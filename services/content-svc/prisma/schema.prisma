@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model Concept {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     ContentConcept[]
+}
+
+model ContentItem {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  body        String
+  version     Int      @default(1)
+  variantKey  String?  // A/B testing variant
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  concepts    ContentConcept[]
+  variants    ContentVariant[]
+}
+
+model ContentConcept {
+  contentId String
+  conceptId String
+  content   ContentItem @relation(fields: [contentId], references: [id])
+  concept   Concept     @relation(fields: [conceptId], references: [id])
+
+  @@id([contentId, conceptId])
+}
+
+model ContentVariant {
+  id         String      @id @default(cuid())
+  contentId  String
+  content    ContentItem @relation(fields: [contentId], references: [id])
+  quality    String      // e.g., low/med/high
+  url        String
+}
