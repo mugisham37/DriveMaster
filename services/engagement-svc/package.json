@@ -16,6 +16,7 @@
     "fastify": "^4.28.1",
     "pino": "^9.5.0",
     "socket.io": "^4.7.5",
+    "@socket.io/redis-adapter": "^8.2.2",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.7",
     "@drivemaster/shared-config": "workspace:*",

@@ -56,6 +56,32 @@ app.get('/v1/content', async (req, reply) => {
   return { hits }
 })
 
+app.put('/v1/content/:id', { preHandler: [async (req: any, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
+  if (!req.user?.roles?.includes('admin')) return reply.code(403).send({ error: 'Forbidden' })
+  const schema = z.object({ id: z.string().min(1) })
+  const bodySchema = z.object({ title: z.string().min(1).optional(), body: z.string().min(1).optional(), variantKey: z.string().optional() })
+  const { id } = schema.parse(req.params)
+  const { title, body, variantKey } = bodySchema.parse(req.body)
+
+  const content = await prisma.contentItem.update({ where: { id }, data: { title, body, variantKey } })
+  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
+  return reply.code(204).send()
+})
+
+app.delete('/v1/content/:id', { preHandler: [async (req: any, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
+  if (!req.user?.roles?.includes('admin')) return reply.code(403).send({ error: 'Forbidden' })
+  const schema = z.object({ id: z.string().min(1) })
+  const { id } = schema.parse(req.params)
+
+  await prisma.$transaction([
+    prisma.contentVariant.deleteMany({ where: { contentId: id } }),
+    prisma.contentConcept.deleteMany({ where: { contentId: id } }),
+    prisma.contentItem.delete({ where: { id } }),
+  ])
+  try { await es.delete({ index: 'content-items', id }) } catch {}
+  return reply.code(204).send()
+})
+
 const port = env.PORT || 3003
 app
   .listen({ host: '0.0.0.0', port })

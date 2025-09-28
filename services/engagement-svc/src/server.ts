@@ -6,6 +6,7 @@ import http from 'http'
 import jwt from 'jsonwebtoken'
 import { nanoid } from 'nanoid'
 import { createRedis } from '@drivemaster/redis-client'
+import { createAdapter } from '@socket.io/redis-adapter'
 
 const env = loadEnv(process.env)
 startTelemetry('engagement-svc')
@@ -19,6 +20,9 @@ const server = http.createServer()
 const io = new Server(server, { cors: { origin: '*' } })
 
 const redis = createRedis(env.REDIS_URL)
+const pub = redis.duplicate()
+const sub = redis.duplicate()
+io.adapter(createAdapter(pub as any, sub as any))
 
 const presenceRoomKey = (roomId: string) => `presence:room:${roomId}`
 const presenceUserKey = (userId: string) => `presence:user:${userId}`
