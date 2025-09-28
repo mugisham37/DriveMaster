@@ -8,6 +8,7 @@ export const envSchema = z.object({
   KAFKA_BROKERS: z.string(),
   ELASTICSEARCH_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
+  BCRYPT_ROUNDS: z.coerce.number().min(10).max(14).default(12),
 })
 
 export type Env = z.infer<typeof envSchema>

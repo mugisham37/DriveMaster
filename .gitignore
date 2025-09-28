@@ -39,7 +39,6 @@ android/
 ios/
 
 # Prisma
-prisma/migrations/
 
 # Kubernetes/Helm
 chart/**/charts/

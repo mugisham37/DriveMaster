@@ -11,10 +11,13 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
+  roles     String[] @default(["user"]) // Postgres text[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   profile   UserProfile?
 }
+
+@@index([createdAt])
 
 model UserProfile {
   id          String   @id @default(cuid())
