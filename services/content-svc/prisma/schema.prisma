@@ -22,6 +22,9 @@ model ContentItem {
   title       String
   body        String
   difficulty  Float    @default(0.5)
+  irtA        Float?
+  irtB        Float?
+  irtC        Float?
   version     Int      @default(1)
   variantKey  String?  // A/B testing variant
   createdAt   DateTime @default(now())

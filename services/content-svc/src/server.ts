@@ -25,12 +25,12 @@ app.get('/health', async () => ({ status: 'ok' }))
 app.post('/v1/content', { preHandler: [async (req: any, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
   // Enforce admin role
   if (!req.user?.roles?.includes('admin')) return reply.code(403).send({ error: 'Forbidden' })
-  const schema = z.object({ slug: z.string().min(1), title: z.string().min(1), body: z.string().min(1), difficulty: z.number().min(0).max(1).default(0.5), concepts: z.array(z.string()).default([]) })
-  const { slug, title, body, difficulty, concepts } = schema.parse(req.body)
+  const schema = z.object({ slug: z.string().min(1), title: z.string().min(1), body: z.string().min(1), difficulty: z.number().min(0).max(1).default(0.5), irtA: z.number().optional(), irtB: z.number().optional(), irtC: z.number().optional(), concepts: z.array(z.string()).default([]) })
+  const { slug, title, body, difficulty, irtA, irtB, irtC, concepts } = schema.parse(req.body)
 
-  const content = await prisma.contentItem.create({ data: { slug, title, body, difficulty, concepts: { create: concepts.map((key) => ({ concept: { connectOrCreate: { where: { key }, create: { key, name: key } } })) } } }, include: { concepts: { include: { concept: true } } } })
+  const content = await prisma.contentItem.create({ data: { slug, title, body, difficulty, irtA, irtB, irtC, concepts: { create: concepts.map((key) => ({ concept: { connectOrCreate: { where: { key }, create: { key, name: key } } })) } } }, include: { concepts: { include: { concept: true } } } })
 
-  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, concepts: content.concepts.map((c) => c.concept.key), difficulty: content.difficulty, version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
+  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, concepts: content.concepts.map((c) => c.concept.key), difficulty: content.difficulty, irtA: content.irtA, irtB: content.irtB, irtC: content.irtC, version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
 
   return reply.code(201).send({ id: content.id })
 })
@@ -68,7 +68,7 @@ app.put('/v1/content/:id', { preHandler: [async (req: any, reply) => { try { awa
   const { title, body, variantKey } = bodySchema.parse(req.body)
 
   const content = await prisma.contentItem.update({ where: { id }, data: { title, body, variantKey } })
-  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, difficulty: content.difficulty, version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
+  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, difficulty: content.difficulty, irtA: content.irtA, irtB: content.irtB, irtC: content.irtC, version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
   return reply.code(204).send()
 })
 

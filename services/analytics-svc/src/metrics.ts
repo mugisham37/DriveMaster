@@ -1,4 +1,4 @@
-import { Registry, collectDefaultMetrics, Counter } from 'prom-client'
+import { Registry, collectDefaultMetrics, Counter, Histogram } from 'prom-client'
 
 const registry = new Registry()
 collectDefaultMetrics({ register: registry })
@@ -12,6 +12,13 @@ export const learningEventsCounter = new Counter({
 export const recommendationsCounter = new Counter({
   name: 'recommendations_total',
   help: 'Recommendation decisions observed',
+  registers: [registry],
+})
+
+export const recommendationsIngestLagMs = new Histogram({
+  name: 'recommendations_ingest_lag_ms',
+  help: 'Lag between recommendation event ts and ingestion',
+  buckets: [10, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
   registers: [registry],
 })
 
