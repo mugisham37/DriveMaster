@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import { startTelemetry } from '@drivemaster/telemetry'
 import { loadEnv } from '@drivemaster/shared-config'
+import { startConsumers } from './kafka/consumers'
 
 const env = loadEnv(process.env)
 startTelemetry('analytics-svc')
@@ -8,6 +9,8 @@ startTelemetry('analytics-svc')
 const app = Fastify({ logger: true })
 
 app.get('/health', async () => ({ status: 'ok' }))
+
+startConsumers(env.KAFKA_BROKERS).catch((e) => app.log.error({ err: e }, 'Kafka consumer failed'))
 
 const port = env.PORT || 3004
 app
