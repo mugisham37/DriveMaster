@@ -5,6 +5,7 @@ import { loadEnv } from '@drivemaster/shared-config'
 import { createES } from '@drivemaster/es-client'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import crypto from 'crypto'
 
 const env = loadEnv(process.env)
 startTelemetry('content-svc')
@@ -17,16 +18,42 @@ const prisma = new PrismaClient()
 
 app.get('/health', async () => ({ status: 'ok' }))
 
-app.post('/v1/content', { preHandler: [async (req, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req, reply) => {
-  // TODO: enforce admin role
+app.post('/v1/content', { preHandler: [async (req: any, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
+  // Enforce admin role
+  if (!req.user?.roles?.includes('admin')) return reply.code(403).send({ error: 'Forbidden' })
   const schema = z.object({ slug: z.string().min(1), title: z.string().min(1), body: z.string().min(1), concepts: z.array(z.string()).default([]) })
   const { slug, title, body, concepts } = schema.parse(req.body)
 
   const content = await prisma.contentItem.create({ data: { slug, title, body, concepts: { create: concepts.map((key) => ({ concept: { connectOrCreate: { where: { key }, create: { key, name: key } } })) } } }, include: { concepts: { include: { concept: true } } } })
 
-  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, concepts: content.concepts.map((c) => c.concept.key), version: content.version, variantKey: content.variantKey } })
+  await es.index({ index: 'content-items', id: content.id, document: { id: content.id, slug: content.slug, title: content.title, body: content.body, concepts: content.concepts.map((c) => c.concept.key), version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt } })
 
   return reply.code(201).send({ id: content.id })
+})
+
+app.get('/v1/content/:slug', async (req, reply) => {
+  const schema = z.object({ slug: z.string().min(1) })
+  const { slug } = schema.parse(req.params as any)
+
+  const content = await prisma.contentItem.findUnique({ where: { slug }, include: { concepts: { include: { concept: true } }, variants: true } })
+  if (!content) return reply.code(404).send({ error: 'Not found' })
+  const payload = { id: content.id, slug: content.slug, title: content.title, body: content.body, concepts: content.concepts.map((c) => c.concept.key), version: content.version, variantKey: content.variantKey, updatedAt: content.updatedAt }
+
+  const etag = crypto.createHash('sha1').update(JSON.stringify(payload)).digest('hex')
+  if ((req.headers['if-none-match'] || '') === etag) return reply.code(304).send()
+
+  reply.header('ETag', etag)
+  reply.header('Cache-Control', 'public, max-age=60')
+  return payload
+})
+
+app.get('/v1/content', async (req, reply) => {
+  const schema = z.object({ q: z.string().min(1) })
+  const { q } = schema.parse(req.query as any)
+  const result = await es.search({ index: 'content-items', query: { multi_match: { query: q, fields: ['title^2', 'body'] } }, size: 10 })
+  const hits = (result.hits.hits as any[]).map((h) => ({ id: h._id, ...(h._source || {}) }))
+  reply.header('Cache-Control', 'public, max-age=30')
+  return { hits }
 })
 
 const port = env.PORT || 3003

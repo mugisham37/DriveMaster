@@ -3,9 +3,17 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../plugins/prisma'
 import { loadEnv } from '@drivemaster/shared-config'
+import { redis } from '../plugins/redis'
 
 const env = loadEnv(process.env)
 const ROUNDS = env.BCRYPT_ROUNDS
+
+const MAX_ATTEMPTS = 5
+const WINDOW_SECONDS = 15 * 60
+
+function loginKey(email: string) {
+  return `login:attempts:${email.toLowerCase()}`
+}
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/v1/auth/register', {
@@ -65,11 +73,31 @@ export async function authRoutes(app: FastifyInstance) {
     const bodySchema = z.object({ email: z.string().email(), password: z.string().min(8) })
     const { email, password } = bodySchema.parse(req.body)
 
+    // Brute force protection
+    const key = loginKey(email)
+    const attemptsStr = await redis.get(key)
+    const attempts = attemptsStr ? parseInt(attemptsStr, 10) : 0
+    if (attempts >= MAX_ATTEMPTS) {
+      const ttl = await redis.ttl(key)
+      reply.header('Retry-After', Math.max(ttl, 0))
+      return reply.code(429).send({ error: 'Too many attempts. Try again later.' })
+    }
+
     const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) return reply.code(401).send({ error: 'Invalid credentials' })
+    if (!user) {
+      const n = await redis.incr(key)
+      if (n === 1) await redis.expire(key, WINDOW_SECONDS)
+      return reply.code(401).send({ error: 'Invalid credentials' })
+    }
 
     const ok = await bcrypt.compare(password, user.password)
-    if (!ok) return reply.code(401).send({ error: 'Invalid credentials' })
+    if (!ok) {
+      const n = await redis.incr(key)
+      if (n === 1) await redis.expire(key, WINDOW_SECONDS)
+      return reply.code(401).send({ error: 'Invalid credentials' })
+    }
+
+    await redis.del(key) // reset on successful login
 
     const token = await reply.jwtSign({ sub: user.id, roles: user.roles })
     return { token, user: { id: user.id, email: user.email, roles: user.roles } }
