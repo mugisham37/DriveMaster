@@ -8,6 +8,8 @@ import { BanditRepo } from './repo/bandit'
 import { z } from 'zod'
 import { createKafka } from '@drivemaster/kafka-client'
 import { thompsonSelect } from './algorithms/mab'
+import { createES } from '@drivemaster/es-client'
+import { fetchCandidateArmIds } from './repo/candidates'
 
 const env = loadEnv(process.env)
 startTelemetry('adaptive-svc')
@@ -18,6 +20,7 @@ app.register(jwt, { secret: env.JWT_SECRET })
 const prisma = new PrismaClient()
 const repo = new KnowledgeRepo(prisma)
 const bands = new BanditRepo(prisma)
+const es = createES(env.ELASTICSEARCH_URL)
 const kafka = createKafka(env.KAFKA_BROKERS.split(','), 'adaptive-svc')
 const producer = kafka.producer()
 await producer.connect().catch(() => {})
@@ -36,8 +39,15 @@ app.post('/v1/learning-events', { preHandler: [async (req, reply) => { try { awa
 })
 
 app.post('/v1/recommendations/next-question', { preHandler: [async (req, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
-  const schema = z.object({ candidateArmIds: z.array(z.string().min(1)).min(1) })
-  const { candidateArmIds } = schema.parse(req.body)
+  const schema = z.object({ candidateArmIds: z.array(z.string().min(1)).optional(), conceptId: z.string().optional(), size: z.number().int().min(1).max(50).default(20) }).refine((v) => !!v.candidateArmIds || !!v.conceptId, 'Provide candidateArmIds or conceptId')
+  const { candidateArmIds: given, conceptId, size } = schema.parse(req.body)
+
+  const candidateArmIds = given ?? (conceptId ? await (async () => {
+    // get mastery for concept
+    const rec = await prisma.userKnowledgeState.findUnique({ where: { userId_conceptId: { userId: req.user.sub, conceptId } } })
+    const mastery = rec ? rec.mastery : 0.2
+    return fetchCandidateArmIds(es as any, conceptId, mastery, size)
+  })() : [])
 
   const statsMap = await bands.getStatsMap(req.user.sub, candidateArmIds)
   const arms: Record<string, { alpha: number; beta: number }> = {}
