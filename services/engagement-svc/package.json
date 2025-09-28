@@ -1,0 +1,36 @@
+{
+  "name": "@drivemaster/engagement-svc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier -w .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "pino": "^9.5.0",
+    "socket.io": "^4.7.5",
+    "@socket.io/redis-adapter": "^8.2.2",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.0.7",
+    "@drivemaster/shared-config": "workspace:*",
+    "@drivemaster/telemetry": "workspace:*",
+    "@drivemaster/redis-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "tsx": "^4.19.1",
+    "vitest": "^2.1.1",
+    "@types/node": "^20.14.12",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "prettier": "^3.3.3"
+  }
+}

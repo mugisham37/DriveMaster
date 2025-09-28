@@ -1,0 +1,28 @@
+_format_version: "3.0"
+_transform: true
+services:
+  - name: user-svc
+    url: http://user-svc:3001
+    routes:
+      - name: user-svc-route
+        paths: ["/user"]
+  - name: adaptive-svc
+    url: http://adaptive-svc:3002
+    routes:
+      - name: adaptive-svc-route
+        paths: ["/adaptive"]
+  - name: content-svc
+    url: http://content-svc:3003
+    routes:
+      - name: content-svc-route
+        paths: ["/content"]
+  - name: analytics-svc
+    url: http://analytics-svc:3004
+    routes:
+      - name: analytics-svc-route
+        paths: ["/analytics"]
+  - name: engagement-svc
+    url: http://engagement-svc:3005
+    routes:
+      - name: engagement-svc-route
+        paths: ["/engagement"]
