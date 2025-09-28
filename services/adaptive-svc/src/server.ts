@@ -10,8 +10,9 @@ const app = Fastify({ logger: true })
 app.get('/health', async () => ({ status: 'ok' }))
 
 app.post('/v1/recommendations/next-question', async (req, reply) => {
-  // placeholder: will call BKT + Thompson Sampling
-  return { questionId: 'placeholder', rationale: 'bootstrap' }
+  // TODO: wire user knowledge state and arm stats
+  // Placeholder select
+  return { questionId: 'placeholder', rationale: 'thompson_sampling_placeholder' }
 })
 
 const port = env.PORT || 3002
