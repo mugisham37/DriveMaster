@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { createKafka } from '@drivemaster/kafka-client'
 import { thompsonSelect } from './algorithms/mab'
 import { createES } from '@drivemaster/es-client'
-import { fetchCandidateArmIds } from './repo/candidates'
+import { fetchCandidateArmIds, fetchCandidateDetails } from './repo/candidates'
 
 const env = loadEnv(process.env)
 startTelemetry('adaptive-svc')
@@ -55,7 +55,36 @@ app.post('/v1/recommendations/next-question', { preHandler: [async (req, reply) 
     const s = statsMap.get(armId) || { alpha: 1, beta: 1 }
     arms[armId] = s
   }
-  const chosen = thompsonSelect(arms)
+
+  // Compute IRT-based information score
+  const details = await fetchCandidateDetails(es as any, candidateArmIds)
+  const masteryRec = conceptId ? await prisma.userKnowledgeState.findUnique({ where: { userId_conceptId: { userId: req.user.sub, conceptId } } }) : null
+  const m = masteryRec ? Math.min(0.99, Math.max(0.01, masteryRec.mastery)) : 0.5
+  const theta = Math.log(m / (1 - m)) // simple logit mapping
+
+  const info: Record<string, number> = {}
+  for (const d of details) {
+    const a = d.irtA ?? 1
+    const b = d.irtB ?? 0
+    const c = d.irtC ?? 0.2
+    // approximate information ~ a^2 * P(1-P)
+    const exp = Math.exp(-a * (theta - b))
+    const P = c + (1 - c) / (1 + exp)
+    info[d.id] = a * a * (P * (1 - P))
+  }
+  // normalize info
+  const maxInfo = Math.max(1e-9, ...Object.values(info))
+  for (const k of Object.keys(info)) info[k] = info[k] / maxInfo
+
+  // blend Thompson expected value (deterministic sample placeholder) with info
+  const W = 0.6
+  let best = { arm: candidateArmIds[0], score: -1 }
+  for (const id of candidateArmIds) {
+    const bandit = arms[id] ? arms[id].alpha / (arms[id].alpha + arms[id].beta) : 0.5
+    const score = W * bandit + (1 - W) * (info[id] ?? 0)
+    if (score > best.score) best = { arm: id, score }
+  }
+  const chosen = best.arm
 
   const event = {
     type: 'recommendation',

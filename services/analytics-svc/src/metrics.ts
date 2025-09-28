@@ -15,6 +15,20 @@ export const recommendationsCounter = new Counter({
   registers: [registry],
 })
 
+export const decisionOutcomeCounter = new Counter({
+  name: 'recommendations_decision_outcome_total',
+  help: 'Outcomes for recommendation decisions joined to learning events',
+  labelNames: ['outcome'],
+  registers: [registry],
+})
+
+export const decisionToOutcomeLagMs = new Histogram({
+  name: 'recommendations_decision_to_outcome_lag_ms',
+  help: 'Lag between recommendation decision and the subsequent outcome event',
+  buckets: [50, 100, 200, 500, 1000, 2000, 5000, 15000, 60000],
+  registers: [registry],
+})
+
 export const recommendationsIngestLagMs = new Histogram({
   name: 'recommendations_ingest_lag_ms',
   help: 'Lag between recommendation event ts and ingestion',

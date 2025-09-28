@@ -1,6 +1,7 @@
 import { Client } from '@elastic/elasticsearch'
 
 const ALIAS = 'content-items'
+const WRITE_ALIAS = 'content-items-write'
 const INDEX = 'content-items-v1'
 
 export async function ensureContentIndex(es: Client) {
@@ -41,7 +42,7 @@ export async function ensureContentIndex(es: Client) {
     // ignore template errors for idempotency
   }
 
-  // Ensure a base index and alias
+  // Ensure a base index and read/write aliases
   const aliasExists = await (es as any).indices.existsAlias({ name: ALIAS })
   const aliasExistsBool = (aliasExists && aliasExists.body === true) || aliasExists === true
   if (!aliasExistsBool) {
@@ -51,5 +52,30 @@ export async function ensureContentIndex(es: Client) {
       await es.indices.create({ index: INDEX } as any)
     }
     await es.indices.putAlias({ index: INDEX, name: ALIAS })
+    await es.indices.putAlias({ index: INDEX, name: WRITE_ALIAS })
   }
+}
+
+export async function rolloverContentIndex(es: Client) {
+  // Determine next version
+  const aliases = await (es as any).indices.getAlias({ name: ALIAS })
+  const indices = Object.keys((aliases as any).body || aliases)
+  const current = indices[0]
+  const match = current?.match(/^(.*)-v(\d+)$/)
+  const base = match ? match[1] : 'content-items'
+  const curV = match ? parseInt(match[2], 10) : 1
+  const nextName = `${base}-v${curV + 1}`
+
+  // Create new index (template applies), then switch aliases atomically
+  await es.indices.create({ index: nextName } as any)
+  await es.indices.updateAliases({
+    actions: [
+      { remove: { index: current, alias: ALIAS } },
+      { remove: { index: current, alias: WRITE_ALIAS } },
+      { add: { index: nextName, alias: ALIAS } },
+      { add: { index: nextName, alias: WRITE_ALIAS } },
+    ],
+  } as any)
+
+  return { previous: current, next: nextName }
 }

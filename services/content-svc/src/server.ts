@@ -6,7 +6,7 @@ import { createES } from '@drivemaster/es-client'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { ensureContentIndex } from './es/index'
+import { ensureContentIndex, rolloverContentIndex } from './es/index'
 
 const env = loadEnv(process.env)
 startTelemetry('content-svc')
@@ -84,6 +84,13 @@ app.delete('/v1/content/:id', { preHandler: [async (req: any, reply) => { try { 
   ])
   try { await es.delete({ index: 'content-items', id }) } catch {}
   return reply.code(204).send()
+})
+
+// Admin: rollover content index (atomically switches read/write aliases)
+app.post('/v1/admin/content/rollover', { preHandler: [async (req: any, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any, reply) => {
+  if (!req.user?.roles?.includes('admin')) return reply.code(403).send({ error: 'Forbidden' })
+  const result = await rolloverContentIndex(es as any)
+  return reply.code(200).send(result)
 })
 
 const port = env.PORT || 3003

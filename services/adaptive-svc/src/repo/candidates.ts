@@ -22,3 +22,10 @@ export async function fetchCandidateArmIds(es: Client, conceptId: string, master
   const hits = (res as any).hits?.hits || []
   return hits.map((h: any) => h._id as string)
 }
+
+export async function fetchCandidateDetails(es: Client, ids: string[]) {
+  if (ids.length === 0) return []
+  const res: any = await (es as any).mget({ index: 'content-items', ids })
+  const docs: any[] = (res?.docs || []).filter((d: any) => d.found)
+  return docs.map((d: any) => ({ id: d._id as string, irtA: d._source?.irtA ?? null, irtB: d._source?.irtB ?? null, irtC: d._source?.irtC ?? null }))
+}
