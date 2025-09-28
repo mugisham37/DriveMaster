@@ -1,7 +1,0 @@
-image:
-  repository: user-svc
-  tag: latest
-  pullPolicy: IfNotPresent
-service:
-  port: 3001
-resources: {}
