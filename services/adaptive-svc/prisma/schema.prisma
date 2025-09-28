@@ -21,10 +21,21 @@ model LearningEvent {
   id             String   @id @default(cuid())
   userId         String
   conceptId      String
+  armId          String?
   correct        Boolean
   responseTimeMs Int?
   confidence     Float?
   createdAt      DateTime @default(now())
 
   @@index([userId, conceptId, createdAt])
+}
+
+model BanditArmStats {
+  userId   String
+  armId    String
+  alpha    Float   @default(1)
+  beta     Float   @default(1)
+  updatedAt DateTime @default(now())
+
+  @@id([userId, armId])
 }

@@ -16,6 +16,8 @@
     "fastify": "^4.28.1",
     "pino": "^9.5.0",
     "socket.io": "^4.7.5",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.0.7",
     "@drivemaster/shared-config": "workspace:*",
     "@drivemaster/telemetry": "workspace:*"
   },

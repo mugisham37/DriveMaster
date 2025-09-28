@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit'
 import { startTelemetry } from '@drivemaster/telemetry'
 import { loadEnv } from '@drivemaster/shared-config'
 import { authRoutes } from './routes/auth'
+import { tokenRoutes } from './routes/tokens'
 
 const env = loadEnv(process.env)
 startTelemetry('user-svc')
@@ -17,6 +18,7 @@ app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 app.get('/health', async () => ({ status: 'ok' }))
 
 app.register(authRoutes)
+app.register(tokenRoutes)
 
 app.get('/v1/users/me', { preHandler: [async (req, reply) => { try { await req.jwtVerify() } catch { return reply.code(401).send({ error: 'Unauthorized' }) } }] }, async (req: any) => {
   return { id: req.user.sub, roles: req.user.roles }
