@@ -1,9 +1,8 @@
 import type { FastifyInstance } from 'fastify'
-import rateLimit from '@fastify/rate-limit'
-import { AuthService, type LoginCredentials, type RegisterData } from '../services/auth.simple'
+import { AuthService, type LoginCredentials, type RegisterData } from '../services/auth.service'
 import { SessionService } from '../services/session.service'
-import { RateLimitMiddleware } from '../middleware/rate-limit.middleware'
-import { AuthMiddleware } from '../middleware/auth.simple'
+import { AuthMiddleware } from '../middleware/auth.middleware'
+import { RateLimitHandler } from '../middleware/rate-limit-handler.middleware'
 
 function createSuccessResponse<T>(data: T, requestId?: string) {
   return {
@@ -35,7 +34,11 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
   server.post(
     '/login',
     {
-      preHandler: [AuthMiddleware.deviceFingerprint(), AuthMiddleware.auditLog()],
+      preHandler: [
+        RateLimitHandler.authRateLimit(),
+        AuthMiddleware.deviceFingerprint(),
+        AuthMiddleware.auditLog(),
+      ],
       schema: {
         tags: ['Authentication'],
         summary: 'User login with JWT and session creation',
@@ -152,7 +155,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
             deviceInfo: {
               userAgent,
               ip: request.ip,
-              deviceType: this.detectDeviceType(userAgent),
+              deviceType: detectDeviceType(userAgent),
             },
           })
 
@@ -203,7 +206,11 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
   server.post(
     '/register',
     {
-      preHandler: [AuthMiddleware.deviceFingerprint(), AuthMiddleware.auditLog()],
+      preHandler: [
+        RateLimitHandler.registrationRateLimit(),
+        AuthMiddleware.deviceFingerprint(),
+        AuthMiddleware.auditLog(),
+      ],
       schema: {
         tags: ['Authentication'],
         summary: 'User registration',
@@ -541,21 +548,21 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
       }
     },
   )
+}
 
-  // Helper method to detect device type
-  function detectDeviceType(userAgent?: string): 'mobile' | 'tablet' | 'desktop' {
-    if (!userAgent) return 'desktop'
+// Helper function to detect device type
+function detectDeviceType(userAgent?: string): 'mobile' | 'tablet' | 'desktop' {
+  if (!userAgent) return 'desktop'
 
-    const ua = userAgent.toLowerCase()
+  const ua = userAgent.toLowerCase()
 
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-      return 'mobile'
-    }
-
-    if (ua.includes('tablet') || ua.includes('ipad')) {
-      return 'tablet'
-    }
-
-    return 'desktop'
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+    return 'mobile'
   }
+
+  if (ua.includes('tablet') || ua.includes('ipad')) {
+    return 'tablet'
+  }
+
+  return 'desktop'
 }

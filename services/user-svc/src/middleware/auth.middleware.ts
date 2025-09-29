@@ -21,7 +21,7 @@ export class AuthMiddleware {
    * JWT Authentication middleware
    */
   static authenticate(options: AuthMiddlewareOptions = {}) {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const { required = true, roles = [], permissions = [] } = options
 
       try {
@@ -42,7 +42,7 @@ export class AuthMiddleware {
               },
             })
           }
-          return // Optional authentication, continue without user context
+          return undefined // Optional authentication, continue without user context
         }
 
         const token = authHeader.substring(7)
@@ -126,7 +126,7 @@ export class AuthMiddleware {
    * Session-based authentication middleware
    */
   static authenticateSession(options: AuthMiddlewareOptions = {}) {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const { required = true, roles = [], permissions = [] } = options
 
       try {
@@ -147,7 +147,7 @@ export class AuthMiddleware {
               },
             })
           }
-          return
+          return undefined
         }
 
         // Validate session and get user context
@@ -167,7 +167,7 @@ export class AuthMiddleware {
               },
             })
           }
-          return
+          return undefined
         }
 
         // Get full user context with permissions
@@ -263,7 +263,7 @@ export class AuthMiddleware {
    * Hybrid authentication (JWT or Session)
    */
   static authenticateHybrid(options: AuthMiddlewareOptions = {}) {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       // Try JWT first, then session
       const authHeader = request.headers.authorization
       const sessionId = request.cookies?.sessionId || (request.headers['x-session-id'] as string)
@@ -314,18 +314,18 @@ export class AuthMiddleware {
    * Self-access middleware (user can only access their own resources)
    */
   static requireSelfAccess(userIdParam: string = 'userId') {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       // First authenticate the user
       await this.authenticate({ required: true })(request, reply)
 
-      if (reply.sent) return // Authentication failed
+      if (reply.sent) return undefined // Authentication failed
 
       const requestedUserId = (request.params as any)[userIdParam]
       const authenticatedUserId = request.user?.userId
 
       // Admin can access any user's resources
       if (request.user && AuthService.hasRole(request.user, ['admin'])) {
-        return
+        return undefined
       }
 
       // User can only access their own resources
@@ -356,7 +356,7 @@ export class AuthMiddleware {
    * API Key authentication (for service-to-service communication)
    */
   static authenticateApiKey() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const apiKey = request.headers['x-api-key'] as string
       const validApiKeys = process.env.API_KEYS?.split(',') || []
 

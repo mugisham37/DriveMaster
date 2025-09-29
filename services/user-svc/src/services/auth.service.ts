@@ -83,8 +83,8 @@ export class AuthService {
    */
   static generateAccessToken(payload: Omit<JWTPayload, 'type'>): string {
     return jwt.sign({ ...payload, type: 'access' }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN as string,
-    })
+      expiresIn: JWT_EXPIRES_IN,
+    } as jwt.SignOptions)
   }
 
   /**
@@ -92,8 +92,8 @@ export class AuthService {
    */
   static generateRefreshToken(payload: Omit<JWTPayload, 'type'>): string {
     return jwt.sign({ ...payload, type: 'refresh' }, JWT_REFRESH_SECRET, {
-      expiresIn: JWT_REFRESH_EXPIRES_IN as string,
-    })
+      expiresIn: JWT_REFRESH_EXPIRES_IN,
+    } as jwt.SignOptions)
   }
 
   /**
