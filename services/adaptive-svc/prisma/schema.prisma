@@ -7,24 +7,241 @@ datasource db {
   url      = env("POSTGRES_URL")
 }
 
+// Bayesian Knowledge Tracing Model
 model UserKnowledgeState {
-  id         String   @id @default(cuid())
-  userId     String
-  conceptKey String
-  pL0        Float
-  pT         Float
-  pG         Float
-  pS         Float
-  updatedAt  DateTime @updatedAt
+  id                String   @id @default(cuid())
+  userId            String
+  conceptKey        String
+  
+  // BKT Parameters
+  pL0               Float    // Initial knowledge probability
+  pT                Float    // Learning rate
+  pG                Float    // Guess probability
+  pS                Float    // Slip probability
+  
+  // Current state
+  currentMastery    Float    // Current mastery probability
+  
+  // Temporal decay factors
+  lastInteraction   DateTime @default(now())
+  decayRate         Float    @default(0.05)
+  
+  // Personalized factors
+  learningVelocity  Float    @default(1.0)
+  confidenceWeight  Float    @default(0.1)
+  responseTimeWeight Float   @default(0.1)
+  
+  // Metadata
+  totalInteractions Int      @default(0)
+  correctAnswers    Int      @default(0)
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  
+  @@unique([userId, conceptKey])
+  @@index([userId])
+  @@index([conceptKey])
+  @@index([currentMastery])
+  @@index([lastInteraction])
 }
 
+// Learning Events with enhanced tracking
 model LearningEvent {
-  id          String   @id @default(cuid())
-  userId      String
-  conceptKey  String
-  itemId      String?
-  correct     Boolean
-  responseMs  Int?
-  confidence  Int?     // 1-5
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String
+  conceptKey     String
+  itemId         String?
+  sessionId      String?
+  
+  // Response data
+  correct        Boolean
+  responseMs     Int?
+  confidence     Int?     // 1-5 scale
+  attempts       Int      @default(1)
+  
+  // Context
+  difficulty     Float?
+  itemType       String?  // "multiple_choice", "true_false", "scenario"
+  contextualInfo Json?    // Additional context (time of day, device, etc.)
+  
+  // BKT state before and after
+  masteryBefore  Float?
+  masteryAfter   Float?
+  
+  // Metadata
+  createdAt      DateTime @default(now())
+  
+  @@index([userId])
+  @@index([conceptKey])
+  @@index([createdAt])
+  @@index([correct])
+}
+
+// Multi-Armed Bandit Statistics
+model BanditArmStats {
+  id            String   @id @default(cuid())
+  userId        String
+  conceptKey    String
+  itemId        String
+  
+  // Thompson Sampling parameters
+  alphaSuccess  Float    @default(1.0)
+  betaFailure   Float    @default(1.0)
+  
+  // Performance metrics
+  totalPulls    Int      @default(0)
+  totalRewards  Float    @default(0.0)
+  avgReward     Float    @default(0.0)
+  
+  // Context-aware factors
+  difficultyScore Float  @default(0.5)
+  engagementScore Float  @default(0.5)
+  
+  // Metadata
+  lastPulled    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, conceptKey, itemId])
+  @@index([userId])
+  @@index([conceptKey])
+  @@index([avgReward])
+  @@index([lastPulled])
+}
+
+// Spaced Repetition Schedule
+model SpacedRepetition {
+  id              String   @id @default(cuid())
+  userId          String
+  conceptKey      String
+  itemId          String?
+  
+  // SM-2 Algorithm parameters
+  easeFactor      Float    @default(2.5)
+  interval        Int      @default(1)     // days
+  repetitions     Int      @default(0)
+  
+  // Enhanced factors
+  forgettingCurve Float    @default(0.5)   // personalized forgetting rate
+  interference    Json     @default("{}")
+  
+  // Schedule
+  nextReview      DateTime
+  lastReview      DateTime?
+  
+  // Performance tracking
+  reviewStreak    Int      @default(0)
+  totalReviews    Int      @default(0)
+  successRate     Float    @default(0.0)
+  
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, conceptKey, itemId])
+  @@index([userId])
+  @@index([nextReview])
+  @@index([conceptKey])
+}
+
+// Item Response Theory parameters
+model IRTItemParams {
+  id             String   @id @default(cuid())
+  itemId         String   @unique
+  conceptKey     String
+  
+  // IRT Parameters
+  discrimination Float    @default(1.0)  // 'a' parameter
+  difficulty     Float    @default(0.0)  // 'b' parameter  
+  guessing       Float    @default(0.0)  // 'c' parameter
+  
+  // Calibration data
+  totalResponses Int      @default(0)
+  correctResponses Int    @default(0)
+  
+  // Quality metrics
+  standardError  Float?
+  fitStatistic   Float?
+  
+  // Metadata
+  calibratedAt   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([conceptKey])
+  @@index([difficulty])
+  @@index([discrimination])
+}
+
+// User ability estimates (theta)
+model UserAbility {
+  id            String   @id @default(cuid())
+  userId        String
+  conceptKey    String
+  
+  // IRT ability estimate
+  theta         Float    @default(0.0)
+  standardError Float?
+  
+  // Confidence bounds
+  lowerBound    Float?
+  upperBound    Float?
+  
+  // Estimation metadata
+  itemsUsed     Int      @default(0)
+  lastUpdated   DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  
+  @@unique([userId, conceptKey])
+  @@index([userId])
+  @@index([theta])
+  @@index([conceptKey])
+}
+
+// Learning Sessions
+model LearningSession {
+  id            String        @id @default(cuid())
+  userId        String
+  
+  // Session info
+  goals         Json?         // Session goals and targets
+  totalQuestions Int          @default(0)
+  correctAnswers Int          @default(0)
+  
+  // Performance metrics
+  avgResponseTime Float?
+  avgConfidence Float?
+  completionRate Float        @default(0.0)
+  
+  // Adaptive metrics
+  initialDifficulty Float?
+  finalDifficulty Float?
+  difficultyAdjustments Int   @default(0)
+  
+  // Engagement tracking
+  engagementScore Float       @default(0.0)
+  fatigueSigns   Json         @default("{}")
+  
+  // Temporal info
+  startedAt     DateTime     @default(now())
+  endedAt       DateTime?
+  duration      Int?         // seconds
+  
+  // Relations
+  events        LearningEvent[]
+  
+  @@index([userId])
+  @@index([startedAt])
+  @@index([engagementScore])
+}
+
+// Concept Dependencies and Prerequisites
+model ConceptDependency {
+  id             String @id @default(cuid())
+  conceptKey     String
+  prerequisite   String
+  weight         Float  @default(1.0)
+  
+  @@unique([conceptKey, prerequisite])
+  @@index([conceptKey])
+  @@index([prerequisite])
 }
