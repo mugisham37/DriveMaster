@@ -10,6 +10,9 @@ import { ABTestingService } from './services/ab-testing.service.js'
 import { ContentDeliveryService } from './services/content-delivery.service.js'
 import { CDNService } from './services/cdn.service.js'
 import { OfflineSyncService } from './services/offline-sync.service.js'
+import { ContentAnalyticsService } from './services/content-analytics.service.js'
+import { ContentRecommendationService } from './services/content-recommendation.service.js'
+import { ContentOptimizationService } from './services/content-optimization.service.js'
 import { eq } from 'drizzle-orm'
 
 const app = Fastify({ logger: true })
@@ -35,6 +38,9 @@ const cdnService = new CDNService({
   zoneId: process.env.CDN_ZONE_ID,
 })
 const offlineSyncService = new OfflineSyncService()
+const contentAnalyticsService = new ContentAnalyticsService()
+const contentRecommendationService = new ContentRecommendationService()
+const contentOptimizationService = new ContentOptimizationService()
 
 // Initialize Elasticsearch if available
 if (esService) {
@@ -981,6 +987,336 @@ app.get(
       reply.send({ responsiveSet })
     } catch (error) {
       app.log.error(error, 'Generate responsive images error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Content Analytics and Performance Tracking
+app.post(
+  '/analytics/track-interaction',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const interaction = {
+        userId: request.user.userId,
+        itemId: request.body.itemId,
+        conceptId: request.body.conceptId,
+        eventType: request.body.eventType,
+        isCorrect: request.body.isCorrect,
+        responseTime: request.body.responseTime,
+        confidence: request.body.confidence,
+        hintsUsed: request.body.hintsUsed,
+        attemptsCount: request.body.attemptsCount,
+        engagementScore: request.body.engagementScore,
+        deviceType: request.body.deviceType,
+        sessionId: request.body.sessionId,
+        timestamp: new Date(),
+        metadata: request.body.metadata,
+      }
+
+      await contentAnalyticsService.trackUserInteraction(interaction)
+
+      reply.send({ success: true })
+    } catch (error) {
+      app.log.error(error, 'Track interaction error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/analytics/content/:itemId/effectiveness',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+      const { days = 30 } = request.query
+
+      const timeRange = {
+        start: new Date(Date.now() - parseInt(days) * 24 * 60 * 60 * 1000),
+        end: new Date(),
+      }
+
+      const effectiveness = await contentAnalyticsService.getContentEffectiveness(itemId, timeRange)
+
+      reply.send(effectiveness)
+    } catch (error) {
+      app.log.error(error, 'Get content effectiveness error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/analytics/content/:itemId/trends',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+      const { period = 'daily', days = 30 } = request.query
+
+      const trends = await contentAnalyticsService.getContentPerformanceTrends(
+        itemId,
+        period as any,
+        parseInt(days),
+      )
+
+      reply.send({ trends })
+    } catch (error) {
+      app.log.error(error, 'Get content trends error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/analytics/content/top-performing',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { conceptId, categoryId, limit = 10, metric = 'quality_score' } = request.query
+
+      const topContent = await contentAnalyticsService.getTopPerformingContent(
+        conceptId,
+        categoryId,
+        parseInt(limit),
+        metric as any,
+      )
+
+      reply.send({ content: topContent })
+    } catch (error) {
+      app.log.error(error, 'Get top performing content error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Content Quality Assessment
+app.get(
+  '/analytics/content/:itemId/quality-assessment',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+
+      const assessment = await contentAnalyticsService.assessContentQuality(itemId)
+
+      reply.send(assessment)
+    } catch (error: any) {
+      if (error.message === 'Item not found') {
+        return reply.code(404).send({ error: error.message })
+      }
+
+      app.log.error(error, 'Content quality assessment error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Content Recommendations
+app.get(
+  '/recommendations/personalized',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const context = {
+        userId: request.user.userId,
+        currentConceptId: request.query.conceptId,
+        sessionGoals: request.query.sessionGoals?.split(','),
+        timeAvailable: request.query.timeAvailable
+          ? parseInt(request.query.timeAvailable)
+          : undefined,
+        deviceType: request.query.deviceType,
+        previousItems: request.query.previousItems?.split(','),
+        targetDifficulty: request.query.targetDifficulty
+          ? parseFloat(request.query.targetDifficulty)
+          : undefined,
+      }
+
+      const limit = parseInt(request.query.limit || '10')
+
+      const recommendations = await contentRecommendationService.getPersonalizedRecommendations(
+        context,
+        limit,
+      )
+
+      reply.send({ recommendations })
+    } catch (error) {
+      app.log.error(error, 'Get personalized recommendations error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/recommendations/adaptive/:conceptId',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { conceptId } = request.params
+      const { limit = 5 } = request.query
+
+      const recommendations = await contentRecommendationService.getAdaptiveRecommendations(
+        request.user.userId,
+        conceptId,
+        parseInt(limit),
+      )
+
+      reply.send({ recommendations })
+    } catch (error) {
+      app.log.error(error, 'Get adaptive recommendations error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/recommendations/similar/:itemId',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+      const { limit = 5 } = request.query
+
+      const recommendations = await contentRecommendationService.getSimilarContent(
+        itemId,
+        parseInt(limit),
+      )
+
+      reply.send({ recommendations })
+    } catch (error: any) {
+      if (error.message === 'Source item not found') {
+        return reply.code(404).send({ error: error.message })
+      }
+
+      app.log.error(error, 'Get similar content error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/recommendations/trending',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { categoryId, timeWindow = 7, limit = 10 } = request.query
+
+      const recommendations = await contentRecommendationService.getTrendingContent(
+        categoryId,
+        parseInt(timeWindow),
+        parseInt(limit),
+      )
+
+      reply.send({ recommendations })
+    } catch (error) {
+      app.log.error(error, 'Get trending content error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Content Optimization
+app.get(
+  '/optimization/report/:itemId',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+
+      const report = await contentOptimizationService.generateOptimizationReport(itemId)
+
+      reply.send(report)
+    } catch (error: any) {
+      if (error.message === 'Item not found') {
+        return reply.code(404).send({ error: error.message })
+      }
+
+      app.log.error(error, 'Generate optimization report error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/optimization/recommendations',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { conceptId, categoryId, limit = 20 } = request.query
+
+      const recommendations = await contentAnalyticsService.generateContentRecommendations(
+        conceptId,
+        categoryId,
+        parseInt(limit),
+      )
+
+      reply.send({ recommendations })
+    } catch (error) {
+      app.log.error(error, 'Generate content recommendations error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/optimization/insights',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { categoryId, conceptId, timeRange = 30 } = request.query
+
+      const insights = await contentOptimizationService.getOptimizationInsights(
+        categoryId,
+        conceptId,
+        parseInt(timeRange),
+      )
+
+      reply.send(insights)
+    } catch (error) {
+      app.log.error(error, 'Get optimization insights error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.post(
+  '/optimization/auto-optimize',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      await contentOptimizationService.applyAutoOptimizationRules()
+
+      reply.send({ success: true, message: 'Auto-optimization rules applied successfully' })
+    } catch (error) {
+      app.log.error(error, 'Apply auto-optimization rules error')
       reply.code(500).send({ error: 'Internal server error' })
     }
   },
