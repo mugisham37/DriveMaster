@@ -163,8 +163,8 @@
     - Write end-to-end tests for gamification feature engagement and retention
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 8. Mobile Application Core Implementation
-  - [ ] 8.1 Set up React Native foundation with offline capabilities
+- [-] 8. Mobile Application Core Implementation
+  - [x] 8.1 Set up React Native foundation with offline capabilities
     - Initialize React Native 0.73+ project with Expo SDK 50+ configuration
     - Implement Zustand state management with offline-first architecture
     - Create local SQLite database with Drizzle for offline data storage
@@ -173,7 +173,7 @@
     - Write unit tests for offline functionality and data synchronization
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 8.2 Build real-time features and Socket.io integration
+  - [-] 8.2 Build real-time features and Socket.io integration
     - Implement Socket.io client for real-time updates and live challenges
     - Create connection management with automatic reconnection and offline handling
     - Build real-time progress sharing and friend activity feeds
