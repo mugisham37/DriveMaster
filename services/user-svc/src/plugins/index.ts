@@ -3,6 +3,8 @@ import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import cookie from '@fastify/cookie'
+import { RateLimitMiddleware } from '../middleware/rate-limit.middleware'
 
 export async function registerPlugins(server: FastifyInstance): Promise<void> {
   // Security plugins
@@ -21,8 +23,21 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
     origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'x-session-id', 'x-api-key'],
   })
+
+  // Cookie support for session management
+  await server.register(cookie, {
+    secret: process.env.COOKIE_SECRET || 'dev-cookie-secret-change-in-production',
+    parseOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    },
+  })
+
+  // Rate limiting
+  await RateLimitMiddleware.registerGlobalRateLimit(server)
 
   // API Documentation
   await server.register(swagger, {

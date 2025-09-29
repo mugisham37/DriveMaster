@@ -32,7 +32,7 @@
     - Write automated backup and restore procedures with point-in-time recovery
     - _Requirements: 9.4, 9.5, 9.6_
 
-- [ ] 3. User Management Service Implementation
+- [-] 3. User Management Service Implementation
   - [ ] 3.1 Build authentication and authorization system
     - Implement OAuth 2.0 authentication with JWT token generation and validation
     - Create secure password hashing with bcrypt and salt generation
