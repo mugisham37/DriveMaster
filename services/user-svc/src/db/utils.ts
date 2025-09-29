@@ -68,9 +68,9 @@ export class DatabaseMonitor {
       `)
 
       return {
-        activeConnections: connectionsResult.active_connections || 0,
-        slowQueries: slowQueriesResult.slow_queries || 0,
-        cacheHitRatio: cacheResult.cache_hit_ratio || 0,
+        activeConnections: Number(connectionsResult?.active_connections) || 0,
+        slowQueries: Number(slowQueriesResult?.slow_queries) || 0,
+        cacheHitRatio: Number(cacheResult?.cache_hit_ratio) || 0,
         indexUsage: indexUsage || [],
         tableStats: tableStats || [],
       }

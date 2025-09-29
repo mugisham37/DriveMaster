@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true
+  },
+  "references": [
+    { "path": "./packages/shared-config" },
+    { "path": "./packages/contracts" },
+    { "path": "./packages/kafka-client" },
+    { "path": "./packages/redis-client" },
+    { "path": "./packages/es-client" },
+    { "path": "./packages/telemetry" },
+    { "path": "./services/user-svc" },
+    { "path": "./services/adaptive-svc" },
+    { "path": "./services/content-svc" },
+    { "path": "./services/analytics-svc" },
+    { "path": "./services/engagement-svc" }
+  ],
+  "files": [],
+  "include": []
+}

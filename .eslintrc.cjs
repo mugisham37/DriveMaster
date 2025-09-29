@@ -9,7 +9,13 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.json', './services/*/tsconfig.json', './packages/*/tsconfig.json'],
+    project: [
+      './tsconfig.json',
+      './services/*/tsconfig.json',
+      './packages/*/tsconfig.json',
+      './services/*/src/scripts/tsconfig.json',
+    ],
+    tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'import', 'prettier', 'node'],
   extends: [
@@ -62,9 +68,26 @@ module.exports = {
     'import/resolver': {
       typescript: {
         alwaysTryTypes: true,
-        project: ['./tsconfig.json', './services/*/tsconfig.json', './packages/*/tsconfig.json'],
+        project: [
+          './tsconfig.json',
+          './services/*/tsconfig.json',
+          './packages/*/tsconfig.json',
+          './services/*/src/scripts/tsconfig.json',
+        ],
       },
     },
   },
+  overrides: [
+    {
+      files: ['**/scripts/*.ts'],
+      rules: {
+        'node/shebang': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+      },
+      parserOptions: {
+        project: null,
+      },
+    },
+  ],
   ignorePatterns: ['dist', 'node_modules', 'android', 'ios', '*.js', '*.d.ts', 'coverage'],
 }

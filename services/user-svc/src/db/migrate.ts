@@ -35,25 +35,25 @@ interface MigrationMetadata {
 
 // Create migrations table if it doesn't exist
 async function ensureMigrationsTable(): Promise<void> {
-  await migrationSql`
-    CREATE TABLE IF NOT EXISTS ${sql.identifier(migrationConfig.migrationsTable)} (
+  await migrationSql.unsafe(`
+    CREATE TABLE IF NOT EXISTS ${migrationConfig.migrationsTable} (
       id SERIAL PRIMARY KEY,
       hash VARCHAR(255) NOT NULL,
       created_at BIGINT NOT NULL,
       applied_at TIMESTAMP DEFAULT NOW(),
       rolled_back_at TIMESTAMP NULL
     )
-  `
+  `)
 }
 
 // Get applied migrations
 async function getAppliedMigrations(): Promise<MigrationMetadata[]> {
-  const result = await migrationSql`
+  const result = await migrationSql.unsafe(`
     SELECT hash, created_at, applied_at, rolled_back_at 
-    FROM ${sql.identifier(migrationConfig.migrationsTable)}
+    FROM ${migrationConfig.migrationsTable}
     WHERE rolled_back_at IS NULL
     ORDER BY created_at ASC
-  `
+  `)
 
   return result.map((row: any) => ({
     id: row.hash,
@@ -90,13 +90,13 @@ export async function rollbackLastMigration(): Promise<void> {
     await ensureMigrationsTable()
 
     // Get the last applied migration
-    const lastMigration = await migrationSql`
+    const lastMigration = await migrationSql.unsafe(`
       SELECT hash, created_at 
-      FROM ${sql.identifier(migrationConfig.migrationsTable)}
+      FROM ${migrationConfig.migrationsTable}
       WHERE rolled_back_at IS NULL
       ORDER BY created_at DESC
       LIMIT 1
-    `
+    `)
 
     if (lastMigration.length === 0) {
       console.log('ℹ️ No migrations to rollback')
@@ -124,11 +124,11 @@ export async function rollbackLastMigration(): Promise<void> {
     await migrationSql.unsafe(rollbackSql)
 
     // Mark migration as rolled back
-    await migrationSql`
-      UPDATE ${sql.identifier(migrationConfig.migrationsTable)}
+    await migrationSql.unsafe(`
+      UPDATE ${migrationConfig.migrationsTable}
       SET rolled_back_at = NOW()
-      WHERE hash = ${migration.hash}
-    `
+      WHERE hash = '${migration.hash}'
+    `)
 
     console.log(`✅ Successfully rolled back migration: ${migration.hash}`)
   } catch (error) {

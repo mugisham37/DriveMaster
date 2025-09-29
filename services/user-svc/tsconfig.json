@@ -4,9 +4,21 @@
     "outDir": "dist",
     "rootDir": "src",
     "skipLibCheck": true,
-    "composite": false
+    "composite": false,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": false,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"],
-  "references": []
+  "exclude": ["dist", "node_modules"],
+  "references": [],
+  "ts-node": {
+    "esm": false,
+    "experimentalSpecifierResolution": "node"
+  }
 }

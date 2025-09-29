@@ -352,7 +352,7 @@ stats_users = postgres, drivemaster_admin
           END as lag_ms
       `)
 
-      const lagMs = result?.lag_ms || 0
+      const lagMs = Number(result?.lag_ms) || 0
       return lagMs <= maxLagMs
     } catch (error) {
       console.error('Error checking replica health:', error)
@@ -379,10 +379,10 @@ stats_users = postgres, drivemaster_admin
       `)
 
       return {
-        totalConnections: stats.total_connections || 0,
-        activeConnections: stats.active_connections || 0,
-        idleConnections: stats.idle_connections || 0,
-        waitingConnections: stats.waiting_connections || 0,
+        totalConnections: Number(stats?.total_connections) || 0,
+        activeConnections: Number(stats?.active_connections) || 0,
+        idleConnections: Number(stats?.idle_connections) || 0,
+        waitingConnections: Number(stats?.waiting_connections) || 0,
       }
     } catch (error) {
       console.error('Error getting connection pool stats:', error)
@@ -518,19 +518,19 @@ export class HealthMonitor {
       `)
 
       return {
-        totalQueries: queryStats?.total_queries || 0,
-        slowQueries: queryStats?.slow_queries || 0,
-        avgQueryTime: queryStats?.avg_query_time || 0,
-        maxQueryTime: queryStats?.max_query_time || 0,
-        cacheHitRatio: cacheStats?.cache_hit_ratio || 0,
-        totalIndexes: indexStats?.total_indexes || 0,
-        unusedIndexes: indexStats?.unused_indexes || 0,
-        avgIndexScans: indexStats?.avg_index_scans || 0,
-        totalInserts: tableStats?.total_inserts || 0,
-        totalUpdates: tableStats?.total_updates || 0,
-        totalDeletes: tableStats?.total_deletes || 0,
-        totalLiveTuples: tableStats?.total_live_tuples || 0,
-        totalDeadTuples: tableStats?.total_dead_tuples || 0,
+        totalQueries: Number(queryStats?.total_queries) || 0,
+        slowQueries: Number(queryStats?.slow_queries) || 0,
+        avgQueryTime: Number(queryStats?.avg_query_time) || 0,
+        maxQueryTime: Number(queryStats?.max_query_time) || 0,
+        cacheHitRatio: Number(cacheStats?.cache_hit_ratio) || 0,
+        totalIndexes: Number(indexStats?.total_indexes) || 0,
+        unusedIndexes: Number(indexStats?.unused_indexes) || 0,
+        avgIndexScans: Number(indexStats?.avg_index_scans) || 0,
+        totalInserts: Number(tableStats?.total_inserts) || 0,
+        totalUpdates: Number(tableStats?.total_updates) || 0,
+        totalDeletes: Number(tableStats?.total_deletes) || 0,
+        totalLiveTuples: Number(tableStats?.total_live_tuples) || 0,
+        totalDeadTuples: Number(tableStats?.total_dead_tuples) || 0,
       }
     } catch (error) {
       console.error('Error getting performance metrics:', error)

@@ -150,7 +150,7 @@ export class DatabaseMonitoring {
 
     const connectionUtilization =
       connections?.total_connections && maxConnections?.max_connections
-        ? (connections.total_connections / maxConnections.max_connections) * 100
+        ? (Number(connections.total_connections) / Number(maxConnections.max_connections)) * 100
         : 0
 
     return {
