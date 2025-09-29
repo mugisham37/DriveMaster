@@ -23,6 +23,7 @@
     "@tensorflow/tfjs-node": "^4.20.0",
     "@drivemaster/shared-config": "workspace:*",
     "@drivemaster/kafka-client": "workspace:*",
+    "@drivemaster/redis-client": "workspace:*",
     "@drivemaster/es-client": "workspace:*",
     "@drivemaster/telemetry": "workspace:*",
     "@drivemaster/contracts": "workspace:*"
