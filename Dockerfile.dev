@@ -1,0 +1,34 @@
+# Development Dockerfile for DriveMaster services
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm and development tools
+RUN npm install -g pnpm@9.0.0 tsx nodemon
+
+# Install system dependencies for development
+RUN apk add --no-cache git curl
+
+# Copy package files
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/*/package.json ./packages/*/
+COPY services/*/package.json ./services/*/
+
+# Install all dependencies (including dev dependencies)
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build shared packages
+RUN pnpm --filter "@drivemaster/shared-config" run build
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S drivemaster -u 1001 && \
+    chown -R drivemaster:nodejs /app
+
+USER drivemaster
+
+# Default command (can be overridden)
+CMD ["pnpm", "dev"]
