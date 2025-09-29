@@ -60,7 +60,7 @@
     - Write end-to-end tests for social feature workflows
     - _Requirements: 7.4, 7.6_
 
-- [-] 4. Adaptive Learning Engine Service Core Implementation
+- [x] 4. Adaptive Learning Engine Service Core Implementation
   - [x] 4.1 Implement Bayesian Knowledge Tracing algorithm
     - Create four-parameter BKT model with initial knowledge, learning rate, guess, and slip probabilities
     - Implement knowledge state updates with temporal decay factors for realistic forgetting
@@ -79,7 +79,7 @@
     - Write integration tests for bandit algorithm effectiveness and convergence
     - _Requirements: 2.2, 2.5, 2.7_
 
-  - [ ] 4.3 Develop personalized spaced repetition engine
+  - [x] 4.3 Develop personalized spaced repetition engine
     - Implement enhanced SuperMemo SM-2 algorithm with individual forgetting curves
     - Create optimal review timing calculation based on user availability patterns
     - Build concept interference modeling for similar concept interactions
