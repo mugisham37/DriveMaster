@@ -6,8 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@drivemaster/*": ["../../packages/*/src"]
-    }
+    },
+    "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "vitest.config.ts"]
 }
