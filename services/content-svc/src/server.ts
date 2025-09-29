@@ -7,6 +7,10 @@ import { db } from './db/connection.js'
 import { ContentService } from './services/content.service.js'
 import { ElasticsearchService } from './services/elasticsearch.service.js'
 import { ABTestingService } from './services/ab-testing.service.js'
+import { ContentDeliveryService } from './services/content-delivery.service.js'
+import { CDNService } from './services/cdn.service.js'
+import { OfflineSyncService } from './services/offline-sync.service.js'
+import { eq } from 'drizzle-orm'
 
 const app = Fastify({ logger: true })
 
@@ -24,6 +28,13 @@ const esService = process.env.ELASTICSEARCH_URL
     })
   : null
 const abTestingService = new ABTestingService()
+const contentDeliveryService = new ContentDeliveryService()
+const cdnService = new CDNService({
+  baseUrl: process.env.CDN_BASE_URL || 'https://cdn.drivemaster.com',
+  apiKey: process.env.CDN_API_KEY,
+  zoneId: process.env.CDN_ZONE_ID,
+})
+const offlineSyncService = new OfflineSyncService()
 
 // Initialize Elasticsearch if available
 if (esService) {
@@ -126,6 +137,48 @@ const ABTestSchema = z.object({
   targetUsers: z.array(z.string()).optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
+})
+
+const DeviceCapabilitiesSchema = z.object({
+  screenWidth: z.number().min(1),
+  screenHeight: z.number().min(1),
+  pixelDensity: z.number().min(0.5).max(4),
+  supportsWebP: z.boolean(),
+  supportsAVIF: z.boolean(),
+  supportsVideo: z.boolean(),
+  maxVideoResolution: z.enum(['480p', '720p', '1080p', '4k']),
+  connectionType: z.enum(['slow-2g', '2g', '3g', '4g', '5g', 'wifi']),
+  bandwidth: z.number().min(0),
+  isLowEndDevice: z.boolean(),
+  supportedCodecs: z.array(z.string()),
+})
+
+const NetworkConditionsSchema = z.object({
+  effectiveType: z.enum(['slow-2g', '2g', '3g', '4g']),
+  downlink: z.number().min(0),
+  rtt: z.number().min(0),
+  saveData: z.boolean(),
+})
+
+const ContentDeliveryOptionsSchema = z.object({
+  quality: z.enum(['low', 'medium', 'high', 'auto']).default('auto'),
+  format: z.enum(['webp', 'avif', 'jpeg', 'png', 'auto']).default('auto'),
+  maxWidth: z.number().optional(),
+  maxHeight: z.number().optional(),
+  progressive: z.boolean().default(true),
+  lazy: z.boolean().default(true),
+  preload: z.boolean().default(false),
+})
+
+const SyncOptionsSchema = z.object({
+  categories: z.array(z.string()).optional(),
+  concepts: z.array(z.string()).optional(),
+  maxSize: z.number().optional(),
+  priority: z.enum(['critical', 'high', 'medium', 'low']).default('medium'),
+  includeMedia: z.boolean().default(true),
+  compressionLevel: z.enum(['low', 'medium', 'high']).default('medium'),
+  networkConditions: NetworkConditionsSchema,
+  deviceCapabilities: DeviceCapabilitiesSchema,
 })
 
 // Middleware
@@ -676,6 +729,258 @@ app.post(
       reply.send({ success: true })
     } catch (error) {
       app.log.error(error, 'Track analytics error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Multimedia Content Delivery Endpoints
+app.post(
+  '/media/:mediaAssetId/optimize',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { mediaAssetId } = request.params
+      const { deviceCapabilities, networkConditions, options = {} } = request.body
+
+      const validatedDeviceCapabilities = DeviceCapabilitiesSchema.parse(deviceCapabilities)
+      const validatedNetworkConditions = NetworkConditionsSchema.parse(networkConditions)
+      const validatedOptions = ContentDeliveryOptionsSchema.parse(options)
+
+      const optimizedContent = await contentDeliveryService.getOptimizedContent(
+        mediaAssetId,
+        validatedDeviceCapabilities,
+        validatedNetworkConditions,
+        validatedOptions,
+      )
+
+      // Set appropriate cache headers
+      reply.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+      reply.header('ETag', `"${optimizedContent.cacheKey}"`)
+
+      reply.send(optimizedContent)
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return reply.code(400).send({ error: 'Validation error', details: error.errors })
+      }
+
+      if (error.message === 'Media asset not found') {
+        return reply.code(404).send({ error: error.message })
+      }
+
+      app.log.error(error, 'Optimize media error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.post(
+  '/media/:mediaAssetId/compress',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { mediaAssetId } = request.params
+      const { targetSize, deviceCapabilities } = request.body
+
+      const validatedDeviceCapabilities = DeviceCapabilitiesSchema.parse(deviceCapabilities)
+
+      const compressedContent = await contentDeliveryService.getCompressedContent(
+        mediaAssetId,
+        parseInt(targetSize),
+        validatedDeviceCapabilities,
+      )
+
+      reply.header('Cache-Control', 'public, max-age=3600')
+      reply.send(compressedContent)
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return reply.code(400).send({ error: 'Validation error', details: error.errors })
+      }
+
+      app.log.error(error, 'Compress media error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// CDN Management Endpoints
+app.post(
+  '/cdn/purge',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { urls, tags, hosts, prefixes } = request.body
+
+      const success = await cdnService.purgeCache({
+        urls,
+        tags,
+        hosts,
+        prefixes,
+      })
+
+      reply.send({ success })
+    } catch (error) {
+      app.log.error(error, 'CDN purge error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/cdn/analytics',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { startDate, endDate, granularity = 'day' } = request.query
+
+      const analytics = await cdnService.getCDNAnalytics(
+        new Date(startDate),
+        new Date(endDate),
+        granularity,
+      )
+
+      reply.send({ analytics })
+    } catch (error) {
+      app.log.error(error, 'CDN analytics error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get('/cdn/health', async (request, reply) => {
+  try {
+    const health = await cdnService.checkCDNHealth()
+    reply.send(health)
+  } catch (error) {
+    app.log.error(error, 'CDN health check error')
+    reply.code(500).send({ error: 'Internal server error' })
+  }
+})
+
+// Content Preloading and Offline Sync Endpoints
+app.post(
+  '/items/:itemId/preload-manifest',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { itemId } = request.params
+      const { deviceCapabilities, networkConditions } = request.body
+
+      const validatedDeviceCapabilities = DeviceCapabilitiesSchema.parse(deviceCapabilities)
+      const validatedNetworkConditions = NetworkConditionsSchema.parse(networkConditions)
+
+      const manifest = await contentDeliveryService.generatePreloadManifest(
+        itemId,
+        validatedDeviceCapabilities,
+        validatedNetworkConditions,
+      )
+
+      reply.header('Cache-Control', 'private, max-age=300')
+      reply.send(manifest)
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return reply.code(400).send({ error: 'Validation error', details: error.errors })
+      }
+
+      if (error.message === 'Item not found') {
+        return reply.code(404).send({ error: error.message })
+      }
+
+      app.log.error(error, 'Generate preload manifest error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.post(
+  '/sync/manifest',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const syncOptions = SyncOptionsSchema.parse(request.body)
+
+      const manifest = await offlineSyncService.generateSyncManifest(syncOptions)
+
+      reply.header('Cache-Control', 'private, max-age=300')
+      reply.send(manifest)
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return reply.code(400).send({ error: 'Validation error', details: error.errors })
+      }
+
+      app.log.error(error, 'Generate sync manifest error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.post(
+  '/sync/validate',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { offlineContent } = request.body
+
+      const validation = await offlineSyncService.validateOfflineContent(offlineContent)
+
+      reply.send(validation)
+    } catch (error) {
+      app.log.error(error, 'Validate offline content error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Responsive Image Generation
+app.get(
+  '/media/:mediaAssetId/responsive',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { mediaAssetId } = request.params
+      const {
+        breakpoints = '320,640,768,1024,1280,1920',
+        format = 'auto',
+        quality = 80,
+      } = request.query
+
+      const breakpointArray = breakpoints.split(',').map(Number)
+
+      // Get media asset
+      const mediaAsset = await db.query.mediaAssets.findFirst({
+        where: eq(mediaAssets.id, mediaAssetId),
+      })
+
+      if (!mediaAsset) {
+        return reply.code(404).send({ error: 'Media asset not found' })
+      }
+
+      const responsiveSet = cdnService.generateResponsiveImageSet(
+        mediaAsset.cdnUrl || mediaAsset.storageUrl,
+        breakpointArray,
+        { format: format as any, quality: parseInt(quality) },
+      )
+
+      reply.header('Cache-Control', 'public, max-age=86400')
+      reply.send({ responsiveSet })
+    } catch (error) {
+      app.log.error(error, 'Generate responsive images error')
       reply.code(500).send({ error: 'Internal server error' })
     }
   },
