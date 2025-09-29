@@ -60,8 +60,8 @@
     - Write end-to-end tests for social feature workflows
     - _Requirements: 7.4, 7.6_
 
-- [ ] 4. Adaptive Learning Engine Service Core Implementation
-  - [ ] 4.1 Implement Bayesian Knowledge Tracing algorithm
+- [-] 4. Adaptive Learning Engine Service Core Implementation
+  - [x] 4.1 Implement Bayesian Knowledge Tracing algorithm
     - Create four-parameter BKT model with initial knowledge, learning rate, guess, and slip probabilities
     - Implement knowledge state updates with temporal decay factors for realistic forgetting
     - Build concept dependency mapping with prerequisite relationship handling
