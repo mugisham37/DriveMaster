@@ -244,6 +244,70 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
               format: 'date',
               description: 'User date of birth (YYYY-MM-DD)',
             },
+            cognitivePatterns: {
+              type: 'object',
+              description: 'Initial cognitive learning patterns',
+              properties: {
+                learningStyle: {
+                  type: 'string',
+                  enum: ['visual', 'auditory', 'kinesthetic', 'mixed'],
+                },
+                processingSpeed: {
+                  type: 'number',
+                  minimum: 0.1,
+                  maximum: 2.0,
+                },
+                attentionSpan: {
+                  type: 'number',
+                  minimum: 5,
+                  maximum: 120,
+                },
+                preferredSessionLength: {
+                  type: 'number',
+                  minimum: 10,
+                  maximum: 180,
+                },
+                optimalTimeOfDay: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    enum: ['morning', 'afternoon', 'evening', 'night'],
+                  },
+                },
+                difficultyPreference: {
+                  type: 'string',
+                  enum: ['gradual', 'challenging', 'mixed'],
+                },
+                feedbackPreference: {
+                  type: 'string',
+                  enum: ['immediate', 'delayed', 'summary'],
+                },
+              },
+            },
+            learningPreferences: {
+              type: 'object',
+              description: 'User learning preferences and settings',
+              properties: {
+                enableNotifications: { type: 'boolean' },
+                notificationFrequency: {
+                  type: 'string',
+                  enum: ['low', 'medium', 'high'],
+                },
+                studyReminders: { type: 'boolean' },
+                socialFeatures: { type: 'boolean' },
+                gamificationEnabled: { type: 'boolean' },
+                preferredLanguage: { type: 'string' },
+                accessibilityOptions: {
+                  type: 'object',
+                  properties: {
+                    highContrast: { type: 'boolean' },
+                    largeText: { type: 'boolean' },
+                    screenReader: { type: 'boolean' },
+                    reducedMotion: { type: 'boolean' },
+                  },
+                },
+              },
+            },
           },
         },
         response: {

@@ -26,6 +26,8 @@ export interface RegisterData {
   firstName?: string
   lastName?: string
   dateOfBirth?: Date
+  cognitivePatterns?: Partial<CognitivePatterns>
+  learningPreferences?: Partial<LearningPreferences>
 }
 
 export interface AuthResult {
@@ -180,7 +182,15 @@ export class AuthService {
    * Register new user
    */
   static async register(userData: RegisterData): Promise<AuthResult> {
-    const { email, password, firstName, lastName, dateOfBirth } = userData
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      dateOfBirth,
+      cognitivePatterns,
+      learningPreferences,
+    } = userData
 
     // Check if user already exists
     const [existingUser] = await readDb
@@ -212,6 +222,27 @@ export class AuthService {
       },
     }
 
+    // Merge provided learning preferences with defaults
+    const finalLearningPreferences = learningPreferences
+      ? { ...defaultLearningPreferences, ...learningPreferences }
+      : defaultLearningPreferences
+
+    // Default cognitive patterns (will be updated through ML analysis)
+    const defaultCognitivePatterns: Partial<CognitivePatterns> = {
+      learningStyle: 'mixed',
+      processingSpeed: 1.0,
+      attentionSpan: 20,
+      preferredSessionLength: 25,
+      optimalTimeOfDay: ['morning', 'evening'],
+      difficultyPreference: 'gradual',
+      feedbackPreference: 'immediate',
+    }
+
+    // Merge provided cognitive patterns with defaults
+    const finalCognitivePatterns = cognitivePatterns
+      ? { ...defaultCognitivePatterns, ...cognitivePatterns }
+      : defaultCognitivePatterns
+
     // Create user
     const [newUser] = await db
       .insert(users)
@@ -221,7 +252,8 @@ export class AuthService {
         firstName,
         lastName,
         dateOfBirth,
-        learningPreferences: defaultLearningPreferences,
+        cognitivePatterns: finalCognitivePatterns as CognitivePatterns,
+        learningPreferences: finalLearningPreferences,
         emailVerified: false,
         isActive: true,
       })
@@ -246,6 +278,7 @@ export class AuthService {
         firstName: newUser.firstName || undefined,
         lastName: newUser.lastName || undefined,
         createdAt: newUser.createdAt!,
+        cognitivePatterns: newUser.cognitivePatterns || undefined,
         learningPreferences: newUser.learningPreferences || undefined,
       },
     }
