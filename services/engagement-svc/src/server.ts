@@ -5,7 +5,9 @@ import { initTelemetry } from '@drivemaster/telemetry'
 import { loadEnv } from '@drivemaster/shared-config'
 import { createRedis } from '@drivemaster/redis-client'
 import { NotificationService } from './services/notification-service.js'
+import { GamificationService } from './services/gamification-service.js'
 import { notificationRoutes } from './routes/notifications.js'
+import { gamificationRoutes } from './routes/gamification.js'
 
 initTelemetry()
 const env = loadEnv()
@@ -14,12 +16,14 @@ const app = Fastify({ logger: true })
 // Initialize Redis connection
 const redis = createRedis(env.REDIS_URL || 'redis://localhost:6379')
 
-// Initialize notification service
+// Initialize services
 const notificationService = new NotificationService(redis)
+const gamificationService = new GamificationService(redis)
 
 // Register services as decorators
 app.decorate('redis', redis)
 app.decorate('notificationService', notificationService)
+app.decorate('gamificationService', gamificationService)
 
 // Socket.io setup
 const server = app.server
@@ -95,6 +99,7 @@ io.on('connection', (socket) => {
 
 // Register routes
 await app.register(notificationRoutes)
+await app.register(gamificationRoutes)
 
 // Health check endpoint
 app.get('/health', async () => ({
