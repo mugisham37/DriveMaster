@@ -697,7 +697,7 @@ export class PredictiveAnalyticsEngine {
   private generateOptimizationReasoning(
     features: UserFeatures,
     patterns: BehaviorPattern[],
-    masteryStates: any[],
+    masteryStates: unknown[],
   ): string[] {
     return []
   }

@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import websocket from '@fastify/websocket'
 import { PrismaClient } from '@prisma/client'
 import { Registry, collectDefaultMetrics, Counter, Histogram, Gauge } from 'prom-client'
 import { initTelemetry } from '@drivemaster/telemetry'
@@ -13,6 +14,9 @@ import { randomUUID } from 'crypto'
 import { AnalyticsEventProcessor } from './event-processor'
 import { PredictiveAnalyticsEngine, PredictiveAnalyticsConfig } from './predictive-analytics'
 import { InterventionSystem, InterventionConfig } from './intervention-system'
+import { DashboardService, DashboardConfig } from './dashboard-service'
+import { WebSocketHandler, WebSocketHandlerConfig } from './websocket-handler'
+import { ReportingSystem, ReportingConfig } from './reporting-system'
 
 initTelemetry('analytics-svc')
 const env = loadEnv()
@@ -67,6 +71,66 @@ if (env.REDIS_URL) {
 
   predictiveEngine = new PredictiveAnalyticsEngine(prisma, predictiveConfig)
   interventionSystem = new InterventionSystem(prisma, interventionConfig)
+}
+
+// Initialize dashboard service
+let dashboardService: DashboardService | null = null
+let webSocketHandler: WebSocketHandler | null = null
+let reportingSystem: ReportingSystem | null = null
+
+if (env.REDIS_URL) {
+  const dashboardConfig: DashboardConfig = {
+    redisUrl: env.REDIS_URL,
+    refreshIntervalMs: parseInt(env.DASHBOARD_REFRESH_INTERVAL_MS || '30000'),
+    alertThresholds: {
+      responseTime: parseFloat(env.ALERT_RESPONSE_TIME_THRESHOLD || '200'),
+      errorRate: parseFloat(env.ALERT_ERROR_RATE_THRESHOLD || '0.01'),
+      activeUsers: parseInt(env.ALERT_ACTIVE_USERS_THRESHOLD || '100'),
+      systemLoad: parseFloat(env.ALERT_SYSTEM_LOAD_THRESHOLD || '80'),
+    },
+    reportingSchedule: {
+      hourly: env.HOURLY_REPORT_SCHEDULE || '0 * * * *',
+      daily: env.DAILY_REPORT_SCHEDULE || '0 6 * * *',
+      weekly: env.WEEKLY_REPORT_SCHEDULE || '0 6 * * 1',
+      monthly: env.MONTHLY_REPORT_SCHEDULE || '0 6 1 * *',
+    },
+  }
+
+  const webSocketConfig: WebSocketHandlerConfig = {
+    maxConnections: parseInt(env.MAX_WEBSOCKET_CONNECTIONS || '1000'),
+    heartbeatInterval: parseInt(env.WEBSOCKET_HEARTBEAT_INTERVAL || '30000'),
+    connectionTimeout: parseInt(env.WEBSOCKET_CONNECTION_TIMEOUT || '60000'),
+  }
+
+  const reportingConfig: ReportingConfig = {
+    redisUrl: env.REDIS_URL,
+    reportRetentionDays: parseInt(env.REPORT_RETENTION_DAYS || '90'),
+    maxReportSize: parseInt(env.MAX_REPORT_SIZE || '10485760'), // 10MB
+    emailNotifications: {
+      enabled: env.EMAIL_NOTIFICATIONS_ENABLED === 'true',
+      recipients: env.EMAIL_NOTIFICATION_RECIPIENTS?.split(',') || [],
+    },
+    schedules: {
+      hourly: env.HOURLY_REPORT_SCHEDULE || '0 * * * *',
+      daily: env.DAILY_REPORT_SCHEDULE || '0 6 * * *',
+      weekly: env.WEEKLY_REPORT_SCHEDULE || '0 6 * * 1',
+      monthly: env.MONTHLY_REPORT_SCHEDULE || '0 6 1 * *',
+    },
+  }
+
+  dashboardService = new DashboardService(prisma, dashboardConfig, registry)
+  webSocketHandler = new WebSocketHandler(dashboardService, webSocketConfig)
+  reportingSystem = new ReportingSystem(prisma, reportingConfig, registry)
+
+  // Register WebSocket routes
+  webSocketHandler.registerRoutes(app)
+
+  // Start threshold checking for alerts
+  setInterval(async () => {
+    if (dashboardService) {
+      await dashboardService.checkThresholds()
+    }
+  }, 60000) // Check every minute
 }
 
 // Prometheus metrics setup
@@ -148,6 +212,7 @@ const PredictionRequestSchema = z.object({
 // Middleware
 await app.register(cors, { origin: true, credentials: true })
 await app.register(jwt, { secret: env.JWT_SECRET || 'change_me' })
+await app.register(websocket)
 
 // Auth middleware
 async function authenticate(request: any, reply: any) {
@@ -1462,12 +1527,244 @@ app.get(
   },
 )
 
+// Dashboard API endpoints
+app.get(
+  '/dashboard/user/:userId/progress',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      if (!dashboardService) {
+        return reply.code(503).send({ error: 'Dashboard service not available' })
+      }
+
+      const { userId } = request.params
+      const progressData = await dashboardService.getUserProgressData(userId)
+      reply.send(progressData)
+    } catch (error) {
+      app.log.error(error, 'User progress dashboard error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/dashboard/system/performance',
+  {
+    preHandler: [authenticate],
+  },
+  async (request, reply) => {
+    try {
+      if (!dashboardService) {
+        return reply.code(503).send({ error: 'Dashboard service not available' })
+      }
+
+      const performanceData = await dashboardService.getSystemPerformanceData()
+      reply.send(performanceData)
+    } catch (error) {
+      app.log.error(error, 'System performance dashboard error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/dashboard/business/kpis',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request, reply) => {
+    try {
+      if (!dashboardService) {
+        return reply.code(503).send({ error: 'Dashboard service not available' })
+      }
+
+      const kpiData = await dashboardService.getBusinessKPIData()
+      reply.send(kpiData)
+    } catch (error) {
+      app.log.error(error, 'Business KPIs dashboard error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/dashboard/alerts',
+  {
+    preHandler: [authenticate],
+  },
+  async (request, reply) => {
+    try {
+      if (!dashboardService) {
+        return reply.code(503).send({ error: 'Dashboard service not available' })
+      }
+
+      const alertsData = await dashboardService.getAlertsData()
+      reply.send(alertsData)
+    } catch (error) {
+      app.log.error(error, 'Alerts dashboard error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Reporting API endpoints
+app.post(
+  '/reports/generate',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      if (!reportingSystem) {
+        return reply.code(503).send({ error: 'Reporting system not available' })
+      }
+
+      const { reportType, period, startTime, endTime, filters, format } = request.body
+
+      const start = startTime ? new Date(startTime) : new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const end = endTime ? new Date(endTime) : new Date()
+
+      let report: any
+
+      switch (reportType) {
+        case 'performance':
+          report = await reportingSystem.generatePerformanceReport(period, start, end, filters)
+          break
+        case 'user_engagement':
+          report = await reportingSystem.generateUserEngagementReport(period, start, end, filters)
+          break
+        case 'learning_outcomes':
+          report = await reportingSystem.generateLearningOutcomesReport(period, start, end, filters)
+          break
+        case 'business_metrics':
+          report = await reportingSystem.generateBusinessMetricsReport(period, start, end, filters)
+          break
+        default:
+          return reply.code(400).send({ error: 'Invalid report type' })
+      }
+
+      const reportId = await reportingSystem.storeReport(reportType, period, report, format || 'json')
+
+      reply.send({
+        reportId,
+        reportType,
+        period,
+        status: 'completed',
+        data: report,
+      })
+    } catch (error) {
+      app.log.error(error, 'Report generation error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/reports/:reportId',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      if (!reportingSystem) {
+        return reply.code(503).send({ error: 'Reporting system not available' })
+      }
+
+      const { reportId } = request.params
+      const report = await reportingSystem.getReport(reportId)
+      reply.send(report)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Report not found') {
+        return reply.code(404).send({ error: 'Report not found' })
+      }
+      app.log.error(error, 'Report retrieval error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.get(
+  '/reports',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      if (!reportingSystem) {
+        return reply.code(503).send({ error: 'Reporting system not available' })
+      }
+
+      const { reportType, period, limit = 50, offset = 0 } = request.query
+      const reports = await reportingSystem.listReports(reportType, period, parseInt(limit), parseInt(offset))
+      reply.send({ reports })
+    } catch (error) {
+      app.log.error(error, 'Report listing error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+app.post(
+  '/reports/schedule',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      if (!reportingSystem) {
+        return reply.code(503).send({ error: 'Reporting system not available' })
+      }
+
+      const { reportType, period, cronExpression, config } = request.body
+      const scheduleId = await reportingSystem.scheduleReport(reportType, period, cronExpression, config)
+
+      reply.send({
+        scheduleId,
+        reportType,
+        period,
+        cronExpression,
+        status: 'scheduled',
+      })
+    } catch (error) {
+      app.log.error(error, 'Report scheduling error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// WebSocket connection statistics
+app.get(
+  '/websocket/stats',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request, reply) => {
+    try {
+      if (!webSocketHandler) {
+        return reply.code(503).send({ error: 'WebSocket handler not available' })
+      }
+
+      const stats = webSocketHandler.getConnectionStats()
+      reply.send(stats)
+    } catch (error) {
+      app.log.error(error, 'WebSocket stats error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
 // Graceful shutdown
 process.on('SIGINT', async () => {
   app.log.info('Shutting down gracefully...')
 
   if (eventProcessor) {
     await eventProcessor.stopProcessing()
+  }
+
+  if (webSocketHandler) {
+    webSocketHandler.closeAllConnections()
   }
 
   await prisma.$disconnect()

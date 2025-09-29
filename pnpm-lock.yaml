@@ -358,18 +358,27 @@ importers:
       '@fastify/jwt':
         specifier: ^7.2.4
         version: 7.2.4
+      '@fastify/websocket':
+        specifier: ^10.0.1
+        version: 10.0.1
       '@prisma/client':
         specifier: ^5.7.1
         version: 5.22.0(prisma@5.22.0)
       fastify:
         specifier: ^4.28.1
         version: 4.29.1
+      node-cron:
+        specifier: ^3.0.3
+        version: 3.0.3
       pino:
         specifier: ^9.5.0
         version: 9.12.0
       prom-client:
         specifier: ^15.1.3
         version: 15.1.3
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.3
       zod:
         specifier: ^3.22.4
         version: 3.25.76
@@ -377,6 +386,12 @@ importers:
       '@types/node':
         specifier: ^20.14.12
         version: 20.19.17
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.18.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2)
@@ -404,21 +419,6 @@ importers:
 
   services/content-svc:
     dependencies:
-      '@drivemaster/es-client':
-        specifier: workspace:*
-        version: link:../../packages/es-client
-      '@drivemaster/kafka-client':
-        specifier: workspace:*
-        version: link:../../packages/kafka-client
-      '@drivemaster/redis-client':
-        specifier: workspace:*
-        version: link:../../packages/redis-client
-      '@drivemaster/shared-config':
-        specifier: workspace:*
-        version: link:../../packages/shared-config
-      '@drivemaster/telemetry':
-        specifier: workspace:*
-        version: link:../../packages/telemetry
       '@elastic/elasticsearch':
         specifier: ^8.15.0
         version: 8.19.1
@@ -431,15 +431,18 @@ importers:
       '@fastify/multipart':
         specifier: ^8.3.0
         version: 8.3.1
-      '@prisma/client':
-        specifier: ^5.20.0
-        version: 5.22.0(prisma@5.22.0)
+      drizzle-orm:
+        specifier: ^0.33.0
+        version: 0.33.0(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/pg@8.6.1)(@types/react@18.3.24)(expo-sqlite@14.0.6(expo@50.0.21(@babel/core@7.28.4)(@react-native/babel-preset@0.73.21(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4)))(react-native@0.73.0(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4))(react@18.3.1))(react@18.3.1)))(postgres@3.4.7)(prisma@5.22.0)(react@18.3.1)
       fastify:
         specifier: ^4.28.1
         version: 4.29.1
       pino:
         specifier: ^9.5.0
         version: 9.12.0
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.7
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
@@ -456,15 +459,15 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.2)
+      drizzle-kit:
+        specifier: ^0.24.0
+        version: 0.24.2
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
       prettier:
         specifier: ^3.3.3
         version: 3.6.2
-      prisma:
-        specifier: ^5.20.0
-        version: 5.22.0
       tsx:
         specifier: ^4.19.1
         version: 4.20.6
@@ -1367,6 +1370,9 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
+  '@drizzle-team/brocli@0.10.2':
+    resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
   '@elastic/elasticsearch@8.19.1':
     resolution: {integrity: sha512-+1j9NnQVOX+lbWB8LhCM7IkUmjU05Y4+BmSLfusq0msCsQb1Va+OUKFCoOXjCJqQrcgdRdQCjYYyolQ/npQALQ==}
     engines: {node: '>=18'}
@@ -2116,6 +2122,9 @@ packages:
 
   '@fastify/swagger@8.15.0':
     resolution: {integrity: sha512-zy+HEEKFqPMS2sFUsQU5X0MHplhKJvWeohBwTCkBAJA/GDYGLGUWQaETEhptiqxK7Hs0fQB9B4MDb3pbwIiCwA==}
+
+  '@fastify/websocket@10.0.1':
+    resolution: {integrity: sha512-8/pQIxTPRD8U94aILTeJ+2O3el/r19+Ej5z1O1mXlqplsUH7KzCjAI0sgd5DM/NoPjAi5qLFNIjgM5+9/rGSNw==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -3444,6 +3453,9 @@ packages:
   '@types/mysql@2.15.22':
     resolution: {integrity: sha512-wK1pzsJVVAjYCSZWQoWHziQZbNggXFDUEIGf54g4ZM/ERuP86uGdWeKZWMYlqTPMZfHJJvLPyogXGvCOg87yLQ==}
 
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
+
   '@types/node-fetch@2.6.13':
     resolution: {integrity: sha512-QGpRVpzSaUs30JBSGPjOg4Uveu384erbHBoT1zeONvyCfwQxIkUshLAOqN/k9EjGviPRmWTTe6aH2qySWKTVSw==}
 
@@ -3489,6 +3501,9 @@ packages:
 
   '@types/tedious@4.0.14':
     resolution: {integrity: sha512-KHPsfX/FoVbUGbyYvk1q9MMQHLPeRZhRJZdO45Q4YjvFkv4hMNghCWTvy7rdKessBsmtz4euWCWAB6/tVpI1Iw==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -4576,6 +4591,10 @@ packages:
     resolution: {integrity: sha512-fLTwcnLqtBxGd+51H/dEm9TC0FW6+cIX/RVPyNcitBO77X9+nkogEfMAJebpd/8Yl4KucmePHRYRWWvUlW0rqg==}
     hasBin: true
 
+  drizzle-kit@0.24.2:
+    resolution: {integrity: sha512-nXOaTSFiuIaTMhS8WJC2d4EBeIcN9OSt2A2cyFbQYBAZbi7lRsVGJNqDpEwPqYfJz38yxbY/UtbvBBahBfnExQ==}
+    hasBin: true
+
   drizzle-orm@0.29.5:
     resolution: {integrity: sha512-jS3+uyzTz4P0Y2CICx8FmRQ1eplURPaIMWDn/yq6k4ShRFj9V7vlJk67lSf2kyYPzQ60GkkNGXcJcwrxZ6QCRw==}
     peerDependencies:
@@ -4647,9 +4666,101 @@ packages:
       sqlite3:
         optional: true
 
+  drizzle-orm@0.33.0:
+    resolution: {integrity: sha512-SHy72R2Rdkz0LEq0PSG/IdvnT3nGiWuRk+2tXZQ90GVq/XQhpCzu/EFT3V2rox+w8MlkBQxifF8pCStNYnERfA==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@cloudflare/workers-types': '>=3'
+      '@electric-sql/pglite': '>=0.1.1'
+      '@libsql/client': '*'
+      '@neondatabase/serverless': '>=0.1'
+      '@op-engineering/op-sqlite': '>=2'
+      '@opentelemetry/api': ^1.4.1
+      '@planetscale/database': '>=1'
+      '@prisma/client': '*'
+      '@tidbcloud/serverless': '*'
+      '@types/better-sqlite3': '*'
+      '@types/pg': '*'
+      '@types/react': '>=18'
+      '@types/sql.js': '*'
+      '@vercel/postgres': '>=0.8.0'
+      '@xata.io/client': '*'
+      better-sqlite3: '>=7'
+      bun-types: '*'
+      expo-sqlite: '>=13.2.0'
+      knex: '*'
+      kysely: '*'
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      prisma: '*'
+      react: '>=18'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@electric-sql/pglite':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@op-engineering/op-sqlite':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@tidbcloud/serverless':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/react':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      '@xata.io/client':
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      expo-sqlite:
+        optional: true
+      knex:
+        optional: true
+      kysely:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      prisma:
+        optional: true
+      react:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
+
+  duplexify@4.1.3:
+    resolution: {integrity: sha512-M3BmBhwJRZsSx38lZyhE53Csddgzl5R7xGJNk7CVddZD6CcmwMCH8J+7AprIrQKH7TonKxaCjcv27Qmf+sQ+oA==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -6567,6 +6678,10 @@ packages:
   node-addon-api@5.1.0:
     resolution: {integrity: sha512-eh0GgfEkpnoWDq+VY8OyvYhFEzBk6jIYbRKdIlyTiAXIVJ8PyBaKb0rp7oDtoddbdoHWhq8wwr+XZ81F1rpNdA==}
 
+  node-cron@3.0.3:
+    resolution: {integrity: sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A==}
+    engines: {node: '>=6.0.0'}
+
   node-dir@0.1.17:
     resolution: {integrity: sha512-tmPX422rYgofd4epzrNoOXiE8XFZYOcCq1vD7MAXCDO+O+zndlA2ztdKKMa+EeuBG5tHETpr4ml4RGgpqDCCAg==}
     engines: {node: '>= 0.10.5'}
@@ -7610,6 +7725,9 @@ packages:
   stream-buffers@2.2.0:
     resolution: {integrity: sha512-uyQK/mx5QjHun80FLJTfaWE7JtwfRMKBLkMne6udYOmvH0CawotVa7TfgYHzAnpphn4+TweIx1QKMnRIbipmUg==}
     engines: {node: '>= 0.10.0'}
+
+  stream-shift@1.0.3:
+    resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
 
   stream-wormhole@1.1.0:
     resolution: {integrity: sha512-gHFfL3px0Kctd6Po0M8TzEvt3De/xu6cnRrjlfYNhwbhLPLwigI2t1nc6jrzNuaYg5C4YF78PPFuQPzRiqn9ew==}
@@ -9357,6 +9475,8 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
+  '@drizzle-team/brocli@0.10.2': {}
+
   '@elastic/elasticsearch@8.19.1':
     dependencies:
       '@elastic/transport': 8.10.0
@@ -10103,6 +10223,15 @@ snapshots:
       yaml: 2.8.1
     transitivePeerDependencies:
       - supports-color
+
+  '@fastify/websocket@10.0.1':
+    dependencies:
+      duplexify: 4.1.3
+      fastify-plugin: 4.5.1
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@gar/promisify@1.1.3': {}
 
@@ -12054,6 +12183,8 @@ snapshots:
     dependencies:
       '@types/node': 20.19.17
 
+  '@types/node-cron@3.0.11': {}
+
   '@types/node-fetch@2.6.13':
     dependencies:
       '@types/node': 20.19.17
@@ -12109,6 +12240,10 @@ snapshots:
   '@types/stack-utils@2.0.3': {}
 
   '@types/tedious@4.0.14':
+    dependencies:
+      '@types/node': 20.19.17
+
+  '@types/ws@8.18.1':
     dependencies:
       '@types/node': 20.19.17
 
@@ -13359,6 +13494,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  drizzle-kit@0.24.2:
+    dependencies:
+      '@drizzle-team/brocli': 0.10.2
+      '@esbuild-kit/esm-loader': 2.6.5
+      esbuild: 0.19.12
+      esbuild-register: 3.6.0(esbuild@0.19.12)
+    transitivePeerDependencies:
+      - supports-color
+
   drizzle-orm@0.29.5(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@18.3.24)(expo-sqlite@14.0.6(expo@50.0.21(@babel/core@7.28.4)(@react-native/babel-preset@0.73.21(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4)))(react-native@0.73.0(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4))(react@18.3.1))(react@18.3.1)))(postgres@3.4.7)(react@18.3.1):
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
@@ -13368,11 +13512,29 @@ snapshots:
       postgres: 3.4.7
       react: 18.3.1
 
+  drizzle-orm@0.33.0(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0(prisma@5.22.0))(@types/pg@8.6.1)(@types/react@18.3.24)(expo-sqlite@14.0.6(expo@50.0.21(@babel/core@7.28.4)(@react-native/babel-preset@0.73.21(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4)))(react-native@0.73.0(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4))(react@18.3.1))(react@18.3.1)))(postgres@3.4.7)(prisma@5.22.0)(react@18.3.1):
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      '@prisma/client': 5.22.0(prisma@5.22.0)
+      '@types/pg': 8.6.1
+      '@types/react': 18.3.24
+      expo-sqlite: 14.0.6(expo@50.0.21(@babel/core@7.28.4)(@react-native/babel-preset@0.73.21(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4)))(react-native@0.73.0(@babel/core@7.28.4)(@babel/preset-env@7.28.3(@babel/core@7.28.4))(react@18.3.1))(react@18.3.1))
+      postgres: 3.4.7
+      prisma: 5.22.0
+      react: 18.3.1
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
       es-errors: 1.3.0
       gopd: 1.2.0
+
+  duplexify@4.1.3:
+    dependencies:
+      end-of-stream: 1.4.5
+      inherits: 2.0.4
+      readable-stream: 3.6.2
+      stream-shift: 1.0.3
 
   eastasianwidth@0.2.0: {}
 
@@ -15949,6 +16111,10 @@ snapshots:
 
   node-addon-api@5.1.0: {}
 
+  node-cron@3.0.3:
+    dependencies:
+      uuid: 8.3.2
+
   node-dir@0.1.17:
     dependencies:
       minimatch: 3.1.2
@@ -17116,6 +17282,8 @@ snapshots:
       internal-slot: 1.1.0
 
   stream-buffers@2.2.0: {}
+
+  stream-shift@1.0.3: {}
 
   stream-wormhole@1.1.0: {}
 
