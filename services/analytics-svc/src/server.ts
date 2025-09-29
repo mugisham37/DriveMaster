@@ -11,6 +11,8 @@ import { createEsClient } from '@drivemaster/es-client'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { AnalyticsEventProcessor } from './event-processor'
+import { PredictiveAnalyticsEngine, PredictiveAnalyticsConfig } from './predictive-analytics'
+import { InterventionSystem, InterventionConfig } from './intervention-system'
 
 initTelemetry('analytics-svc')
 const env = loadEnv()
@@ -33,6 +35,38 @@ if (env.KAFKA_BROKERS && env.REDIS_URL) {
     },
     prisma,
   )
+}
+
+// Initialize predictive analytics engine
+let predictiveEngine: PredictiveAnalyticsEngine | null = null
+let interventionSystem: InterventionSystem | null = null
+
+if (env.REDIS_URL) {
+  const predictiveConfig: PredictiveAnalyticsConfig = {
+    redisUrl: env.REDIS_URL,
+    modelUpdateIntervalMs: parseInt(env.MODEL_UPDATE_INTERVAL_MS || '3600000'),
+    predictionCacheTimeMs: parseInt(env.PREDICTION_CACHE_TIME_MS || '1800000'),
+    interventionThresholds: {
+      dropoutRisk: parseFloat(env.DROPOUT_RISK_THRESHOLD || '0.7'),
+      engagementRisk: parseFloat(env.ENGAGEMENT_RISK_THRESHOLD || '0.6'),
+      performanceDecline: parseFloat(env.PERFORMANCE_DECLINE_THRESHOLD || '0.5'),
+    },
+  }
+
+  const interventionConfig: InterventionConfig = {
+    redisUrl: env.REDIS_URL,
+    interventionCooldownMs: parseInt(env.INTERVENTION_COOLDOWN_MS || '3600000'),
+    maxInterventionsPerDay: parseInt(env.MAX_INTERVENTIONS_PER_DAY || '3'),
+    escalationThresholds: {
+      low: parseFloat(env.ESCALATION_LOW_THRESHOLD || '0.3'),
+      medium: parseFloat(env.ESCALATION_MEDIUM_THRESHOLD || '0.5'),
+      high: parseFloat(env.ESCALATION_HIGH_THRESHOLD || '0.7'),
+      critical: parseFloat(env.ESCALATION_CRITICAL_THRESHOLD || '0.9'),
+    },
+  }
+
+  predictiveEngine = new PredictiveAnalyticsEngine(prisma, predictiveConfig)
+  interventionSystem = new InterventionSystem(prisma, interventionConfig)
 }
 
 // Prometheus metrics setup
@@ -983,6 +1017,300 @@ app.get(
       }
 
       // Update view count
+      await prisma.dashboard.update({
+        where: { slug },
+        data: { 
+          viewCount: { increment: 1 },
+          lastViewed: new Date()
+        }
+      })
+
+      reply.send(dashboard)
+    } catch (error) {
+      app.log.error(error, 'Dashboard retrieval error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Predictive Analytics Endpoints
+
+// Dropout risk prediction
+app.get(
+  '/users/:userId/dropout-risk',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userId } = request.params
+
+      if (!predictiveEngine) {
+        return reply.code(503).send({ error: 'Predictive analytics service unavailable' })
+      }
+
+      const prediction = await predictiveEngine.predictDropoutRisk(userId)
+      
+      reply.send({
+        userId,
+        dropoutRisk: prediction.prediction,
+        confidence: prediction.confidence,
+        interventionRecommended: prediction.interventionRecommended,
+        explanation: prediction.explanation,
+        timestamp: prediction.timestamp
+      })
+    } catch (error) {
+      app.log.error(error, 'Dropout risk prediction error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Behavioral pattern identification
+app.get(
+  '/users/:userId/behavior-patterns',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userId } = request.params
+
+      if (!predictiveEngine) {
+        return reply.code(503).send({ error: 'Predictive analytics service unavailable' })
+      }
+
+      const patterns = await predictiveEngine.identifyLearningPatterns(userId)
+      
+      reply.send({
+        userId,
+        patterns: patterns.map(p => ({
+          patternType: p.patternType,
+          name: p.pattern.name,
+          description: p.pattern.description,
+          characteristics: p.pattern.characteristics,
+          recommendations: p.pattern.recommendations,
+          confidence: p.confidence,
+          detectedAt: p.detectedAt
+        }))
+      })
+    } catch (error) {
+      app.log.error(error, 'Behavior pattern identification error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Engagement scoring and trend analysis
+app.get(
+  '/users/:userId/engagement-analysis',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userId } = request.params
+
+      if (!predictiveEngine) {
+        return reply.code(503).send({ error: 'Predictive analytics service unavailable' })
+      }
+
+      const engagementAnalysis = await predictiveEngine.calculateEngagementScore(userId)
+      
+      reply.send({
+        userId,
+        ...engagementAnalysis,
+        timestamp: new Date()
+      })
+    } catch (error) {
+      app.log.error(error, 'Engagement analysis error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Learning path optimization
+app.get(
+  '/users/:userId/learning-path-optimization',
+  {
+    preHandler: [authenticate],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userId } = request.params
+
+      if (!predictiveEngine) {
+        return reply.code(503).send({ error: 'Predictive analytics service unavailable' })
+      }
+
+      const optimization = await predictiveEngine.optimizeLearningPath(userId)
+      
+      reply.send({
+        userId,
+        ...optimization,
+        timestamp: new Date()
+      })
+    } catch (error) {
+      app.log.error(error, 'Learning path optimization error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Trigger intervention manually (admin only)
+app.post(
+  '/users/:userId/trigger-intervention',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userId } = request.params
+      const { interventionType, reason } = request.body
+
+      if (!predictiveEngine || !interventionSystem) {
+        return reply.code(503).send({ error: 'Intervention system unavailable' })
+      }
+
+      // Get current prediction and patterns
+      const prediction = await predictiveEngine.predictDropoutRisk(userId)
+      const patterns = await predictiveEngine.identifyLearningPatterns(userId)
+
+      // Force intervention trigger
+      const actions = await interventionSystem.processInterventionTrigger(prediction, patterns)
+      
+      reply.send({
+        userId,
+        interventionTriggered: true,
+        actionsScheduled: actions.length,
+        actions: actions.map(a => ({
+          actionId: a.actionId,
+          actionType: a.actionType,
+          priority: a.priority,
+          scheduledFor: a.scheduledFor
+        }))
+      })
+    } catch (error) {
+      app.log.error(error, 'Manual intervention trigger error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Execute intervention action
+app.post(
+  '/interventions/:actionId/execute',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { actionId } = request.params
+
+      if (!interventionSystem) {
+        return reply.code(503).send({ error: 'Intervention system unavailable' })
+      }
+
+      const success = await interventionSystem.executeIntervention(actionId)
+      
+      reply.send({
+        actionId,
+        executed: success,
+        timestamp: new Date()
+      })
+    } catch (error) {
+      app.log.error(error, 'Intervention execution error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Measure intervention outcome
+app.post(
+  '/interventions/:interventionId/measure-outcome',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { interventionId } = request.params
+      const { measurementType, beforeValue, afterValue } = request.body
+
+      if (!interventionSystem) {
+        return reply.code(503).send({ error: 'Intervention system unavailable' })
+      }
+
+      const outcome = await interventionSystem.measureInterventionOutcome(
+        interventionId,
+        measurementType,
+        beforeValue,
+        afterValue
+      )
+      
+      reply.send(outcome)
+    } catch (error) {
+      app.log.error(error, 'Intervention outcome measurement error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
+
+// Batch prediction endpoint for multiple users
+app.post(
+  '/predictions/batch',
+  {
+    preHandler: [requireAdmin],
+  },
+  async (request: any, reply) => {
+    try {
+      const { userIds, modelName = 'dropout_prediction' } = request.body
+
+      if (!predictiveEngine) {
+        return reply.code(503).send({ error: 'Predictive analytics service unavailable' })
+      }
+
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return reply.code(400).send({ error: 'userIds must be a non-empty array' })
+      }
+
+      if (userIds.length > 100) {
+        return reply.code(400).send({ error: 'Maximum 100 users per batch request' })
+      }
+
+      const predictions = await Promise.all(
+        userIds.map(async (userId: string) => {
+          try {
+            const prediction = await predictiveEngine!.predictDropoutRisk(userId)
+            return {
+              userId,
+              success: true,
+              prediction: prediction.prediction,
+              confidence: prediction.confidence,
+              interventionRecommended: prediction.interventionRecommended
+            }
+          } catch (error) {
+            return {
+              userId,
+              success: false,
+              error: 'Prediction failed'
+            }
+          }
+        })
+      )
+
+      reply.send({
+        batchId: randomUUID(),
+        totalUsers: userIds.length,
+        successfulPredictions: predictions.filter(p => p.success).length,
+        predictions,
+        timestamp: new Date()
+      })
+    } catch (error) {
+      app.log.error(error, 'Batch prediction error')
+      reply.code(500).send({ error: 'Internal server error' })
+    }
+  },
+)
       await prisma.dashboard.update({
         where: { id: dashboard.id },
         data: {
