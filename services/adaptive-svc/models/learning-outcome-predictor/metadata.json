@@ -1,0 +1,33 @@
+{
+  "name": "Learning Outcome Predictor",
+  "version": "1.0.0",
+  "type": "classification",
+  "accuracy": 0.87,
+  "f1Score": 0.84,
+  "trainingDate": "2024-01-15T00:00:00Z",
+  "features": [
+    "currentMastery",
+    "learningVelocity",
+    "totalInteractions",
+    "accuracyRate",
+    "pL0",
+    "pT",
+    "pG",
+    "pS",
+    "decayRate",
+    "timeOfDay",
+    "dayOfWeek",
+    "hoursSinceLastInteraction",
+    "fatigueLevel",
+    "studyStreak",
+    "sessionLength"
+  ],
+  "description": "Predicts probability of successful learning outcome based on user knowledge state and contextual factors",
+  "trainingDataSize": 100000,
+  "validationAccuracy": 0.85,
+  "testAccuracy": 0.87,
+  "inputShape": [15],
+  "outputShape": [1],
+  "modelSize": "2.3MB",
+  "inferenceTime": "~5ms"
+}

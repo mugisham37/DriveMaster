@@ -1,0 +1,33 @@
+{
+  "name": "Difficulty Optimizer",
+  "version": "1.0.0",
+  "type": "regression",
+  "accuracy": 0.82,
+  "mse": 0.045,
+  "trainingDate": "2024-01-15T00:00:00Z",
+  "features": [
+    "currentMastery",
+    "learningVelocity",
+    "totalInteractions",
+    "accuracyRate",
+    "pL0",
+    "pT",
+    "pG",
+    "pS",
+    "decayRate",
+    "timeOfDay",
+    "dayOfWeek",
+    "hoursSinceLastInteraction",
+    "fatigueLevel",
+    "studyStreak",
+    "sessionLength"
+  ],
+  "description": "Predicts optimal difficulty level for maximum learning efficiency based on user state",
+  "trainingDataSize": 85000,
+  "validationMSE": 0.048,
+  "testMSE": 0.045,
+  "inputShape": [15],
+  "outputShape": [1],
+  "modelSize": "2.1MB",
+  "inferenceTime": "~4ms"
+}
