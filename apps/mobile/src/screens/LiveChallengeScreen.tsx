@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  FlatList,
-  Animated,
-} from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList, Animated } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRealTimeChallenges } from '../hooks/useRealTime'
 import { ChallengeAnswer } from '../services/socketService'
@@ -24,7 +16,7 @@ function QuestionComponent({ question, onAnswer, timeRemaining }: QuestionProps)
 
   const handleAnswer = (answer: string) => {
     if (answered) return
-    
+
     setSelectedAnswer(answer)
     setAnswered(true)
     onAnswer(answer)
@@ -38,7 +30,7 @@ function QuestionComponent({ question, onAnswer, timeRemaining }: QuestionProps)
           <Text style={styles.timerText}>{Math.ceil(timeRemaining / 1000)}s</Text>
         </View>
       </View>
-      
+
       <View style={styles.optionsContainer}>
         {question.options?.map((option: any) => (
           <TouchableOpacity
@@ -47,15 +39,17 @@ function QuestionComponent({ question, onAnswer, timeRemaining }: QuestionProps)
               styles.optionButton,
               selectedAnswer === option.id && styles.selectedOption,
               answered && option.isCorrect && styles.correctOption,
-              answered && selectedAnswer === option.id && !option.isCorrect && styles.incorrectOption,
+              answered &&
+                selectedAnswer === option.id &&
+                !option.isCorrect &&
+                styles.incorrectOption,
             ]}
             onPress={() => handleAnswer(option.id)}
             disabled={answered}
           >
-            <Text style={[
-              styles.optionText,
-              selectedAnswer === option.id && styles.selectedOptionText,
-            ]}>
+            <Text
+              style={[styles.optionText, selectedAnswer === option.id && styles.selectedOptionText]}
+            >
               {option.text}
             </Text>
           </TouchableOpacity>
@@ -73,7 +67,7 @@ interface ScoreboardProps {
 
 function Scoreboard({ participants, scores, currentUserId }: ScoreboardProps) {
   const sortedParticipants = participants
-    .map(id => ({ id, score: scores[id] || 0 }))
+    .map((id) => ({ id, score: scores[id] || 0 }))
     .sort((a, b) => b.score - a.score)
 
   return (
@@ -83,10 +77,7 @@ function Scoreboard({ participants, scores, currentUserId }: ScoreboardProps) {
         data={sortedParticipants}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
-          <View style={[
-            styles.scoreItem,
-            item.id === currentUserId && styles.currentUserScore
-          ]}>
+          <View style={[styles.scoreItem, item.id === currentUserId && styles.currentUserScore]}>
             <Text style={styles.scoreRank}>#{index + 1}</Text>
             <Text style={styles.scoreUser}>
               {item.id === currentUserId ? 'You' : `Player ${item.id.slice(-4)}`}
@@ -104,7 +95,7 @@ export default function LiveChallengeScreen({ route, navigation }: any) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
-  
+
   const {
     currentChallenge,
     isInChallenge,
@@ -140,64 +131,72 @@ export default function LiveChallengeScreen({ route, navigation }: any) {
   }
 
   const handleLeaveChallenge = async () => {
-    Alert.alert(
-      'Leave Challenge',
-      'Are you sure you want to leave this challenge?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: async () => {
-            if (currentChallenge) {
-              await leave(currentChallenge.id)
-            }
-            navigation.goBack()
-          },
+    Alert.alert('Leave Challenge', 'Are you sure you want to leave this challenge?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          if (currentChallenge) {
+            await leave(currentChallenge.id)
+          }
+          navigation.goBack()
         },
-      ]
-    )
+      },
+    ])
   }
 
-  const handleAnswer = useCallback(async (selectedAnswer: string) => {
-    if (!currentChallenge) return
+  const handleAnswer = useCallback(
+    async (selectedAnswer: string) => {
+      if (!currentChallenge) return
 
-    const responseTime = Date.now() - questionStartTime
-    const currentQuestion = currentChallenge.questions[currentQuestionIndex]
+      const responseTime = Date.now() - questionStartTime
+      const currentQuestion = currentChallenge.questions[currentQuestionIndex]
 
-    const answer: ChallengeAnswer = {
-      challengeId: currentChallenge.id,
-      questionId: currentQuestion.id,
-      selectedAnswer,
-      responseTime,
-      timestamp: new Date().toISOString(),
-    }
-
-    const result = await submitAnswer(answer)
-    if (!result.success) {
-      Alert.alert('Error', 'Failed to submit answer')
-      return
-    }
-
-    // Move to next question after a short delay
-    setTimeout(() => {
-      if (currentQuestionIndex < currentChallenge.questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1)
-        setQuestionStartTime(Date.now())
-      } else {
-        // Challenge completed
-        Alert.alert(
-          'Challenge Complete!',
-          `Final Score: ${challengeScore}\nPosition: #${challengePosition}`,
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        )
+      const answer: ChallengeAnswer = {
+        challengeId: currentChallenge.id,
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        responseTime,
+        timestamp: new Date().toISOString(),
       }
-    }, 2000)
-  }, [currentChallenge, currentQuestionIndex, questionStartTime, challengeScore, challengePosition, submitAnswer, navigation])
+
+      const result = await submitAnswer(answer)
+      if (!result.success) {
+        Alert.alert('Error', 'Failed to submit answer')
+        return
+      }
+
+      // Move to next question after a short delay
+      setTimeout(() => {
+        if (currentQuestionIndex < currentChallenge.questions.length - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1)
+          setQuestionStartTime(Date.now())
+        } else {
+          // Challenge completed
+          Alert.alert(
+            'Challenge Complete!',
+            `Final Score: ${challengeScore}\nPosition: #${challengePosition}`,
+            [{ text: 'OK', onPress: () => navigation.goBack() }],
+          )
+        }
+      }, 2000)
+    },
+    [
+      currentChallenge,
+      currentQuestionIndex,
+      questionStartTime,
+      challengeScore,
+      challengePosition,
+      submitAnswer,
+      navigation,
+    ],
+  )
 
   if (!currentChallenge || !isInChallenge) {
     return (
-      <SafeAreaView style={styles.container}></SafeAreaView> <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Joining challenge...</Text>
         </View>
       </SafeAreaView>
@@ -214,14 +213,16 @@ export default function LiveChallengeScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={handleLeaveChallenge} style={styles.leaveButton}>
           <Text style={styles.leaveButtonText}>Leave</Text>
         </TouchableOpacity>
-        
+
         <View style={styles.challengeInfo}>
-          <Text style={styles.challengeType}>{currentChallenge.type.replace('_', ' ').toUpperCase()}</Text>
+          <Text style={styles.challengeType}>
+            {currentChallenge.type.replace('_', ' ').toUpperCase()}
+          </Text>
           <Text style={styles.questionProgress}>
             {currentQuestionIndex + 1} / {currentChallenge.questions.length}
           </Text>
         </View>
-        
+
         <View style={styles.scoreInfo}>
           <Text style={styles.scoreText}>Score: {challengeScore}</Text>
           <Text style={styles.positionText}>#{challengePosition}</Text>
@@ -229,10 +230,10 @@ export default function LiveChallengeScreen({ route, navigation }: any) {
       </View>
 
       <View style={styles.progressBar}>
-        <View 
+        <View
           style={[
             styles.progressFill,
-            { width: `${((currentQuestionIndex + 1) / currentChallenge.questions.length) * 100}%` }
+            { width: `${((currentQuestionIndex + 1) / currentChallenge.questions.length) * 100}%` },
           ]}
         />
       </View>

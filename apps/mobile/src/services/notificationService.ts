@@ -106,32 +106,59 @@ export class NotificationService {
       // Parse the deep link
       const url = Linking.parse(deepLink)
 
+      // Import navigation reference
+      const { navigationRef } = require('../navigation/NavigationService')
+
       // Handle different deep link patterns
       switch (url.hostname) {
         case 'challenge':
-          // Navigate to challenge screen
-          // This would be handled by the navigation system
-          console.log('Navigate to challenge:', url.path)
+          // Navigate to live challenge screen
+          if (url.path && navigationRef.isReady()) {
+            const challengeId = url.path.replace('/', '')
+            navigationRef.navigate('LiveChallenge', { challengeId, ...data })
+          }
           break
 
         case 'friend':
           // Navigate to friend profile or friend request
-          console.log('Navigate to friend:', url.path)
+          if (url.path && navigationRef.isReady()) {
+            const friendId = url.path.replace('/', '')
+            if (data?.type === 'friend_request') {
+              navigationRef.navigate('Friends', { tab: 'requests', friendId })
+            } else {
+              navigationRef.navigate('Friends', { tab: 'profile', friendId })
+            }
+          }
           break
 
         case 'achievement':
           // Navigate to achievement details
-          console.log('Navigate to achievement:', url.path)
+          if (url.path && navigationRef.isReady()) {
+            const achievementId = url.path.replace('/', '')
+            navigationRef.navigate('Progress', { tab: 'achievements', achievementId })
+          }
           break
 
         case 'learn':
           // Navigate to learning session
-          console.log('Navigate to learning:', url.path)
+          if (navigationRef.isReady()) {
+            const category = url.path?.replace('/', '') || data?.category
+            navigationRef.navigate('Learn', { category })
+          }
+          break
+
+        case 'leaderboard':
+          // Navigate to leaderboard
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Leaderboard', data)
+          }
           break
 
         default:
           // Navigate to main app
-          console.log('Navigate to main app')
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Main')
+          }
           break
       }
     } catch (error) {

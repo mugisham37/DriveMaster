@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import * as Linking from 'expo-linking'
 import { useAuthStore } from '../store'
 import { RootStackParamList, MainTabParamList } from '../types'
+import { navigationRef } from './NavigationService'
 
 // Import screens (we'll create these next)
 import AuthScreen from '../screens/AuthScreen'
@@ -17,20 +18,32 @@ import ResultsScreen from '../screens/ResultsScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import FriendsScreen from '../screens/FriendsScreen'
 import LeaderboardScreen from '../screens/LeaderboardScreen'
+import LiveChallengeScreen from '../screens/LiveChallengeScreen'
 
 const RootStack = createNativeStackNavigator<RootStackParamList>()
 const MainTab = createBottomTabNavigator<MainTabParamList>()
 
 // Deep linking configuration
 const linking = {
-  prefixes: [Linking.createURL('/')],
+  prefixes: [Linking.createURL('/'), 'drivemaster://'],
   config: {
     screens: {
       Auth: 'auth',
       Main: {
         screens: {
-          Learn: 'learn',
-          Progress: 'progress',
+          Learn: {
+            path: 'learn/:category?',
+            parse: {
+              category: (category: string) => category || undefined,
+            },
+          },
+          Progress: {
+            path: 'progress/:tab?/:achievementId?',
+            parse: {
+              tab: (tab: string) => tab || 'overview',
+              achievementId: (id: string) => id || undefined,
+            },
+          },
           Social: 'social',
           Profile: 'profile',
         },
@@ -38,8 +51,15 @@ const linking = {
       Question: 'question/:questionId',
       Results: 'results/:sessionId',
       Settings: 'settings',
-      Friends: 'friends',
+      Friends: {
+        path: 'friends/:tab?/:friendId?',
+        parse: {
+          tab: (tab: string) => tab || 'list',
+          friendId: (id: string) => id || undefined,
+        },
+      },
       Leaderboard: 'leaderboard',
+      LiveChallenge: 'challenge/:challengeId',
     },
   },
 }
@@ -125,7 +145,7 @@ export default function Navigation() {
   const { isAuthenticated } = useAuthStore()
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <RootStack.Screen name="Auth" component={AuthScreen} />
@@ -172,6 +192,15 @@ export default function Navigation() {
               options={{
                 headerShown: true,
                 title: 'Leaderboard',
+              }}
+            />
+            <RootStack.Screen
+              name="LiveChallenge"
+              component={LiveChallengeScreen}
+              options={{
+                headerShown: true,
+                title: 'Live Challenge',
+                presentation: 'modal',
               }}
             />
           </>
