@@ -178,21 +178,141 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F2F7',
   },
-  content: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
     padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1C1C1E',
+  },
+  onlineStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  onlineIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34C759',
+    marginRight: 6,
+  },
+  onlineText: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  notificationsSection: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 12,
+  },
+  notificationItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1C1C1E',
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: '#8E8E93',
+    marginTop: 2,
+  },
+  section: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
+  },
+  friendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  friendInfo: {
+    flex: 1,
+  },
+  friendHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  friendName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1C1C1E',
+    marginRight: 8,
+  },
+  friendStats: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  challengeButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  challengeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#8E8E93',
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
+  emptyStateSubtext: {
+    fontSize: 14,
     color: '#8E8E93',
     textAlign: 'center',
+  },
+  activityList: {
+    maxHeight: 200,
+  },
+  activityItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  activityFriend: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1C1C1E',
+  },
+  activityDescription: {
+    fontSize: 14,
+    color: '#8E8E93',
+    marginTop: 2,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: '#8E8E93',
+    marginTop: 2,
   },
 })

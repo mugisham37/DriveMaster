@@ -173,7 +173,7 @@
     - Write unit tests for offline functionality and data synchronization
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [-] 8.2 Build real-time features and Socket.io integration
+  - [ ] 8.2 Build real-time features and Socket.io integration
     - Implement Socket.io client for real-time updates and live challenges
     - Create connection management with automatic reconnection and offline handling
     - Build real-time progress sharing and friend activity feeds

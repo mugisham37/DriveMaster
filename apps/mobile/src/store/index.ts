@@ -427,3 +427,6 @@ export const useOfflineStore = create<OfflineState>()(
     },
   ),
 )
+
+// Export real-time store
+export { useRealTimeStore } from './realTimeStore'
