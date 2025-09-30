@@ -141,6 +141,80 @@ services:
       timeout: 10s
       retries: 5
 
+  # Kong API Gateway
+  kong-database:
+    image: postgres:16-alpine
+    container_name: drivemaster-kong-db
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong_password_123
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kong-migrations:
+    image: kong:3.4.2-alpine
+    container_name: drivemaster-kong-migrations
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_password_123
+    command: kong migrations bootstrap
+    restart: "no"
+
+  kong:
+    image: kong:3.4.2-alpine
+    container_name: drivemaster-kong
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_password_123
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_PLUGINS: bundled,cors,rate-limiting,request-size-limiting,response-transformer,proxy-cache,jwt,prometheus,request-id
+      KONG_LOG_LEVEL: info
+    ports:
+      - "8000:8000" # Proxy port
+      - "8443:8443" # Proxy SSL port
+      - "8001:8001" # Admin API port
+      - "8444:8444" # Admin API SSL port
+      - "8002:8002" # Admin GUI port
+    volumes:
+      - ./infra/kong/kong.yaml:/opt/kong/kong.yaml
+    command: >
+      sh -c "
+        kong config db_import /opt/kong/kong.yaml &&
+        kong start --vv
+      "
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
   # Kafka UI for development
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -161,6 +235,7 @@ volumes:
   zookeeper_data:
   zookeeper_logs:
   elasticsearch_data:
+  kong_db_data:
 
 networks:
   default:

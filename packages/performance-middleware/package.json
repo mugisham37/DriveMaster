@@ -1,0 +1,40 @@
+{
+  "name": "@drivemaster/performance-middleware",
+  "version": "1.0.0",
+  "description": "Performance optimization middleware for DriveMaster services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "compression": "^1.7.4",
+    "etag": "^1.8.1",
+    "lru-cache": "^10.1.0",
+    "prom-client": "^15.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/compression": "^1.7.5",
+    "@types/etag": "^1.8.3",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
