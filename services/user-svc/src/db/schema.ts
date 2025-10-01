@@ -589,3 +589,171 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+// GDPR/CCPA Compliance Tables
+
+// User Consents table - GDPR consent tracking
+export const userConsents = pgTable(
+  'user_consents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    consentType: varchar('consent_type', { length: 50 }).notNull(), // marketing, analytics, functional, necessary
+    granted: boolean('granted').notNull(),
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
+    ipAddress: varchar('ip_address', { length: 45 }).notNull(),
+    userAgent: text('user_agent').notNull(),
+    version: varchar('version', { length: 10 }).notNull(), // consent version
+    withdrawnAt: timestamp('withdrawn_at'),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    userConsentTypeIdx: index('user_consents_user_consent_type_idx').on(
+      table.userId,
+      table.consentType,
+    ),
+    timestampIdx: index('user_consents_timestamp_idx').on(table.timestamp),
+    grantedIdx: index('user_consents_granted_idx').on(table.granted),
+  }),
+)
+
+// Data Deletion Requests table - Right to be forgotten
+export const dataDeletionRequests = pgTable(
+  'data_deletion_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    reason: text('reason').notNull(),
+    requestedAt: timestamp('requested_at').defaultNow().notNull(),
+    scheduledFor: timestamp('scheduled_for').notNull(),
+    completedAt: timestamp('completed_at'),
+    keepAnonymizedData: boolean('keep_anonymized_data').default(false),
+    confirmationToken: varchar('confirmation_token', { length: 255 }).notNull(),
+    status: varchar('status', { length: 20 }).default('pending'), // pending, confirmed, processing, completed, cancelled
+    processingNotes: text('processing_notes'),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('data_deletion_requests_user_idx').on(table.userId),
+    statusIdx: index('data_deletion_requests_status_idx').on(table.status),
+    scheduledIdx: index('data_deletion_requests_scheduled_idx').on(table.scheduledFor),
+    confirmationTokenIdx: uniqueIndex('data_deletion_requests_token_idx').on(
+      table.confirmationToken,
+    ),
+  }),
+)
+
+// Audit Logs table - Comprehensive audit trail
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id'), // Can be null for system actions
+    action: varchar('action', { length: 100 }).notNull(),
+    resourceType: varchar('resource_type', { length: 50 }).notNull(),
+    resourceId: varchar('resource_id', { length: 255 }).notNull(),
+    oldValues: text('old_values'), // JSON string of old values
+    newValues: text('new_values'), // JSON string of new values
+    ipAddress: varchar('ip_address', { length: 45 }).notNull(),
+    userAgent: text('user_agent').notNull(),
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
+    metadata: text('metadata'), // Additional context as JSON
+    severity: varchar('severity', { length: 20 }).default('info'), // info, warning, error, critical
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    userActionIdx: index('audit_logs_user_action_idx').on(table.userId, table.action),
+    resourceIdx: index('audit_logs_resource_idx').on(table.resourceType, table.resourceId),
+    timestampIdx: index('audit_logs_timestamp_idx').on(table.timestamp),
+    actionIdx: index('audit_logs_action_idx').on(table.action),
+    severityIdx: index('audit_logs_severity_idx').on(table.severity),
+  }),
+)
+
+// Data Export Requests table - GDPR data portability
+export const dataExportRequests = pgTable(
+  'data_export_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    format: varchar('format', { length: 10 }).notNull(), // json, csv, xml
+    includePersonalData: boolean('include_personal_data').default(true),
+    includeActivityData: boolean('include_activity_data').default(true),
+    includeAnalytics: boolean('include_analytics').default(false),
+    requestedAt: timestamp('requested_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+    downloadUrl: text('download_url'),
+    expiresAt: timestamp('expires_at'),
+    status: varchar('status', { length: 20 }).default('pending'), // pending, processing, completed, expired, failed
+    fileSize: integer('file_size'), // bytes
+    downloadCount: integer('download_count').default(0),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('data_export_requests_user_idx').on(table.userId),
+    statusIdx: index('data_export_requests_status_idx').on(table.status),
+    expiresIdx: index('data_export_requests_expires_idx').on(table.expiresAt),
+  }),
+)
+
+// Security Events table - Security monitoring and incident tracking
+export const securityEvents = pgTable(
+  'security_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id'), // Can be null for system-wide events
+    eventType: varchar('event_type', { length: 50 }).notNull(),
+    severity: varchar('severity', { length: 20 }).notNull(), // low, medium, high, critical
+    description: text('description').notNull(),
+    ipAddress: varchar('ip_address', { length: 45 }).notNull(),
+    userAgent: text('user_agent'),
+    metadata: jsonb('metadata'), // Additional event data
+    resolved: boolean('resolved').default(false),
+    resolvedAt: timestamp('resolved_at'),
+    resolvedBy: uuid('resolved_by'), // Admin user who resolved
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    userEventIdx: index('security_events_user_event_idx').on(table.userId, table.eventType),
+    severityIdx: index('security_events_severity_idx').on(table.severity),
+    timestampIdx: index('security_events_timestamp_idx').on(table.timestamp),
+    resolvedIdx: index('security_events_resolved_idx').on(table.resolved),
+    eventTypeIdx: index('security_events_event_type_idx').on(table.eventType),
+  }),
+)
+
+// Compliance Relations
+export const userConsentsRelations = relations(userConsents, ({ one }) => ({
+  user: one(users, {
+    fields: [userConsents.userId],
+    references: [users.id],
+  }),
+}))
+
+export const dataDeletionRequestsRelations = relations(dataDeletionRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [dataDeletionRequests.userId],
+    references: [users.id],
+  }),
+}))
+
+export const dataExportRequestsRelations = relations(dataExportRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [dataExportRequests.userId],
+    references: [users.id],
+  }),
+}))
+
+export const securityEventsRelations = relations(securityEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [securityEvents.userId],
+    references: [users.id],
+  }),
+}))

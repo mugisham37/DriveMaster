@@ -1,0 +1,42 @@
+apiVersion: v2
+name: drivemaster
+description: A Helm chart for DriveMaster adaptive learning platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - learning
+  - adaptive
+  - education
+  - microservices
+home: https://drivemaster.com
+sources:
+  - https://github.com/drivemaster/platform
+maintainers:
+  - name: DriveMaster Team
+    email: ops@drivemaster.com
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "18.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: kafka
+    version: "25.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: kafka.enabled
+  - name: elasticsearch
+    version: "19.x.x"
+    repository: "https://helm.elastic.co"
+    condition: elasticsearch.enabled
+  - name: prometheus
+    version: "25.x.x"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: monitoring.prometheus.enabled
+  - name: grafana
+    version: "7.x.x"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: monitoring.grafana.enabled

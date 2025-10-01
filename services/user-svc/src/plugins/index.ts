@@ -5,28 +5,22 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import cookie from '@fastify/cookie'
 import { RateLimitMiddleware } from '../middleware/rate-limit.middleware'
+import securityPlugin from './security.plugin'
+import { validateSecurityConfig } from '../config/security.config'
 
 export async function registerPlugins(server: FastifyInstance): Promise<void> {
-  // Security plugins
-  await server.register(helmet, {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-      },
-    },
-  })
+  // Validate security configuration before starting
+  const securityValidation = validateSecurityConfig()
+  if (!securityValidation.valid) {
+    server.log.error('Security configuration validation failed:', securityValidation.errors)
+    throw new Error(`Security configuration invalid: ${securityValidation.errors.join(', ')}`)
+  }
 
-  await server.register(cors, {
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'x-session-id', 'x-api-key'],
-  })
+  if (securityValidation.warnings.length > 0) {
+    server.log.warn('Security configuration warnings:', securityValidation.warnings)
+  }
 
-  // Cookie support for session management
+  // Cookie support for session management (must be registered before security plugin)
   await server.register(cookie, {
     secret: process.env.COOKIE_SECRET || 'dev-cookie-secret-change-in-production',
     parseOptions: {
@@ -36,8 +30,34 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
     },
   })
 
-  // Rate limiting
-  await RateLimitMiddleware.registerGlobalRateLimit(server)
+  // Redis plugin for rate limiting (if available)
+  try {
+    if (process.env.REDIS_URL) {
+      await server.register(require('@fastify/redis'), {
+        url: process.env.REDIS_URL,
+      })
+      server.log.info('Redis connected for rate limiting')
+    }
+  } catch (error) {
+    server.log.warn('Redis connection failed, using in-memory rate limiting:', error)
+  }
+
+  // Comprehensive security plugin
+  await server.register(securityPlugin, {
+    enableHelmet: true,
+    enableCors: true,
+    enableRateLimit: true,
+    enableCSRF: true,
+    enableXSS: true,
+    enableSQLInjection: true,
+  })
+
+  // Legacy rate limiting (fallback if security plugin rate limiting fails)
+  try {
+    await RateLimitMiddleware.registerGlobalRateLimit(server)
+  } catch (error) {
+    server.log.warn('Legacy rate limiting registration failed:', error)
+  }
 
   // API Documentation
   await server.register(swagger, {
