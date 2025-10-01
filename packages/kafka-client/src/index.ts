@@ -99,7 +99,7 @@ export class KafkaEventProcessor {
     await this.consumer.run({
       partitionsConsumedConcurrently: 3,
       eachMessage: async (payload) => {
-        const { topic, partition, message } = payload
+        const { topic, message } = payload
         let retryCount = 0
         const maxRetries = this.dlqConfig?.maxRetries || 3
 
@@ -288,7 +288,7 @@ export class KafkaEventProcessor {
   }
 
   private generateCorrelationId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
   }
 
   async disconnect(): Promise<void> {

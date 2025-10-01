@@ -53,9 +53,11 @@ export class HealthMonitor {
 
         checks[name] = {
           status: result.status,
-          latency: result.latency || endTime - startTime,
-          error: result.error,
-          metadata: result.metadata,
+          ...(result.latency !== undefined
+            ? { latency: result.latency }
+            : { latency: endTime - startTime }),
+          ...(result.error !== undefined ? { error: result.error } : {}),
+          ...(result.metadata !== undefined ? { metadata: result.metadata } : {}),
         }
       } catch (error) {
         checks[name] = {

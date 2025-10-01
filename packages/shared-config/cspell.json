@@ -14,10 +14,15 @@
     "srcset",
     "preload",
     "preconnect",
-    "nosniff",
-    "hotlinking",
-    "webp",
-    "srcset"
+    "kafkajs",
+    "opentelemetry",
+    "jaeger",
+    "otlp",
+    "prometheus",
+    "loki",
+    "winston",
+    "avro",
+    "elasticsearch"
   ],
-  "ignorePaths": ["node_modules/**", "dist/**", "*.json"]
+  "ignorePaths": ["node_modules/**", "dist/**", "**/*.js.map", "**/*.d.ts.map", "**/*.json"]
 }

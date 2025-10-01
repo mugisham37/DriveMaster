@@ -9,16 +9,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: [
-      './tsconfig.json',
-      './packages/*/tsconfig.json',
-      './services/user-svc/tsconfig.json',
-      './services/adaptive-svc/tsconfig.json',
-      './services/content-svc/tsconfig.json',
-      './services/analytics-svc/tsconfig.json',
-      './services/engagement-svc/tsconfig.json',
-      './services/user-svc/src/scripts/tsconfig.json',
-    ],
+    project: ['./tsconfig.base.json', './packages/*/tsconfig.json', './services/*/tsconfig.json'],
     tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'import', 'prettier', 'node'],
@@ -76,14 +67,9 @@ module.exports = {
       typescript: {
         alwaysTryTypes: true,
         project: [
-          './tsconfig.json',
+          './tsconfig.base.json',
           './packages/*/tsconfig.json',
-          './services/user-svc/tsconfig.json',
-          './services/adaptive-svc/tsconfig.json',
-          './services/content-svc/tsconfig.json',
-          './services/analytics-svc/tsconfig.json',
-          './services/engagement-svc/tsconfig.json',
-          './services/user-svc/src/scripts/tsconfig.json',
+          './services/*/tsconfig.json',
         ],
       },
       node: {

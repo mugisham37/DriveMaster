@@ -1,6 +1,6 @@
 import { NodeSDK } from '@opentelemetry/sdk-node'
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
-import { JaegerExporter } from '@opentelemetry/exporter-jaeger'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Resource } from '@opentelemetry/resources'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api'
@@ -30,8 +30,8 @@ export class TracingManager {
       return
     }
 
-    const jaegerExporter = new JaegerExporter({
-      endpoint: this.config.jaegerEndpoint || 'http://localhost:14268/api/traces',
+    const otlpExporter = new OTLPTraceExporter({
+      url: this.config.jaegerEndpoint || 'http://localhost:4318/v1/traces',
     })
 
     this.sdk = new NodeSDK({
@@ -40,7 +40,7 @@ export class TracingManager {
         [SemanticResourceAttributes.SERVICE_VERSION]: this.config.serviceVersion,
         [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.config.environment,
       }),
-      traceExporter: jaegerExporter,
+      traceExporter: otlpExporter,
       instrumentations: [
         getNodeAutoInstrumentations({
           '@opentelemetry/instrumentation-fs': {
@@ -66,10 +66,15 @@ export class TracingManager {
   ) {
     const tracer = trace.getTracer(this.config.serviceName, this.config.serviceVersion)
 
-    return tracer.startSpan(name, {
+    const spanOptions: any = {
       kind: options?.kind || SpanKind.INTERNAL,
-      attributes: options?.attributes,
-    })
+    }
+
+    if (options?.attributes !== undefined) {
+      spanOptions.attributes = options.attributes
+    }
+
+    return tracer.startSpan(name, spanOptions)
   }
 
   public async withSpan<T>(
