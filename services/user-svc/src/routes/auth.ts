@@ -1,10 +1,33 @@
 import type { FastifyInstance } from 'fastify'
-import { AuthService, type LoginCredentials, type RegisterData } from '../services/auth.service'
-import { SessionService } from '../services/session.service'
+
 import { AuthMiddleware } from '../middleware/auth.middleware'
 import { RateLimitHandler } from '../middleware/rate-limit-handler.middleware'
+import { AuthService, type LoginCredentials, type RegisterData } from '../services/auth.service'
+import { SessionService } from '../services/session.service'
+import type { UserContext } from '../types/auth.types'
 
-function createSuccessResponse<T>(data: T, requestId?: string) {
+interface SuccessResponse<T> {
+  success: true
+  data: T
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+}
+
+interface ErrorResponse {
+  success: false
+  error: {
+    code: string
+    message: string
+  }
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+}
+
+function createSuccessResponse<T>(data: T, requestId?: string): SuccessResponse<T> {
   return {
     success: true as const,
     data,
@@ -15,7 +38,7 @@ function createSuccessResponse<T>(data: T, requestId?: string) {
   }
 }
 
-function createErrorResponse(code: string, message: string, requestId?: string) {
+function createErrorResponse(code: string, message: string, requestId?: string): ErrorResponse {
   return {
     success: false as const,
     error: {
@@ -29,7 +52,7 @@ function createErrorResponse(code: string, message: string, requestId?: string) 
   }
 }
 
-export async function authRoutes(server: FastifyInstance): Promise<void> {
+export function authRoutes(server: FastifyInstance): void {
   // Login endpoint with rate limiting
   server.post(
     '/login',
@@ -146,7 +169,6 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
         // Create session if requested
         if (createSession) {
           const userAgent = request.headers['user-agent']
-          const deviceFingerprint = (request as any).deviceFingerprint
 
           sessionId = await SessionService.createSession({
             userId: authResult.user.id,
@@ -160,7 +182,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           })
 
           // Set session cookie
-          reply.setCookie('sessionId', sessionId, {
+          void reply.setCookie('sessionId', sessionId, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
@@ -172,7 +194,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           {
             userId: authResult.user.id,
             email: authResult.user.email,
-            sessionCreated: !!sessionId,
+            sessionCreated: sessionId !== undefined && sessionId.length > 0,
           },
           'Login successful',
         )
@@ -187,16 +209,17 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Login failed'
 
+        const requestBody = request.body as LoginCredentials | undefined
         server.log.warn(
           {
-            email: (request.body as any)?.email,
+            email: requestBody?.email,
             error: errorMessage,
             ip: request.ip,
           },
           'Login failed',
         )
 
-        reply.code(401)
+        void reply.code(401)
         return createErrorResponse('LOGIN_FAILED', errorMessage, request.id)
       }
     },
@@ -367,21 +390,22 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           'Registration successful',
         )
 
-        reply.code(201)
+        void reply.code(201)
         return createSuccessResponse(authResult, request.id)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Registration failed'
 
+        const requestBody = request.body as RegisterData | undefined
         server.log.warn(
           {
-            email: (request.body as any)?.email,
+            email: requestBody?.email,
             error: errorMessage,
             ip: request.ip,
           },
           'Registration failed',
         )
 
-        reply.code(400)
+        void reply.code(400)
         return createErrorResponse('REGISTRATION_FAILED', errorMessage, request.id)
       }
     },
@@ -459,7 +483,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           'Token refresh failed',
         )
 
-        reply.code(401)
+        void reply.code(401)
         return createErrorResponse('TOKEN_REFRESH_FAILED', errorMessage, request.id)
       }
     },
@@ -499,16 +523,16 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const sessionId = request.cookies?.sessionId || (request.headers['x-session-id'] as string)
+        const sessionId = request.cookies?.sessionId ?? (request.headers['x-session-id'] as string)
 
-        if (sessionId) {
+        if (sessionId !== undefined && sessionId !== null && sessionId.length > 0) {
           await SessionService.deleteSession(sessionId)
-          reply.clearCookie('sessionId')
+          void reply.clearCookie('sessionId')
         }
 
         server.log.info(
           {
-            userId: request.user?.userId,
+            userId: getUserId(request.user),
             sessionId,
           },
           'Logout successful',
@@ -519,7 +543,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
         server.log.warn(
           {
             error: error instanceof Error ? error.message : 'Logout error',
-            userId: request.user?.userId,
+            userId: getUserId(request.user),
           },
           'Logout error',
         )
@@ -563,7 +587,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
         },
       },
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       return createSuccessResponse({ user: request.user }, request.id)
     },
   )
@@ -594,16 +618,21 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
         },
       },
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       try {
-        const sessions = await SessionService.getUserSessions(request.user!.userId)
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
+        const sessions = await SessionService.getUserSessions(user.userId)
 
         return createSuccessResponse({ sessions }, request.id)
       } catch (error) {
         server.log.warn(
           {
             error: error instanceof Error ? error.message : 'Session info error',
-            userId: request.user?.userId,
+            userId: getUserId(request.user),
           },
           'Session info error',
         )
@@ -616,7 +645,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
 
 // Helper function to detect device type
 function detectDeviceType(userAgent?: string): 'mobile' | 'tablet' | 'desktop' {
-  if (!userAgent) return 'desktop'
+  if (userAgent === undefined || userAgent === null || userAgent.length === 0) return 'desktop'
 
   const ua = userAgent.toLowerCase()
 
@@ -629,4 +658,8 @@ function detectDeviceType(userAgent?: string): 'mobile' | 'tablet' | 'desktop' {
   }
 
   return 'desktop'
+}
+
+function getUserId(user?: UserContext): string {
+  return user?.userId ?? 'unknown'
 }

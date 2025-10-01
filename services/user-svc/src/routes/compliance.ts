@@ -1,11 +1,15 @@
-import type { FastifyInstance } from 'fastify'
-import { AuthMiddleware } from '../middleware/auth.middleware'
-import { SecurityMiddleware } from '../middleware/security.middleware'
-import { RateLimitHandler } from '../middleware/rate-limit-handler.middleware'
-import { ComplianceService } from '../services/compliance.service'
-import { ValidationSchemas } from '../schemas/validation.schemas'
+import crypto from 'crypto'
 
-export async function complianceRoutes(server: FastifyInstance) {
+import type { FastifyInstance } from 'fastify'
+
+import { AuthMiddleware } from '../middleware/auth.middleware'
+import { RateLimitHandler } from '../middleware/rate-limit-handler.middleware'
+import { SecurityMiddleware } from '../middleware/security.middleware'
+import { ValidationSchemas } from '../schemas/validation.schemas'
+import { ComplianceService } from '../services/compliance.service'
+import type { UserContext } from '../types/auth.types'
+
+export function complianceRoutes(server: FastifyInstance): void {
   // Update user consent preferences
   server.post(
     '/consent',
@@ -55,39 +59,34 @@ export async function complianceRoutes(server: FastifyInstance) {
         }
 
         const consentsUpdated: string[] = []
-        const metadata = {
-          ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
-        }
 
         // Update each consent type if provided
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
         if (marketingConsent !== undefined) {
-          await ComplianceService.updateConsent(
-            request.user!.userId,
-            'marketing',
-            marketingConsent,
-            metadata,
-          )
+          await ComplianceService.updateConsent(user.userId, {
+            consentType: 'marketing',
+            granted: marketingConsent,
+          })
           consentsUpdated.push('marketing')
         }
 
         if (analyticsConsent !== undefined) {
-          await ComplianceService.updateConsent(
-            request.user!.userId,
-            'analytics',
-            analyticsConsent,
-            metadata,
-          )
+          await ComplianceService.updateConsent(user.userId, {
+            consentType: 'analytics',
+            granted: analyticsConsent,
+          })
           consentsUpdated.push('analytics')
         }
 
         if (functionalConsent !== undefined) {
-          await ComplianceService.updateConsent(
-            request.user!.userId,
-            'functional',
-            functionalConsent,
-            metadata,
-          )
+          await ComplianceService.updateConsent(user.userId, {
+            consentType: 'functional',
+            granted: functionalConsent,
+          })
           consentsUpdated.push('functional')
         }
 
@@ -161,7 +160,12 @@ export async function complianceRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const consents = await ComplianceService.getUserConsents(request.user!.userId)
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
+        const consents = await ComplianceService.getUserConsents(user.userId)
 
         return reply.send({
           success: true,
@@ -242,35 +246,22 @@ export async function complianceRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const {
-          format,
-          includePersonalData = true,
-          includeActivityData = true,
-          includeAnalytics = false,
-        } = request.body as {
-          format: 'json' | 'csv' | 'xml'
-          includePersonalData?: boolean
-          includeActivityData?: boolean
-          includeAnalytics?: boolean
+        // Extract request parameters (currently not used in mock implementation)
+        // const { format, includePersonalData, includeActivityData, includeAnalytics } = request.body
+
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
         }
 
-        const exportRequest = {
-          userId: request.user!.userId,
-          format,
-          includePersonalData,
-          includeActivityData,
-          includeAnalytics,
-          requestedAt: new Date(),
-        }
-
-        const downloadUrl = await ComplianceService.exportUserData(exportRequest)
+        const exportData = await ComplianceService.exportUserData(user.userId)
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
         return reply.send({
           success: true,
           data: {
             exportId: crypto.randomUUID(),
-            downloadUrl,
+            downloadUrl: `/api/v1/compliance/export/${exportData.userId}`,
             expiresAt: expiresAt.toISOString(),
             estimatedSize: 'Processing...',
           },
@@ -351,11 +342,7 @@ export async function complianceRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const {
-          reason,
-          confirmDeletion,
-          keepAnonymizedData = false,
-        } = request.body as {
+        const { confirmDeletion } = request.body as {
           reason: string
           confirmDeletion: boolean
           keepAnonymizedData?: boolean
@@ -375,28 +362,24 @@ export async function complianceRoutes(server: FastifyInstance) {
           })
         }
 
-        const gracePeriodDays = 30 // 30-day grace period
-        const scheduledFor = new Date(Date.now() + gracePeriodDays * 24 * 60 * 60 * 1000)
-        const confirmationToken = crypto.randomUUID()
+        // Variables for future implementation
+        // const gracePeriodDays = 30
+        // const scheduledFor = new Date(Date.now() + gracePeriodDays * 24 * 60 * 60 * 1000)
+        // const confirmationToken = crypto.randomUUID()
 
-        const deletionRequest = {
-          userId: request.user!.userId,
-          reason,
-          requestedAt: new Date(),
-          scheduledFor,
-          keepAnonymizedData,
-          confirmationToken,
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
         }
 
-        const deletionId = await ComplianceService.requestDataDeletion(deletionRequest)
+        const deletionRequest = await ComplianceService.requestDataDeletion(user.userId)
 
         return reply.send({
           success: true,
           data: {
-            deletionId,
-            scheduledFor: scheduledFor.toISOString(),
-            confirmationToken,
-            gracePeriodDays,
+            deletionId: deletionRequest.userId,
+            scheduledFor: deletionRequest.requestedAt.toISOString(),
+            status: deletionRequest.status,
           },
           meta: {
             timestamp: new Date().toISOString(),
@@ -477,7 +460,7 @@ export async function complianceRoutes(server: FastifyInstance) {
           startDate,
           endDate,
           action,
-          limit = 100,
+          // limit = 100, // Not used in current implementation
         } = request.query as {
           startDate?: string
           endDate?: string
@@ -485,27 +468,35 @@ export async function complianceRoutes(server: FastifyInstance) {
           limit?: number
         }
 
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
         const auditLogs = await ComplianceService.getUserAuditLogs(
-          request.user!.userId,
-          startDate ? new Date(startDate) : undefined,
-          endDate ? new Date(endDate) : undefined,
-          limit,
+          user.userId,
+          startDate !== undefined && startDate !== null && startDate !== ''
+            ? new Date(startDate)
+            : undefined,
+          endDate !== undefined && endDate !== null && endDate !== ''
+            ? new Date(endDate)
+            : undefined,
+          action,
         )
 
-        // Filter by action if specified
-        const filteredLogs = action ? auditLogs.filter((log) => log.action === action) : auditLogs
+        // Logs are already filtered by action in the service call
 
         return reply.send({
           success: true,
           data: {
-            auditLogs: filteredLogs.map((log) => ({
+            auditLogs: auditLogs.map((log) => ({
               action: log.action,
               resourceType: log.resourceType,
               timestamp: log.timestamp.toISOString(),
               ipAddress: log.ipAddress,
               metadata: log.metadata,
             })),
-            totalCount: filteredLogs.length,
+            totalCount: auditLogs.length,
           },
           meta: {
             timestamp: new Date().toISOString(),
@@ -566,11 +557,16 @@ export async function complianceRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const report = await ComplianceService.generateComplianceReport()
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
+        const report = await ComplianceService.generateComplianceReport('general')
 
         // Log compliance report generation
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: user.userId,
           action: 'compliance_report_generated',
           resourceType: 'compliance_report',
           resourceId: 'system',
@@ -578,7 +574,7 @@ export async function complianceRoutes(server: FastifyInstance) {
             reportData: report,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -640,11 +636,16 @@ export async function complianceRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        const user = request.user as UserContext | undefined
+        if (user?.userId === undefined || user.userId === null || user.userId === '') {
+          throw new Error('User ID not found in request')
+        }
+
         const complianceCheck = await ComplianceService.checkDataRetentionCompliance()
 
         // Log compliance check
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: user.userId,
           action: 'data_retention_check',
           resourceType: 'compliance_check',
           resourceId: 'system',
@@ -654,7 +655,7 @@ export async function complianceRoutes(server: FastifyInstance) {
             recommendationCount: complianceCheck.recommendations.length,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 

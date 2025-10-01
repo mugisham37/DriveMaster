@@ -1,15 +1,48 @@
 import type { FastifyInstance } from 'fastify'
-import { SecurityMiddleware } from '../middleware/security.middleware'
-import { AdvancedSecurityMiddleware } from '../middleware/advanced-security.middleware'
+
+import { validateSecurityConfig } from '../config/security.config'
 import { AuthMiddleware } from '../middleware/auth.middleware'
 import { RateLimitHandler } from '../middleware/rate-limit-handler.middleware'
-import { ComplianceService } from '../services/compliance.service'
-import { SecurityTestingService } from '../services/security-testing.service'
-import EncryptionService from '../services/encryption.service'
+import { SecurityMiddleware } from '../middleware/security.middleware'
 import { ValidationSchemas } from '../schemas/validation.schemas'
-import { validateSecurityConfig } from '../config/security.config'
+import { ComplianceService } from '../services/compliance.service'
+import { EncryptionService } from '../services/encryption.service'
+import { SecurityTestingService } from '../services/security-testing.service'
 
-export async function securityRoutes(server: FastifyInstance) {
+// Type definitions for request bodies
+interface SecurityValidationRequest {
+  data: Record<string, unknown>
+  validationType: 'user_input' | 'content' | 'search_query' | 'form_data'
+}
+
+interface SecurityEventRequest {
+  eventType:
+    | 'login_attempt'
+    | 'password_change'
+    | 'suspicious_activity'
+    | 'data_access'
+    | 'permission_change'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  description: string
+  metadata?: Record<string, unknown>
+}
+
+interface EncryptionTestRequest {
+  plaintext: string
+  testType: 'basic_encryption' | 'pii_encryption' | 'password_hashing'
+}
+
+// Type guard for authenticated user
+function isAuthenticatedUser(user: unknown): user is { userId: string } {
+  return (
+    typeof user === 'object' &&
+    user !== null &&
+    'userId' in user &&
+    typeof (user as { userId: unknown }).userId === 'string'
+  )
+}
+
+export function securityRoutes(server: FastifyInstance): void {
   // CSRF Token endpoint
   server.get(
     '/csrf-token',
@@ -48,7 +81,7 @@ export async function securityRoutes(server: FastifyInstance) {
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
 
         // Set CSRF token in cookie
-        reply.setCookie('csrf-token', csrfToken, {
+        await reply.setCookie('csrf-token', csrfToken, {
           httpOnly: true,
           secure: request.protocol === 'https',
           sameSite: 'strict',
@@ -129,16 +162,13 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const { data, validationType } = request.body as {
-          data: any
-          validationType: string
-        }
+        const { data, validationType } = request.body as SecurityValidationRequest
 
         const validationResult = SecurityMiddleware.validateSecurityCompliance(data)
 
         // Log security validation attempt
         await ComplianceService.logAuditEvent({
-          userId: request.user?.userId || 'anonymous',
+          userId: isAuthenticatedUser(request.user) ? request.user.userId : 'anonymous',
           action: 'security_validation',
           resourceType: 'user_input',
           resourceId: validationType,
@@ -148,7 +178,7 @@ export async function securityRoutes(server: FastifyInstance) {
             errorCount: validationResult.errors.length,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -218,16 +248,26 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const { eventType, severity, description, metadata } = request.body as {
-          eventType: string
-          severity: string
-          description: string
-          metadata?: Record<string, any>
+        const { eventType, severity, description, metadata } = request.body as SecurityEventRequest
+
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
         }
 
         // Log the security event
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'security_event_reported',
           resourceType: 'security_event',
           resourceId: eventType,
@@ -238,7 +278,7 @@ export async function securityRoutes(server: FastifyInstance) {
             reportedMetadata: metadata,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -299,15 +339,27 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const { plaintext, testType } = request.body as {
-          plaintext: string
-          testType: string
+        const { plaintext, testType } = request.body as EncryptionTestRequest
+
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
         }
 
-        let result: any
+        let result: Record<string, unknown>
 
         switch (testType) {
-          case 'basic_encryption':
+          case 'basic_encryption': {
             const encrypted = EncryptionService.encryptData(plaintext)
             const decrypted = EncryptionService.decryptData(encrypted)
             result = {
@@ -317,8 +369,9 @@ export async function securityRoutes(server: FastifyInstance) {
               matches: plaintext === decrypted,
             }
             break
+          }
 
-          case 'pii_encryption':
+          case 'pii_encryption': {
             const piiData = { sensitiveField: plaintext }
             const encryptedPII = EncryptionService.encryptPII(piiData)
             const decryptedPII = EncryptionService.decryptPII(encryptedPII)
@@ -329,8 +382,9 @@ export async function securityRoutes(server: FastifyInstance) {
               matches: piiData.sensitiveField === decryptedPII.sensitiveField,
             }
             break
+          }
 
-          case 'password_hashing':
+          case 'password_hashing': {
             const hash = await EncryptionService.hashPassword(plaintext)
             const isValid = await EncryptionService.verifyPassword(plaintext, hash)
             result = {
@@ -339,6 +393,7 @@ export async function securityRoutes(server: FastifyInstance) {
               verified: isValid,
             }
             break
+          }
 
           default:
             throw new Error('Invalid test type')
@@ -346,7 +401,7 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log encryption test
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'encryption_test',
           resourceType: 'security_test',
           resourceId: testType,
@@ -355,7 +410,7 @@ export async function securityRoutes(server: FastifyInstance) {
             success: true,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -422,15 +477,33 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
+        }
+
         const encryptionValid = EncryptionService.validateConfiguration()
         const recommendations: string[] = []
 
         // Check various security configurations
-        if (!process.env.MASTER_ENCRYPTION_KEY) {
+        if (
+          typeof process.env.MASTER_ENCRYPTION_KEY !== 'string' ||
+          process.env.MASTER_ENCRYPTION_KEY.length === 0
+        ) {
           recommendations.push('Set MASTER_ENCRYPTION_KEY environment variable')
         }
 
-        if (!process.env.JWT_SECRET) {
+        if (typeof process.env.JWT_SECRET !== 'string' || process.env.JWT_SECRET.length === 0) {
           recommendations.push('Set JWT_SECRET environment variable')
         }
 
@@ -440,7 +513,7 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log configuration validation
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'security_configuration_validated',
           resourceType: 'security_config',
           resourceId: 'system',
@@ -449,7 +522,7 @@ export async function securityRoutes(server: FastifyInstance) {
             recommendationCount: recommendations.length,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -522,6 +595,21 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
+        }
+
         // Only allow in non-production environments for security
         if (process.env.NODE_ENV === 'production') {
           return reply.code(403).send({
@@ -537,7 +625,7 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log security audit
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'security_audit_performed',
           resourceType: 'security_audit',
           resourceId: 'system',
@@ -547,7 +635,7 @@ export async function securityRoutes(server: FastifyInstance) {
             criticalIssues: auditReport.criticalIssues,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -610,6 +698,21 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
+        }
+
         if (process.env.NODE_ENV === 'production') {
           return reply.code(403).send({
             success: false,
@@ -632,13 +735,13 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log penetration test
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'penetration_test_performed',
           resourceType: 'security_pentest',
           resourceId: 'system',
           metadata: summary,
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -688,6 +791,21 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
+        }
+
         if (process.env.NODE_ENV === 'production') {
           return reply.code(403).send({
             success: false,
@@ -704,7 +822,7 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log report generation
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'security_report_generated',
           resourceType: 'security_report',
           resourceId: 'system',
@@ -713,12 +831,12 @@ export async function securityRoutes(server: FastifyInstance) {
             vulnerabilityCount: pentestResults.filter((r) => r.vulnerability).length,
           },
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
-        reply.header('Content-Type', 'text/markdown')
-        reply.header(
+        await reply.header('Content-Type', 'text/markdown')
+        await reply.header(
           'Content-Disposition',
           `attachment; filename="security-report-${new Date().toISOString().split('T')[0]}.md"`,
         )
@@ -758,6 +876,21 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        // Ensure user is authenticated
+        if (!isAuthenticatedUser(request.user)) {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'UNAUTHORIZED',
+              message: 'Authentication required',
+            },
+            meta: {
+              timestamp: new Date().toISOString(),
+              requestId: request.id,
+            },
+          })
+        }
+
         const configValidation = validateSecurityConfig()
         const encryptionValid = EncryptionService.validateConfiguration()
 
@@ -778,13 +911,13 @@ export async function securityRoutes(server: FastifyInstance) {
 
         // Log configuration validation
         await ComplianceService.logAuditEvent({
-          userId: request.user!.userId,
+          userId: request.user.userId,
           action: 'enhanced_security_config_validated',
           resourceType: 'security_config',
           resourceId: 'system',
           metadata: enhancedValidation,
           ipAddress: request.ip,
-          userAgent: request.headers['user-agent'] || 'unknown',
+          userAgent: request.headers['user-agent'] ?? 'unknown',
           timestamp: new Date(),
         })
 
@@ -844,19 +977,22 @@ export async function securityRoutes(server: FastifyInstance) {
     },
     async (request, reply) => {
       const headers = reply.getHeaders()
-      const recommendations = []
+      const recommendations: string[] = []
 
       // Check for important security headers
-      if (!headers['x-content-type-options']) {
+      if (typeof headers['x-content-type-options'] !== 'string') {
         recommendations.push('Add X-Content-Type-Options header')
       }
-      if (!headers['x-frame-options']) {
+      if (typeof headers['x-frame-options'] !== 'string') {
         recommendations.push('Add X-Frame-Options header')
       }
-      if (!headers['content-security-policy']) {
+      if (typeof headers['content-security-policy'] !== 'string') {
         recommendations.push('Add Content-Security-Policy header')
       }
-      if (request.protocol === 'https' && !headers['strict-transport-security']) {
+      if (
+        request.protocol === 'https' &&
+        typeof headers['strict-transport-security'] !== 'string'
+      ) {
         recommendations.push('Add Strict-Transport-Security header for HTTPS')
       }
 

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { SocialService } from '../services/social.service'
+
 import {
   friendRequestSchema,
   friendRequestResponseSchema,
@@ -10,8 +10,42 @@ import {
   progressShareSchema,
   socialStatsResponseSchema,
 } from '../schemas/social.schemas'
+import { SocialService } from '../services/social.service'
 
-function createSuccessResponse<T>(data: T, requestId?: string) {
+// Type definitions for request bodies
+interface FriendRequestBody {
+  addresseeId: string
+}
+
+interface ProgressShareBody {
+  achievementId?: string
+  xpGained?: number
+  streakMilestone?: number
+  customMessage?: string
+  shareToSocial?: boolean
+}
+
+// Type guard for authenticated user
+function isAuthenticatedUser(user: unknown): user is { userId: string } {
+  return (
+    typeof user === 'object' &&
+    user !== null &&
+    'userId' in user &&
+    typeof (user as { userId: unknown }).userId === 'string'
+  )
+}
+
+function createSuccessResponse<T>(
+  data: T,
+  requestId?: string,
+): {
+  success: true
+  data: T
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+} {
   return {
     success: true as const,
     data,
@@ -22,7 +56,21 @@ function createSuccessResponse<T>(data: T, requestId?: string) {
   }
 }
 
-function createErrorResponse(message: string, code: string, requestId?: string) {
+function createErrorResponse(
+  message: string,
+  code: string,
+  requestId?: string,
+): {
+  success: false
+  error: {
+    message: string
+    code: string
+  }
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+} {
   return {
     success: false as const,
     error: {
@@ -36,7 +84,7 @@ function createErrorResponse(message: string, code: string, requestId?: string) 
   }
 }
 
-export async function socialRoutes(server: FastifyInstance): Promise<void> {
+export function socialRoutes(server: FastifyInstance): void {
   // Send friend request
   server.post(
     '/friends/request',
@@ -80,14 +128,16 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
-        const { addresseeId } = request.body as { addresseeId: string }
-        const friendRequest = await SocialService.sendFriendRequest(userId, addresseeId)
+        const { addresseeId } = request.body as FriendRequestBody
+        const friendRequest = await SocialService.sendFriendRequest(
+          request.user.userId,
+          addresseeId,
+        )
 
         return createSuccessResponse(friendRequest, request.id)
       } catch (error) {
@@ -101,7 +151,7 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
               ? 'SOCIAL_DISABLED'
               : 'INTERNAL_ERROR'
 
-        reply.code(message.includes('not found') ? 404 : 400)
+        await reply.code(message.includes('not found') ? 404 : 400)
         return createErrorResponse(message, code, request.id)
       }
     },
@@ -141,20 +191,19 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const { friendshipId } = request.params as { friendshipId: string }
-        await SocialService.acceptFriendRequest(userId, friendshipId)
+        await SocialService.acceptFriendRequest(request.user.userId, friendshipId)
 
         return createSuccessResponse({ message: 'Friend request accepted' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error accepting friend request')
         const message = error instanceof Error ? error.message : 'Internal server error'
-        reply.code(message.includes('not found') ? 404 : 400)
+        await reply.code(message.includes('not found') ? 404 : 400)
         return createErrorResponse(message, 'REQUEST_ERROR', request.id)
       }
     },
@@ -194,20 +243,19 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const { friendshipId } = request.params as { friendshipId: string }
-        await SocialService.declineFriendRequest(userId, friendshipId)
+        await SocialService.declineFriendRequest(request.user.userId, friendshipId)
 
         return createSuccessResponse({ message: 'Friend request declined' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error declining friend request')
         const message = error instanceof Error ? error.message : 'Internal server error'
-        reply.code(message.includes('not found') ? 404 : 400)
+        await reply.code(message.includes('not found') ? 404 : 400)
         return createErrorResponse(message, 'REQUEST_ERROR', request.id)
       }
     },
@@ -247,20 +295,19 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const { friendId } = request.params as { friendId: string }
-        await SocialService.removeFriend(userId, friendId)
+        await SocialService.removeFriend(request.user.userId, friendId)
 
         return createSuccessResponse({ message: 'Friend removed successfully' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error removing friend')
         const message = error instanceof Error ? error.message : 'Internal server error'
-        reply.code(message.includes('not found') ? 404 : 400)
+        await reply.code(message.includes('not found') ? 404 : 400)
         return createErrorResponse(message, 'FRIENDSHIP_ERROR', request.id)
       }
     },
@@ -300,20 +347,19 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const currentUserId = request.user?.userId
-        if (!currentUserId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const { userId } = request.params as { userId: string }
-        await SocialService.blockUser(currentUserId, userId)
+        await SocialService.blockUser(request.user.userId, userId)
 
         return createSuccessResponse({ message: 'User blocked successfully' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error blocking user')
         const message = error instanceof Error ? error.message : 'Internal server error'
-        reply.code(400)
+        await reply.code(400)
         return createErrorResponse(message, 'BLOCK_ERROR', request.id)
       }
     },
@@ -353,19 +399,18 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const currentUserId = request.user?.userId
-        if (!currentUserId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const { userId } = request.params as { userId: string }
-        await SocialService.unblockUser(currentUserId, userId)
+        await SocialService.unblockUser(request.user.userId, userId)
 
         return createSuccessResponse({ message: 'User unblocked successfully' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error unblocking user')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -393,17 +438,16 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
-        const friends = await SocialService.getFriends(userId)
+        const friends = await SocialService.getFriends(request.user.userId)
         return createSuccessResponse({ friends }, request.id)
       } catch (error) {
         server.log.error(error, 'Error getting friends list')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -431,17 +475,16 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
-        const pendingRequests = await SocialService.getPendingRequests(userId)
+        const pendingRequests = await SocialService.getPendingRequests(request.user.userId)
         return createSuccessResponse(pendingRequests, request.id)
       } catch (error) {
         server.log.error(error, 'Error getting pending requests')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -490,9 +533,8 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
@@ -503,16 +545,16 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
         }
 
         const leaderboard = await SocialService.getLeaderboard(
-          userId,
-          query.scope || 'global',
-          query.timeframe || 'all_time',
-          query.limit || 50,
+          request.user.userId,
+          query.scope ?? 'global',
+          query.timeframe ?? 'all_time',
+          query.limit ?? 50,
         )
 
         return createSuccessResponse({ leaderboard }, request.id)
       } catch (error) {
         server.log.error(error, 'Error getting leaderboard')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -557,19 +599,22 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
         const query = request.query as { q: string; limit?: number }
-        const searchResults = await SocialService.searchUsers(userId, query.q, query.limit || 20)
+        const searchResults = await SocialService.searchUsers(
+          request.user.userId,
+          query.q,
+          query.limit ?? 20,
+        )
 
         return createSuccessResponse({ users: searchResults }, request.id)
       } catch (error) {
         server.log.error(error, 'Error searching users')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -603,19 +648,19 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
-        const shareData = request.body as any
-        await SocialService.shareProgress(userId, shareData)
+        const shareData = request.body as ProgressShareBody
+        const progressShareData = { ...shareData, userId: request.user.userId }
+        await SocialService.shareProgress(request.user.userId, progressShareData)
 
         return createSuccessResponse({ message: 'Progress shared successfully' }, request.id)
       } catch (error) {
         server.log.error(error, 'Error sharing progress')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },
@@ -643,17 +688,16 @@ export async function socialRoutes(server: FastifyInstance): Promise<void> {
     },
     async (request, reply) => {
       try {
-        const userId = request.user?.userId
-        if (!userId) {
-          reply.code(401)
+        if (!isAuthenticatedUser(request.user)) {
+          await reply.code(401)
           return createErrorResponse('Unauthorized', 'UNAUTHORIZED', request.id)
         }
 
-        const stats = await SocialService.getSocialStats(userId)
+        const stats = await SocialService.getSocialStats(request.user.userId)
         return createSuccessResponse(stats, request.id)
       } catch (error) {
         server.log.error(error, 'Error getting social stats')
-        reply.code(500)
+        await reply.code(500)
         return createErrorResponse('Internal server error', 'INTERNAL_ERROR', request.id)
       }
     },

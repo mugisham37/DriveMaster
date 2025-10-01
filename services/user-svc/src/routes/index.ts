@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 
 import { authRoutes } from './auth'
-import { userRoutes } from './users'
-import { socialRoutes } from './social'
-import { securityRoutes } from './security'
 import { complianceRoutes } from './compliance'
+import { securityRoutes } from './security'
+import { socialRoutes } from './social'
+import { userRoutes } from './users'
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
   // Register API routes with versioning

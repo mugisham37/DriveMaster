@@ -38,7 +38,10 @@
     "psql",
     "hsts",
     "anonymization",
-    "ciphertext"
+    "ciphertext",
+    "pentest",
+    "Vulns",
+    "nosniff"
   ],
   "flagWords": [],
   "ignorePaths": ["node_modules/**", "dist/**", "coverage/**", "*.log"]
