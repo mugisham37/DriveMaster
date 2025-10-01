@@ -52,6 +52,7 @@ module.exports = {
     'node/no-missing-import': 'off', // TypeScript handles this
     'node/no-unsupported-features/es-syntax': 'off', // We use TypeScript
     'node/no-unsupported-features/node-builtins': 'off', // We target Node 20+
+    'node/no-unsupported-features/es-builtins': 'off', // We target Node 20+
 
     // General rules
     'no-console': 'warn',

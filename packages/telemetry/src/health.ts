@@ -1,7 +1,7 @@
 import type { HealthCheckResult, TelemetryConfig } from './types'
 
 export class HealthMonitor {
-  private static instance: HealthMonitor
+  private static instance: HealthMonitor | undefined
   private config: TelemetryConfig
   private healthChecks: Map<
     string,
@@ -9,7 +9,7 @@ export class HealthMonitor {
       status: boolean
       latency?: number
       error?: string
-      metadata?: Record<string, any>
+      metadata?: Record<string, unknown>
     }>
   > = new Map()
 
@@ -18,8 +18,8 @@ export class HealthMonitor {
   }
 
   public static getInstance(config?: TelemetryConfig): HealthMonitor {
-    if (!HealthMonitor.instance) {
-      if (!config) {
+    if (HealthMonitor.instance === undefined) {
+      if (config === undefined) {
         throw new Error('HealthMonitor must be initialized with config')
       }
       HealthMonitor.instance = new HealthMonitor(config)
@@ -33,7 +33,7 @@ export class HealthMonitor {
       status: boolean
       latency?: number
       error?: string
-      metadata?: Record<string, any>
+      metadata?: Record<string, unknown>
     }>,
   ): void {
     this.healthChecks.set(name, check)
@@ -53,7 +53,7 @@ export class HealthMonitor {
 
         checks[name] = {
           status: result.status,
-          ...(result.latency !== undefined
+          ...(typeof result.latency === 'number'
             ? { latency: result.latency }
             : { latency: endTime - startTime }),
           ...(result.error !== undefined ? { error: result.error } : {}),
@@ -73,7 +73,9 @@ export class HealthMonitor {
 
     // Determine overall status
     const allChecksHealthy = Object.values(checks).every((check) => check.status)
-    const hasWarnings = Object.values(checks).some((check) => check.latency && check.latency > 1000)
+    const hasWarnings = Object.values(checks).some(
+      (check) => typeof check.latency === 'number' && check.latency > 1000,
+    )
 
     let status: HealthCheckResult['status']
     if (!allChecksHealthy) {
@@ -117,7 +119,10 @@ export class HealthMonitor {
       const end = process.hrtime.bigint()
       metrics.event_loop_lag_ms = Number(end - start) / 1000000
     } catch (error) {
-      console.error('Error collecting system metrics:', error)
+      // Log error to stderr instead of console for production environments
+      process.stderr.write(
+        `Error collecting system metrics: ${error instanceof Error ? error.message : String(error)}\n`,
+      )
     }
 
     return metrics
@@ -208,7 +213,15 @@ export class HealthMonitor {
     })
   }
 
-  public getHealthEndpoint() {
+  public getHealthEndpoint(): () => Promise<{
+    status: string
+    timestamp: string
+    service: string
+    version: string
+    environment: string
+    checks: HealthCheckResult['checks']
+    metrics: Record<string, number>
+  }> {
     return async () => {
       const health = await this.performHealthCheck()
       return {
@@ -223,7 +236,12 @@ export class HealthMonitor {
     }
   }
 
-  public getReadinessEndpoint() {
+  public getReadinessEndpoint(): () => Promise<{
+    ready: boolean
+    timestamp: string
+    service: string
+    checks: Record<string, boolean>
+  }> {
     return async () => {
       const health = await this.performHealthCheck()
       const isReady = health.status === 'healthy' || health.status === 'degraded'
@@ -232,22 +250,31 @@ export class HealthMonitor {
         ready: isReady,
         timestamp: health.timestamp.toISOString(),
         service: this.config.serviceName,
-        checks: Object.fromEntries(
-          Object.entries(health.checks).map(([name, check]) => [name, check.status]),
+        checks: Object.entries(health.checks).reduce<Record<string, boolean>>(
+          (acc, [name, check]) => {
+            acc[name] = check.status
+            return acc
+          },
+          {},
         ),
       }
     }
   }
 
-  public getLivenessEndpoint() {
-    return async () => {
+  public getLivenessEndpoint(): () => Promise<{
+    alive: boolean
+    timestamp: string
+    service: string
+    uptime: number
+  }> {
+    return () => {
       // Simple liveness check - service is alive if it can respond
-      return {
+      return Promise.resolve({
         alive: true,
         timestamp: new Date().toISOString(),
         service: this.config.serviceName,
         uptime: process.uptime(),
-      }
+      })
     }
   }
 }

@@ -2,12 +2,24 @@ import { NodeSDK } from '@opentelemetry/sdk-node'
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { Resource } from '@opentelemetry/resources'
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
-import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api'
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+  SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+} from '@opentelemetry/semantic-conventions'
+import {
+  trace,
+  context,
+  SpanStatusCode,
+  SpanKind,
+  type Span,
+  type SpanOptions,
+} from '@opentelemetry/api'
+
 import type { TelemetryConfig } from './types'
 
 export class TracingManager {
-  private static instance: TracingManager
+  private static instance: TracingManager | undefined
   private sdk: NodeSDK | null = null
   private config: TelemetryConfig
 
@@ -16,8 +28,8 @@ export class TracingManager {
   }
 
   public static getInstance(config?: TelemetryConfig): TracingManager {
-    if (!TracingManager.instance) {
-      if (!config) {
+    if (TracingManager.instance === undefined) {
+      if (config === undefined) {
         throw new Error('TracingManager must be initialized with config')
       }
       TracingManager.instance = new TracingManager(config)
@@ -26,19 +38,22 @@ export class TracingManager {
   }
 
   public initialize(): void {
-    if (!this.config.enableTracing) {
+    if (this.config.enableTracing !== true) {
       return
     }
 
     const otlpExporter = new OTLPTraceExporter({
-      url: this.config.jaegerEndpoint || 'http://localhost:4318/v1/traces',
+      url:
+        typeof this.config.jaegerEndpoint === 'string' && this.config.jaegerEndpoint.length > 0
+          ? this.config.jaegerEndpoint
+          : 'http://localhost:4318/v1/traces',
     })
 
     this.sdk = new NodeSDK({
       resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: this.config.serviceName,
-        [SemanticResourceAttributes.SERVICE_VERSION]: this.config.serviceVersion,
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.config.environment,
+        [ATTR_SERVICE_NAME]: this.config.serviceName,
+        [ATTR_SERVICE_VERSION]: this.config.serviceVersion,
+        [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: this.config.environment,
       }),
       traceExporter: otlpExporter,
       instrumentations: [
@@ -63,11 +78,11 @@ export class TracingManager {
   public createSpan(
     name: string,
     options?: { kind?: SpanKind; attributes?: Record<string, string | number | boolean> },
-  ) {
+  ): Span {
     const tracer = trace.getTracer(this.config.serviceName, this.config.serviceVersion)
 
-    const spanOptions: any = {
-      kind: options?.kind || SpanKind.INTERNAL,
+    const spanOptions: SpanOptions = {
+      kind: typeof options?.kind === 'number' ? options.kind : SpanKind.INTERNAL,
     }
 
     if (options?.attributes !== undefined) {

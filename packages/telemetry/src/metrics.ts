@@ -1,14 +1,9 @@
 import { register, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client'
-import type {
-  TelemetryConfig,
-  MetricLabels,
-  LearningMetrics,
-  SystemMetrics,
-  BusinessMetrics,
-} from './types'
+
+import type { TelemetryConfig, LearningMetrics, SystemMetrics, BusinessMetrics } from './types'
 
 export class MetricsCollector {
-  private static instance: MetricsCollector
+  private static instance: MetricsCollector | undefined
   private config: TelemetryConfig
 
   // HTTP Metrics
@@ -204,8 +199,8 @@ export class MetricsCollector {
   }
 
   public static getInstance(config?: TelemetryConfig): MetricsCollector {
-    if (!MetricsCollector.instance) {
-      if (!config) {
+    if (MetricsCollector.instance === undefined) {
+      if (config === undefined) {
         throw new Error('MetricsCollector must be initialized with config')
       }
       MetricsCollector.instance = new MetricsCollector(config)
@@ -226,7 +221,6 @@ export class MetricsCollector {
   }
 
   public recordLearningMetrics(userId: string, metrics: LearningMetrics): void {
-    const serviceLabel = { service: this.config.serviceName }
     const userServiceLabel = { user_id: userId, service: this.config.serviceName }
 
     this.learningEffectiveness.set(userServiceLabel, metrics.effectiveness_score)
@@ -254,7 +248,7 @@ export class MetricsCollector {
     this.userRetentionRate.set({ period: '7d', ...labels }, metrics.user_retention_rate)
   }
 
-  public getMetricsEndpoint() {
+  public getMetricsEndpoint(): () => Promise<string> {
     return async () => {
       return register.metrics()
     }

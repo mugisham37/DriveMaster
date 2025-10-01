@@ -19,7 +19,7 @@ export interface HealthCheckResult {
       status: boolean
       latency?: number
       error?: string
-      metadata?: Record<string, any>
+      metadata?: Record<string, unknown>
     }
   >
   metrics: Record<string, number>
