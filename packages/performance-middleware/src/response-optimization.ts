@@ -1,4 +1,4 @@
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPlugin } from 'fastify'
 import fp from 'fastify-plugin'
 
 export interface ResponseOptimizationOptions {
@@ -9,19 +9,20 @@ export interface ResponseOptimizationOptions {
   maxDepth?: number
 }
 
-const responseOptimizationPlugin: FastifyPluginAsync<ResponseOptimizationOptions> = async (
+const responseOptimizationPlugin: FastifyPlugin<ResponseOptimizationOptions> = (
   fastify,
   options,
+  done,
 ) => {
   const config = {
     minifyJson: options.minifyJson !== false,
     removeNullValues: options.removeNullValues !== false,
-    removeEmptyArrays: options.removeEmptyArrays || false,
-    removeEmptyObjects: options.removeEmptyObjects || false,
-    maxDepth: options.maxDepth || 10,
+    removeEmptyArrays: options.removeEmptyArrays ?? false,
+    removeEmptyObjects: options.removeEmptyObjects ?? false,
+    maxDepth: options.maxDepth ?? 10,
   }
 
-  function optimizeObject(obj: any, depth = 0): any {
+  function optimizeObject(obj: unknown, depth = 0): unknown {
     if (depth > config.maxDepth) return obj
     if (obj === null || obj === undefined) return config.removeNullValues ? undefined : obj
 
@@ -34,7 +35,7 @@ const responseOptimizationPlugin: FastifyPluginAsync<ResponseOptimizationOptions
     }
 
     if (typeof obj === 'object' && obj !== null) {
-      const optimized: any = {}
+      const optimized: Record<string, unknown> = {}
       let hasProperties = false
 
       for (const [key, value] of Object.entries(obj)) {
@@ -52,15 +53,19 @@ const responseOptimizationPlugin: FastifyPluginAsync<ResponseOptimizationOptions
     return obj
   }
 
-  fastify.addHook('onSend', async (request, reply, payload) => {
+  fastify.addHook('onSend', (request, reply, payload) => {
     // Skip optimization for non-JSON responses
-    const contentType = reply.getHeader('content-type') as string
-    if (!contentType || !contentType.includes('application/json')) {
+    const contentType = reply.getHeader('content-type') as string | undefined
+    if (
+      contentType === undefined ||
+      contentType === '' ||
+      !contentType.includes('application/json')
+    ) {
       return payload
     }
 
     try {
-      let data: any
+      let data: unknown
 
       // Parse payload
       if (typeof payload === 'string') {
@@ -80,11 +85,11 @@ const responseOptimizationPlugin: FastifyPluginAsync<ResponseOptimizationOptions
         : JSON.stringify(optimized, null, 2)
 
       // Update content-length header
-      reply.header('content-length', Buffer.byteLength(serialized, 'utf8'))
+      void reply.header('content-length', Buffer.byteLength(serialized, 'utf8'))
 
       // Add optimization headers
-      reply.header('x-response-optimized', 'true')
-      reply.header(
+      void reply.header('x-response-optimized', 'true')
+      void reply.header(
         'x-optimization-config',
         JSON.stringify({
           minifyJson: config.minifyJson,
@@ -97,25 +102,36 @@ const responseOptimizationPlugin: FastifyPluginAsync<ResponseOptimizationOptions
       return serialized
     } catch (error) {
       // If optimization fails, return original payload
-      fastify.log.warn('Response optimization failed:', error)
+      fastify.log.warn(
+        `Response optimization failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
       return payload
     }
   })
 
   // Add response size tracking
-  fastify.addHook('onResponse', async (request, reply) => {
-    const originalSize = request.headers['content-length']
-    const optimizedSize = reply.getHeader('content-length')
+  fastify.addHook('onResponse', (request, reply) => {
+    const originalSizeHeader = request.headers['content-length']
+    const optimizedSizeHeader = reply.getHeader('content-length')
 
-    if (originalSize && optimizedSize) {
-      const savings = parseInt(originalSize as string) - parseInt(optimizedSize as string)
-      const percentage = (savings / parseInt(originalSize as string)) * 100
+    if (
+      originalSizeHeader !== undefined &&
+      originalSizeHeader !== '' &&
+      optimizedSizeHeader !== undefined &&
+      optimizedSizeHeader !== ''
+    ) {
+      const originalSize = parseInt(originalSizeHeader, 10)
+      const optimizedSize = parseInt(String(optimizedSizeHeader), 10)
+      const savings = originalSize - optimizedSize
+      const percentage = (savings / originalSize) * 100
 
       if (savings > 0) {
         fastify.log.info(`Response optimized: ${savings} bytes saved (${percentage.toFixed(2)}%)`)
       }
     }
   })
+
+  done()
 }
 
 export { responseOptimizationPlugin }

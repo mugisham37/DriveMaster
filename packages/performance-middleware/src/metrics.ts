@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
-import client from 'prom-client'
+import { collectDefaultMetrics, Counter, Histogram, Gauge, register } from 'prom-client'
+
 import { RequestMetrics } from './types'
 
 export interface MetricsOptions {
@@ -12,63 +13,66 @@ export interface MetricsOptions {
 const metricsPlugin: FastifyPluginAsync<MetricsOptions> = async (fastify, options) => {
   const config = {
     collectDefaultMetrics: options.collectDefaultMetrics !== false,
-    prefix: options.prefix || 'drivemaster_',
-    endpoint: options.endpoint || '/metrics',
+    prefix: options.prefix ?? 'drivemaster_',
+    endpoint: options.endpoint ?? '/metrics',
   }
 
   // Collect default metrics
   if (config.collectDefaultMetrics) {
-    client.collectDefaultMetrics({ prefix: config.prefix })
+    collectDefaultMetrics({ prefix: config.prefix })
   }
 
   // Custom metrics
-  const httpRequestsTotal = new client.Counter({
+  const httpRequestsTotal = new Counter({
     name: `${config.prefix}http_requests_total`,
     help: 'Total number of HTTP requests',
     labelNames: ['method', 'route', 'status_code', 'service'],
   })
 
-  const httpRequestDuration = new client.Histogram({
+  const httpRequestDuration = new Histogram({
     name: `${config.prefix}http_request_duration_seconds`,
     help: 'Duration of HTTP requests in seconds',
     labelNames: ['method', 'route', 'status_code', 'service'],
     buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10],
   })
 
-  const httpRequestsInFlight = new client.Gauge({
+  const httpRequestsInFlight = new Gauge({
     name: `${config.prefix}http_requests_in_flight`,
     help: 'Number of HTTP requests currently being processed',
     labelNames: ['service'],
   })
 
-  const httpResponseSize = new client.Histogram({
+  const httpResponseSize = new Histogram({
     name: `${config.prefix}http_response_size_bytes`,
     help: 'Size of HTTP responses in bytes',
     labelNames: ['method', 'route', 'status_code', 'service'],
     buckets: [100, 1000, 10000, 100000, 1000000],
   })
 
-  const serviceName = process.env.SERVICE_NAME || 'unknown'
+  const serviceName = process.env.SERVICE_NAME ?? 'unknown'
 
   // Request tracking
-  fastify.addHook('onRequest', async (request) => {
+  fastify.addHook('onRequest', (request) => {
+    const routePath = request.routerPath ?? ''
+    const route = routePath !== '' ? routePath : request.url
+
     const metrics: RequestMetrics = {
       startTime: Date.now(),
       method: request.method,
-      route: request.routerPath || request.url,
+      route,
     }
 
     request.requestMetrics = metrics
     httpRequestsInFlight.inc({ service: serviceName })
   })
 
-  fastify.addHook('onResponse', async (request, reply) => {
-    const metrics = request.requestMetrics as RequestMetrics
-    if (!metrics) return
+  fastify.addHook('onResponse', (request, reply) => {
+    const metrics = request.requestMetrics
+    if (metrics === undefined) return
 
     const responseTime = (Date.now() - metrics.startTime) / 1000
     const statusCode = reply.statusCode.toString()
-    const contentLength = reply.getHeader('content-length') as string
+    const contentLengthHeader = reply.getHeader('content-length') as string | undefined
 
     // Update metrics
     httpRequestsTotal.inc({
@@ -88,7 +92,7 @@ const metricsPlugin: FastifyPluginAsync<MetricsOptions> = async (fastify, option
       responseTime,
     )
 
-    if (contentLength) {
+    if (contentLengthHeader !== undefined && contentLengthHeader !== '') {
       httpResponseSize.observe(
         {
           method: metrics.method,
@@ -96,7 +100,7 @@ const metricsPlugin: FastifyPluginAsync<MetricsOptions> = async (fastify, option
           status_code: statusCode,
           service: serviceName,
         },
-        parseInt(contentLength, 10),
+        parseInt(contentLengthHeader, 10),
       )
     }
 
@@ -104,14 +108,14 @@ const metricsPlugin: FastifyPluginAsync<MetricsOptions> = async (fastify, option
   })
 
   // Metrics endpoint
-  fastify.get(config.endpoint, async (request, reply) => {
-    reply.type('text/plain')
-    return client.register.metrics()
+  fastify.get(config.endpoint, async (_request, reply) => {
+    void reply.type('text/plain')
+    return register.metrics()
   })
 
   // Health check endpoint with metrics
-  fastify.get('/health', async (request, reply) => {
-    const metrics = await client.register.getMetricsAsJSON()
+  fastify.get('/health', async (_request, _reply) => {
+    await register.getMetricsAsJSON()
 
     return {
       status: 'healthy',
@@ -125,9 +129,12 @@ const metricsPlugin: FastifyPluginAsync<MetricsOptions> = async (fastify, option
   })
 
   // Graceful shutdown
-  fastify.addHook('onClose', async () => {
-    client.register.clear()
+  fastify.addHook('onClose', () => {
+    register.clear()
   })
+
+  // Ensure plugin is properly initialized
+  await Promise.resolve()
 }
 
 // Extend FastifyRequest interface

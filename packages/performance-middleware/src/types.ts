@@ -1,5 +1,3 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
-
 export interface PerformanceConfig {
   compression: {
     enabled: boolean
@@ -48,14 +46,14 @@ export interface BatchRequest {
   method: string
   url: string
   headers: Record<string, string>
-  body?: any
+  body?: unknown
 }
 
 export interface BatchResponse {
   id: string
   statusCode: number
   headers: Record<string, string>
-  body: any
+  body: unknown
 }
 
 export interface PerformanceMetrics {

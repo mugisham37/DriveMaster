@@ -1,4 +1,4 @@
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
 import { LRUCache } from 'lru-cache'
 
@@ -6,7 +6,7 @@ export interface RateLimitOptions {
   max?: number
   timeWindow?: number
   skipOnError?: boolean
-  keyGenerator?: (request: any) => string
+  keyGenerator?: (request: FastifyRequest) => string
   skipSuccessfulRequests?: boolean
   skipFailedRequests?: boolean
   redis?: {
@@ -24,12 +24,12 @@ interface RateLimitInfo {
 
 const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, options) => {
   const config = {
-    max: options.max || 100,
-    timeWindow: options.timeWindow || 60000, // 1 minute
+    max: options.max ?? 100,
+    timeWindow: options.timeWindow ?? 60000, // 1 minute
     skipOnError: options.skipOnError !== false,
-    keyGenerator: options.keyGenerator || ((request: any) => request.ip),
-    skipSuccessfulRequests: options.skipSuccessfulRequests || false,
-    skipFailedRequests: options.skipFailedRequests || false,
+    keyGenerator: options.keyGenerator ?? ((request: FastifyRequest): string => request.ip),
+    skipSuccessfulRequests: options.skipSuccessfulRequests ?? false,
+    skipFailedRequests: options.skipFailedRequests ?? false,
   }
 
   // Use LRU cache for in-memory rate limiting
@@ -39,36 +39,41 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, op
   })
 
   // Redis client for distributed rate limiting (if configured)
-  let redisClient: any = null
-  if (options.redis) {
-    const Redis = await import('ioredis')
-    redisClient = new Redis.default({
+  let redisClient: import('ioredis').Redis | null = null
+  if (options.redis !== undefined) {
+    const Redis = (await import('ioredis')).default
+    const redisConfig: import('ioredis').RedisOptions = {
       host: options.redis.host,
       port: options.redis.port,
-      password: options.redis.password,
-      db: options.redis.db || 0,
-    })
+      db: options.redis.db ?? 0,
+    }
+
+    if (options.redis.password !== undefined) {
+      redisConfig.password = options.redis.password
+    }
+
+    redisClient = new Redis(redisConfig)
   }
 
   async function getRateLimitInfo(key: string): Promise<RateLimitInfo> {
     const now = Date.now()
     const resetTime = now + config.timeWindow
 
-    if (redisClient) {
+    if (redisClient !== null) {
       // Distributed rate limiting with Redis
       const pipeline = redisClient.pipeline()
       pipeline.incr(key)
       pipeline.expire(key, Math.ceil(config.timeWindow / 1000))
 
       const results = await pipeline.exec()
-      const count = results?.[0]?.[1] || 0
+      const count = (results?.[0]?.[1] as number) ?? 0
 
       return { count, resetTime }
     } else {
       // In-memory rate limiting
       const existing = cache.get(key)
 
-      if (existing && existing.resetTime > now) {
+      if (existing !== undefined && existing.resetTime > now) {
         existing.count++
         cache.set(key, existing)
         return existing
@@ -86,24 +91,26 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, op
       const rateLimitInfo = await getRateLimitInfo(key)
 
       // Add rate limit headers
-      reply.header('x-ratelimit-limit', config.max)
-      reply.header('x-ratelimit-remaining', Math.max(0, config.max - rateLimitInfo.count))
-      reply.header('x-ratelimit-reset', Math.ceil(rateLimitInfo.resetTime / 1000))
+      void reply.header('x-ratelimit-limit', config.max)
+      void reply.header('x-ratelimit-remaining', Math.max(0, config.max - rateLimitInfo.count))
+      void reply.header('x-ratelimit-reset', Math.ceil(rateLimitInfo.resetTime / 1000))
 
       // Check if rate limit exceeded
       if (rateLimitInfo.count > config.max) {
-        reply.code(429).send({
+        void reply.code(429).send({
           error: 'Too Many Requests',
           message: 'Rate limit exceeded',
           retryAfter: Math.ceil((rateLimitInfo.resetTime - Date.now()) / 1000),
         })
         return
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (!config.skipOnError) {
         throw error
       }
-      fastify.log.warn('Rate limiting error:', error)
+      fastify.log.warn(
+        `Rate limiting error: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   })
 
@@ -118,11 +125,11 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, op
         // Decrement the counter for skipped requests
         const key = config.keyGenerator(request)
 
-        if (redisClient) {
+        if (redisClient !== null) {
           await redisClient.decr(key)
         } else {
           const existing = cache.get(key)
-          if (existing) {
+          if (existing !== undefined) {
             existing.count = Math.max(0, existing.count - 1)
             cache.set(key, existing)
           }
@@ -133,7 +140,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, op
 
   // Graceful shutdown
   fastify.addHook('onClose', async () => {
-    if (redisClient) {
+    if (redisClient !== null) {
       await redisClient.quit()
     }
   })

@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
+
 import { BatchRequest, BatchResponse } from './types'
 
 export interface BatchingOptions {
@@ -10,9 +11,9 @@ export interface BatchingOptions {
 
 const requestBatchingPlugin: FastifyPluginAsync<BatchingOptions> = async (fastify, options) => {
   const config = {
-    maxBatchSize: options.maxBatchSize || 10,
-    timeout: options.timeout || 5000,
-    endpoint: options.endpoint || '/batch',
+    maxBatchSize: options.maxBatchSize ?? 10,
+    timeout: options.timeout ?? 5000,
+    endpoint: options.endpoint ?? '/batch',
   }
 
   // Batch processing endpoint
@@ -60,6 +61,26 @@ const requestBatchingPlugin: FastifyPluginAsync<BatchingOptions> = async (fastif
                   },
                 },
               },
+              error: { type: 'string' },
+              maxBatchSize: { type: 'number' },
+              timeout: { type: 'number' },
+            },
+            required: ['responses'],
+          },
+          400: {
+            type: 'object',
+            properties: {
+              responses: { type: 'array' },
+              error: { type: 'string' },
+              maxBatchSize: { type: 'number' },
+            },
+          },
+          408: {
+            type: 'object',
+            properties: {
+              responses: { type: 'array' },
+              error: { type: 'string' },
+              timeout: { type: 'number' },
             },
           },
         },
@@ -69,32 +90,52 @@ const requestBatchingPlugin: FastifyPluginAsync<BatchingOptions> = async (fastif
       const { requests } = request.body
 
       if (requests.length > config.maxBatchSize) {
-        return reply.code(400).send({
+        void reply.code(400)
+        return {
+          responses: [],
           error: 'Batch size exceeds maximum allowed',
           maxBatchSize: config.maxBatchSize,
-        })
+        }
       }
 
-      const responses: BatchResponse[] = []
-      const promises = requests.map(async (batchRequest) => {
+      const promises = requests.map(async (batchRequest): Promise<BatchResponse> => {
         try {
           // Create internal request
           const internalResponse = await fastify.inject({
-            method: batchRequest.method as any,
+            method: batchRequest.method as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
             url: batchRequest.url,
             headers: {
               ...batchRequest.headers,
               'x-batch-request': 'true',
               'x-batch-id': batchRequest.id,
             },
-            payload: batchRequest.body,
+            ...(batchRequest.body !== undefined && { payload: JSON.stringify(batchRequest.body) }),
           })
+
+          // Convert headers to Record<string, string>
+          const responseHeaders: Record<string, string> = {}
+          Object.entries(internalResponse.headers).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+              responseHeaders[key] = value
+            } else if (Array.isArray(value)) {
+              responseHeaders[key] = value.join(', ')
+            } else if (value !== undefined) {
+              responseHeaders[key] = String(value)
+            }
+          })
+
+          let responseBody: unknown
+          try {
+            responseBody = JSON.parse(internalResponse.body)
+          } catch {
+            responseBody = internalResponse.body
+          }
 
           return {
             id: batchRequest.id,
             statusCode: internalResponse.statusCode,
-            headers: internalResponse.headers,
-            body: internalResponse.json(),
+            headers: responseHeaders,
+            body: responseBody,
           }
         } catch (error) {
           return {
@@ -120,32 +161,38 @@ const requestBatchingPlugin: FastifyPluginAsync<BatchingOptions> = async (fastif
 
         return { responses: results }
       } catch (error) {
-        return reply.code(408).send({
+        void reply.code(408)
+        return {
+          responses: [],
           error: 'Batch request timeout',
           timeout: config.timeout,
-        })
+        }
       }
     },
   )
 
   // Middleware to detect batch requests
-  fastify.addHook('onRequest', async (request) => {
-    if (request.headers['x-batch-request']) {
+  fastify.addHook('onRequest', (request) => {
+    const batchHeader = request.headers['x-batch-request']
+    if (batchHeader !== undefined && batchHeader !== '') {
       request.isBatchRequest = true
       request.batchId = request.headers['x-batch-id'] as string
     }
   })
 
   // Response optimization for batch requests
-  fastify.addHook('onSend', async (request, reply, payload) => {
-    if (request.isBatchRequest) {
+  fastify.addHook('onSend', (request, reply, payload) => {
+    if (request.isBatchRequest === true) {
       // Add batch metadata to response
-      reply.header('x-batch-id', request.batchId)
-      reply.header('x-batch-processed', 'true')
+      void reply.header('x-batch-id', request.batchId)
+      void reply.header('x-batch-processed', 'true')
     }
 
     return payload
   })
+
+  // Ensure plugin is properly initialized
+  await Promise.resolve()
 }
 
 // Extend FastifyRequest interface

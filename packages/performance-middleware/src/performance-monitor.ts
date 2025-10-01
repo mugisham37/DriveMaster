@@ -1,6 +1,7 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
-import { performance } from 'perf_hooks'
 import { EventEmitter } from 'events'
+import { performance } from 'perf_hooks'
+
+import { FastifyRequest, FastifyReply } from 'fastify'
 
 export interface PerformanceMetrics {
   requestId: string
@@ -11,8 +12,8 @@ export interface PerformanceMetrics {
   memoryUsage: NodeJS.MemoryUsage
   cpuUsage: NodeJS.CpuUsage
   timestamp: number
-  userAgent?: string
-  userId?: string
+  userAgent?: string | undefined
+  userId?: string | undefined
   service: string
 }
 
@@ -37,6 +38,17 @@ export interface AlertConfig {
   cpuThreshold: number
 }
 
+export interface PerformanceStats {
+  requestCount: number
+  errorCount: number
+  errorRate: number
+  responseTime: { p50: number; p95: number; p99: number; avg: number }
+  throughput: number
+  memoryUsage: NodeJS.MemoryUsage
+  uptime: number
+  service: string
+}
+
 export class PerformanceMonitor extends EventEmitter {
   private metrics: PerformanceMetrics[] = []
   private budget: PerformanceBudget
@@ -58,25 +70,66 @@ export class PerformanceMonitor extends EventEmitter {
   }
 
   /**
-   * Fastify middleware for performance monitoring
+   * Create Fastify hooks for performance monitoring
    */
-  middleware() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
-      const startTime = performance.now()
-      const startCpuUsage = process.cpuUsage()
-      const requestId = (request.headers['x-request-id'] as string) || this.generateRequestId()
+  createHooks(): {
+    onRequest: (request: FastifyRequest) => void
+    onSend: (request: FastifyRequest, reply: FastifyReply, payload: unknown) => Promise<unknown>
+  } {
+    return {
+      onRequest: (request: FastifyRequest): void => {
+        const startTime = performance.now()
+        const startCpuUsage = process.cpuUsage()
+        const requestIdHeader = request.headers['x-request-id'] as string | undefined
+        const requestId =
+          requestIdHeader !== undefined && requestIdHeader !== ''
+            ? requestIdHeader
+            : this.generateRequestId()
 
-      // Add request ID to request context
-      request.requestId = requestId
+        // Store performance data in request context
+        ;(
+          request as FastifyRequest & {
+            performanceData?: {
+              startTime: number
+              startCpuUsage: NodeJS.CpuUsage
+              requestId: string
+            }
+          }
+        ).performanceData = {
+          startTime,
+          startCpuUsage,
+          requestId,
+        }
+      },
 
-      // Hook into response to capture metrics
-      reply.addHook('onSend', async (request, reply, payload) => {
+      onSend: async (
+        request: FastifyRequest,
+        reply: FastifyReply,
+        payload: unknown,
+      ): Promise<unknown> => {
+        const performanceData = (
+          request as FastifyRequest & {
+            performanceData?: {
+              startTime: number
+              startCpuUsage: NodeJS.CpuUsage
+              requestId: string
+            }
+          }
+        ).performanceData
+
+        if (performanceData === undefined) {
+          return payload
+        }
+
         const endTime = performance.now()
-        const responseTime = endTime - startTime
-        const cpuUsage = process.cpuUsage(startCpuUsage)
+        const responseTime = endTime - performanceData.startTime
+        const cpuUsage = process.cpuUsage(performanceData.startCpuUsage)
+
+        const userAgent = request.headers['user-agent']
+        const userId = (request as FastifyRequest & { user?: { id?: string } }).user?.id
 
         const metrics: PerformanceMetrics = {
-          requestId,
+          requestId: performanceData.requestId,
           method: request.method,
           url: request.url,
           statusCode: reply.statusCode,
@@ -84,8 +137,8 @@ export class PerformanceMonitor extends EventEmitter {
           memoryUsage: process.memoryUsage(),
           cpuUsage,
           timestamp: Date.now(),
-          userAgent: request.headers['user-agent'],
-          userId: (request as any).user?.id,
+          userAgent,
+          userId,
           service: this.serviceName,
         }
 
@@ -93,11 +146,11 @@ export class PerformanceMonitor extends EventEmitter {
         this.checkPerformanceBudget(metrics)
 
         // Add performance headers
-        reply.header('X-Response-Time', `${responseTime.toFixed(2)}ms`)
-        reply.header('X-Request-ID', requestId)
+        void reply.header('X-Response-Time', `${responseTime.toFixed(2)}ms`)
+        void reply.header('X-Request-ID', performanceData.requestId)
 
         return payload
-      })
+      },
     }
   }
 
@@ -223,7 +276,7 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Get performance statistics
    */
-  getStats(timeWindow: number = 300000): any {
+  getStats(timeWindow: number = 300000): PerformanceStats {
     // Default 5 minutes
     const recentMetrics = this.getRecentMetrics(timeWindow)
 
@@ -236,6 +289,7 @@ export class PerformanceMonitor extends EventEmitter {
         throughput: 0,
         memoryUsage: process.memoryUsage(),
         uptime: Date.now() - this.startTime,
+        service: this.serviceName,
       }
     }
 
@@ -263,7 +317,7 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Get health check status
    */
-  getHealthStatus(): { status: 'healthy' | 'degraded' | 'unhealthy'; details: any } {
+  getHealthStatus(): { status: 'healthy' | 'degraded' | 'unhealthy'; details: unknown } {
     const stats = this.getStats()
     const issues: string[] = []
 
@@ -330,11 +384,11 @@ export class PerformanceMonitor extends EventEmitter {
   private percentile(sortedArray: number[], percentile: number): number {
     if (sortedArray.length === 0) return 0
     const index = Math.ceil(sortedArray.length * percentile) - 1
-    return sortedArray[Math.max(0, index)]
+    return sortedArray[Math.max(0, index)] ?? 0
   }
 
   private generateRequestId(): string {
-    return `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    return `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
   }
 
   private startPeriodicMonitoring(): void {
@@ -358,7 +412,7 @@ export class PerformanceMonitor extends EventEmitter {
     }, 300000)
   }
 
-  private formatPrometheusMetrics(stats: any): string {
+  private formatPrometheusMetrics(stats: PerformanceStats): string {
     const serviceName = this.serviceName.replace(/-/g, '_')
 
     return `
