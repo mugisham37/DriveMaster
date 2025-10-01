@@ -18,11 +18,13 @@ export interface ReviewResult {
   difficulty?: number
 }
 
+import type { UserProfile } from '../types/spaced.types'
+
 export interface ScheduleContext {
   userId: string
   conceptKey: string
   itemId?: string
-  userProfile?: any
+  userProfile?: UserProfile
   similarConcepts?: string[]
   currentTime: Date
 }
@@ -102,7 +104,7 @@ export class SpacedRepetition {
     for (const similar of similarConcepts) {
       if (similar === conceptKey) continue
 
-      const mastery = conceptMasteries.get(similar) || 0
+      const mastery = conceptMasteries.get(similar) ?? 0
 
       // Higher mastery in similar concepts can cause interference
       if (mastery > 0.3) {
@@ -168,8 +170,8 @@ export class SpacedRepetition {
     newInterval = Math.max(1, Math.round(newInterval * forgettingAdjustment))
 
     // Apply response time factor
-    if (responseTime && responseTime > 0) {
-      const responseTimeFactor = this.calculateResponseTimeFactor(responseTime, difficulty || 0.5)
+    if (responseTime !== undefined && responseTime !== null && responseTime > 0) {
+      const responseTimeFactor = this.calculateResponseTimeFactor(responseTime, difficulty ?? 0.5)
       newInterval = Math.round(newInterval * responseTimeFactor)
     }
 
@@ -193,7 +195,7 @@ export class SpacedRepetition {
     const newInterference = { ...params.interference }
     if (context.similarConcepts) {
       for (const similar of context.similarConcepts) {
-        newInterference[similar] = (newInterference[similar] || 0) + 0.1
+        newInterference[similar] = (newInterference[similar] ?? 0) + 0.1
       }
     }
 
@@ -358,7 +360,12 @@ export class SpacedRepetition {
       const [hour, minute = 0] = timeStr.split(':').map(Number)
       if (hour === undefined) continue
       const preferredDate = new Date(baseTime)
-      preferredDate.setHours(hour, minute || 0, 0, 0)
+      preferredDate.setHours(
+        hour,
+        minute !== undefined && minute !== null && !isNaN(minute) ? minute : 0,
+        0,
+        0,
+      )
 
       // If preferred time is earlier today, move to next day
       if (preferredDate <= baseTime) {
@@ -388,11 +395,14 @@ export class SpacedRepetition {
     // Group reviews by date
     for (const [itemId, reviewDate] of scheduledReviews) {
       const dateKey = reviewDate.toISOString().split('T')[0]
-      if (dateKey) {
+      if (dateKey !== undefined && dateKey !== null && dateKey.length > 0) {
         if (!reviewsByDate.has(dateKey)) {
           reviewsByDate.set(dateKey, [])
         }
-        reviewsByDate.get(dateKey)!.push(itemId)
+        const dateItems = reviewsByDate.get(dateKey)
+        if (dateItems !== undefined) {
+          dateItems.push(itemId)
+        }
       }
     }
 
@@ -401,7 +411,10 @@ export class SpacedRepetition {
       if (itemIds.length <= maxDailyReviews) {
         // No redistribution needed
         for (const itemId of itemIds) {
-          balancedSchedule.set(itemId, scheduledReviews.get(itemId)!)
+          const originalDate = scheduledReviews.get(itemId)
+          if (originalDate) {
+            balancedSchedule.set(itemId, originalDate)
+          }
         }
       } else {
         // Redistribute excess reviews
@@ -410,7 +423,7 @@ export class SpacedRepetition {
         // Keep highest priority items on original date
         for (let i = 0; i < maxDailyReviews; i++) {
           const itemId = itemIds[i]
-          if (itemId) {
+          if (itemId !== undefined && itemId !== null && itemId.length > 0) {
             const originalDate = scheduledReviews.get(itemId)
             if (originalDate) {
               balancedSchedule.set(itemId, originalDate)
@@ -421,7 +434,7 @@ export class SpacedRepetition {
         // Redistribute excess items to following days
         for (let i = maxDailyReviews; i < itemIds.length; i++) {
           const itemId = itemIds[i]
-          if (itemId) {
+          if (itemId !== undefined && itemId !== null && itemId.length > 0) {
             const dayOffset = Math.floor((i - maxDailyReviews) / maxDailyReviews) + 1
             const newDate = new Date(baseDate.getTime() + dayOffset * 24 * 60 * 60 * 1000)
             balancedSchedule.set(itemId, newDate)
