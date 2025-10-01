@@ -1,6 +1,23 @@
 import Redis from 'ioredis'
 
 import type { RedisConfig } from './environment'
+import type { RedisOptions } from './types'
+
+// Simple logger for internal use - in production, inject proper logger
+const logger = {
+  error: (message: string, error?: unknown): void => {
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.error(message, error)
+    }
+  },
+  info: (message: string): void => {
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.log(message)
+    }
+  },
+}
 
 export interface RedisConnection {
   client: Redis
@@ -8,7 +25,7 @@ export interface RedisConnection {
 }
 
 export function createRedisConnection(config: RedisConfig): RedisConnection {
-  const redisOptions: any = {
+  const redisOptions: RedisOptions = {
     host: config.host,
     port: config.port,
     db: config.db,
@@ -19,7 +36,7 @@ export function createRedisConnection(config: RedisConfig): RedisConnection {
     family: 4,
   }
 
-  if (config.password) {
+  if (config.password !== undefined && config.password !== '') {
     redisOptions.password = config.password
   }
 
@@ -27,24 +44,24 @@ export function createRedisConnection(config: RedisConfig): RedisConnection {
 
   // Error handling
   client.on('error', (error) => {
-    console.error('Redis connection error:', error)
+    logger.error('Redis connection error:', error)
   })
 
   client.on('connect', () => {
-    console.log('Redis connected successfully')
+    logger.info('Redis connected successfully')
   })
 
   client.on('ready', () => {
-    console.log('Redis ready for operations')
+    logger.info('Redis ready for operations')
   })
 
   client.on('close', () => {
-    console.log('Redis connection closed')
+    logger.info('Redis connection closed')
   })
 
   return {
     client,
-    close: async () => {
+    close: async (): Promise<void> => {
       await client.quit()
     },
   }
@@ -56,7 +73,7 @@ export async function checkRedisHealth(client: Redis): Promise<boolean> {
     const result = await client.ping()
     return result === 'PONG'
   } catch (error) {
-    console.error('Redis health check failed:', error)
+    logger.error('Redis health check failed:', error)
     return false
   }
 }
@@ -68,9 +85,9 @@ export class CacheManager {
   async get<T>(key: string): Promise<T | null> {
     try {
       const value = await this.redis.get(key)
-      return value ? JSON.parse(value) : null
+      return value !== null && value !== undefined ? (JSON.parse(value) as T) : null
     } catch (error) {
-      console.error('Cache get error:', error)
+      logger.error('Cache get error:', error)
       return null
     }
   }
@@ -78,14 +95,14 @@ export class CacheManager {
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> {
     try {
       const serialized = JSON.stringify(value)
-      if (ttlSeconds) {
+      if (ttlSeconds !== undefined && ttlSeconds > 0) {
         await this.redis.setex(key, ttlSeconds, serialized)
       } else {
         await this.redis.set(key, serialized)
       }
       return true
     } catch (error) {
-      console.error('Cache set error:', error)
+      logger.error('Cache set error:', error)
       return false
     }
   }
@@ -95,7 +112,7 @@ export class CacheManager {
       const result = await this.redis.del(key)
       return result > 0
     } catch (error) {
-      console.error('Cache delete error:', error)
+      logger.error('Cache delete error:', error)
       return false
     }
   }
@@ -105,7 +122,7 @@ export class CacheManager {
       const result = await this.redis.exists(key)
       return result === 1
     } catch (error) {
-      console.error('Cache exists error:', error)
+      logger.error('Cache exists error:', error)
       return false
     }
   }
@@ -114,7 +131,7 @@ export class CacheManager {
     try {
       return await this.redis.incrby(key, by)
     } catch (error) {
-      console.error('Cache increment error:', error)
+      logger.error('Cache increment error:', error)
       return null
     }
   }
@@ -124,7 +141,7 @@ export class CacheManager {
       const result = await this.redis.expire(key, ttlSeconds)
       return result === 1
     } catch (error) {
-      console.error('Cache expire error:', error)
+      logger.error('Cache expire error:', error)
       return false
     }
   }

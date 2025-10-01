@@ -97,7 +97,7 @@ export function loadEnvironmentConfig(): {
   })
 
   const kafka = KafkaConfigSchema.parse({
-    brokers: process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092'],
+    brokers: process.env.KAFKA_BROKERS?.split(',') ?? ['localhost:9092'],
     clientId: process.env.KAFKA_CLIENT_ID,
     groupId: process.env.KAFKA_GROUP_ID,
     connectionTimeout: process.env.KAFKA_CONNECTION_TIMEOUT,

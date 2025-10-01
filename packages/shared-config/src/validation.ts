@@ -82,13 +82,23 @@ export function createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
 }
 
 // Response builders
-export function createSuccessResponse<T>(data: T, requestId?: string) {
+export function createSuccessResponse<T>(
+  data: T,
+  requestId?: string,
+): {
+  success: true
+  data: T
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+} {
   return {
     success: true as const,
     data,
     meta: {
       timestamp: new Date().toISOString(),
-      requestId,
+      ...(requestId !== undefined && requestId !== '' ? { requestId } : {}),
     },
   }
 }
@@ -96,9 +106,20 @@ export function createSuccessResponse<T>(data: T, requestId?: string) {
 export function createErrorResponse(
   code: string,
   message: string,
-  details?: any,
+  details?: unknown,
   requestId?: string,
-) {
+): {
+  success: false
+  error: {
+    code: string
+    message: string
+    details?: unknown
+  }
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+} {
   return {
     success: false as const,
     error: {
@@ -108,7 +129,7 @@ export function createErrorResponse(
     },
     meta: {
       timestamp: new Date().toISOString(),
-      requestId,
+      ...(requestId !== undefined && requestId !== '' ? { requestId } : {}),
     },
   }
 }
@@ -121,7 +142,22 @@ export function createPaginatedResponse<T>(
     total: number
   },
   requestId?: string,
-) {
+): {
+  success: true
+  data: T[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+  meta: {
+    timestamp: string
+    requestId?: string
+  }
+} {
   const totalPages = Math.ceil(pagination.total / pagination.limit)
 
   return {
@@ -135,7 +171,7 @@ export function createPaginatedResponse<T>(
     },
     meta: {
       timestamp: new Date().toISOString(),
-      requestId,
+      ...(requestId !== undefined && requestId !== '' ? { requestId } : {}),
     },
   }
 }

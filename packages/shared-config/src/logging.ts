@@ -1,4 +1,7 @@
-import pino from 'pino'
+// eslint-disable-next-line import/no-named-as-default
+import pino, { stdTimeFunctions, stdSerializers } from 'pino'
+
+import type { HttpRequest, HttpResponse, RequestLoggerConfig } from './types'
 
 export interface LoggerConfig {
   level: 'error' | 'warn' | 'info' | 'debug'
@@ -18,7 +21,7 @@ export function createLogger(config: LoggerConfig): pino.Logger {
       version: config.version,
       environment: config.environment,
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: stdTimeFunctions.isoTime,
     formatters: {
       level: (label) => ({ level: label }),
     },
@@ -33,28 +36,49 @@ export function createLogger(config: LoggerConfig): pino.Logger {
       },
     }),
     serializers: {
-      error: pino.stdSerializers.err,
-      req: pino.stdSerializers.req,
-      res: pino.stdSerializers.res,
+      error: stdSerializers.err,
+      req: stdSerializers.req,
+      res: stdSerializers.res,
     },
   })
 }
 
 // Request logging middleware for Fastify
-export function createRequestLogger(logger: pino.Logger) {
+export function createRequestLogger(logger: pino.Logger): RequestLoggerConfig {
   return {
     logger,
     serializers: {
-      req: (req: any) => ({
+      req: (
+        req: HttpRequest,
+      ): {
+        method: string
+        url: string
+        headers: {
+          'user-agent'?: string | string[]
+          'content-type'?: string | string[]
+        }
+        remoteAddress: string
+      } => ({
         method: req.method,
         url: req.url,
         headers: {
-          'user-agent': req.headers['user-agent'],
-          'content-type': req.headers['content-type'],
+          ...(req.headers['user-agent'] !== undefined && {
+            'user-agent': req.headers['user-agent'],
+          }),
+          ...(req.headers['content-type'] !== undefined && {
+            'content-type': req.headers['content-type'],
+          }),
         },
         remoteAddress: req.ip,
       }),
-      res: (res: any) => ({
+      res: (
+        res: HttpResponse,
+      ): {
+        statusCode: number
+        headers: {
+          'content-type'?: string | number | string[] | undefined
+        }
+      } => ({
         statusCode: res.statusCode,
         headers: {
           'content-type': res.getHeader('content-type'),
@@ -68,19 +92,19 @@ export function createRequestLogger(logger: pino.Logger) {
 export class StructuredLogger {
   constructor(private logger: pino.Logger) {}
 
-  info(message: string, data?: Record<string, any>): void {
+  info(message: string, data?: Record<string, unknown>): void {
     this.logger.info(data, message)
   }
 
-  warn(message: string, data?: Record<string, any>): void {
+  warn(message: string, data?: Record<string, unknown>): void {
     this.logger.warn(data, message)
   }
 
-  error(message: string, error?: Error, data?: Record<string, any>): void {
+  error(message: string, error?: Error, data?: Record<string, unknown>): void {
     this.logger.error({ err: error, ...data }, message)
   }
 
-  debug(message: string, data?: Record<string, any>): void {
+  debug(message: string, data?: Record<string, unknown>): void {
     this.logger.debug(data, message)
   }
 
@@ -95,12 +119,12 @@ export class StructuredLogger {
   }
 
   // Business event logging
-  businessEvent(event: string, data: Record<string, any>): void {
+  businessEvent(event: string, data: Record<string, unknown>): void {
     this.logger.info({ event: 'business', type: event, ...data }, `Business event: ${event}`)
   }
 
   // Security event logging
-  securityEvent(event: string, data: Record<string, any>): void {
+  securityEvent(event: string, data: Record<string, unknown>): void {
     this.logger.warn({ event: 'security', type: event, ...data }, `Security event: ${event}`)
   }
 
@@ -109,7 +133,7 @@ export class StructuredLogger {
     operation: string,
     table: string,
     duration: number,
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
   ): void {
     this.logger.debug(
       {

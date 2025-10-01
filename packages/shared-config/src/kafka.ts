@@ -2,6 +2,22 @@ import { Kafka, Producer, Consumer, EachMessagePayload } from 'kafkajs'
 
 import type { KafkaConfig } from './environment'
 
+// Simple logger for internal use - in production, inject proper logger
+const logger = {
+  error: (message: string, error?: unknown): void => {
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.error(message, error)
+    }
+  },
+  warn: (message: string): void => {
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.warn(message)
+    }
+  },
+}
+
 export interface KafkaConnection {
   kafka: Kafka
   producer: Producer
@@ -49,7 +65,7 @@ export async function createKafkaConnection(config: KafkaConfig): Promise<KafkaC
     kafka,
     producer,
     consumer,
-    close: async () => {
+    close: async (): Promise<void> => {
       await producer.disconnect()
       await consumer.disconnect()
     },
@@ -74,7 +90,7 @@ export class EventPublisher {
       })
       return true
     } catch (error) {
-      console.error('Event publishing error:', error)
+      logger.error('Event publishing error:', error)
       return false
     }
   }
@@ -94,7 +110,7 @@ export class EventPublisher {
       })
       return true
     } catch (error) {
-      console.error('Batch event publishing error:', error)
+      logger.error('Batch event publishing error:', error)
       return false
     }
   }
@@ -112,8 +128,8 @@ export class EventConsumer {
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }: EachMessagePayload) => {
         try {
-          if (!message.value) {
-            console.warn('Received message with no value')
+          if (message.value === null || message.value === undefined) {
+            logger.warn('Received message with no value')
             return
           }
 
@@ -122,13 +138,16 @@ export class EventConsumer {
             topic,
             partition,
             offset: message.offset,
-            key: message.key?.toString() || undefined,
-            timestamp: message.timestamp ? new Date(parseInt(message.timestamp)) : new Date(),
+            key: message.key?.toString() ?? undefined,
+            timestamp:
+              message.timestamp !== undefined && message.timestamp !== ''
+                ? new Date(parseInt(message.timestamp))
+                : new Date(),
           }
 
           await handler(parsedMessage, metadata)
         } catch (error) {
-          console.error('Message processing error:', error)
+          logger.error('Message processing error:', error)
           // In production, you might want to send to a dead letter queue
         }
       },
@@ -153,7 +172,7 @@ export async function checkKafkaHealth(kafka: Kafka): Promise<boolean> {
     await admin.disconnect()
     return true
   } catch (error) {
-    console.error('Kafka health check failed:', error)
+    logger.error('Kafka health check failed:', error)
     return false
   }
 }
@@ -169,8 +188,8 @@ export async function createTopics(
     await admin.createTopics({
       topics: topics.map((t) => ({
         topic: t.topic,
-        numPartitions: t.numPartitions || 3,
-        replicationFactor: t.replicationFactor || 1,
+        numPartitions: t.numPartitions ?? 3,
+        replicationFactor: t.replicationFactor ?? 1,
       })),
     })
   } finally {

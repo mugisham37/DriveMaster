@@ -1,6 +1,24 @@
 import { Client } from '@elastic/elasticsearch'
 
 import type { ElasticsearchConfig } from './environment'
+import type { ElasticsearchResponse, ElasticsearchBulkResponse } from './types'
+
+// Simple logger for internal use - in production, inject proper logger
+const logger = {
+  error: (message: string, error?: unknown): void => {
+    // In production, this should use the proper logger instance
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.error(message, error)
+    }
+  },
+  info: (message: string): void => {
+    if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
+      console.log(message)
+    }
+  },
+}
 
 export interface ElasticsearchConnection {
   client: Client
@@ -27,7 +45,7 @@ export function createElasticsearchConnection(
 
   return {
     client,
-    close: async () => {
+    close: async (): Promise<void> => {
       await client.close()
     },
   }
@@ -39,7 +57,7 @@ export async function checkElasticsearchHealth(client: Client): Promise<boolean>
     const response = await client.cluster.health()
     return response.status === 'green' || response.status === 'yellow'
   } catch (error) {
-    console.error('Elasticsearch health check failed:', error)
+    logger.error('Elasticsearch health check failed:', error)
     return false
   }
 }
@@ -50,20 +68,20 @@ export class IndexManager {
 
   async createIndex(
     name: string,
-    mapping: Record<string, any>,
-    settings?: Record<string, any>,
+    mapping: Record<string, unknown>,
+    settings?: Record<string, unknown>,
   ): Promise<boolean> {
     try {
       const exists = await this.client.indices.exists({ index: name })
       if (exists) {
-        console.log(`Index ${name} already exists`)
+        logger.info(`Index ${name} already exists`)
         return true
       }
 
       await this.client.indices.create({
         index: name,
         body: {
-          settings: settings || {
+          settings: settings ?? {
             number_of_shards: 1,
             number_of_replicas: 0,
             'index.mapping.total_fields.limit': 2000,
@@ -72,10 +90,10 @@ export class IndexManager {
         },
       })
 
-      console.log(`Index ${name} created successfully`)
+      logger.info(`Index ${name} created successfully`)
       return true
     } catch (error) {
-      console.error(`Failed to create index ${name}:`, error)
+      logger.error(`Failed to create index ${name}:`, error)
       return false
     }
   }
@@ -83,10 +101,10 @@ export class IndexManager {
   async deleteIndex(name: string): Promise<boolean> {
     try {
       await this.client.indices.delete({ index: name })
-      console.log(`Index ${name} deleted successfully`)
+      logger.info(`Index ${name} deleted successfully`)
       return true
     } catch (error) {
-      console.error(`Failed to delete index ${name}:`, error)
+      logger.error(`Failed to delete index ${name}:`, error)
       return false
     }
   }
@@ -95,7 +113,7 @@ export class IndexManager {
     try {
       return await this.client.indices.exists({ index: name })
     } catch (error) {
-      console.error(`Failed to check if index ${name} exists:`, error)
+      logger.error(`Failed to check if index ${name} exists:`, error)
       return false
     }
   }
@@ -105,20 +123,20 @@ export class IndexManager {
 export class SearchManager {
   constructor(private client: Client) {}
 
-  async search<T>(index: string, query: Record<string, any>): Promise<T[]> {
+  async search<T>(index: string, query: Record<string, unknown>): Promise<T[]> {
     try {
-      const response = await this.client.search({
+      const response = (await this.client.search({
         index,
         body: query,
-      })
+      })) as ElasticsearchResponse<T>
 
-      return response.hits.hits.map((hit: any) => ({
+      return response.hits.hits.map((hit) => ({
         ...hit._source,
         _id: hit._id,
         _score: hit._score,
       })) as T[]
     } catch (error) {
-      console.error('Search error:', error)
+      logger.error('Search error:', error)
       return []
     }
   }
@@ -133,7 +151,7 @@ export class SearchManager {
       })
       return true
     } catch (error) {
-      console.error('Indexing error:', error)
+      logger.error('Indexing error:', error)
       return false
     }
   }
@@ -148,22 +166,20 @@ export class SearchManager {
         document,
       ])
 
-      const response = await this.client.bulk({
+      const response = (await this.client.bulk({
         body,
         refresh: 'wait_for',
-      })
+      })) as ElasticsearchBulkResponse
 
       if (response.errors) {
-        console.error(
-          'Bulk indexing errors:',
-          response.items.filter((item: any) => item.index?.error),
-        )
-        return false
+        // Use structured logging instead of console
+        const errors = response.items.filter((item) => item.index?.error)
+        throw new Error(`Bulk indexing errors: ${JSON.stringify(errors)}`)
       }
 
       return true
     } catch (error) {
-      console.error('Bulk indexing error:', error)
+      logger.error('Bulk indexing error:', error)
       return false
     }
   }
@@ -177,7 +193,7 @@ export class SearchManager {
       })
       return true
     } catch (error) {
-      console.error('Delete error:', error)
+      logger.error('Delete error:', error)
       return false
     }
   }
