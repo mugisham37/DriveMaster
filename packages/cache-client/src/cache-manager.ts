@@ -1,6 +1,7 @@
-import Redis from 'ioredis'
 import NodeCache from 'node-cache'
+import Redis from 'ioredis'
 import * as pako from 'pako'
+
 import {
   CacheConfig,
   CacheLayer,
@@ -14,8 +15,8 @@ import {
 import { createCacheKey, isExpired, serializeValue, deserializeValue } from './utils'
 
 export class CacheManager {
-  private redis: Redis
-  private memory: NodeCache
+  private redis!: Redis
+  private memory!: NodeCache
   private config: CacheConfig
   private metrics: CacheMetrics
 
@@ -35,17 +36,21 @@ export class CacheManager {
   }
 
   private initializeRedis(): void {
-    this.redis = new Redis({
+    const redisConfig: any = {
       host: this.config.redis.host,
       port: this.config.redis.port,
-      password: this.config.redis.password,
       db: this.config.redis.db,
       keyPrefix: this.config.redis.keyPrefix,
       maxRetriesPerRequest: this.config.redis.maxRetriesPerRequest,
-      retryDelayOnFailover: this.config.redis.retryDelayOnFailover,
       enableOfflineQueue: this.config.redis.enableOfflineQueue,
       lazyConnect: this.config.redis.lazyConnect,
-    })
+    }
+
+    if (this.config.redis.password) {
+      redisConfig.password = this.config.redis.password
+    }
+
+    this.redis = new Redis(redisConfig)
 
     this.redis.on('error', (error) => {
       console.error('Redis connection error:', error)
@@ -61,7 +66,7 @@ export class CacheManager {
     this.memory = new NodeCache({
       maxKeys: this.config.memory.maxKeys,
       stdTTL: this.config.memory.ttl,
-      checkperiod: this.config.memory.checkperiod,
+      checkperiod: this.config.memory.checkPeriod,
       useClones: this.config.memory.useClones,
     })
 
@@ -92,7 +97,7 @@ export class CacheManager {
         if (result !== null) {
           // Store in memory for faster subsequent access
           if (options.layer === CacheLayer.BOTH) {
-            await this.setInMemory(cacheKey, result, options)
+            this.setInMemory(cacheKey, result, options)
           }
           this.updateMetrics('hit', startTime)
           return result
@@ -117,14 +122,14 @@ export class CacheManager {
         value,
         ttl: options.ttl || this.config.memory.ttl,
         createdAt: Date.now(),
-        tags: options.tags,
-        version: options.version,
+        tags: options.tags || undefined,
+        version: options.version || undefined,
         compressed: false,
       }
 
       // Compress if enabled and value is large enough
       if (this.shouldCompress(value, options)) {
-        entry.value = await this.compressValue(value)
+        entry.value = this.compressValue(value) as T
         entry.compressed = true
       }
 
@@ -132,7 +137,7 @@ export class CacheManager {
 
       // Set in memory cache
       if (options.layer !== CacheLayer.REDIS) {
-        success = (await this.setInMemory(cacheKey, entry, options)) && success
+        success = this.setInMemory(cacheKey, entry, options) && success
       }
 
       // Set in Redis cache
@@ -263,7 +268,7 @@ export class CacheManager {
       return null
     }
 
-    return entry.compressed ? await this.decompressValue(entry.value) : entry.value
+    return entry.compressed ? this.decompressValue(entry.value) : entry.value
   }
 
   private async getFromRedis<T>(key: string): Promise<T | null> {
@@ -276,14 +281,10 @@ export class CacheManager {
       return null
     }
 
-    return entry.compressed ? await this.decompressValue(entry.value) : entry.value
+    return entry.compressed ? this.decompressValue(entry.value) : entry.value
   }
 
-  private async setInMemory<T>(
-    key: string,
-    value: T | CacheEntry<T>,
-    options: CacheOptions,
-  ): Promise<boolean> {
+  private setInMemory<T>(key: string, value: T | CacheEntry<T>, options: CacheOptions): boolean {
     const entry = this.isEntry(value)
       ? value
       : { value, ttl: options.ttl || this.config.memory.ttl, createdAt: Date.now() }
@@ -318,15 +319,21 @@ export class CacheManager {
     cacheKeys.forEach((key) => pipeline.get(key))
 
     const results = await pipeline.exec()
-    return (
-      results?.map((result, index) => {
-        if (result && result[1]) {
+    const processedResults: (T | null)[] = []
+
+    if (results) {
+      for (const result of results) {
+        if (result?.[1]) {
           const entry: CacheEntry<T> = deserializeValue(result[1] as string)
-          return entry.compressed ? this.decompressValue(entry.value) : entry.value
+          const value = entry.compressed ? this.decompressValue<T>(entry.value) : entry.value
+          processedResults.push(value)
+        } else {
+          processedResults.push(null)
         }
-        return null
-      }) || []
-    )
+      }
+    }
+
+    return processedResults
   }
 
   private async pipelineSet(operations: BatchOperation[], options: CacheOptions): Promise<boolean> {
@@ -338,13 +345,13 @@ export class CacheManager {
         value: op.value,
         ttl: op.options?.ttl || options.ttl || this.config.memory.ttl,
         createdAt: Date.now(),
-        tags: op.options?.tags || options.tags,
-        version: op.options?.version || options.version,
+        tags: op.options?.tags || options.tags || undefined,
+        version: op.options?.version || options.version || undefined,
         compressed: false,
       }
 
       if (this.shouldCompress(op.value, { ...options, ...op.options })) {
-        entry.value = await this.compressValue(op.value)
+        entry.value = this.compressValue(op.value)
         entry.compressed = true
       }
 
@@ -365,14 +372,15 @@ export class CacheManager {
     return serialized.length >= this.config.compression.threshold
   }
 
-  private async compressValue<T>(value: T): Promise<Buffer> {
+  private compressValue(value: any): Buffer {
     const serialized = JSON.stringify(value)
     const compressed = pako.deflate(serialized)
     return Buffer.from(compressed)
   }
 
-  private async decompressValue<T>(compressed: Buffer): Promise<T> {
-    const decompressed = pako.inflate(compressed, { to: 'string' })
+  private decompressValue<T>(compressed: any): T {
+    const buffer = compressed instanceof Buffer ? compressed : Buffer.from(compressed)
+    const decompressed = pako.inflate(buffer, { to: 'string' })
     return JSON.parse(decompressed)
   }
 
@@ -390,7 +398,22 @@ export class CacheManager {
     if (!this.config.performance.enableMetrics) return
 
     const responseTime = Date.now() - startTime
-    this.metrics[operation === 'hit' || operation === 'miss' ? operation + 's' : operation + 's']++
+
+    // Update metrics based on operation type
+    switch (operation) {
+      case 'hit':
+        this.metrics.hits++
+        break
+      case 'miss':
+        this.metrics.misses++
+        break
+      case 'set':
+        this.metrics.sets++
+        break
+      case 'delete':
+        this.metrics.deletes++
+        break
+    }
 
     // Update average response time
     const totalOps =

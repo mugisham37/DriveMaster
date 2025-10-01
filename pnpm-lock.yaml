@@ -168,12 +168,18 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.8.0
+      lru-cache:
+        specifier: ^10.1.0
+        version: 10.4.3
       node-cache:
         specifier: ^5.1.2
         version: 5.1.2
       pako:
         specifier: ^2.1.0
         version: 2.1.0
+      reflect-metadata:
+        specifier: ^0.1.13
+        version: 0.1.14
       zod:
         specifier: ^3.22.4
         version: 3.25.76
@@ -8393,6 +8399,9 @@ packages:
   redis-parser@3.0.0:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
+
+  reflect-metadata@0.1.14:
+    resolution: {integrity: sha512-ZhYeb6nRaXCfhnndflDK8qI6ZQ/YcWZCISRAWICW9XYqMUwjZM9Z0DveWX/ABN01oxSHwVxKQmxeYZSsm0jh5A==}
 
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
@@ -19052,6 +19061,8 @@ snapshots:
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
+
+  reflect-metadata@0.1.14: {}
 
   reflect.getprototypeof@1.0.10:
     dependencies:

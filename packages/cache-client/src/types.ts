@@ -15,7 +15,7 @@ export const CacheConfigSchema = z.object({
   memory: z.object({
     maxKeys: z.number().default(1000),
     ttl: z.number().default(600), // 10 minutes
-    checkperiod: z.number().default(120), // 2 minutes
+    checkPeriod: z.number().default(120), // 2 minutes
     useClones: z.boolean().default(false),
   }),
   compression: z.object({
@@ -39,11 +39,11 @@ export enum CacheLayer {
 }
 
 export interface CacheOptions {
-  ttl?: number
-  layer?: CacheLayer
-  compress?: boolean
-  tags?: string[]
-  version?: string
+  ttl?: number | undefined
+  layer?: CacheLayer | undefined
+  compress?: boolean | undefined
+  tags?: string[] | undefined
+  version?: string | undefined
 }
 
 export interface CacheMetrics {
@@ -59,19 +59,19 @@ export interface CacheEntry<T = any> {
   value: T
   ttl: number
   createdAt: number
-  tags?: string[]
-  version?: string
-  compressed?: boolean
+  tags?: string[] | undefined
+  version?: string | undefined
+  compressed?: boolean | undefined
 }
 
 export interface BatchOperation {
   key: string
   value?: any
-  options?: CacheOptions
+  options?: CacheOptions | undefined
 }
 
 export interface CacheInvalidationOptions {
-  tags?: string[]
-  pattern?: string
-  version?: string
+  tags?: string[] | undefined
+  pattern?: string | undefined
+  version?: string | undefined
 }

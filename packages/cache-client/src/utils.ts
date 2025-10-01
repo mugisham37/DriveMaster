@@ -16,21 +16,21 @@ export function createCacheKey(key: string, options: CacheOptions = {}): string 
 
 export function parseCacheKey(cacheKey: string): {
   key: string
-  version?: string
-  tags?: string[]
+  version?: string | undefined
+  tags?: string[] | undefined
 } {
   const parts = cacheKey.split(':')
-  const result: { key: string; version?: string; tags?: string[] } = {
-    key: parts[0],
+  const result: { key: string; version?: string | undefined; tags?: string[] | undefined } = {
+    key: parts[0] || '',
   }
 
   for (let i = 1; i < parts.length; i += 2) {
     const prefix = parts[i]
     const value = parts[i + 1]
 
-    if (prefix === 'v') {
+    if (prefix === 'v' && value !== undefined) {
       result.version = value
-    } else if (prefix === 't') {
+    } else if (prefix === 't' && value !== undefined) {
       result.tags = value.split(',')
     }
   }

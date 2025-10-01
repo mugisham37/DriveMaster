@@ -1,12 +1,14 @@
-import { Redis } from 'ioredis'
-import { LRUCache } from 'lru-cache'
 import { createHash } from 'crypto'
 
-export interface CacheConfig {
+import Redis from 'ioredis'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { LRUCache } = require('lru-cache')
+
+export interface MultiLayerCacheConfig {
   redis: {
     host: string
     port: number
-    password?: string
+    password?: string | undefined
     db: number
   }
   memory: {
@@ -19,7 +21,7 @@ export interface CacheConfig {
   }
 }
 
-export interface CacheEntry<T = any> {
+export interface MultiLayerCacheEntry<T = any> {
   data: T
   timestamp: number
   ttl: number
@@ -27,37 +29,41 @@ export interface CacheEntry<T = any> {
   etag: string
 }
 
-export interface CacheOptions {
-  ttl?: number
-  tags?: string[]
-  compress?: boolean
-  skipMemory?: boolean
-  skipRedis?: boolean
+export interface MultiLayerCacheOptions {
+  ttl?: number | undefined
+  tags?: string[] | undefined
+  compress?: boolean | undefined
+  skipMemory?: boolean | undefined
+  skipRedis?: boolean | undefined
 }
 
 export class MultiLayerCache {
   private redis: Redis
-  private memoryCache: LRUCache<string, CacheEntry>
-  private config: CacheConfig
+  private memoryCache: any
+  private config: MultiLayerCacheConfig
   private compressionThreshold: number
 
-  constructor(config: CacheConfig) {
+  constructor(config: MultiLayerCacheConfig) {
     this.config = config
     this.compressionThreshold = config.compression.threshold
 
     // Initialize Redis connection
-    this.redis = new Redis({
+    const redisConfig: any = {
       host: config.redis.host,
       port: config.redis.port,
-      password: config.redis.password,
       db: config.redis.db,
-      retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
-    })
+    }
+
+    if (config.redis.password) {
+      redisConfig.password = config.redis.password
+    }
+
+    this.redis = new Redis(redisConfig)
 
     // Initialize memory cache
-    this.memoryCache = new LRUCache<string, CacheEntry>({
+    this.memoryCache = new LRUCache({
       max: config.memory.maxSize,
       ttl: config.memory.ttl * 1000, // Convert to milliseconds
       updateAgeOnGet: true,
@@ -70,7 +76,7 @@ export class MultiLayerCache {
   /**
    * Get value from cache with multi-layer fallback
    */
-  async get<T = any>(key: string, options: CacheOptions = {}): Promise<T | null> {
+  async get<T = any>(key: string, options: MultiLayerCacheOptions = {}): Promise<T | null> {
     const cacheKey = this.generateCacheKey(key)
 
     try {
@@ -86,7 +92,7 @@ export class MultiLayerCache {
       if (!options.skipRedis) {
         const redisData = await this.redis.get(cacheKey)
         if (redisData) {
-          const entry: CacheEntry = JSON.parse(redisData)
+          const entry: MultiLayerCacheEntry = JSON.parse(redisData)
           if (this.isValidEntry(entry)) {
             // Populate memory cache for faster subsequent access
             if (!options.skipMemory) {
@@ -107,12 +113,12 @@ export class MultiLayerCache {
   /**
    * Set value in cache with multi-layer storage
    */
-  async set<T = any>(key: string, value: T, options: CacheOptions = {}): Promise<void> {
+  async set<T = any>(key: string, value: T, options: MultiLayerCacheOptions = {}): Promise<void> {
     const cacheKey = this.generateCacheKey(key)
     const ttl = options.ttl || this.config.memory.ttl
     const shouldCompress = options.compress ?? this.shouldCompress(value)
 
-    const entry: CacheEntry<T> = {
+    const entry: MultiLayerCacheEntry<T> = {
       data: value,
       timestamp: Date.now(),
       ttl: ttl * 1000, // Convert to milliseconds
@@ -192,7 +198,7 @@ export class MultiLayerCache {
   async getOrSet<T = any>(
     key: string,
     factory: () => Promise<T>,
-    options: CacheOptions = {},
+    options: MultiLayerCacheOptions = {},
   ): Promise<T> {
     const cached = await this.get<T>(key, options)
     if (cached !== null) {
@@ -218,14 +224,14 @@ export class MultiLayerCache {
         const originalKey = keys[i]
         const redisValue = redisValues[i]
 
-        if (redisValue) {
-          const entry: CacheEntry = JSON.parse(redisValue)
+        if (originalKey && redisValue) {
+          const entry: MultiLayerCacheEntry = JSON.parse(redisValue)
           if (this.isValidEntry(entry)) {
             result.set(originalKey, this.deserializeData<T>(entry))
           } else {
             result.set(originalKey, null)
           }
-        } else {
+        } else if (originalKey) {
           result.set(originalKey, null)
         }
       }
@@ -241,7 +247,10 @@ export class MultiLayerCache {
   /**
    * Batch set multiple key-value pairs
    */
-  async mset<T = any>(entries: Map<string, T>, options: CacheOptions = {}): Promise<void> {
+  async mset<T = any>(
+    entries: Map<string, T>,
+    options: MultiLayerCacheOptions = {},
+  ): Promise<void> {
     try {
       const pipeline = this.redis.pipeline()
       const ttl = options.ttl || this.config.memory.ttl
@@ -250,7 +259,7 @@ export class MultiLayerCache {
         const cacheKey = this.generateCacheKey(key)
         const shouldCompress = options.compress ?? this.shouldCompress(value)
 
-        const entry: CacheEntry<T> = {
+        const entry: MultiLayerCacheEntry<T> = {
           data: value,
           timestamp: Date.now(),
           ttl: ttl * 1000,
@@ -323,13 +332,13 @@ export class MultiLayerCache {
     return `drivemaster:cache:${key}`
   }
 
-  private generateETag(data: any): string {
+  public generateETag(data: any): string {
     const hash = createHash('md5')
     hash.update(JSON.stringify(data))
     return hash.digest('hex')
   }
 
-  private isValidEntry(entry: CacheEntry): boolean {
+  private isValidEntry(entry: MultiLayerCacheEntry): boolean {
     const now = Date.now()
     return now - entry.timestamp < entry.ttl
   }
@@ -343,7 +352,7 @@ export class MultiLayerCache {
     return Buffer.byteLength(serialized, 'utf8') > this.compressionThreshold
   }
 
-  private deserializeData<T>(entry: CacheEntry): T {
+  private deserializeData<T>(entry: MultiLayerCacheEntry): T {
     // In a real implementation, you would handle decompression here
     // if entry.compressed is true
     return entry.data as T
@@ -382,10 +391,10 @@ export class MultiLayerCache {
 
 // Cache middleware for Fastify
 export interface CacheMiddlewareOptions {
-  ttl?: number
-  tags?: string[]
-  keyGenerator?: (request: any) => string
-  skipCache?: (request: any) => boolean
+  ttl?: number | undefined
+  tags?: string[] | undefined
+  keyGenerator?: ((request: any) => string) | undefined
+  skipCache?: ((request: any) => boolean) | undefined
 }
 
 export function createCacheMiddleware(
@@ -437,6 +446,10 @@ export function createCacheMiddleware(
           const etag = cache.generateETag(payload)
           reply.header('ETag', etag)
 
+          const cacheOptions: MultiLayerCacheOptions = {}
+          if (options.ttl !== undefined) cacheOptions.ttl = options.ttl
+          if (options.tags !== undefined) cacheOptions.tags = options.tags
+
           cache
             .set(
               cacheKey,
@@ -446,10 +459,7 @@ export function createCacheMiddleware(
                 statusCode: reply.statusCode,
                 headers: reply.getHeaders(),
               },
-              {
-                ttl: options.ttl,
-                tags: options.tags,
-              },
+              cacheOptions,
             )
             .catch((error) => {
               console.error('Cache set error in middleware:', error)

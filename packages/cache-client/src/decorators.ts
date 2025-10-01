@@ -1,5 +1,7 @@
+import 'reflect-metadata'
+
 import { CacheManager } from './cache-manager'
-import { CacheOptions, CacheLayer } from './types'
+import { CacheOptions } from './types'
 
 export interface CacheDecoratorOptions extends CacheOptions {
   keyGenerator?: (...args: any[]) => string
@@ -53,10 +55,11 @@ export function CacheEvict(options: { key?: string; pattern?: string; tags?: str
       }
 
       if (options.pattern || options.tags) {
-        await cacheManager.invalidate({
-          pattern: options.pattern,
-          tags: options.tags,
-        })
+        const invalidationOptions: { pattern?: string; tags?: string[] } = {}
+        if (options.pattern) invalidationOptions.pattern = options.pattern
+        if (options.tags) invalidationOptions.tags = options.tags
+
+        await cacheManager.invalidate(invalidationOptions)
       }
 
       return result
@@ -90,19 +93,19 @@ export function CachePut(options: CacheDecoratorOptions = {}) {
 }
 
 // Method-level cache configuration
-export function CacheConfig(config: Partial<CacheDecoratorOptions>) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
-    // Store cache config as metadata for the method
-    Reflect.defineMetadata('cache:config', config, target, propertyName)
+export function CacheConfiguration(config: Partial<CacheDecoratorOptions>) {
+  return function (_target: any, _propertyName: string, descriptor: PropertyDescriptor) {
+    // Store cache config as property on the descriptor for later use
+    ;(descriptor as any).cacheConfig = config
     return descriptor
   }
 }
 
 // Class-level cache configuration
-export function CacheEnabled(defaultOptions: CacheDecoratorOptions = {}) {
-  return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+export function CacheEnabled(_defaultOptions: CacheDecoratorOptions = {}) {
+  return function <T extends { new (...args: any[]): object }>(constructor: T) {
     return class extends constructor {
-      private static cacheManager = new CacheManager()
+      public static cacheManager = new CacheManager()
 
       static getCacheManager(): CacheManager {
         return this.cacheManager

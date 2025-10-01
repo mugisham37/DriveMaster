@@ -14,7 +14,11 @@
     "ioredis",
     "kafkajs",
     "drizzle",
-    "pino"
+    "pino",
+    "nosniff",
+    "setex",
+    "incrby",
+    "Hotlinking"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "*.d.ts.map", "*.js.map"]
 }
