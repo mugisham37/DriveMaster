@@ -22,7 +22,19 @@
     "loki",
     "winston",
     "avro",
-    "elasticsearch"
+    "elasticsearch",
+    "blks",
+    "statio",
+    "xact",
+    "datname",
+    "bgwriter",
+    "dbid",
+    "usename",
+    "schemaname",
+    "tablename",
+    "indexrelid",
+    "psql",
+    "pkey"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "**/*.js.map", "**/*.d.ts.map", "**/*.json"]
 }

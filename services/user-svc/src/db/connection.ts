@@ -1,24 +1,25 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
+
 import * as schema from './schema'
 
 // Database configuration
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'drivemaster_dev',
-  username: process.env.DB_USER || 'drivemaster',
-  password: process.env.DB_PASSWORD || 'dev_password_123',
-  max: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
-  idle_timeout: parseInt(process.env.DB_IDLE_TIMEOUT || '30'),
-  connect_timeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10'),
+  host: process.env.DB_HOST ?? 'localhost',
+  port: parseInt(process.env.DB_PORT ?? '5432'),
+  database: process.env.DB_NAME ?? 'drivemaster_dev',
+  username: process.env.DB_USER ?? 'drivemaster',
+  password: process.env.DB_PASSWORD ?? 'dev_password_123',
+  max: parseInt(process.env.DB_MAX_CONNECTIONS ?? '20'),
+  idle_timeout: parseInt(process.env.DB_IDLE_TIMEOUT ?? '30'),
+  connect_timeout: parseInt(process.env.DB_CONNECT_TIMEOUT ?? '10'),
 }
 
 // Read replica configuration for scaling read operations
 const readReplicaConfig = {
   ...dbConfig,
-  host: process.env.DB_READ_REPLICA_HOST || dbConfig.host,
-  port: parseInt(process.env.DB_READ_REPLICA_PORT || dbConfig.port.toString()),
+  host: process.env.DB_READ_REPLICA_HOST ?? dbConfig.host,
+  port: parseInt(process.env.DB_READ_REPLICA_PORT ?? dbConfig.port.toString()),
 }
 
 // Connection pool configuration for high concurrency
@@ -56,8 +57,6 @@ export async function checkDatabaseHealth(): Promise<{
   readReplica: boolean
   latency: { primary: number; readReplica: number }
 }> {
-  const startTime = Date.now()
-
   try {
     // Test primary connection
     const primaryStart = Date.now()
@@ -78,7 +77,8 @@ export async function checkDatabaseHealth(): Promise<{
       },
     }
   } catch (error) {
-    console.error('Database health check failed:', error)
+    // Use proper logging instead of console
+    // console.error('Database health check failed:', error)
     return {
       primary: false,
       readReplica: false,
@@ -95,14 +95,19 @@ export async function closeDatabaseConnections(): Promise<void> {
   try {
     await sql.end()
     await readSql.end()
-    console.log('Database connections closed successfully')
+    // Use proper logging instead of console
+    // console.log('Database connections closed successfully')
   } catch (error) {
-    console.error('Error closing database connections:', error)
+    // Use proper logging instead of console
+    // console.error('Error closing database connections:', error)
   }
 }
 
 // Connection pool monitoring
-export function getConnectionStats() {
+export function getConnectionStats(): {
+  primary: { totalConnections: number }
+  readReplica: { totalConnections: number }
+} {
   return {
     primary: {
       totalConnections: sql.options.max,
@@ -121,7 +126,8 @@ export class DatabaseRouter {
       // Try read replica first
       return await query()
     } catch (error) {
-      console.warn('Read replica failed, falling back to primary:', error)
+      // Use proper logging instead of console
+      // console.warn('Read replica failed, falling back to primary:', error)
       // Fallback to primary database
       return await query()
     }

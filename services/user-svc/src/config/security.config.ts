@@ -157,7 +157,7 @@ export function validateSecurityConfig(): {
   const requiredEnvVars = ['JWT_SECRET', 'MASTER_ENCRYPTION_KEY']
 
   for (const envVar of requiredEnvVars) {
-    if (!process.env[envVar]) {
+    if (process.env[envVar] == null || process.env[envVar] === '') {
       errors.push(`Missing required environment variable: ${envVar}`)
     }
   }
@@ -166,14 +166,14 @@ export function validateSecurityConfig(): {
   const recommendedEnvVars = ['REDIS_URL', 'DATABASE_URL']
 
   for (const envVar of recommendedEnvVars) {
-    if (!process.env[envVar]) {
+    if (process.env[envVar] == null || process.env[envVar] === '') {
       warnings.push(`Missing recommended environment variable: ${envVar}`)
     }
   }
 
   // Security checks
   if (process.env.NODE_ENV === 'production') {
-    if (!process.env.HTTPS_ENABLED || process.env.HTTPS_ENABLED !== 'true') {
+    if (process.env.HTTPS_ENABLED == null || process.env.HTTPS_ENABLED !== 'true') {
       warnings.push('HTTPS should be enabled in production')
     }
 
@@ -187,12 +187,12 @@ export function validateSecurityConfig(): {
   }
 
   // JWT secret strength check
-  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
+  if (process.env.JWT_SECRET != null && process.env.JWT_SECRET.length < 32) {
     warnings.push('JWT_SECRET should be at least 32 characters long')
   }
 
   // Encryption key strength check
-  if (process.env.MASTER_ENCRYPTION_KEY && process.env.MASTER_ENCRYPTION_KEY.length < 64) {
+  if (process.env.MASTER_ENCRYPTION_KEY != null && process.env.MASTER_ENCRYPTION_KEY.length < 64) {
     warnings.push('MASTER_ENCRYPTION_KEY should be at least 64 characters long')
   }
 

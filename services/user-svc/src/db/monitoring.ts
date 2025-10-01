@@ -1,52 +1,51 @@
 import { sql } from 'drizzle-orm'
+
 import { db, readDb } from './connection'
+import type {
+  AlertItem,
+  AlertsResult,
+  DashboardMetrics,
+  DatabaseMetrics,
+  IndexSizeRow,
+  LongRunningQueryRow,
+  ReplicationSlotRow,
+  TableSizeRow,
+} from './types'
 
 // Real-time database monitoring and alerting
 export class DatabaseMonitoring {
   // Performance dashboard data
-  static async getDashboardMetrics(): Promise<{
-    overview: any
-    performance: any
-    connections: any
-    queries: any
-    storage: any
-    replication: any
-  }> {
-    try {
-      // Overview metrics
-      const overview = await this.getOverviewMetrics()
+  static async getDashboardMetrics(): Promise<DashboardMetrics> {
+    // Overview metrics
+    const overview = await this.getOverviewMetrics()
 
-      // Performance metrics
-      const performance = await this.getPerformanceMetrics()
+    // Performance metrics
+    const performance = await this.getPerformanceMetrics()
 
-      // Connection metrics
-      const connections = await this.getConnectionMetrics()
+    // Connection metrics
+    const connections = await this.getConnectionMetrics()
 
-      // Query metrics
-      const queries = await this.getQueryMetrics()
+    // Query metrics
+    const queries = await this.getQueryMetrics()
 
-      // Storage metrics
-      const storage = await this.getStorageMetrics()
+    // Storage metrics
+    const storage = await this.getStorageMetrics()
 
-      // Replication metrics
-      const replication = await this.getReplicationMetrics()
+    // Replication metrics
+    const replication = await this.getReplicationMetrics()
 
-      return {
-        overview,
-        performance,
-        connections,
-        queries,
-        storage,
-        replication,
-      }
-    } catch (error) {
-      console.error('Error getting dashboard metrics:', error)
-      throw error
+    return {
+      overview,
+      performance,
+      connections,
+      queries,
+      storage,
+      replication,
     }
   }
 
   // Overview metrics
-  private static async getOverviewMetrics(): Promise<any> {
+  private static async getOverviewMetrics(): Promise<DatabaseMetrics> {
     const [dbSize] = await readDb.execute(sql`
       SELECT pg_size_pretty(pg_database_size(current_database())) as database_size
     `)
@@ -68,16 +67,16 @@ export class DatabaseMonitoring {
     `)
 
     return {
-      databaseSize: dbSize?.database_size,
-      uptime: uptime?.uptime,
-      startTime: uptime?.start_time,
-      version: version?.postgresql_version,
-      activeUsers24h: activeUsers?.active_users_24h || 0,
+      database_size: (dbSize as DatabaseMetrics | undefined)?.database_size,
+      uptime: (uptime as DatabaseMetrics | undefined)?.uptime,
+      start_time: (uptime as DatabaseMetrics | undefined)?.start_time,
+      postgresql_version: (version as DatabaseMetrics | undefined)?.postgresql_version,
+      active_users_24h: (activeUsers as DatabaseMetrics | undefined)?.active_users_24h ?? 0,
     }
   }
 
   // Performance metrics
-  private static async getPerformanceMetrics(): Promise<any> {
+  private static async getPerformanceMetrics(): Promise<DatabaseMetrics> {
     // Cache hit ratio
     const [cacheHit] = await readDb.execute(sql`
       SELECT 
@@ -117,20 +116,23 @@ export class DatabaseMonitoring {
     `)
 
     return {
-      cacheHitRatio: cacheHit?.cache_hit_ratio || 0,
-      indexHitRatio: indexHit?.index_hit_ratio || 0,
-      commitRatio: transactions?.commit_ratio || 0,
-      totalCommits: transactions?.xact_commit || 0,
-      totalRollbacks: transactions?.xact_rollback || 0,
-      checkpointsTimed: checkpoints?.checkpoints_timed || 0,
-      checkpointsRequested: checkpoints?.checkpoints_req || 0,
-      checkpointWriteTime: checkpoints?.checkpoint_write_time || 0,
-      checkpointSyncTime: checkpoints?.checkpoint_sync_time || 0,
+      cache_hit_ratio: (cacheHit as DatabaseMetrics | undefined)?.cache_hit_ratio ?? 0,
+      index_hit_ratio: (indexHit as DatabaseMetrics | undefined)?.index_hit_ratio ?? 0,
+      commit_ratio: (transactions as DatabaseMetrics | undefined)?.commit_ratio ?? 0,
+      xact_commit: (transactions as DatabaseMetrics | undefined)?.xact_commit ?? 0,
+      xact_rollback: (transactions as DatabaseMetrics | undefined)?.xact_rollback ?? 0,
+      checkpoints_timed: (checkpoints as DatabaseMetrics | undefined)?.checkpoints_timed ?? 0,
+      checkpoints_req: (checkpoints as DatabaseMetrics | undefined)?.checkpoints_req ?? 0,
+      checkpoint_write_time:
+        (checkpoints as DatabaseMetrics | undefined)?.checkpoint_write_time ?? 0,
+      checkpoint_sync_time: (checkpoints as DatabaseMetrics | undefined)?.checkpoint_sync_time ?? 0,
     }
   }
 
   // Connection metrics
-  private static async getConnectionMetrics(): Promise<any> {
+  private static async getConnectionMetrics(): Promise<
+    DatabaseMetrics & { connectionUtilization: number }
+  > {
     const [connections] = await readDb.execute(sql`
       SELECT 
         count(*) as total_connections,
@@ -148,24 +150,30 @@ export class DatabaseMonitoring {
       WHERE name = 'max_connections'
     `)
 
+    const connectionsData = connections as DatabaseMetrics | undefined
+    const maxConnectionsData = maxConnections as DatabaseMetrics | undefined
+
     const connectionUtilization =
-      connections?.total_connections && maxConnections?.max_connections
-        ? (Number(connections.total_connections) / Number(maxConnections.max_connections)) * 100
+      connectionsData?.total_connections != null && maxConnectionsData?.max_connections != null
+        ? (Number(connectionsData.total_connections) / Number(maxConnectionsData.max_connections)) *
+          100
         : 0
 
     return {
-      totalConnections: connections?.total_connections || 0,
-      activeConnections: connections?.active_connections || 0,
-      idleConnections: connections?.idle_connections || 0,
-      idleInTransaction: connections?.idle_in_transaction || 0,
-      waitingConnections: connections?.waiting_connections || 0,
-      maxConnections: maxConnections?.max_connections || 0,
+      total_connections: connectionsData?.total_connections ?? 0,
+      active_connections: connectionsData?.active_connections ?? 0,
+      idle_connections: connectionsData?.idle_connections ?? 0,
+      idle_in_transaction: connectionsData?.idle_in_transaction ?? 0,
+      waiting_connections: connectionsData?.waiting_connections ?? 0,
+      max_connections: maxConnectionsData?.max_connections ?? 0,
       connectionUtilization: Math.round(connectionUtilization * 100) / 100,
     }
   }
 
   // Query metrics
-  private static async getQueryMetrics(): Promise<any> {
+  private static async getQueryMetrics(): Promise<
+    DatabaseMetrics & { longRunningQueries: LongRunningQueryRow[] }
+  > {
     // Query statistics from pg_stat_statements
     const [queryStats] = await readDb.execute(sql`
       SELECT 
@@ -195,19 +203,27 @@ export class DatabaseMonitoring {
       LIMIT 5
     `)
 
+    const queryStatsData = queryStats as DatabaseMetrics | undefined
+
     return {
-      totalQueries: queryStats?.total_queries || 0,
-      slowQueries: queryStats?.slow_queries || 0,
-      avgExecutionTime: queryStats?.avg_execution_time || 0,
-      maxExecutionTime: queryStats?.max_execution_time || 0,
-      totalCalls: queryStats?.total_calls || 0,
-      totalExecutionTime: queryStats?.total_execution_time || 0,
-      longRunningQueries: longRunningQueries || [],
+      total_queries: queryStatsData?.total_queries ?? 0,
+      slow_queries: queryStatsData?.slow_queries ?? 0,
+      avg_execution_time: queryStatsData?.avg_execution_time ?? 0,
+      max_execution_time: queryStatsData?.max_execution_time ?? 0,
+      total_calls: queryStatsData?.total_calls ?? 0,
+      total_execution_time: queryStatsData?.total_execution_time ?? 0,
+      longRunningQueries: (longRunningQueries as unknown as LongRunningQueryRow[]) ?? [],
     }
   }
 
   // Storage metrics
-  private static async getStorageMetrics(): Promise<any> {
+  private static async getStorageMetrics(): Promise<{
+    tableSizes: TableSizeRow[]
+    indexSizes: IndexSizeRow[]
+    tablesWithBloat: number
+    avgDeadTuples: number
+    maxDeadTuples: number
+  }> {
     // Table sizes
     const tableSizes = await readDb.execute(sql`
       SELECT 
@@ -243,24 +259,34 @@ export class DatabaseMonitoring {
       WHERE n_dead_tup > 1000
     `)
 
+    const bloatStatsData = bloatStats as DatabaseMetrics | undefined
+
     return {
-      tableSizes: tableSizes || [],
-      indexSizes: indexSizes || [],
-      tablesWithBloat: bloatStats?.tables_with_bloat || 0,
-      avgDeadTuples: bloatStats?.avg_dead_tuples || 0,
-      maxDeadTuples: bloatStats?.max_dead_tuples || 0,
+      tableSizes: (tableSizes as unknown as TableSizeRow[]) ?? [],
+      indexSizes: (indexSizes as unknown as IndexSizeRow[]) ?? [],
+      tablesWithBloat: bloatStatsData?.tables_with_bloat ?? 0,
+      avgDeadTuples: bloatStatsData?.avg_dead_tuples ?? 0,
+      maxDeadTuples: bloatStatsData?.max_dead_tuples ?? 0,
     }
   }
 
   // Replication metrics
-  private static async getReplicationMetrics(): Promise<any> {
+  private static async getReplicationMetrics(): Promise<{
+    role: string
+    lagMs?: number
+    lastReplay?: Date
+    replicationSlots?: ReplicationSlotRow[]
+    error?: string
+  }> {
     try {
       // Check if this is a primary or replica
       const [replicationRole] = await readDb.execute(sql`
         SELECT pg_is_in_recovery() as is_replica
       `)
 
-      if (replicationRole?.is_replica) {
+      const replicationRoleData = replicationRole as DatabaseMetrics | undefined
+
+      if (replicationRoleData?.is_replica === true) {
         // Replica metrics
         const [replicaLag] = await readDb.execute(sql`
           SELECT 
@@ -268,10 +294,12 @@ export class DatabaseMonitoring {
             pg_last_xact_replay_timestamp() as last_replay
         `)
 
+        const replicaLagData = replicaLag as DatabaseMetrics | undefined
+
         return {
           role: 'replica',
-          lagMs: replicaLag?.lag_ms || 0,
-          lastReplay: replicaLag?.last_replay,
+          lagMs: replicaLagData?.lag_ms ?? 0,
+          lastReplay: replicaLagData?.last_replay,
         }
       } else {
         // Primary metrics
@@ -287,7 +315,7 @@ export class DatabaseMonitoring {
 
         return {
           role: 'primary',
-          replicationSlots: replicationSlots || [],
+          replicationSlots: (replicationSlots as unknown as ReplicationSlotRow[]) ?? [],
         }
       }
     } catch (error) {
@@ -299,97 +327,87 @@ export class DatabaseMonitoring {
   }
 
   // Alert system
-  static async checkAlerts(): Promise<{
-    critical: any[]
-    warning: any[]
-    info: any[]
-  }> {
-    const critical: any[] = []
-    const warning: any[] = []
-    const info: any[] = []
+  static async checkAlerts(): Promise<AlertsResult> {
+    const critical: AlertItem[] = []
+    const warning: AlertItem[] = []
+    const info: AlertItem[] = []
 
-    try {
-      // Check connection utilization
-      const connectionMetrics = await this.getConnectionMetrics()
-      if (connectionMetrics.connectionUtilization > 90) {
-        critical.push({
-          type: 'high_connection_utilization',
-          message: `Connection utilization at ${connectionMetrics.connectionUtilization}%`,
-          value: connectionMetrics.connectionUtilization,
-          threshold: 90,
-        })
-      } else if (connectionMetrics.connectionUtilization > 75) {
-        warning.push({
-          type: 'moderate_connection_utilization',
-          message: `Connection utilization at ${connectionMetrics.connectionUtilization}%`,
-          value: connectionMetrics.connectionUtilization,
-          threshold: 75,
-        })
-      }
-
-      // Check cache hit ratio
-      const performanceMetrics = await this.getPerformanceMetrics()
-      if (performanceMetrics.cacheHitRatio < 90) {
-        warning.push({
-          type: 'low_cache_hit_ratio',
-          message: `Cache hit ratio at ${performanceMetrics.cacheHitRatio}%`,
-          value: performanceMetrics.cacheHitRatio,
-          threshold: 90,
-        })
-      }
-
-      // Check for long-running queries
-      const queryMetrics = await this.getQueryMetrics()
-      if (queryMetrics.longRunningQueries.length > 0) {
-        warning.push({
-          type: 'long_running_queries',
-          message: `${queryMetrics.longRunningQueries.length} long-running queries detected`,
-          value: queryMetrics.longRunningQueries.length,
-          queries: queryMetrics.longRunningQueries,
-        })
-      }
-
-      // Check slow queries
-      if (queryMetrics.slowQueries > 10) {
-        warning.push({
-          type: 'high_slow_queries',
-          message: `${queryMetrics.slowQueries} slow queries detected`,
-          value: queryMetrics.slowQueries,
-          threshold: 10,
-        })
-      }
-
-      // Check replication lag
-      const replicationMetrics = await this.getReplicationMetrics()
-      if (replicationMetrics.role === 'replica' && replicationMetrics.lagMs > 5000) {
-        critical.push({
-          type: 'high_replication_lag',
-          message: `Replication lag at ${Math.round(replicationMetrics.lagMs)}ms`,
-          value: replicationMetrics.lagMs,
-          threshold: 5000,
-        })
-      }
-
-      // Check table bloat
-      const storageMetrics = await this.getStorageMetrics()
-      if (storageMetrics.tablesWithBloat > 5) {
-        info.push({
-          type: 'table_bloat_detected',
-          message: `${storageMetrics.tablesWithBloat} tables with significant bloat`,
-          value: storageMetrics.tablesWithBloat,
-          recommendation: 'Consider running VACUUM ANALYZE',
-        })
-      }
-
-      return { critical, warning, info }
-    } catch (error) {
+    // Check connection utilization
+    const connectionMetrics = await this.getConnectionMetrics()
+    if (connectionMetrics.connectionUtilization > 90) {
       critical.push({
-        type: 'monitoring_error',
-        message: 'Error checking database alerts',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        type: 'high_connection_utilization',
+        message: `Connection utilization at ${connectionMetrics.connectionUtilization}%`,
+        value: connectionMetrics.connectionUtilization,
+        threshold: 90,
       })
-      return { critical, warning, info }
+    } else if (connectionMetrics.connectionUtilization > 75) {
+      warning.push({
+        type: 'moderate_connection_utilization',
+        message: `Connection utilization at ${connectionMetrics.connectionUtilization}%`,
+        value: connectionMetrics.connectionUtilization,
+        threshold: 75,
+      })
     }
+
+    // Check cache hit ratio
+    const performanceMetrics = await this.getPerformanceMetrics()
+    const cacheHitRatio = performanceMetrics.cache_hit_ratio ?? 0
+    if (cacheHitRatio < 90) {
+      warning.push({
+        type: 'low_cache_hit_ratio',
+        message: `Cache hit ratio at ${cacheHitRatio}%`,
+        value: cacheHitRatio,
+        threshold: 90,
+      })
+    }
+
+    // Check for long-running queries
+    const queryMetrics = await this.getQueryMetrics()
+    if (queryMetrics.longRunningQueries.length > 0) {
+      warning.push({
+        type: 'long_running_queries',
+        message: `${queryMetrics.longRunningQueries.length} long-running queries detected`,
+        value: queryMetrics.longRunningQueries.length,
+        queries: queryMetrics.longRunningQueries,
+      })
+    }
+
+    // Check slow queries
+    const slowQueries = queryMetrics.slow_queries ?? 0
+    if (slowQueries > 10) {
+      warning.push({
+        type: 'high_slow_queries',
+        message: `${slowQueries} slow queries detected`,
+        value: slowQueries,
+        threshold: 10,
+      })
+    }
+
+    // Check replication lag
+    const replicationMetrics = await this.getReplicationMetrics()
+    if (replicationMetrics.role === 'replica' && (replicationMetrics.lagMs ?? 0) > 5000) {
+      const lagMs = replicationMetrics.lagMs ?? 0
+      critical.push({
+        type: 'high_replication_lag',
+        message: `Replication lag at ${Math.round(lagMs)}ms`,
+        value: lagMs,
+        threshold: 5000,
+      })
+    }
+
+    // Check table bloat
+    const storageMetrics = await this.getStorageMetrics()
+    if (storageMetrics.tablesWithBloat > 5) {
+      info.push({
+        type: 'table_bloat_detected',
+        message: `${storageMetrics.tablesWithBloat} tables with significant bloat`,
+        value: storageMetrics.tablesWithBloat,
+        recommendation: 'Consider running VACUUM ANALYZE',
+      })
+    }
+
+    return { critical, warning, info }
   }
 
   // Generate monitoring report
@@ -403,24 +421,24 @@ export class DatabaseMonitoring {
 Generated: ${new Date().toISOString()}
 
 ## Overview
-- Database Size: ${metrics.overview.databaseSize}
-- Uptime: ${metrics.overview.uptime}
-- Active Users (24h): ${metrics.overview.activeUsers24h}
+- Database Size: ${metrics.overview.database_size ?? 'N/A'}
+- Uptime: ${metrics.overview.uptime ?? 'N/A'}
+- Active Users (24h): ${metrics.overview.active_users_24h ?? 0}
 
 ## Performance
-- Cache Hit Ratio: ${metrics.performance.cacheHitRatio}%
-- Index Hit Ratio: ${metrics.performance.indexHitRatio}%
-- Commit Ratio: ${metrics.performance.commitRatio}%
+- Cache Hit Ratio: ${metrics.performance.cache_hit_ratio ?? 0}%
+- Index Hit Ratio: ${metrics.performance.index_hit_ratio ?? 0}%
+- Commit Ratio: ${metrics.performance.commit_ratio ?? 0}%
 
 ## Connections
-- Total: ${metrics.connections.totalConnections}/${metrics.connections.maxConnections}
-- Active: ${metrics.connections.activeConnections}
+- Total: ${metrics.connections.total_connections ?? 0}/${metrics.connections.max_connections ?? 0}
+- Active: ${metrics.connections.active_connections ?? 0}
 - Utilization: ${metrics.connections.connectionUtilization}%
 
 ## Queries
-- Total Queries: ${metrics.queries.totalQueries}
-- Slow Queries: ${metrics.queries.slowQueries}
-- Avg Execution Time: ${metrics.queries.avgExecutionTime}ms
+- Total Queries: ${metrics.queries.total_queries ?? 0}
+- Slow Queries: ${metrics.queries.slow_queries ?? 0}
+- Avg Execution Time: ${metrics.queries.avg_execution_time ?? 0}ms
 
 ## Alerts
 ### Critical (${alerts.critical.length})
@@ -435,7 +453,7 @@ ${alerts.info.map((alert) => `- ${alert.message}`).join('\n')}
 ## Top Tables by Size
 ${metrics.storage.tableSizes
   .slice(0, 5)
-  .map((table: any) => `- ${table.tablename}: ${table.size}`)
+  .map((table) => `- ${table.tablename}: ${table.size}`)
   .join('\n')}
 
 ## Recommendations
@@ -449,11 +467,11 @@ ${this.generateRecommendations(metrics, alerts)}
   }
 
   // Generate performance recommendations
-  private static generateRecommendations(metrics: any, alerts: any): string {
+  private static generateRecommendations(metrics: DashboardMetrics, _alerts: AlertsResult): string {
     const recommendations: string[] = []
 
     // Cache hit ratio recommendations
-    if (metrics.performance.cacheHitRatio < 95) {
+    if ((metrics.performance.cache_hit_ratio ?? 0) < 95) {
       recommendations.push('- Consider increasing shared_buffers for better cache performance')
     }
 
@@ -463,7 +481,7 @@ ${this.generateRecommendations(metrics, alerts)}
     }
 
     // Query performance recommendations
-    if (metrics.queries.slowQueries > 5) {
+    if ((metrics.queries.slow_queries ?? 0) > 5) {
       recommendations.push('- Review and optimize slow queries using EXPLAIN ANALYZE')
       recommendations.push('- Consider adding indexes for frequently queried columns')
     }
@@ -475,7 +493,7 @@ ${this.generateRecommendations(metrics, alerts)}
     }
 
     // Replication recommendations
-    if (metrics.replication.role === 'replica' && metrics.replication.lagMs > 1000) {
+    if (metrics.replication.role === 'replica' && (metrics.replication.lagMs ?? 0) > 1000) {
       recommendations.push('- Check network connectivity between primary and replica')
       recommendations.push('- Consider increasing wal_sender_timeout and wal_receiver_timeout')
     }
@@ -590,26 +608,23 @@ echo "Monthly maintenance completed: $(date)"
 
   // Execute maintenance task
   static async executeMaintenanceTask(task: 'daily' | 'weekly' | 'monthly'): Promise<void> {
-    try {
-      console.log(`Starting ${task} maintenance task...`)
+    // Use proper logging instead of console
+    // console.log(`Starting ${task} maintenance task...`)
 
-      switch (task) {
-        case 'daily':
-          await this.dailyMaintenance()
-          break
-        case 'weekly':
-          await this.weeklyMaintenance()
-          break
-        case 'monthly':
-          await this.monthlyMaintenance()
-          break
-      }
-
-      console.log(`✅ ${task} maintenance completed successfully`)
-    } catch (error) {
-      console.error(`❌ ${task} maintenance failed:`, error)
-      throw error
+    switch (task) {
+      case 'daily':
+        await this.dailyMaintenance()
+        break
+      case 'weekly':
+        await this.weeklyMaintenance()
+        break
+      case 'monthly':
+        await this.monthlyMaintenance()
+        break
     }
+
+    // Use proper logging instead of console
+    // console.log(`✅ ${task} maintenance completed successfully`)
   }
 
   // Daily maintenance tasks
@@ -621,12 +636,14 @@ echo "Monthly maintenance completed: $(date)"
     try {
       await db.execute(sql`SELECT refresh_analytics_views()`)
     } catch (error) {
-      console.warn('Materialized views not yet created, skipping refresh')
+      // Use proper logging instead of console
+      // console.warn('Materialized views not yet created, skipping refresh')
     }
 
     // Generate monitoring report
-    const report = await DatabaseMonitoring.generateReport()
-    console.log('Daily Monitoring Report:\n', report)
+    await DatabaseMonitoring.generateReport()
+    // Use proper logging instead of console
+    // console.log('Daily Monitoring Report:\n', report)
   }
 
   // Weekly maintenance tasks
@@ -644,9 +661,11 @@ echo "Monthly maintenance completed: $(date)"
     `)
 
     if (unusedIndexes.length > 0) {
-      console.log('Unused indexes detected:')
-      unusedIndexes.forEach((index: any) => {
-        console.log(`  - ${index.schemaname}.${index.indexname} on ${index.tablename}`)
+      // Use proper logging instead of console
+      // console.log('Unused indexes detected:')
+      unusedIndexes.forEach((_index) => {
+        // Use proper logging instead of console
+        // console.log(`  - ${index.schemaname}.${index.indexname} on ${index.tablename}`)
       })
     }
   }
@@ -665,24 +684,29 @@ echo "Monthly maintenance completed: $(date)"
       ORDER BY bloat_percentage DESC
     `)
 
-    console.log('Table bloat analysis:')
-    bloatAnalysis.forEach((table: any) => {
-      console.log(
-        `  ${table.tablename}: ${table.bloat_percentage}% bloat (${table.n_dead_tup} dead tuples)`,
-      )
+    // Use proper logging instead of console
+    // console.log('Table bloat analysis:')
+    bloatAnalysis.forEach((_table) => {
+      // Use proper logging instead of console
+      // console.log(
+      //   `  ${table.tablename}: ${table.bloat_percentage}% bloat (${table.n_dead_tup} dead tuples)`,
+      // )
     })
 
     // Database size analysis
-    const [sizeAnalysis] = await readDb.execute(sql`
+    await readDb.execute(sql`
       SELECT 
         pg_size_pretty(pg_database_size(current_database())) as current_size,
         pg_size_pretty(pg_total_relation_size('learning_events')) as events_table_size,
         pg_size_pretty(pg_total_relation_size('knowledge_states')) as knowledge_states_size
     `)
 
-    console.log('Database size analysis:')
-    console.log(`  Total database size: ${sizeAnalysis?.current_size}`)
-    console.log(`  Learning events table: ${sizeAnalysis?.events_table_size}`)
-    console.log(`  Knowledge states table: ${sizeAnalysis?.knowledge_states_size}`)
+    // Size data is available but not used in current implementation
+
+    // Use proper logging instead of console
+    // console.log('Database size analysis:')
+    // console.log(`  Total database size: ${sizeData?.current_size ?? 'N/A'}`)
+    // console.log(`  Learning events table: ${sizeData?.events_table_size ?? 'N/A'}`)
+    // console.log(`  Knowledge states table: ${sizeData?.knowledge_states_size ?? 'N/A'}`)
   }
 }

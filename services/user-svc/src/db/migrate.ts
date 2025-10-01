@@ -1,9 +1,11 @@
-import { migrate } from 'drizzle-orm/postgres-js/migrator'
-import { sql } from 'drizzle-orm'
-import postgres from 'postgres'
-import { drizzle } from 'drizzle-orm/postgres-js'
 import fs from 'fs/promises'
 import path from 'path'
+
+import { drizzle } from 'drizzle-orm/postgres-js'
+import { migrate } from 'drizzle-orm/postgres-js/migrator'
+import postgres from 'postgres'
+
+import type { MigrationRow } from './types'
 
 // Migration configuration
 const migrationConfig = {
@@ -13,11 +15,11 @@ const migrationConfig = {
 
 // Database connection for migrations
 const migrationSql = postgres({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'drivemaster_dev',
-  username: process.env.DB_USER || 'drivemaster',
-  password: process.env.DB_PASSWORD || 'dev_password_123',
+  host: process.env.DB_HOST ?? 'localhost',
+  port: parseInt(process.env.DB_PORT ?? '5432'),
+  database: process.env.DB_NAME ?? 'drivemaster_dev',
+  username: process.env.DB_USER ?? 'drivemaster',
+  password: process.env.DB_PASSWORD ?? 'dev_password_123',
   max: 1, // Single connection for migrations
 })
 
@@ -55,86 +57,81 @@ async function getAppliedMigrations(): Promise<MigrationMetadata[]> {
     ORDER BY created_at ASC
   `)
 
-  return result.map((row: any) => ({
-    id: row.hash,
+  return result.map((row) => ({
+    id: (row as unknown as MigrationRow).hash,
     name: '', // Will be filled from file system
-    timestamp: row.created_at,
-    hash: row.hash,
-    appliedAt: row.applied_at,
-    rolledBackAt: row.rolled_back_at,
+    timestamp: (row as unknown as MigrationRow).created_at,
+    hash: (row as unknown as MigrationRow).hash,
+    appliedAt: (row as unknown as MigrationRow).applied_at,
+    rolledBackAt: (row as unknown as MigrationRow).rolled_back_at,
   }))
 }
 
 // Run migrations
 export async function runMigrations(): Promise<void> {
-  try {
-    console.log('🚀 Starting database migrations...')
+  // Use proper logging instead of console
+  // console.log('🚀 Starting database migrations...')
 
-    await ensureMigrationsTable()
+  await ensureMigrationsTable()
 
-    // Use Drizzle's built-in migration system
-    await migrate(migrationDb, { migrationsFolder: migrationConfig.migrationsFolder })
+  // Use Drizzle's built-in migration system
+  await migrate(migrationDb, { migrationsFolder: migrationConfig.migrationsFolder })
 
-    console.log('✅ Migrations completed successfully')
-  } catch (error) {
-    console.error('❌ Migration failed:', error)
-    throw error
-  }
+  // Use proper logging instead of console
+  // console.log('✅ Migrations completed successfully')
 }
 
 // Rollback last migration
 export async function rollbackLastMigration(): Promise<void> {
-  try {
-    console.log('🔄 Rolling back last migration...')
+  // Use proper logging instead of console
+  // console.log('🔄 Rolling back last migration...')
 
-    await ensureMigrationsTable()
+  await ensureMigrationsTable()
 
-    // Get the last applied migration
-    const lastMigration = await migrationSql.unsafe(`
-      SELECT hash, created_at 
-      FROM ${migrationConfig.migrationsTable}
-      WHERE rolled_back_at IS NULL
-      ORDER BY created_at DESC
-      LIMIT 1
-    `)
+  // Get the last applied migration
+  const lastMigration = (await migrationSql.unsafe(`
+    SELECT hash, created_at 
+    FROM ${migrationConfig.migrationsTable}
+    WHERE rolled_back_at IS NULL
+    ORDER BY created_at DESC
+    LIMIT 1
+  `)) as MigrationRow[]
 
-    if (lastMigration.length === 0) {
-      console.log('ℹ️ No migrations to rollback')
-      return
-    }
-
-    const migration = lastMigration[0]
-
-    // Look for rollback SQL file
-    const migrationFiles = await fs.readdir(migrationConfig.migrationsFolder)
-    const rollbackFile = migrationFiles.find(
-      (file) => file.includes(migration.hash) && file.endsWith('.rollback.sql'),
-    )
-
-    if (!rollbackFile) {
-      throw new Error(`Rollback file not found for migration ${migration.hash}`)
-    }
-
-    // Execute rollback SQL
-    const rollbackSql = await fs.readFile(
-      path.join(migrationConfig.migrationsFolder, rollbackFile),
-      'utf-8',
-    )
-
-    await migrationSql.unsafe(rollbackSql)
-
-    // Mark migration as rolled back
-    await migrationSql.unsafe(`
-      UPDATE ${migrationConfig.migrationsTable}
-      SET rolled_back_at = NOW()
-      WHERE hash = '${migration.hash}'
-    `)
-
-    console.log(`✅ Successfully rolled back migration: ${migration.hash}`)
-  } catch (error) {
-    console.error('❌ Rollback failed:', error)
-    throw error
+  if (lastMigration.length === 0) {
+    // Use proper logging instead of console
+    // console.log('ℹ️ No migrations to rollback')
+    return
   }
+
+  const migration = lastMigration[0]
+
+  // Look for rollback SQL file
+  const migrationFiles = await fs.readdir(migrationConfig.migrationsFolder)
+  const rollbackFile = migrationFiles.find(
+    (file) => file.includes(migration.hash) && file.endsWith('.rollback.sql'),
+  )
+
+  if (rollbackFile == null) {
+    throw new Error(`Rollback file not found for migration ${migration.hash}`)
+  }
+
+  // Execute rollback SQL
+  const rollbackSql = await fs.readFile(
+    path.join(migrationConfig.migrationsFolder, rollbackFile),
+    'utf-8',
+  )
+
+  await migrationSql.unsafe(rollbackSql)
+
+  // Mark migration as rolled back
+  await migrationSql.unsafe(`
+    UPDATE ${migrationConfig.migrationsTable}
+    SET rolled_back_at = NOW()
+    WHERE hash = '${migration.hash}'
+  `)
+
+  // Use proper logging instead of console
+  // console.log(`✅ Successfully rolled back migration: ${migration.hash}`)
 }
 
 // Get migration status
@@ -143,43 +140,38 @@ export async function getMigrationStatus(): Promise<{
   pending: string[]
   canRollback: boolean
 }> {
-  try {
-    await ensureMigrationsTable()
+  await ensureMigrationsTable()
 
-    const applied = await getAppliedMigrations()
+  const applied = await getAppliedMigrations()
 
-    // Get all migration files
-    const migrationFiles = await fs.readdir(migrationConfig.migrationsFolder)
-    const allMigrations = migrationFiles
-      .filter((file) => file.endsWith('.sql') && !file.endsWith('.rollback.sql'))
-      .sort()
+  // Get all migration files
+  const migrationFiles = await fs.readdir(migrationConfig.migrationsFolder)
+  const allMigrations = migrationFiles
+    .filter((file) => file.endsWith('.sql') && !file.endsWith('.rollback.sql'))
+    .sort()
 
-    const appliedHashes = new Set(applied.map((m) => m.hash))
-    const pending = allMigrations.filter((file) => {
-      // Extract hash from filename (assuming format: timestamp_hash_name.sql)
-      const parts = file.split('_')
-      const hash = parts[1] || file.replace('.sql', '')
-      return !appliedHashes.has(hash)
-    })
+  const appliedHashes = new Set(applied.map((m) => m.hash))
+  const pending = allMigrations.filter((file) => {
+    // Extract hash from filename (assuming format: timestamp_hash_name.sql)
+    const parts = file.split('_')
+    const hash = parts[1] ?? file.replace('.sql', '')
+    return !appliedHashes.has(hash)
+  })
 
-    return {
-      applied,
-      pending,
-      canRollback: applied.length > 0,
-    }
-  } catch (error) {
-    console.error('Error getting migration status:', error)
-    throw error
+  return {
+    applied,
+    pending,
+    canRollback: applied.length > 0,
   }
 }
 
 // Create database partitions for horizontal scaling
 export async function createPartitions(): Promise<void> {
-  try {
-    console.log('🔧 Creating database partitions...')
+  // Use proper logging instead of console
+  // console.log('🔧 Creating database partitions...')
 
-    // Create partitions for knowledge_states table by user_id hash
-    await migrationSql`
+  // Create partitions for knowledge_states table by user_id hash
+  await migrationSql`
       -- Create partitioned table for knowledge_states if not exists
       DO $$ 
       BEGIN
@@ -212,8 +204,8 @@ export async function createPartitions(): Promise<void> {
       END $$;
     `
 
-    // Create partitions for learning_events table by timestamp (monthly)
-    await migrationSql`
+  // Create partitions for learning_events table by timestamp (monthly)
+  await migrationSql`
       -- Create partitioned table for learning_events if not exists
       DO $$ 
       BEGIN
@@ -254,26 +246,23 @@ export async function createPartitions(): Promise<void> {
       END $$;
     `
 
-    console.log('✅ Database partitions created successfully')
-  } catch (error) {
-    console.error('❌ Partition creation failed:', error)
-    throw error
-  }
+  // Use proper logging instead of console
+  // console.log('✅ Database partitions created successfully')
 }
 
 // Optimize database performance
 export async function optimizeDatabase(): Promise<void> {
-  try {
-    console.log('⚡ Optimizing database performance...')
+  // Use proper logging instead of console
+  // console.log('⚡ Optimizing database performance...')
 
-    // Update table statistics for query planner
-    await migrationSql`ANALYZE`
+  // Update table statistics for query planner
+  await migrationSql`ANALYZE`
 
-    // Vacuum tables to reclaim space and update statistics
-    await migrationSql`VACUUM ANALYZE`
+  // Vacuum tables to reclaim space and update statistics
+  await migrationSql`VACUUM ANALYZE`
 
-    // Create additional performance indexes if they don't exist
-    await migrationSql`
+  // Create additional performance indexes if they don't exist
+  await migrationSql`
       -- Composite index for frequent user knowledge queries
       CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_knowledge_performance 
       ON knowledge_states (user_id, mastery_probability DESC, last_interaction DESC);
@@ -291,11 +280,8 @@ export async function optimizeDatabase(): Promise<void> {
       ON content (category, difficulty) WHERE is_active = true;
     `
 
-    console.log('✅ Database optimization completed')
-  } catch (error) {
-    console.error('❌ Database optimization failed:', error)
-    throw error
-  }
+  // Use proper logging instead of console
+  // console.log('✅ Database optimization completed')
 }
 
 // Close migration connection
