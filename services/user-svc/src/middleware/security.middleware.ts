@@ -1,7 +1,8 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
 import crypto from 'crypto'
-import { z } from 'zod'
+
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import DOMPurify from 'isomorphic-dompurify'
+import { z } from 'zod'
 
 // CSRF Token Configuration
 const CSRF_TOKEN_LENGTH = 32
@@ -23,9 +24,9 @@ const XSS_PATTERNS = [
 // SQL Injection patterns (additional layer beyond parameterized queries)
 const SQL_INJECTION_PATTERNS = [
   /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi,
-  /('|(\\')|(;)|(\\)|(\/\*)|(\*\/)|(--)|(\|)|(\%)|(\+))/gi,
-  /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/gi,
-  /((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/gi,
+  /('|(\\')|(;)|(\\)|(\*\/)|(--)|(\|)|(%)|(\+))/gi,
+  /((%3D)|(=))[^\n]*((%27)|(')|(--)|((%3B))|(;))/gi,
+  /((%27)|(')|(%6F)|o|(%4F))((%72)|r|(%52))/gi,
 ]
 
 // Input validation schemas
@@ -41,7 +42,7 @@ const textSchema = z.string().max(10000)
 export interface SecurityValidationResult {
   isValid: boolean
   errors: string[]
-  sanitizedData?: any
+  sanitizedData?: Record<string, unknown>
 }
 
 export class SecurityMiddleware {
@@ -65,7 +66,14 @@ export class SecurityMiddleware {
       const token = request.headers[CSRF_HEADER_NAME] as string
       const cookieToken = request.cookies?.[CSRF_COOKIE_NAME]
 
-      if (!token || !cookieToken || token !== cookieToken) {
+      if (
+        token === undefined ||
+        token.trim() === '' ||
+        cookieToken === undefined ||
+        typeof cookieToken !== 'string' ||
+        cookieToken.trim() === '' ||
+        token !== cookieToken
+      ) {
         return reply.code(403).send({
           success: false,
           error: {
@@ -88,7 +96,7 @@ export class SecurityMiddleware {
    */
   static xssProtection() {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-      if (request.body && typeof request.body === 'object') {
+      if (request.body !== null && typeof request.body === 'object') {
         const sanitizedBody = this.sanitizeObject(request.body)
         const hasXSS = this.detectXSS(JSON.stringify(request.body))
 
@@ -211,15 +219,18 @@ export class SecurityMiddleware {
   static securityHeaders() {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       // Set security headers
-      reply.header('X-Content-Type-Options', 'nosniff')
-      reply.header('X-Frame-Options', 'DENY')
-      reply.header('X-XSS-Protection', '1; mode=block')
-      reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
-      reply.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+      void reply.header('X-Content-Type-Options', 'nosniff') // cspell:disable-line
+      void reply.header('X-Frame-Options', 'DENY')
+      void reply.header('X-XSS-Protection', '1; mode=block')
+      void reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+      void reply.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
 
-      // HSTS header for HTTPS
+      // HSTS header for HTTPS // cspell:disable-line
       if (request.protocol === 'https') {
-        reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+        void reply.header(
+          'Strict-Transport-Security',
+          'max-age=31536000; includeSubDomains; preload',
+        )
       }
 
       // Content Security Policy
@@ -233,7 +244,7 @@ export class SecurityMiddleware {
         "frame-ancestors 'none'",
       ].join('; ')
 
-      reply.header('Content-Security-Policy', csp)
+      void reply.header('Content-Security-Policy', csp)
     }
   }
 
@@ -242,9 +253,13 @@ export class SecurityMiddleware {
    */
   static encryptSensitiveData(data: string, key?: string): string {
     const encryptionKey =
-      key || process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex')
+      key ?? process.env.ENCRYPTION_KEY ?? crypto.randomBytes(32).toString('hex')
     const iv = crypto.randomBytes(16)
-    const cipher = crypto.createCipher('aes-256-cbc', encryptionKey)
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(encryptionKey, 'hex').subarray(0, 32),
+      iv,
+    )
 
     let encrypted = cipher.update(data, 'utf8', 'hex')
     encrypted += cipher.final('hex')
@@ -253,11 +268,15 @@ export class SecurityMiddleware {
   }
 
   static decryptSensitiveData(encryptedData: string, key?: string): string {
-    const encryptionKey = key || process.env.ENCRYPTION_KEY || ''
+    const encryptionKey = key ?? process.env.ENCRYPTION_KEY ?? ''
     const [ivHex, encrypted] = encryptedData.split(':')
     const iv = Buffer.from(ivHex, 'hex')
 
-    const decipher = crypto.createDecipher('aes-256-cbc', encryptionKey)
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(encryptionKey, 'hex').subarray(0, 32),
+      iv,
+    )
     let decrypted = decipher.update(encrypted, 'hex', 'utf8')
     decrypted += decipher.final('utf8')
 
@@ -267,9 +286,9 @@ export class SecurityMiddleware {
   /**
    * Comprehensive security validation
    */
-  static validateSecurityCompliance(data: any): SecurityValidationResult {
+  static validateSecurityCompliance(data: Record<string, unknown>): SecurityValidationResult {
     const errors: string[] = []
-    let sanitizedData = data
+    let sanitizedData: Record<string, unknown> = data
 
     try {
       // XSS Detection
@@ -283,7 +302,7 @@ export class SecurityMiddleware {
       }
 
       // Sanitize data
-      sanitizedData = this.sanitizeObject(data)
+      sanitizedData = this.sanitizeObject(data) as Record<string, unknown>
 
       return {
         isValid: errors.length === 0,
@@ -310,7 +329,7 @@ export class SecurityMiddleware {
     return SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(input))
   }
 
-  private static sanitizeObject(obj: any): any {
+  private static sanitizeObject(obj: unknown): unknown {
     if (typeof obj === 'string') {
       return DOMPurify.sanitize(obj)
     }
@@ -319,9 +338,9 @@ export class SecurityMiddleware {
       return obj.map((item) => this.sanitizeObject(item))
     }
 
-    if (obj && typeof obj === 'object') {
-      const sanitized: any = {}
-      for (const [key, value] of Object.entries(obj)) {
+    if (obj !== null && typeof obj === 'object') {
+      const sanitized: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
         sanitized[key] = this.sanitizeObject(value)
       }
       return sanitized

@@ -1,12 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { AuthService, type UserContext } from '../services/auth.simple'
 
-// Extend FastifyRequest to include user context
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: UserContext
-  }
-}
+import { AuthService } from '../services/auth.simple'
 
 export interface AuthMiddlewareOptions {
   required?: boolean
@@ -26,9 +20,9 @@ export class AuthMiddleware {
         // Extract token from Authorization header
         const authHeader = request.headers.authorization
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          if (required) {
-            reply.code(401).send({
+        if (!(authHeader?.startsWith('Bearer ') ?? false)) {
+          if (required === true) {
+            void reply.code(401).send({
               success: false,
               error: {
                 code: 'MISSING_TOKEN',
@@ -51,7 +45,7 @@ export class AuthMiddleware {
 
         // Check role requirements
         if (roles.length > 0 && !AuthService.hasRole(userContext, roles)) {
-          reply.code(403).send({
+          void reply.code(403).send({
             success: false,
             error: {
               code: 'INSUFFICIENT_ROLE',
@@ -68,7 +62,7 @@ export class AuthMiddleware {
         // Check permission requirements
         for (const permission of permissions) {
           if (!AuthService.hasPermission(userContext, permission)) {
-            reply.code(403).send({
+            void reply.code(403).send({
               success: false,
               error: {
                 code: 'INSUFFICIENT_PERMISSION',
@@ -106,8 +100,8 @@ export class AuthMiddleware {
           'Authentication error',
         )
 
-        if (required) {
-          reply.code(401).send({
+        if (required === true) {
+          void reply.code(401).send({
             success: false,
             error: {
               code: 'INVALID_TOKEN',
@@ -128,7 +122,7 @@ export class AuthMiddleware {
    * Device fingerprinting middleware for additional security
    */
   static deviceFingerprint() {
-    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
       const userAgent = request.headers['user-agent']
       const acceptLanguage = request.headers['accept-language']
       const acceptEncoding = request.headers['accept-encoding']
@@ -139,7 +133,7 @@ export class AuthMiddleware {
       ).toString('base64')
 
       // Store fingerprint in request for later use
-      ;(request as any).deviceFingerprint = fingerprint
+      ;(request as FastifyRequest & { deviceFingerprint: string }).deviceFingerprint = fingerprint
 
       request.log.debug(
         {
@@ -165,7 +159,7 @@ export class AuthMiddleware {
           url: request.url,
           ip: request.ip,
           userAgent: request.headers['user-agent'],
-          userId: request.user?.userId,
+          userId: (request.user?.userId as string) ?? 'anonymous',
           timestamp: new Date().toISOString(),
         },
         'API request audit',
@@ -181,7 +175,7 @@ export class AuthMiddleware {
             url: request.url,
             statusCode: reply.raw.statusCode,
             duration,
-            userId: request.user?.userId,
+            userId: (request.user?.userId as string) ?? 'anonymous',
             timestamp: new Date().toISOString(),
           },
           'API response audit',

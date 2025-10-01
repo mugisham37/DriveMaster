@@ -1,13 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { AuthService, type UserContext } from '../services/auth.simple'
-import { SessionService } from '../services/session.service'
 
-// Extend FastifyRequest to include user context
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: UserContext
-  }
-}
+import { AuthService } from '../services/auth.simple'
+import { SessionService } from '../services/session.service'
 
 export interface AuthMiddlewareOptions {
   required?: boolean
@@ -28,8 +22,8 @@ export class AuthMiddleware {
         // Extract token from Authorization header
         const authHeader = request.headers.authorization
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          if (required) {
+        if (authHeader === undefined || !authHeader.startsWith('Bearer ')) {
+          if (required === true) {
             return reply.code(401).send({
               success: false,
               error: {
@@ -105,7 +99,7 @@ export class AuthMiddleware {
           'Authentication error',
         )
 
-        if (required) {
+        if (required === true) {
           return reply.code(401).send({
             success: false,
             error: {
@@ -131,10 +125,10 @@ export class AuthMiddleware {
 
       try {
         // Extract session ID from cookie or header
-        const sessionId = request.cookies?.sessionId || (request.headers['x-session-id'] as string)
+        const sessionId = request.cookies?.sessionId ?? (request.headers['x-session-id'] as string)
 
-        if (!sessionId) {
-          if (required) {
+        if (sessionId === undefined || sessionId.trim() === '') {
+          if (required === true) {
             return reply.code(401).send({
               success: false,
               error: {
@@ -154,7 +148,7 @@ export class AuthMiddleware {
         const sessionContext = await SessionService.validateSession(sessionId)
 
         if (!sessionContext) {
-          if (required) {
+          if (required === true) {
             return reply.code(401).send({
               success: false,
               error: {
@@ -242,7 +236,7 @@ export class AuthMiddleware {
           'Session authentication error',
         )
 
-        if (required) {
+        if (required === true) {
           return reply.code(401).send({
             success: false,
             error: {
@@ -266,15 +260,15 @@ export class AuthMiddleware {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       // Try JWT first, then session
       const authHeader = request.headers.authorization
-      const sessionId = request.cookies?.sessionId || (request.headers['x-session-id'] as string)
+      const sessionId = request.cookies?.sessionId ?? (request.headers['x-session-id'] as string)
 
-      if (authHeader && authHeader.startsWith('Bearer ')) {
+      if (authHeader !== undefined && authHeader.startsWith('Bearer ')) {
         // Use JWT authentication
         return this.authenticate(options)(request, reply)
-      } else if (sessionId) {
+      } else if (sessionId !== undefined && sessionId.trim() !== '') {
         // Use session authentication
         return this.authenticateSession(options)(request, reply)
-      } else if (options.required !== false) {
+      } else if (options.required === true) {
         return reply.code(401).send({
           success: false,
           error: {
@@ -293,7 +287,7 @@ export class AuthMiddleware {
   /**
    * Admin-only middleware
    */
-  static requireAdmin() {
+  static requireAdmin(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
     return this.authenticate({
       required: true,
       roles: ['admin'],
@@ -303,7 +297,7 @@ export class AuthMiddleware {
   /**
    * Premium user middleware
    */
-  static requirePremium() {
+  static requirePremium(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
     return this.authenticate({
       required: true,
       roles: ['premium', 'admin'],
@@ -320,11 +314,11 @@ export class AuthMiddleware {
 
       if (reply.sent) return undefined // Authentication failed
 
-      const requestedUserId = (request.params as any)[userIdParam]
-      const authenticatedUserId = request.user?.userId
+      const requestedUserId = (request.params as Record<string, string>)[userIdParam]
+      const authenticatedUserId = (request.user?.userId as string) ?? ''
 
       // Admin can access any user's resources
-      if (request.user && AuthService.hasRole(request.user, ['admin'])) {
+      if (request.user !== undefined && AuthService.hasRole(request.user, ['admin'])) {
         return undefined
       }
 
@@ -348,7 +342,7 @@ export class AuthMiddleware {
   /**
    * Optional authentication middleware
    */
-  static optionalAuth() {
+  static optionalAuth(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
     return this.authenticate({ required: false })
   }
 
@@ -358,9 +352,9 @@ export class AuthMiddleware {
   static authenticateApiKey() {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const apiKey = request.headers['x-api-key'] as string
-      const validApiKeys = process.env.API_KEYS?.split(',') || []
+      const validApiKeys = process.env.API_KEYS?.split(',') ?? []
 
-      if (!apiKey || !validApiKeys.includes(apiKey)) {
+      if (apiKey.length === 0 || apiKey.trim() === '' || !validApiKeys.includes(apiKey)) {
         return reply.code(401).send({
           success: false,
           error: {
@@ -395,8 +389,8 @@ export class AuthMiddleware {
   /**
    * Device fingerprinting middleware for additional security
    */
-  static deviceFingerprint() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+  static deviceFingerprint(): (request: FastifyRequest, _reply: FastifyReply) => Promise<void> {
+    return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
       const userAgent = request.headers['user-agent']
       const acceptLanguage = request.headers['accept-language']
       const acceptEncoding = request.headers['accept-encoding']
@@ -407,7 +401,7 @@ export class AuthMiddleware {
       ).toString('base64')
 
       // Store fingerprint in request for later use
-      ;(request as any).deviceFingerprint = fingerprint
+      ;(request as FastifyRequest & { deviceFingerprint: string }).deviceFingerprint = fingerprint
 
       request.log.debug(
         {
@@ -422,8 +416,8 @@ export class AuthMiddleware {
   /**
    * Audit logging middleware
    */
-  static auditLog() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+  static auditLog(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const startTime = Date.now()
 
       // Log request
@@ -433,7 +427,7 @@ export class AuthMiddleware {
           url: request.url,
           ip: request.ip,
           userAgent: request.headers['user-agent'],
-          userId: request.user?.userId,
+          userId: (request.user?.userId as string) ?? 'anonymous',
           timestamp: new Date().toISOString(),
         },
         'API request audit',
@@ -449,7 +443,7 @@ export class AuthMiddleware {
             url: request.url,
             statusCode: reply.raw.statusCode,
             duration,
-            userId: request.user?.userId,
+            userId: (request.user?.userId as string) ?? 'anonymous',
             timestamp: new Date().toISOString(),
           },
           'API response audit',

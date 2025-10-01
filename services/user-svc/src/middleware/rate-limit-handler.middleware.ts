@@ -1,5 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+
 import { RateLimitMiddleware } from './rate-limit.middleware'
+
+interface RequestBody {
+  email?: string
+  [key: string]: unknown
+}
 
 export class RateLimitHandler {
   /**
@@ -7,8 +13,11 @@ export class RateLimitHandler {
    */
   static authRateLimit() {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-      const body = request.body as any
-      const email = body?.email || 'unknown'
+      const body = request.body as RequestBody
+      const email =
+        body?.email !== null && body?.email !== undefined && typeof body.email === 'string'
+          ? body.email
+          : 'unknown'
       const key = `auth:${request.ip}:${email}`
 
       const result = await RateLimitMiddleware.createProgressiveRateLimit(key, request)
@@ -61,8 +70,11 @@ export class RateLimitHandler {
    */
   static passwordResetRateLimit() {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-      const body = request.body as any
-      const email = body?.email || 'unknown'
+      const body = request.body as RequestBody
+      const email =
+        body?.email !== null && body?.email !== undefined && typeof body.email === 'string'
+          ? body.email
+          : 'unknown'
       const key = `password-reset:${request.ip}:${email}`
 
       const result = await RateLimitMiddleware.createProgressiveRateLimit(key, request)

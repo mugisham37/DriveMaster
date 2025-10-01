@@ -1,6 +1,11 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import rateLimit from '@fastify/rate-limit'
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import Redis from 'ioredis'
+
+interface RequestBody {
+  email?: string
+  [key: string]: unknown
+}
 
 // Rate limiting configuration
 const RATE_LIMIT_CONFIG = {
@@ -33,10 +38,10 @@ const RATE_LIMIT_CONFIG = {
 
 // Redis configuration for distributed rate limiting
 const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  host: process.env.REDIS_HOST ?? 'localhost',
+  port: parseInt(process.env.REDIS_PORT ?? '6379'),
   password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_RATE_LIMIT_DB || '1'), // Separate DB for rate limiting
+  db: parseInt(process.env.REDIS_RATE_LIMIT_DB ?? '1'), // Separate DB for rate limiting
 }
 
 export interface RateLimitOptions {
@@ -56,16 +61,21 @@ export class RateLimitMiddleware {
    * Initialize Redis connection for rate limiting
    */
   static async initialize(): Promise<void> {
-    if (!this.redis) {
+    if (this.redis === undefined) {
       this.redis = new Redis(redisConfig)
 
       this.redis.on('connect', () => {
-        console.log('✅ Redis connected for rate limiting')
+        // Use proper logging in production
+        process.stdout.write('✅ Redis connected for rate limiting\n')
       })
 
       this.redis.on('error', (error) => {
-        console.error('❌ Redis rate limit connection error:', error)
+        // Use proper logging in production
+        process.stderr.write(`❌ Redis rate limit connection error: ${error.message}\n`)
       })
+
+      // Test the connection
+      await this.redis.ping()
     }
   }
 
@@ -79,17 +89,17 @@ export class RateLimitMiddleware {
       max: RATE_LIMIT_CONFIG.global.max,
       timeWindow: RATE_LIMIT_CONFIG.global.timeWindow,
       redis: this.redis,
-      keyGenerator: (request: FastifyRequest) => {
+      keyGenerator: (request: FastifyRequest): string => {
         // Use IP address as the key, but consider user ID if authenticated
         const userKey = this.extractUserKey(request)
-        return userKey || request.ip
+        return userKey ?? request.ip
       },
-      errorResponseBuilder: (request: FastifyRequest, context: any) => {
+      errorResponseBuilder: (request: FastifyRequest, context: { max: number; ttl: number }) => {
         return {
           success: false,
           error: {
             code: 'RATE_LIMIT_EXCEEDED',
-            message: `Too many requests. Limit: ${context.max} requests per ${context.timeWindow}`,
+            message: `Too many requests. Limit: ${context.max} requests per window`,
             retryAfter: context.ttl,
           },
           meta: {
@@ -113,15 +123,18 @@ export class RateLimitMiddleware {
     return {
       max: RATE_LIMIT_CONFIG.auth.max,
       timeWindow: RATE_LIMIT_CONFIG.auth.timeWindow,
-      keyGenerator: (request: FastifyRequest) => {
+      keyGenerator: (request: FastifyRequest): string => {
         // For auth endpoints, use IP + email combination for more granular control
-        const body = request.body as any
-        const email = body?.email || 'unknown'
+        const body = request.body as RequestBody
+        const email =
+          body?.email !== null && body?.email !== undefined && typeof body.email === 'string'
+            ? body.email
+            : 'unknown'
         return `auth:${request.ip}:${email}`
       },
       skipSuccessfulRequests: false, // Count all attempts
       skipFailedRequests: false,
-      onExceeded: (request: FastifyRequest, reply: FastifyReply) => {
+      onExceeded: (request: FastifyRequest, _reply: FastifyReply): void => {
         request.log.warn(
           {
             ip: request.ip,
@@ -141,12 +154,12 @@ export class RateLimitMiddleware {
     return {
       max: RATE_LIMIT_CONFIG.register.max,
       timeWindow: RATE_LIMIT_CONFIG.register.timeWindow,
-      keyGenerator: (request: FastifyRequest) => {
+      keyGenerator: (request: FastifyRequest): string => {
         // For registration, use IP address to prevent abuse
         return `register:${request.ip}`
       },
       skipSuccessfulRequests: true, // Only count failed attempts
-      onExceeded: (request: FastifyRequest, reply: FastifyReply) => {
+      onExceeded: (request: FastifyRequest, _reply: FastifyReply): void => {
         request.log.warn(
           {
             ip: request.ip,
@@ -165,17 +178,25 @@ export class RateLimitMiddleware {
     return {
       max: RATE_LIMIT_CONFIG.passwordReset.max,
       timeWindow: RATE_LIMIT_CONFIG.passwordReset.timeWindow,
-      keyGenerator: (request: FastifyRequest) => {
-        const body = request.body as any
-        const email = body?.email || 'unknown'
+      keyGenerator: (request: FastifyRequest): string => {
+        const body = request.body as RequestBody
+        const email =
+          body?.email !== null && body?.email !== undefined && typeof body.email === 'string'
+            ? body.email
+            : 'unknown'
         return `password-reset:${request.ip}:${email}`
       },
       skipFailedRequests: false,
-      onExceeded: (request: FastifyRequest, reply: FastifyReply) => {
+      onExceeded: (request: FastifyRequest, _reply: FastifyReply): void => {
+        const body = request.body as RequestBody
+        const email =
+          body?.email !== null && body?.email !== undefined && typeof body.email === 'string'
+            ? body.email
+            : 'unknown'
         request.log.warn(
           {
             ip: request.ip,
-            email: (request.body as any)?.email,
+            email,
           },
           'Password reset rate limit exceeded',
         )
@@ -190,9 +211,9 @@ export class RateLimitMiddleware {
     return {
       max: RATE_LIMIT_CONFIG.profile.max,
       timeWindow: RATE_LIMIT_CONFIG.profile.timeWindow,
-      keyGenerator: (request: FastifyRequest) => {
+      keyGenerator: (request: FastifyRequest): string => {
         const userKey = this.extractUserKey(request)
-        return `profile:${userKey || request.ip}`
+        return `profile:${userKey ?? request.ip}`
       },
       skipSuccessfulRequests: false,
     }
@@ -218,11 +239,10 @@ export class RateLimitMiddleware {
     await this.initialize()
 
     const key = `progressive:${baseKey}`
-    const now = Date.now()
     const windowSize = 15 * 60 * 1000 // 15 minutes in milliseconds
 
     // Get current violation count
-    const violationCount = (await this.redis.get(`${key}:violations`)) || '0'
+    const violationCount = (await this.redis.get(`${key}:violations`)) ?? '0'
     const violations = parseInt(violationCount, 10)
 
     // Calculate dynamic limit based on violations
@@ -233,12 +253,12 @@ export class RateLimitMiddleware {
     }
 
     // Check current request count
-    const requestCount = (await this.redis.get(key)) || '0'
+    const requestCount = (await this.redis.get(key)) ?? '0'
     const requests = parseInt(requestCount, 10)
 
     if (requests >= currentLimit) {
       // Increment violation count
-      await this.redis.setex(`${key}:violations`, windowSize / 1000, violations + 1)
+      await this.redis.setex(`${key}:violations`, windowSize / 1000, violations + 1) // cspell:disable-line
 
       // Calculate retry after time (exponential backoff)
       const retryAfter = Math.min(3600, 60 * Math.pow(2, violations)) // Max 1 hour
@@ -271,7 +291,11 @@ export class RateLimitMiddleware {
    * Whitelist IP addresses (for trusted sources)
    */
   static createWhitelistMiddleware(whitelistedIPs: string[]) {
-    return async (request: FastifyRequest, reply: FastifyReply, done: () => void) => {
+    return async (
+      request: FastifyRequest,
+      _reply: FastifyReply,
+      done: () => void,
+    ): Promise<void> => {
       const clientIP = request.ip
 
       if (whitelistedIPs.includes(clientIP)) {
@@ -288,13 +312,17 @@ export class RateLimitMiddleware {
    * Blacklist IP addresses (for known bad actors)
    */
   static createBlacklistMiddleware(blacklistedIPs: string[]) {
-    return async (request: FastifyRequest, reply: FastifyReply, done: () => void) => {
+    return async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+      done: () => void,
+    ): Promise<void> => {
       const clientIP = request.ip
 
       if (blacklistedIPs.includes(clientIP)) {
         request.log.warn({ ip: clientIP }, 'Request from blacklisted IP')
 
-        reply.code(403).send({
+        void reply.code(403).send({
           success: false,
           error: {
             code: 'IP_BLACKLISTED',
@@ -319,10 +347,10 @@ export class RateLimitMiddleware {
 
     for (const key of keys) {
       const violations = await this.redis.get(key)
-      if (violations && parseInt(violations, 10) > 10) {
+      if (violations !== null && violations !== undefined && parseInt(violations, 10) > 10) {
         // Extract IP from key and consider blacklisting
         const ip = key.split(':')[1]
-        console.warn(`High violation count for IP ${ip}: ${violations}`)
+        process.stderr.write(`High violation count for IP ${ip}: ${violations}\n`)
 
         // In production, you might want to automatically blacklist or alert administrators
       }
@@ -335,12 +363,16 @@ export class RateLimitMiddleware {
   private static extractUserKey(request: FastifyRequest): string | null {
     // Try to extract user ID from JWT token in Authorization header
     const authHeader = request.headers.authorization
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ') ?? false) {
       try {
         const token = authHeader.substring(7)
         // This is a simplified extraction - in practice, you'd validate the token
-        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
-        return payload.userId || null
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()) as {
+          userId?: string
+        }
+        return payload.userId !== undefined && payload.userId !== null && payload.userId !== ''
+          ? payload.userId
+          : null
       } catch (error) {
         // Invalid token, fall back to IP
         return null
@@ -361,7 +393,7 @@ export class RateLimitMiddleware {
   }> {
     await this.initialize()
 
-    const requests = parseInt((await this.redis.get(key)) || '0', 10)
+    const requests = parseInt((await this.redis.get(key)) ?? '0', 10)
     const ttl = await this.redis.ttl(key)
     const limit = RATE_LIMIT_CONFIG.global.max // Default limit
 
@@ -387,7 +419,7 @@ export class RateLimitMiddleware {
    * Close Redis connection
    */
   static async close(): Promise<void> {
-    if (this.redis) {
+    if (this.redis !== undefined) {
       await this.redis.quit()
     }
   }

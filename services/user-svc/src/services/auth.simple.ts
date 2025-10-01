@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production'
+  process.env.JWT_REFRESH_SECRET != null || 'dev-refresh-secret-change-in-production'
 const JWT_EXPIRES_IN = '15m'
 const JWT_REFRESH_EXPIRES_IN = '7d'
 
@@ -138,11 +138,24 @@ export class AuthService {
   }
 
   /**
-   * Validate token and return user context (mock implementation)
+   * Validate token and return user context
    */
   static async validateToken(token: string): Promise<UserContext> {
-    // Mock implementation for testing
-    throw new Error('Token validation not implemented')
+    try {
+      const decoded = this.verifyToken(token, 'access')
+
+      // Get permissions for the user's roles
+      const permissions = this.getRolePermissions(decoded.roles)
+
+      return {
+        userId: decoded.userId,
+        email: decoded.email,
+        roles: decoded.roles,
+        permissions,
+      }
+    } catch (error) {
+      throw new Error('Invalid or expired token')
+    }
   }
 
   /**
