@@ -1,0 +1,37 @@
+{
+  "name": "@drivemaster/integration-tests",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:load": "k6 run load-tests/scenarios/*.js",
+    "test:chaos": "vitest run chaos-tests/*.test.ts",
+    "test:security": "vitest run security-tests/*.test.ts",
+    "test:integration": "vitest run integration-tests/*.test.ts",
+    "test:all": "pnpm test:integration && pnpm test:e2e && pnpm test:security",
+    "build": "tsc",
+    "clean": "rimraf dist coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@drivemaster/shared-config": "workspace:*",
+    "@drivemaster/contracts": "workspace:*",
+    "axios": "^1.6.2",
+    "socket.io-client": "^4.7.4",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "k6": "^0.47.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.0"
+  }
+}
