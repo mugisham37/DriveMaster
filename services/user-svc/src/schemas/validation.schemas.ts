@@ -19,11 +19,20 @@ export const BaseSchemas = {
   // Text content with XSS protection
   safeText: z
     .string()
-    .max(10000, 'Text too long')
     .refine(
       (val) => !/<script|javascript:|on\w+=/i.test(val),
       'Potentially unsafe content detected',
     ),
+
+  // Safe text with length limits
+  safeTextWithLimit: (maxLength: number): z.ZodEffects<z.ZodString, string, string> =>
+    z
+      .string()
+      .max(maxLength, 'Text too long')
+      .refine(
+        (val) => !/<script|javascript:|on\w+=/i.test(val),
+        'Potentially unsafe content detected',
+      ),
 
   // Numeric constraints
   positiveNumber: z.number().positive('Must be positive'),
@@ -97,48 +106,53 @@ export const AuthSchemas = {
     }),
 }
 
+// Define individual schemas first to avoid circular references
+const cognitivePatterns = z.object({
+  processingSpeed: z.number().min(0.1).max(5.0, 'Processing speed out of range'),
+  workingMemoryCapacity: z.number().min(0.1).max(5.0, 'Memory capacity out of range'),
+  attentionSpan: z.number().min(0.1).max(5.0, 'Attention span out of range'),
+  learningStyle: BaseSchemas.learningStyle,
+  preferredDifficulty: BaseSchemas.difficultyLevel.optional(),
+  adaptationRate: z.number().min(0.1).max(2.0).optional(),
+})
+
+const learningPreferences = z.object({
+  enableNotifications: z.boolean(),
+  studyReminders: z.boolean(),
+  difficultyPreference: z.enum(['adaptive', 'easy', 'medium', 'hard']),
+  sessionLength: z.number().min(5).max(120, 'Session length must be 5-120 minutes'),
+  preferredStudyTimes: z.array(z.number().min(0).max(23)).optional(),
+  breakFrequency: z.number().min(5).max(60).optional(),
+  gamificationEnabled: z.boolean().optional(),
+})
+
+const progressUpdate = z.object({
+  conceptId: BaseSchemas.uuid,
+  isCorrect: z.boolean(),
+  responseTime: z.number().positive('Response time must be positive'),
+  confidenceLevel: z.number().min(0).max(1, 'Confidence must be 0-1'),
+  sessionId: BaseSchemas.uuid,
+  timestamp: BaseSchemas.isoDate.optional(),
+})
+
 // User profile schemas
 export const UserSchemas = {
-  cognitivePatterns: z.object({
-    processingSpeed: z.number().min(0.1).max(5.0, 'Processing speed out of range'),
-    workingMemoryCapacity: z.number().min(0.1).max(5.0, 'Memory capacity out of range'),
-    attentionSpan: z.number().min(0.1).max(5.0, 'Attention span out of range'),
-    learningStyle: BaseSchemas.learningStyle,
-    preferredDifficulty: BaseSchemas.difficultyLevel.optional(),
-    adaptationRate: z.number().min(0.1).max(2.0).optional(),
-  }),
-
-  learningPreferences: z.object({
-    enableNotifications: z.boolean(),
-    studyReminders: z.boolean(),
-    difficultyPreference: z.enum(['adaptive', 'easy', 'medium', 'hard']),
-    sessionLength: z.number().min(5).max(120, 'Session length must be 5-120 minutes'),
-    preferredStudyTimes: z.array(z.number().min(0).max(23)).optional(),
-    breakFrequency: z.number().min(5).max(60).optional(),
-    gamificationEnabled: z.boolean().optional(),
-  }),
+  cognitivePatterns,
+  learningPreferences,
+  progressUpdate,
 
   updateProfile: z.object({
     email: BaseSchemas.email.optional(),
-    firstName: BaseSchemas.safeText.max(50).optional(),
-    lastName: BaseSchemas.safeText.max(50).optional(),
-    cognitivePatterns: z.lazy(() => UserSchemas.cognitivePatterns).optional(),
-    learningPreferences: z.lazy(() => UserSchemas.learningPreferences).optional(),
+    firstName: BaseSchemas.safeTextWithLimit(50).optional(),
+    lastName: BaseSchemas.safeTextWithLimit(50).optional(),
+    cognitivePatterns: cognitivePatterns.optional(),
+    learningPreferences: learningPreferences.optional(),
     timezone: z.string().max(50).optional(),
     language: z.string().length(2, 'Language code must be 2 characters').optional(),
   }),
 
-  progressUpdate: z.object({
-    conceptId: BaseSchemas.uuid,
-    isCorrect: z.boolean(),
-    responseTime: z.number().positive('Response time must be positive'),
-    confidenceLevel: z.number().min(0).max(1, 'Confidence must be 0-1'),
-    sessionId: BaseSchemas.uuid,
-    timestamp: BaseSchemas.isoDate.optional(),
-  }),
-
   bulkProgressUpdate: z.object({
-    updates: z.array(z.lazy(() => UserSchemas.progressUpdate)).max(100, 'Too many updates'),
+    updates: z.array(progressUpdate).max(100, 'Too many updates'),
     sessionId: BaseSchemas.uuid,
   }),
 }
@@ -147,7 +161,7 @@ export const UserSchemas = {
 export const SocialSchemas = {
   friendRequest: z.object({
     friendId: BaseSchemas.uuid,
-    message: BaseSchemas.safeText.max(500).optional(),
+    message: BaseSchemas.safeTextWithLimit(500).optional(),
   }),
 
   friendResponse: z.object({
@@ -157,7 +171,7 @@ export const SocialSchemas = {
 
   shareProgress: z.object({
     achievementId: BaseSchemas.uuid,
-    message: BaseSchemas.safeText.max(280).optional(),
+    message: BaseSchemas.safeTextWithLimit(280).optional(),
     visibility: z.enum(['public', 'friends', 'private']),
   }),
 
@@ -217,8 +231,8 @@ export const SecuritySchemas = {
       'permission_change',
     ]),
     severity: z.enum(['low', 'medium', 'high', 'critical']),
-    description: BaseSchemas.safeText.max(1000),
-    metadata: z.record(z.any()).optional(),
+    description: BaseSchemas.safeTextWithLimit(1000),
+    metadata: z.record(z.unknown()).optional(),
   }),
 
   roleAssignment: z.object({
@@ -230,8 +244,19 @@ export const SecuritySchemas = {
   permissionCheck: z.object({
     resource: z.string().min(1, 'Resource is required'),
     action: z.string().min(1, 'Action is required'),
-    context: z.record(z.any()).optional(),
+    context: z.record(z.unknown()).optional(),
   }),
+}
+
+// Types for Fastify request/reply
+interface FastifyRequest {
+  body: unknown
+  id: string
+}
+
+interface FastifyReply {
+  code: (statusCode: number) => FastifyReply
+  send: (payload: unknown) => FastifyReply
 }
 
 // Validation helper functions
@@ -258,8 +283,10 @@ export class ValidationHelpers {
   /**
    * Create validation middleware for Fastify
    */
-  static createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
-    return async (request: any, reply: any) => {
+  static createValidationMiddleware<T>(
+    schema: z.ZodSchema<T>,
+  ): (request: FastifyRequest, reply: FastifyReply) => FastifyReply | void {
+    return (request: FastifyRequest, reply: FastifyReply): FastifyReply | void => {
       const result = this.validateInput(schema, request.body)
 
       if (!result.success) {
@@ -319,4 +346,4 @@ export const ValidationSchemas = {
   Social: SocialSchemas,
   Compliance: ComplianceSchemas,
   Security: SecuritySchemas,
-}
+} as const

@@ -45,7 +45,7 @@ export const userRegistrationSchema = z.object({
     .string()
     .datetime()
     .optional()
-    .transform((val) => (val ? new Date(val) : undefined)),
+    .transform((val) => (val != null && val.trim() !== '' ? new Date(val) : undefined)),
   cognitivePatterns: cognitivePatternSchema.optional(),
   learningPreferences: learningPreferencesSchema.optional(),
 })
@@ -58,7 +58,7 @@ export const profileUpdateSchema = z.object({
     .string()
     .datetime()
     .optional()
-    .transform((val) => (val ? new Date(val) : undefined)),
+    .transform((val) => (val != null && val.trim() !== '' ? new Date(val) : undefined)),
   cognitivePatterns: cognitivePatternSchema.optional(),
   learningPreferences: learningPreferencesSchema.optional(),
 })
@@ -79,7 +79,7 @@ export const dataDeletionRequestSchema = z.object({
     .string()
     .datetime()
     .optional()
-    .transform((val) => (val ? new Date(val) : undefined)),
+    .transform((val) => (val != null && val.trim() !== '' ? new Date(val) : undefined)),
 })
 
 // Response Schemas for OpenAPI documentation

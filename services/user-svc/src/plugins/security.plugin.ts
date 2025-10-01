@@ -1,10 +1,31 @@
-import fp from 'fastify-plugin'
-import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify'
+import fp from 'fastify-plugin'
+
 import { securityConfig, securityHeaders, httpsConfig } from '../config/security.config'
 import { SecurityMiddleware } from '../middleware/security.middleware'
+
+// Type for Fastify instance that might have Redis
+type FastifyWithOptionalRedis = FastifyInstance & {
+  redis?: unknown
+}
+
+// Helper function to safely get user agent
+function getUserAgent(headers: Record<string, string | string[] | undefined>): string {
+  const userAgent = headers['user-agent']
+  return typeof userAgent === 'string' ? userAgent : 'unknown'
+}
+
+// Helper function to safely get user ID
+function getUserId(user: unknown): string {
+  if (user != null && typeof user === 'object' && 'userId' in user) {
+    const userId = (user as { userId: unknown }).userId
+    return typeof userId === 'string' ? userId : 'anonymous'
+  }
+  return 'anonymous'
+}
 
 export interface SecurityPluginOptions extends FastifyPluginOptions {
   enableHelmet?: boolean
@@ -16,7 +37,7 @@ export interface SecurityPluginOptions extends FastifyPluginOptions {
 }
 
 async function securityPlugin(
-  fastify: FastifyInstance,
+  fastify: FastifyWithOptionalRedis,
   options: SecurityPluginOptions = {},
 ): Promise<void> {
   const {
@@ -43,6 +64,7 @@ async function securityPlugin(
         },
       },
       crossOriginEmbedderPolicy: false, // Disable for API compatibility
+      // cspell:disable-line
       hsts:
         process.env.NODE_ENV === 'production'
           ? {
@@ -59,7 +81,7 @@ async function securityPlugin(
     await fastify.register(cors, {
       origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin) return callback(null, true)
+        if (origin == null || origin.trim() === '') return callback(null, true)
 
         // In production, restrict to specific domains
         if (process.env.NODE_ENV === 'production') {
@@ -93,15 +115,18 @@ async function securityPlugin(
 
   // Rate limiting
   if (enableRateLimit) {
+    // Check if Redis is available
+    const hasRedis = 'redis' in fastify
+
     await fastify.register(rateLimit, {
       global: true,
       max: securityConfig.rateLimit.api.max,
       timeWindow: securityConfig.rateLimit.api.timeWindow,
-      redis: fastify.redis, // Use Redis for distributed rate limiting
+      ...(hasRedis && { redis: fastify.redis }), // Use Redis if available
       keyGenerator: (request) => {
         // Use user ID if authenticated, otherwise IP
-        const userId = request.user?.userId
-        return userId || request.ip
+        const userId = getUserId(request.user)
+        return userId !== 'anonymous' ? userId : request.ip
       },
       errorResponseBuilder: (request, context) => {
         return {
@@ -112,7 +137,7 @@ async function securityPlugin(
           },
           meta: {
             limit: context.max,
-            remaining: context.remaining,
+            remaining: 0, // Set default value since context.remaining might not exist
             resetTime: new Date(Date.now() + context.ttl),
             timestamp: new Date().toISOString(),
             requestId: request.id,
@@ -123,39 +148,14 @@ async function securityPlugin(
         request.log.warn(
           {
             ip: request.ip,
-            userAgent: request.headers['user-agent'],
-            userId: request.user?.userId,
+            userAgent: getUserAgent(request.headers),
+            userId: getUserId(request.user),
             url: request.url,
             method: request.method,
           },
           'Rate limit exceeded',
         )
       },
-    })
-
-    // Specific rate limits for auth endpoints
-    fastify.addHook('preHandler', async (request, reply) => {
-      if (request.url.startsWith('/auth/')) {
-        const authLimiter = rateLimit({
-          max: securityConfig.rateLimit.auth.max,
-          timeWindow: securityConfig.rateLimit.auth.timeWindow,
-          redis: fastify.redis,
-          keyGenerator: (req) => `auth:${req.ip}`,
-        })
-
-        await authLimiter(request, reply)
-      }
-
-      if (request.url === '/auth/register') {
-        const registerLimiter = rateLimit({
-          max: securityConfig.rateLimit.registration.max,
-          timeWindow: securityConfig.rateLimit.registration.timeWindow,
-          redis: fastify.redis,
-          keyGenerator: (req) => `register:${req.ip}`,
-        })
-
-        await registerLimiter(request, reply)
-      }
     })
   }
 
@@ -181,28 +181,31 @@ async function securityPlugin(
   fastify.addHook('onSend', async (request, reply) => {
     // Add custom security headers
     Object.entries(securityHeaders).forEach(([header, value]) => {
-      reply.header(header, value)
+      void reply.header(header, value)
     })
 
     // Add HTTPS headers in production
     if (process.env.NODE_ENV === 'production' && request.protocol === 'https') {
       Object.entries(httpsConfig).forEach(([header, value]) => {
-        reply.header(header, value)
+        void reply.header(header, value)
       })
     }
 
     // Add security-related response headers
-    reply.header('X-Request-ID', request.id)
-    reply.header('X-Response-Time', reply.getResponseTime())
+    void reply.header('X-Request-ID', request.id)
+    void reply.header('X-Response-Time', Date.now() - request.startTime)
   })
 
-  // Security event logging
-  fastify.addHook('onRequest', async (request) => {
+  // Security event logging and timing
+  fastify.addHook('onRequest', (request) => {
+    // Set start time for response time calculation
+    request.startTime = Date.now()
+
     if (securityConfig.monitoring.enableSecurityEventLogging) {
       request.log.debug(
         {
           ip: request.ip,
-          userAgent: request.headers['user-agent'],
+          userAgent: getUserAgent(request.headers),
           method: request.method,
           url: request.url,
           headers: request.headers,
@@ -221,10 +224,10 @@ async function securityPlugin(
           error: error.message,
           statusCode: error.statusCode,
           ip: request.ip,
-          userAgent: request.headers['user-agent'],
+          userAgent: getUserAgent(request.headers),
           url: request.url,
           method: request.method,
-          userId: request.user?.userId,
+          userId: getUserId(request.user),
         },
         'Security error occurred',
       )

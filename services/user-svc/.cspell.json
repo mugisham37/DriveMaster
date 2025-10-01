@@ -35,7 +35,8 @@
     "drivemaster",
     "bgwriter",
     "indexrelid",
-    "psql"
+    "psql",
+    "hsts"
   ],
   "flagWords": [],
   "ignorePaths": ["node_modules/**", "dist/**", "coverage/**", "*.log"]

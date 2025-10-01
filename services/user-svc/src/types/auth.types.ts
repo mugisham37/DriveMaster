@@ -18,5 +18,6 @@ declare module 'fastify' {
     apiKey?: ApiKeyInfo
     rateLimitMultiplier?: number
     deviceFingerprint?: string
+    startTime: number
   }
 }

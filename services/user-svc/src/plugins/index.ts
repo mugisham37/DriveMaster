@@ -1,28 +1,28 @@
-import type { FastifyInstance } from 'fastify'
-import cors from '@fastify/cors'
-import helmet from '@fastify/helmet'
+import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
-import cookie from '@fastify/cookie'
-import { RateLimitMiddleware } from '../middleware/rate-limit.middleware'
-import securityPlugin from './security.plugin'
+import type { FastifyInstance } from 'fastify'
+
 import { validateSecurityConfig } from '../config/security.config'
+import { RateLimitMiddleware } from '../middleware/rate-limit.middleware'
+
+import securityPlugin from './security.plugin'
 
 export async function registerPlugins(server: FastifyInstance): Promise<void> {
   // Validate security configuration before starting
   const securityValidation = validateSecurityConfig()
   if (!securityValidation.valid) {
-    server.log.error('Security configuration validation failed:', securityValidation.errors)
+    server.log.error('Security configuration validation failed: %o', securityValidation.errors)
     throw new Error(`Security configuration invalid: ${securityValidation.errors.join(', ')}`)
   }
 
   if (securityValidation.warnings.length > 0) {
-    server.log.warn('Security configuration warnings:', securityValidation.warnings)
+    server.log.warn('Security configuration warnings: %o', securityValidation.warnings)
   }
 
   // Cookie support for session management (must be registered before security plugin)
   await server.register(cookie, {
-    secret: process.env.COOKIE_SECRET || 'dev-cookie-secret-change-in-production',
+    secret: process.env.COOKIE_SECRET ?? 'dev-cookie-secret-change-in-production',
     parseOptions: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -32,14 +32,17 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
 
   // Redis plugin for rate limiting (if available)
   try {
-    if (process.env.REDIS_URL) {
-      await server.register(require('@fastify/redis'), {
-        url: process.env.REDIS_URL,
+    const redisUrl = process.env.REDIS_URL
+    if (redisUrl != null && redisUrl.trim() !== '') {
+      const fastifyRedis = await import('@fastify/redis')
+      await server.register(fastifyRedis.default, {
+        url: redisUrl,
       })
       server.log.info('Redis connected for rate limiting')
     }
   } catch (error) {
-    server.log.warn('Redis connection failed, using in-memory rate limiting:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    server.log.warn('Redis connection failed, using in-memory rate limiting: %s', errorMessage)
   }
 
   // Comprehensive security plugin
@@ -56,7 +59,8 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
   try {
     await RateLimitMiddleware.registerGlobalRateLimit(server)
   } catch (error) {
-    server.log.warn('Legacy rate limiting registration failed:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    server.log.warn('Legacy rate limiting registration failed: %s', errorMessage)
   }
 
   // API Documentation
@@ -118,7 +122,7 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
         },
       },
     },
-    async (request, reply) => {
+    async (_request, _reply) => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -130,11 +134,11 @@ export async function registerPlugins(server: FastifyInstance): Promise<void> {
   )
 
   // Ready check plugin (for Kubernetes)
-  server.get('/ready', async (request, reply) => {
+  server.get('/ready', async (_request, reply) => {
     try {
       return { status: 'ready' }
     } catch (error) {
-      reply.code(503)
+      void reply.code(503)
       return { status: 'not ready', error: (error as Error).message }
     }
   })
