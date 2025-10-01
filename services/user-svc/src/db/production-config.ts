@@ -132,11 +132,11 @@ export class ProductionConfigTemplates {
   static getHighPerformanceConfig(): ProductionConfig {
     return {
       database: {
-        host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT || '5432'),
-        database: process.env.DB_NAME || 'drivemaster_prod',
-        username: process.env.DB_USER || 'drivemaster',
-        password: process.env.DB_PASSWORD || '',
+        host: process.env.DB_HOST ?? 'localhost',
+        port: parseInt(process.env.DB_PORT ?? '5432'),
+        database: process.env.DB_NAME ?? 'drivemaster_prod',
+        username: process.env.DB_USER ?? 'drivemaster',
+        password: process.env.DB_PASSWORD ?? '',
         ssl: {
           enabled: true,
           rejectUnauthorized: true,
@@ -148,8 +148,8 @@ export class ProductionConfigTemplates {
       pooling: {
         pgbouncer: {
           enabled: true,
-          host: process.env.PGBOUNCER_HOST || 'localhost',
-          port: parseInt(process.env.PGBOUNCER_PORT || '6432'),
+          host: process.env.PGBOUNCER_HOST ?? 'localhost',
+          port: parseInt(process.env.PGBOUNCER_PORT ?? '6432'),
           poolMode: 'transaction',
           maxClientConnections: 1000,
           defaultPoolSize: 50,
@@ -167,13 +167,13 @@ export class ProductionConfigTemplates {
         enabled: true,
         readReplicas: [
           {
-            host: process.env.DB_READ_REPLICA_1_HOST || 'replica1.example.com',
+            host: process.env.DB_READ_REPLICA_1_HOST ?? 'replica1.example.com',
             port: 5432,
             lag_threshold_ms: 5000,
             weight: 1,
           },
           {
-            host: process.env.DB_READ_REPLICA_2_HOST || 'replica2.example.com',
+            host: process.env.DB_READ_REPLICA_2_HOST ?? 'replica2.example.com',
             port: 5432,
             lag_threshold_ms: 5000,
             weight: 1,

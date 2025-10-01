@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm'
 import {
   pgTable,
   uuid,
@@ -12,7 +13,6 @@ import {
   uniqueIndex,
   pgEnum,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
 
 // Enums for type safety
 export const contentCategoryEnum = pgEnum('content_category', [

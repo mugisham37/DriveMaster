@@ -1,4 +1,7 @@
 import { sql } from 'drizzle-orm'
+
+import { logger } from '../utils/logger'
+
 import { db, readDb } from './connection'
 
 // Database performance monitoring utilities
@@ -8,8 +11,8 @@ export class DatabaseMonitor {
     activeConnections: number
     slowQueries: number
     cacheHitRatio: number
-    indexUsage: any[]
-    tableStats: any[]
+    indexUsage: Array<Record<string, unknown>>
+    tableStats: Array<Record<string, unknown>>
   }> {
     try {
       // Get active connections
@@ -68,20 +71,20 @@ export class DatabaseMonitor {
       `)
 
       return {
-        activeConnections: Number(connectionsResult?.active_connections) || 0,
-        slowQueries: Number(slowQueriesResult?.slow_queries) || 0,
-        cacheHitRatio: Number(cacheResult?.cache_hit_ratio) || 0,
-        indexUsage: indexUsage || [],
-        tableStats: tableStats || [],
+        activeConnections: Number(connectionsResult?.active_connections ?? 0),
+        slowQueries: Number(slowQueriesResult?.slow_queries ?? 0),
+        cacheHitRatio: Number(cacheResult?.cache_hit_ratio ?? 0),
+        indexUsage: indexUsage ?? [],
+        tableStats: tableStats ?? [],
       }
     } catch (error) {
-      console.error('Error getting performance metrics:', error)
+      logger.error('Error getting performance metrics', {}, error as Error)
       throw error
     }
   }
 
   // Get table sizes and growth
-  static async getTableSizes(): Promise<any[]> {
+  static async getTableSizes(): Promise<Array<Record<string, unknown>>> {
     try {
       const result = await readDb.execute(sql`
         SELECT 
@@ -95,13 +98,13 @@ export class DatabaseMonitor {
       `)
       return result
     } catch (error) {
-      console.error('Error getting table sizes:', error)
+      logger.error('Error getting table sizes', {}, error as Error)
       throw error
     }
   }
 
   // Check for missing indexes
-  static async findMissingIndexes(): Promise<any[]> {
+  static async findMissingIndexes(): Promise<Array<Record<string, unknown>>> {
     try {
       const result = await readDb.execute(sql`
         SELECT 
@@ -121,7 +124,7 @@ export class DatabaseMonitor {
       `)
       return result
     } catch (error) {
-      console.error('Error finding missing indexes:', error)
+      logger.error('Error finding missing indexes', {}, error as Error)
       throw error
     }
   }
@@ -130,25 +133,25 @@ export class DatabaseMonitor {
 // Query optimization utilities
 export class QueryOptimizer {
   // Analyze query performance
-  static async analyzeQuery(query: string): Promise<any> {
+  static async analyzeQuery(query: string): Promise<Record<string, unknown>> {
     try {
       const result = await readDb.execute(
         sql.raw(`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}`),
       )
       return result[0]
     } catch (error) {
-      console.error('Error analyzing query:', error)
+      logger.error('Error analyzing query', {}, error as Error)
       throw error
     }
   }
 
   // Get query execution plan
-  static async explainQuery(query: string): Promise<any> {
+  static async explainQuery(query: string): Promise<Record<string, unknown>> {
     try {
       const result = await readDb.execute(sql.raw(`EXPLAIN (FORMAT JSON) ${query}`))
       return result[0]
     } catch (error) {
-      console.error('Error explaining query:', error)
+      logger.error('Error explaining query', {}, error as Error)
       throw error
     }
   }
@@ -156,13 +159,13 @@ export class QueryOptimizer {
   // Update table statistics
   static async updateStatistics(tableName?: string): Promise<void> {
     try {
-      if (tableName) {
+      if (tableName !== null && tableName !== undefined && tableName !== '') {
         await db.execute(sql.raw(`ANALYZE ${tableName}`))
       } else {
         await db.execute(sql`ANALYZE`)
       }
     } catch (error) {
-      console.error('Error updating statistics:', error)
+      logger.error('Error updating statistics', {}, error as Error)
       throw error
     }
   }
@@ -173,7 +176,7 @@ export class IndexManager {
   // Create GIN indexes for JSONB columns (since Drizzle doesn't support .using() yet)
   static async createGinIndexes(): Promise<void> {
     try {
-      console.log('Creating GIN indexes for JSONB columns...')
+      logger.info('Creating GIN indexes for JSONB columns...')
 
       // Create GIN indexes for better JSONB query performance
       await db.execute(sql`
@@ -206,9 +209,9 @@ export class IndexManager {
         ON learning_events USING gin (context_data)
       `)
 
-      console.log('✅ GIN indexes created successfully')
+      logger.info('✅ GIN indexes created successfully')
     } catch (error) {
-      console.error('❌ Error creating GIN indexes:', error)
+      logger.error('❌ Error creating GIN indexes', {}, error as Error)
       throw error
     }
   }
@@ -216,7 +219,7 @@ export class IndexManager {
   // Create composite indexes for frequent query patterns
   static async createCompositeIndexes(): Promise<void> {
     try {
-      console.log('Creating composite indexes for query optimization...')
+      logger.info('Creating composite indexes for query optimization...')
 
       // User knowledge state queries
       await db.execute(sql`
@@ -254,9 +257,9 @@ export class IndexManager {
         ON notifications (user_id, is_read, created_at DESC) WHERE is_read = false
       `)
 
-      console.log('✅ Composite indexes created successfully')
+      logger.info('✅ Composite indexes created successfully')
     } catch (error) {
-      console.error('❌ Error creating composite indexes:', error)
+      logger.error('❌ Error creating composite indexes', {}, error as Error)
       throw error
     }
   }
@@ -264,7 +267,7 @@ export class IndexManager {
   // Drop unused indexes
   static async dropUnusedIndexes(): Promise<void> {
     try {
-      console.log('Identifying unused indexes...')
+      logger.info('Identifying unused indexes...')
 
       const unusedIndexes = await readDb.execute(sql`
         SELECT 
@@ -279,18 +282,20 @@ export class IndexManager {
       `)
 
       if (unusedIndexes.length > 0) {
-        console.log(`Found ${unusedIndexes.length} unused indexes:`)
-        unusedIndexes.forEach((index: any) => {
-          console.log(`  - ${index.schemaname}.${index.indexname} on ${index.tablename}`)
+        logger.info(`Found ${unusedIndexes.length} unused indexes:`)
+        unusedIndexes.forEach((index: Record<string, unknown>) => {
+          logger.info(
+            `  - ${String(index.schemaname)}.${String(index.indexname)} on ${String(index.tablename)}`,
+          )
         })
 
         // Note: We don't automatically drop indexes, just report them
-        console.log('⚠️ Review these indexes manually before dropping')
+        logger.warn('⚠️ Review these indexes manually before dropping')
       } else {
-        console.log('✅ No unused indexes found')
+        logger.info('✅ No unused indexes found')
       }
     } catch (error) {
-      console.error('❌ Error checking unused indexes:', error)
+      logger.error('❌ Error checking unused indexes', {}, error as Error)
       throw error
     }
   }
@@ -301,16 +306,16 @@ export class DatabaseMaintenance {
   // Vacuum and analyze tables
   static async vacuumAnalyze(tableName?: string): Promise<void> {
     try {
-      if (tableName) {
-        console.log(`Running VACUUM ANALYZE on ${tableName}...`)
+      if (tableName !== null && tableName !== undefined && tableName !== '') {
+        logger.info(`Running VACUUM ANALYZE on ${tableName}...`)
         await db.execute(sql.raw(`VACUUM ANALYZE ${tableName}`))
       } else {
-        console.log('Running VACUUM ANALYZE on all tables...')
+        logger.info('Running VACUUM ANALYZE on all tables...')
         await db.execute(sql`VACUUM ANALYZE`)
       }
-      console.log('✅ VACUUM ANALYZE completed')
+      logger.info('✅ VACUUM ANALYZE completed')
     } catch (error) {
-      console.error('❌ VACUUM ANALYZE failed:', error)
+      logger.error('❌ VACUUM ANALYZE failed', {}, error as Error)
       throw error
     }
   }
@@ -318,17 +323,17 @@ export class DatabaseMaintenance {
   // Reindex tables
   static async reindexTable(tableName: string): Promise<void> {
     try {
-      console.log(`Reindexing table ${tableName}...`)
+      logger.info(`Reindexing table ${tableName}...`)
       await db.execute(sql.raw(`REINDEX TABLE ${tableName}`))
-      console.log('✅ Reindex completed')
+      logger.info('✅ Reindex completed')
     } catch (error) {
-      console.error('❌ Reindex failed:', error)
+      logger.error('❌ Reindex failed', {}, error as Error)
       throw error
     }
   }
 
   // Check table bloat
-  static async checkTableBloat(): Promise<any[]> {
+  static async checkTableBloat(): Promise<Array<Record<string, unknown>>> {
     try {
       const result = await readDb.execute(sql`
         SELECT 
@@ -347,7 +352,7 @@ export class DatabaseMaintenance {
       `)
       return result
     } catch (error) {
-      console.error('Error checking table bloat:', error)
+      logger.error('Error checking table bloat', {}, error as Error)
       throw error
     }
   }
@@ -356,48 +361,55 @@ export class DatabaseMaintenance {
 // Backup utilities
 export class BackupManager {
   // Create logical backup
-  static async createLogicalBackup(outputPath: string): Promise<void> {
-    try {
-      const dbName = process.env.DB_NAME || 'drivemaster_dev'
-      const dbUser = process.env.DB_USER || 'drivemaster'
-      const dbHost = process.env.DB_HOST || 'localhost'
-      const dbPort = process.env.DB_PORT || '5432'
+  static createLogicalBackup(outputPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const dbName = process.env.DB_NAME ?? 'drivemaster_dev'
+        const dbUser = process.env.DB_USER ?? 'drivemaster'
+        const dbHost = process.env.DB_HOST ?? 'localhost'
+        const dbPort = process.env.DB_PORT ?? '5432'
 
-      console.log(`Creating logical backup to ${outputPath}...`)
+        logger.info(`Creating logical backup to ${outputPath}...`)
+        logger.info(`Database: ${dbName} on ${dbHost}:${dbPort} as ${dbUser}`)
 
-      // Note: This would typically use pg_dump via child_process
-      // For now, we'll create a simple SQL export
-      const tables = [
-        'users',
-        'concepts',
-        'knowledge_states',
-        'content',
-        'learning_events',
-        'user_sessions',
-        'friendships',
-        'achievements',
-        'user_achievements',
-        'spaced_repetition',
-        'notifications',
-      ]
+        // Note: This would typically use pg_dump via child_process
+        // For now, we'll create a simple SQL export
+        const tables = [
+          'users',
+          'concepts',
+          'knowledge_states',
+          'content',
+          'learning_events',
+          'user_sessions',
+          'friendships',
+          'achievements',
+          'user_achievements',
+          'spaced_repetition',
+          'notifications',
+        ]
 
-      console.log(`Backup would include ${tables.length} tables`)
-      console.log('✅ Backup preparation completed (implementation needed for production)')
-    } catch (error) {
-      console.error('❌ Backup failed:', error)
-      throw error
-    }
+        logger.info(`Backup would include ${tables.length} tables`)
+        logger.info('✅ Backup preparation completed (implementation needed for production)')
+        resolve()
+      } catch (error) {
+        logger.error('❌ Backup failed', {}, error as Error)
+        reject(error)
+      }
+    })
   }
 
   // Restore from backup
-  static async restoreFromBackup(backupPath: string): Promise<void> {
-    try {
-      console.log(`Restoring from backup ${backupPath}...`)
-      // Implementation would use pg_restore
-      console.log('✅ Restore preparation completed (implementation needed for production)')
-    } catch (error) {
-      console.error('❌ Restore failed:', error)
-      throw error
-    }
+  static restoreFromBackup(backupPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        logger.info(`Restoring from backup ${backupPath}...`)
+        // Implementation would use pg_restore
+        logger.info('✅ Restore preparation completed (implementation needed for production)')
+        resolve()
+      } catch (error) {
+        logger.error('❌ Restore failed', {}, error as Error)
+        reject(error)
+      }
+    })
   }
 }

@@ -1,4 +1,7 @@
 import { sql } from 'drizzle-orm'
+
+import { logger } from '../utils/logger'
+
 import { db, readDb } from './connection'
 
 // Advanced database optimization features
@@ -6,7 +9,7 @@ export class DatabaseOptimizer {
   // Create materialized views for complex analytics queries
   static async createMaterializedViews(): Promise<void> {
     try {
-      console.log('Creating materialized views for analytics...')
+      logger.info('Creating materialized views for analytics...')
 
       // User learning progress summary view
       await db.execute(sql`
@@ -102,9 +105,9 @@ export class DatabaseOptimizer {
         GROUP BY c.id, c.key, c.name, c.category, c.base_difficulty
       `)
 
-      console.log('✅ Materialized views created successfully')
+      logger.info('✅ Materialized views created successfully')
     } catch (error) {
-      console.error('❌ Error creating materialized views:', error)
+      logger.error('❌ Error creating materialized views', {}, error as Error)
       throw error
     }
   }
@@ -112,7 +115,7 @@ export class DatabaseOptimizer {
   // Refresh materialized views with concurrency
   static async refreshMaterializedViews(): Promise<void> {
     try {
-      console.log('Refreshing materialized views...')
+      logger.info('Refreshing materialized views...')
 
       const views = [
         'user_learning_progress',
@@ -125,13 +128,13 @@ export class DatabaseOptimizer {
       await Promise.all(
         views.map(async (view) => {
           await db.execute(sql.raw(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${view}`))
-          console.log(`  ✅ Refreshed ${view}`)
+          logger.info(`  ✅ Refreshed ${view}`)
         }),
       )
 
-      console.log('✅ All materialized views refreshed')
+      logger.info('✅ All materialized views refreshed')
     } catch (error) {
-      console.error('❌ Error refreshing materialized views:', error)
+      logger.error('❌ Error refreshing materialized views', {}, error as Error)
       throw error
     }
   }
@@ -139,7 +142,7 @@ export class DatabaseOptimizer {
   // Create refresh strategy with scheduled updates
   static async setupMaterializedViewRefresh(): Promise<void> {
     try {
-      console.log('Setting up materialized view refresh strategy...')
+      logger.info('Setting up materialized view refresh strategy...')
 
       // Create function to refresh views
       await db.execute(sql`
@@ -155,12 +158,12 @@ export class DatabaseOptimizer {
       `)
 
       // Note: In production, you would set up pg_cron or similar for scheduling
-      console.log('✅ Materialized view refresh function created')
-      console.log(
+      logger.info('✅ Materialized view refresh function created')
+      logger.info(
         'ℹ️  Set up pg_cron or external scheduler to call refresh_analytics_views() periodically',
       )
     } catch (error) {
-      console.error('❌ Error setting up materialized view refresh:', error)
+      logger.error('❌ Error setting up materialized view refresh', {}, error as Error)
       throw error
     }
   }
@@ -168,7 +171,7 @@ export class DatabaseOptimizer {
   // Optimize query performance with advanced indexes
   static async createAdvancedIndexes(): Promise<void> {
     try {
-      console.log('Creating advanced performance indexes...')
+      logger.info('Creating advanced performance indexes...')
 
       // Covering indexes to avoid table lookups
       await db.execute(sql`
@@ -211,9 +214,9 @@ export class DatabaseOptimizer {
         INCLUDE (questions_attempted, questions_correct, xp_earned, duration)
       `)
 
-      console.log('✅ Advanced indexes created successfully')
+      logger.info('✅ Advanced indexes created successfully')
     } catch (error) {
-      console.error('❌ Error creating advanced indexes:', error)
+      logger.error('❌ Error creating advanced indexes', {}, error as Error)
       throw error
     }
   }
@@ -221,7 +224,7 @@ export class DatabaseOptimizer {
   // Database performance tuning
   static async optimizePerformance(): Promise<void> {
     try {
-      console.log('Optimizing database performance...')
+      logger.info('Optimizing database performance...')
 
       // Update table statistics
       await db.execute(sql`ANALYZE`)
@@ -248,13 +251,13 @@ export class DatabaseOptimizer {
         try {
           await db.execute(sql.raw(query))
         } catch (error) {
-          console.warn(`Warning: Could not apply setting: ${query}`)
+          logger.warn(`Warning: Could not apply setting: ${query}`)
         }
       }
 
-      console.log('✅ Performance optimization completed')
+      logger.info('✅ Performance optimization completed')
     } catch (error) {
-      console.error('❌ Error optimizing performance:', error)
+      logger.error('❌ Error optimizing performance', {}, error as Error)
       throw error
     }
   }
@@ -329,11 +332,13 @@ stats_users = postgres, drivemaster_admin
         // Use read replica
         return await query()
       } else {
-        console.warn('Read replica unhealthy, falling back to primary')
+        logger.warn('Read replica unhealthy, falling back to primary')
         return await query()
       }
     } catch (error) {
-      console.warn('Read replica failed, falling back to primary:', error)
+      logger.warn('Read replica failed, falling back to primary', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       return await query()
     }
   }
@@ -352,10 +357,10 @@ stats_users = postgres, drivemaster_admin
           END as lag_ms
       `)
 
-      const lagMs = Number(result?.lag_ms) || 0
+      const lagMs = Number(result?.lag_ms ?? 0)
       return lagMs <= maxLagMs
     } catch (error) {
-      console.error('Error checking replica health:', error)
+      logger.error('Error checking replica health', {}, error as Error)
       return false
     }
   }
@@ -379,13 +384,13 @@ stats_users = postgres, drivemaster_admin
       `)
 
       return {
-        totalConnections: Number(stats?.total_connections) || 0,
-        activeConnections: Number(stats?.active_connections) || 0,
-        idleConnections: Number(stats?.idle_connections) || 0,
-        waitingConnections: Number(stats?.waiting_connections) || 0,
+        totalConnections: Number(stats?.total_connections ?? 0),
+        activeConnections: Number(stats?.active_connections ?? 0),
+        idleConnections: Number(stats?.idle_connections ?? 0),
+        waitingConnections: Number(stats?.waiting_connections ?? 0),
       }
     } catch (error) {
-      console.error('Error getting connection pool stats:', error)
+      logger.error('Error getting connection pool stats', {}, error as Error)
       return {
         totalConnections: 0,
         activeConnections: 0,
@@ -518,28 +523,30 @@ export class HealthMonitor {
       `)
 
       return {
-        totalQueries: Number(queryStats?.total_queries) || 0,
-        slowQueries: Number(queryStats?.slow_queries) || 0,
-        avgQueryTime: Number(queryStats?.avg_query_time) || 0,
-        maxQueryTime: Number(queryStats?.max_query_time) || 0,
-        cacheHitRatio: Number(cacheStats?.cache_hit_ratio) || 0,
-        totalIndexes: Number(indexStats?.total_indexes) || 0,
-        unusedIndexes: Number(indexStats?.unused_indexes) || 0,
-        avgIndexScans: Number(indexStats?.avg_index_scans) || 0,
-        totalInserts: Number(tableStats?.total_inserts) || 0,
-        totalUpdates: Number(tableStats?.total_updates) || 0,
-        totalDeletes: Number(tableStats?.total_deletes) || 0,
-        totalLiveTuples: Number(tableStats?.total_live_tuples) || 0,
-        totalDeadTuples: Number(tableStats?.total_dead_tuples) || 0,
+        totalQueries: Number(queryStats?.total_queries ?? 0),
+        slowQueries: Number(queryStats?.slow_queries ?? 0),
+        avgQueryTime: Number(queryStats?.avg_query_time ?? 0),
+        maxQueryTime: Number(queryStats?.max_query_time ?? 0),
+        cacheHitRatio: Number(cacheStats?.cache_hit_ratio ?? 0),
+        totalIndexes: Number(indexStats?.total_indexes ?? 0),
+        unusedIndexes: Number(indexStats?.unused_indexes ?? 0),
+        avgIndexScans: Number(indexStats?.avg_index_scans ?? 0),
+        totalInserts: Number(tableStats?.total_inserts ?? 0),
+        totalUpdates: Number(tableStats?.total_updates ?? 0),
+        totalDeletes: Number(tableStats?.total_deletes ?? 0),
+        totalLiveTuples: Number(tableStats?.total_live_tuples ?? 0),
+        totalDeadTuples: Number(tableStats?.total_dead_tuples ?? 0),
       }
     } catch (error) {
-      console.error('Error getting performance metrics:', error)
+      logger.error('Error getting performance metrics', {}, error as Error)
       return {}
     }
   }
 
   // Monitor long-running queries
-  static async getLongRunningQueries(thresholdSeconds: number = 30): Promise<any[]> {
+  static async getLongRunningQueries(
+    thresholdSeconds: number = 30,
+  ): Promise<Array<Record<string, unknown>>> {
     try {
       const result = await readDb.execute(sql`
         SELECT 
@@ -558,7 +565,7 @@ export class HealthMonitor {
       `)
       return result
     } catch (error) {
-      console.error('Error getting long-running queries:', error)
+      logger.error('Error getting long-running queries', {}, error as Error)
       return []
     }
   }
@@ -567,7 +574,7 @@ export class HealthMonitor {
 // Backup and recovery utilities
 export class BackupManager {
   // Create logical backup with compression
-  static async createLogicalBackup(options: {
+  static createLogicalBackup(options: {
     outputPath: string
     compress?: boolean
     includeData?: boolean
@@ -575,33 +582,36 @@ export class BackupManager {
   }): Promise<void> {
     const { outputPath, compress = true, includeData = true, tables } = options
 
-    try {
-      console.log(`Creating logical backup to ${outputPath}...`)
+    return new Promise((resolve, reject) => {
+      try {
+        logger.info(`Creating logical backup to ${outputPath}...`)
 
-      // In production, this would use pg_dump via child_process
-      // For now, we'll create a comprehensive backup strategy
+        // In production, this would use pg_dump via child_process
+        // For now, we'll create a comprehensive backup strategy
 
-      const backupMetadata = {
-        timestamp: new Date().toISOString(),
-        database: process.env.DB_NAME,
-        version: '1.0.0',
-        includeData,
-        tables: tables || 'all',
-        compressed: compress,
+        const backupMetadata = {
+          timestamp: new Date().toISOString(),
+          database: process.env.DB_NAME,
+          version: '1.0.0',
+          includeData,
+          tables: tables ?? 'all',
+          compressed: compress,
+        }
+
+        logger.info('Backup metadata:', { backupMetadata })
+        logger.info('✅ Backup strategy prepared (pg_dump implementation needed for production)')
+        resolve()
+      } catch (error) {
+        logger.error('❌ Backup failed', {}, error as Error)
+        reject(error)
       }
-
-      console.log('Backup metadata:', backupMetadata)
-      console.log('✅ Backup strategy prepared (pg_dump implementation needed for production)')
-    } catch (error) {
-      console.error('❌ Backup failed:', error)
-      throw error
-    }
+    })
   }
 
   // Point-in-time recovery setup
   static async setupPointInTimeRecovery(): Promise<void> {
     try {
-      console.log('Setting up point-in-time recovery...')
+      logger.info('Setting up point-in-time recovery...')
 
       // Check WAL archiving status
       const [walStatus] = await db.execute(sql`
@@ -613,14 +623,14 @@ export class BackupManager {
         WHERE name IN ('wal_level', 'archive_mode', 'archive_command', 'max_wal_senders')
       `)
 
-      console.log('Current WAL settings:', walStatus)
-      console.log('ℹ️  Configure postgresql.conf for WAL archiving in production:')
-      console.log('  wal_level = replica')
-      console.log('  archive_mode = on')
-      console.log("  archive_command = 'cp %p /path/to/archive/%f'")
-      console.log('  max_wal_senders = 3')
+      logger.info('Current WAL settings:', { walStatus })
+      logger.info('ℹ️  Configure postgresql.conf for WAL archiving in production:')
+      logger.info('  wal_level = replica')
+      logger.info('  archive_mode = on')
+      logger.info("  archive_command = 'cp %p /path/to/archive/%f'")
+      logger.info('  max_wal_senders = 3')
     } catch (error) {
-      console.error('❌ Error setting up PITR:', error)
+      logger.error('❌ Error setting up PITR', {}, error as Error)
       throw error
     }
   }
@@ -631,19 +641,19 @@ export class BackupManager {
 # Automated Backup Schedule Configuration
 
 ## Daily Full Backup (2 AM)
-0 2 * * * pg_dump -h localhost -U drivemaster -d drivemaster_prod -Fc -f /backups/daily/drivemaster_\$(date +\%Y\%m\%d).backup
+0 2 * * * pg_dump -h localhost -U drivemaster -d drivemaster_prod -Fc -f /backups/daily/drivemaster_$(date +%Y%m%d).backup
 
 ## Hourly WAL Archive Cleanup (keep 24 hours)
 0 * * * * find /wal_archive -name "*.backup" -mtime +1 -delete
 
 ## Weekly Schema-Only Backup (Sunday 3 AM)
-0 3 * * 0 pg_dump -h localhost -U drivemaster -d drivemaster_prod -s -f /backups/weekly/schema_\$(date +\%Y\%m\%d).sql
+0 3 * * 0 pg_dump -h localhost -U drivemaster -d drivemaster_prod -s -f /backups/weekly/schema_$(date +%Y%m%d).sql
 
 ## Monthly Archive (1st of month, 4 AM)
-0 4 1 * * pg_dump -h localhost -U drivemaster -d drivemaster_prod -Fc -f /backups/monthly/drivemaster_\$(date +\%Y\%m).backup
+0 4 1 * * pg_dump -h localhost -U drivemaster -d drivemaster_prod -Fc -f /backups/monthly/drivemaster_$(date +%Y%m).backup
 
 ## Backup Verification (Daily 5 AM)
-0 5 * * * /scripts/verify_backup.sh /backups/daily/drivemaster_\$(date +\%Y\%m\%d).backup
+0 5 * * * /scripts/verify_backup.sh /backups/daily/drivemaster_$(date +%Y%m%d).backup
     `
   }
 }
