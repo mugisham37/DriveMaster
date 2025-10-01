@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks'
 
-import { Pool, PoolClient, PoolConfig } from 'pg'
+import { Pool, PoolClient } from 'pg'
 
 export interface DatabaseConfig {
   primary: {
@@ -42,8 +42,8 @@ export interface QueryMetrics {
   timestamp: number
   database: 'primary' | 'replica'
   cached: boolean
-  planTime?: number
-  executionTime?: number
+  planTime?: number | undefined
+  executionTime?: number | undefined
 }
 
 export interface ConnectionPoolStats {
@@ -54,12 +54,25 @@ export interface ConnectionPoolStats {
   database: string
 }
 
+interface QueryResult {
+  rows: unknown[]
+  rowCount: number | null
+  command: string
+  fields: unknown[]
+}
+
+interface CacheEntry {
+  result: QueryResult
+  timestamp: number
+  ttl: number
+}
+
 export class DatabaseOptimizer {
-  private primaryPool: Pool
+  private primaryPool!: Pool
   private replicaPools: Pool[] = []
   private config: DatabaseConfig
   private queryMetrics: QueryMetrics[] = []
-  private queryCache: Map<string, { result: any; timestamp: number; ttl: number }> = new Map()
+  private queryCache: Map<string, CacheEntry> = new Map()
   private replicaWeights: number[] = []
 
   constructor(config: DatabaseConfig) {
@@ -83,14 +96,13 @@ export class DatabaseOptimizer {
       min: this.config.pooling.min,
       idleTimeoutMillis: this.config.pooling.idleTimeoutMillis,
       connectionTimeoutMillis: this.config.pooling.connectionTimeoutMillis,
-      acquireTimeoutMillis: this.config.pooling.acquireTimeoutMillis,
       maxUses: this.config.pooling.maxUses,
       statement_timeout: this.config.optimization.statementTimeout,
       query_timeout: this.config.optimization.queryTimeout,
     })
 
     // Read replica pools
-    this.config.readReplicas.forEach((replica, index) => {
+    this.config.readReplicas.forEach((replica) => {
       const pool = new Pool({
         host: replica.host,
         port: replica.port,
@@ -101,14 +113,13 @@ export class DatabaseOptimizer {
         min: Math.floor(this.config.pooling.min * 0.5),
         idleTimeoutMillis: this.config.pooling.idleTimeoutMillis,
         connectionTimeoutMillis: this.config.pooling.connectionTimeoutMillis,
-        acquireTimeoutMillis: this.config.pooling.acquireTimeoutMillis,
         maxUses: this.config.pooling.maxUses,
         statement_timeout: this.config.optimization.statementTimeout,
         query_timeout: this.config.optimization.queryTimeout,
       })
 
       this.replicaPools.push(pool)
-      this.replicaWeights.push(replica.weight || 1)
+      this.replicaWeights.push(replica.weight ?? 1)
     })
 
     this.setupPoolEventHandlers()
@@ -119,25 +130,29 @@ export class DatabaseOptimizer {
    */
   async query(
     sql: string,
-    params?: any[],
+    params?: unknown[],
     options?: {
-      useReplica?: boolean
-      cacheTtl?: number
-      skipCache?: boolean
-      explainAnalyze?: boolean
+      useReplica?: boolean | undefined
+      cacheTtl?: number | undefined
+      skipCache?: boolean | undefined
+      explainAnalyze?: boolean | undefined
     },
-  ): Promise<any> {
+  ): Promise<QueryResult> {
     const startTime = performance.now()
     const cacheKey = this.generateCacheKey(sql, params)
 
     // Check cache first
-    if (!options?.skipCache && options?.cacheTtl) {
+    if (
+      options?.skipCache !== true &&
+      typeof options?.cacheTtl === 'number' &&
+      options.cacheTtl > 0
+    ) {
       const cached = this.queryCache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < cached.ttl) {
         this.recordMetrics({
           query: sql,
           duration: performance.now() - startTime,
-          rows: cached.result.rowCount || 0,
+          rows: cached.result.rowCount ?? 0,
           timestamp: Date.now(),
           database: 'replica',
           cached: true,
@@ -152,39 +167,79 @@ export class DatabaseOptimizer {
     const database = useReplica ? 'replica' : 'primary'
 
     try {
-      let result
-      let planTime = 0
-      let executionTime = 0
+      const result: QueryResult = (await pool.query(sql, params)) as QueryResult
+      let planTime: number | undefined
+      let executionTime: number | undefined
 
       // Execute EXPLAIN ANALYZE if requested and enabled
-      if (options?.explainAnalyze && this.config.optimization.enableExplainAnalyze) {
-        const explainResult = await pool.query(`EXPLAIN (ANALYZE, BUFFERS) ${sql}`, params)
-        console.log('Query Plan:', explainResult.rows)
+      if (options?.explainAnalyze === true && this.config.optimization.enableExplainAnalyze) {
+        try {
+          const explainResult = (await pool.query(
+            `EXPLAIN (ANALYZE, BUFFERS) ${sql}`,
+            params,
+          )) as QueryResult
 
-        // Extract timing information from explain output
-        const planRow = explainResult.rows.find((row) =>
-          row['QUERY PLAN'].includes('Planning Time:'),
-        )
-        const execRow = explainResult.rows.find((row) =>
-          row['QUERY PLAN'].includes('Execution Time:'),
-        )
+          // Extract timing information from explain output
+          const planRow = explainResult.rows.find((row: unknown) => {
+            if (typeof row === 'object' && row !== null && 'QUERY PLAN' in row) {
+              const queryPlan = (row as { 'QUERY PLAN': unknown })['QUERY PLAN']
+              return typeof queryPlan === 'string' && queryPlan.includes('Planning Time:')
+            }
+            return false
+          })
 
-        if (planRow)
-          planTime = parseFloat(
-            planRow['QUERY PLAN'].match(/Planning Time: ([\d.]+) ms/)?.[1] || '0',
-          )
-        if (execRow)
-          executionTime = parseFloat(
-            execRow['QUERY PLAN'].match(/Execution Time: ([\d.]+) ms/)?.[1] || '0',
-          )
+          const execRow = explainResult.rows.find((row: unknown) => {
+            if (typeof row === 'object' && row !== null && 'QUERY PLAN' in row) {
+              const queryPlan = (row as { 'QUERY PLAN': unknown })['QUERY PLAN']
+              return typeof queryPlan === 'string' && queryPlan.includes('Execution Time:')
+            }
+            return false
+          })
+
+          if (
+            planRow !== undefined &&
+            typeof planRow === 'object' &&
+            planRow !== null &&
+            'QUERY PLAN' in planRow
+          ) {
+            const queryPlan = (planRow as { 'QUERY PLAN': string })['QUERY PLAN']
+            if (typeof queryPlan === 'string' && queryPlan.length > 0) {
+              const match = queryPlan.match(/Planning Time: ([\d.]+) ms/)
+              const matchResult = match?.[1]
+              if (typeof matchResult === 'string' && matchResult.length > 0) {
+                planTime = parseFloat(matchResult)
+              }
+            }
+          }
+
+          if (
+            execRow !== undefined &&
+            typeof execRow === 'object' &&
+            execRow !== null &&
+            'QUERY PLAN' in execRow
+          ) {
+            const queryPlan = (execRow as { 'QUERY PLAN': string })['QUERY PLAN']
+            if (typeof queryPlan === 'string' && queryPlan.length > 0) {
+              const match = queryPlan.match(/Execution Time: ([\d.]+) ms/)
+              const matchResult = match?.[1]
+              if (typeof matchResult === 'string' && matchResult.length > 0) {
+                executionTime = parseFloat(matchResult)
+              }
+            }
+          }
+        } catch (explainError) {
+          // Ignore explain errors, continue with main query
+        }
       }
 
-      // Execute the actual query
-      result = await pool.query(sql, params)
       const duration = performance.now() - startTime
 
       // Cache result if TTL is specified
-      if (options?.cacheTtl && !options?.skipCache) {
+      if (
+        typeof options?.cacheTtl === 'number' &&
+        options.cacheTtl > 0 &&
+        options?.skipCache !== true
+      ) {
         this.queryCache.set(cacheKey, {
           result,
           timestamp: Date.now(),
@@ -196,16 +251,17 @@ export class DatabaseOptimizer {
       this.recordMetrics({
         query: sql,
         duration,
-        rows: result.rowCount || 0,
+        rows: result.rowCount ?? 0,
         timestamp: Date.now(),
         database,
         cached: false,
-        planTime: planTime || undefined,
-        executionTime: executionTime || undefined,
+        planTime: typeof planTime === 'number' ? planTime : undefined,
+        executionTime: typeof executionTime === 'number' ? executionTime : undefined,
       })
 
       // Log slow queries
       if (duration > this.config.optimization.slowQueryThreshold) {
+        // eslint-disable-next-line no-console
         console.warn(`Slow query detected (${duration.toFixed(2)}ms):`, {
           sql: sql.substring(0, 200),
           params: params?.slice(0, 5),
@@ -216,10 +272,12 @@ export class DatabaseOptimizer {
 
       return result
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      // eslint-disable-next-line no-console
       console.error('Database query error:', {
         sql: sql.substring(0, 200),
         params: params?.slice(0, 5),
-        error: error.message,
+        error: errorMessage,
         database,
       })
       throw error
@@ -231,10 +289,10 @@ export class DatabaseOptimizer {
    */
   async transaction<T>(
     callback: (client: PoolClient) => Promise<T>,
-    options?: { retries?: number; useReplica?: boolean },
+    options?: { retries?: number | undefined; useReplica?: boolean | undefined },
   ): Promise<T> {
-    const maxRetries = options?.retries || 3
-    const pool = options?.useReplica ? this.selectReplicaPool() : this.primaryPool
+    const maxRetries = options?.retries ?? 3
+    const pool = options?.useReplica === true ? this.selectReplicaPool() : this.primaryPool
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       const client = await pool.connect()
@@ -266,24 +324,26 @@ export class DatabaseOptimizer {
    * Batch execute multiple queries
    */
   async batchQuery(
-    queries: Array<{ sql: string; params?: any[] }>,
-    options?: { useTransaction?: boolean; useReplica?: boolean },
-  ): Promise<any[]> {
-    if (options?.useTransaction) {
+    queries: Array<{ sql: string; params?: unknown[] }>,
+    options?: { useTransaction?: boolean | undefined; useReplica?: boolean | undefined },
+  ): Promise<QueryResult[]> {
+    if (options?.useTransaction === true) {
       return this.transaction(
         async (client) => {
-          const results = []
+          const results: QueryResult[] = []
           for (const query of queries) {
-            const result = await client.query(query.sql, query.params)
+            const result = (await client.query(query.sql, query.params)) as QueryResult
             results.push(result)
           }
           return results
         },
-        { useReplica: options.useReplica },
+        { useReplica: options.useReplica === true ? true : undefined },
       )
     } else {
       const promises = queries.map((query) =>
-        this.query(query.sql, query.params, { useReplica: options?.useReplica }),
+        this.query(query.sql, query.params, {
+          useReplica: options?.useReplica === true ? true : undefined,
+        }),
       )
       return Promise.all(promises)
     }
@@ -321,7 +381,23 @@ export class DatabaseOptimizer {
   /**
    * Get query performance metrics
    */
-  getQueryMetrics(timeWindow: number = 300000): any {
+  getQueryMetrics(timeWindow: number = 300000): {
+    totalQueries: number
+    averageResponseTime: number
+    slowQueries: number
+    slowQueryRate: number
+    cacheHitRate: number
+    primaryQueries: number
+    replicaQueries: number
+    replicaUsageRate: number
+    topSlowQueries: Array<{
+      query: string
+      duration: number
+      rows: number
+      database: string
+      timestamp: number
+    }>
+  } {
     // Default 5 minutes
     const cutoff = Date.now() - timeWindow
     const recentMetrics = this.queryMetrics.filter((m) => m.timestamp > cutoff)
@@ -331,9 +407,12 @@ export class DatabaseOptimizer {
         totalQueries: 0,
         averageResponseTime: 0,
         slowQueries: 0,
+        slowQueryRate: 0,
         cacheHitRate: 0,
         primaryQueries: 0,
         replicaQueries: 0,
+        replicaUsageRate: 0,
+        topSlowQueries: [],
       }
     }
 
@@ -388,6 +467,7 @@ export class DatabaseOptimizer {
     }
 
     if (removedCount > 0) {
+      // eslint-disable-next-line no-console
       console.log(`Optimized query cache: removed ${removedCount} expired entries`)
     }
   }
@@ -432,7 +512,11 @@ export class DatabaseOptimizer {
     }
 
     if (this.replicaPools.length === 1) {
-      return this.replicaPools[0]
+      const pool = this.replicaPools[0]
+      if (!pool) {
+        return this.primaryPool
+      }
+      return pool
     }
 
     // Simple weighted selection (can be improved with proper round-robin)
@@ -440,19 +524,25 @@ export class DatabaseOptimizer {
     let random = Math.random() * totalWeight
 
     for (let i = 0; i < this.replicaPools.length; i++) {
-      random -= this.replicaWeights[i]
-      if (random <= 0) {
-        return this.replicaPools[i]
+      const weight = this.replicaWeights[i]
+      const pool = this.replicaPools[i]
+
+      if (weight !== undefined && pool !== undefined) {
+        random -= weight
+        if (random <= 0) {
+          return pool
+        }
       }
     }
 
-    return this.replicaPools[0]
+    const fallbackPool = this.replicaPools[0]
+    return fallbackPool ?? this.primaryPool
   }
 
   /**
    * Generate cache key for query
    */
-  private generateCacheKey(sql: string, params?: any[]): string {
+  private generateCacheKey(sql: string, params?: unknown[]): string {
     const normalizedSql = sql.replace(/\s+/g, ' ').trim()
     const paramsStr = params ? JSON.stringify(params) : ''
     return `${normalizedSql}:${paramsStr}`
@@ -471,6 +561,7 @@ export class DatabaseOptimizer {
 
     // Log query if enabled
     if (this.config.optimization.enableQueryLogging) {
+      // eslint-disable-next-line no-console
       console.log('Query executed:', {
         duration: `${metrics.duration.toFixed(2)}ms`,
         rows: metrics.rows,
@@ -484,7 +575,16 @@ export class DatabaseOptimizer {
   /**
    * Get top slow queries
    */
-  private getTopSlowQueries(metrics: QueryMetrics[], limit: number): any[] {
+  private getTopSlowQueries(
+    metrics: QueryMetrics[],
+    limit: number,
+  ): Array<{
+    query: string
+    duration: number
+    rows: number
+    database: string
+    timestamp: number
+  }> {
     return metrics
       .filter((m) => !m.cached)
       .sort((a, b) => b.duration - a.duration)
@@ -501,36 +601,43 @@ export class DatabaseOptimizer {
   /**
    * Check if error is retryable
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     const retryableCodes = [
       '40001', // serialization_failure
       '40P01', // deadlock_detected
       '53300', // too_many_connections
       '08006', // connection_failure
-      '08001', // sqlclient_unable_to_establish_sqlconnection
+      '08001', // sql_client_unable_to_establish_sql_connection
     ]
 
-    return retryableCodes.includes(error.code)
+    if (error !== null && typeof error === 'object' && 'code' in error) {
+      const errorCode = (error as { code: unknown }).code
+      return typeof errorCode === 'string' && retryableCodes.includes(errorCode)
+    }
+
+    return false
   }
 
   /**
    * Setup pool event handlers
    */
   private setupPoolEventHandlers(): void {
-    const setupHandlers = (pool: Pool, name: string) => {
-      pool.on('connect', (client) => {
+    const setupHandlers = (pool: Pool, name: string): void => {
+      pool.on('connect', () => {
+        // eslint-disable-next-line no-console
         console.log(`Database connected: ${name}`)
       })
 
-      pool.on('error', (err, client) => {
+      pool.on('error', (err) => {
+        // eslint-disable-next-line no-console
         console.error(`Database pool error (${name}):`, err)
       })
 
-      pool.on('acquire', (client) => {
+      pool.on('acquire', () => {
         // Client acquired from pool
       })
 
-      pool.on('release', (client) => {
+      pool.on('release', () => {
         // Client released back to pool
       })
     }
@@ -562,19 +669,19 @@ export class DatabaseOptimizer {
 export function createDatabaseOptimizer(): DatabaseOptimizer {
   const config: DatabaseConfig = {
     primary: {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'drivemaster_dev',
-      user: process.env.DB_USER || 'drivemaster',
-      password: process.env.DB_PASSWORD || 'dev_password_123',
+      host: process.env.DB_HOST ?? 'localhost',
+      port: parseInt(process.env.DB_PORT ?? '5432'),
+      database: process.env.DB_NAME ?? 'drivemaster_dev',
+      user: process.env.DB_USER ?? 'drivemaster',
+      password: process.env.DB_PASSWORD ?? 'dev_password_123',
     },
     readReplicas: [
       {
-        host: process.env.DB_READ_REPLICA_1_HOST || 'localhost',
-        port: parseInt(process.env.DB_READ_REPLICA_1_PORT || '5433'),
-        database: process.env.DB_NAME || 'drivemaster_dev',
-        user: process.env.DB_USER || 'drivemaster',
-        password: process.env.DB_PASSWORD || 'dev_password_123',
+        host: process.env.DB_READ_REPLICA_1_HOST ?? 'localhost',
+        port: parseInt(process.env.DB_READ_REPLICA_1_PORT ?? '5433'),
+        database: process.env.DB_NAME ?? 'drivemaster_dev',
+        user: process.env.DB_USER ?? 'drivemaster',
+        password: process.env.DB_PASSWORD ?? 'dev_password_123',
         weight: 1,
       },
     ],

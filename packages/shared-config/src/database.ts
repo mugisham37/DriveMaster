@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
+import postgres, { BigInt as PostgresBigInt } from 'postgres'
 
 import type { DatabaseConfig } from './environment'
 
@@ -21,7 +21,7 @@ export function createDatabaseConnection(config: DatabaseConfig): DatabaseConnec
       undefined: null,
     },
     types: {
-      bigint: postgres.BigInt,
+      bigint: PostgresBigInt,
     },
   })
 
@@ -32,18 +32,19 @@ export function createDatabaseConnection(config: DatabaseConfig): DatabaseConnec
   return {
     db,
     client,
-    close: async () => {
+    close: async (): Promise<void> => {
       await client.end()
     },
   }
 }
 
 // Database health check utility
-export async function checkDatabaseHealth(client: ReturnType<typeof postgres>): Promise<boolean> {
+export async function checkDatabaseHealth(_client: ReturnType<typeof postgres>): Promise<boolean> {
   try {
-    await client`SELECT 1`
+    await _client`SELECT 1`
     return true
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Database health check failed:', error)
     return false
   }
@@ -55,11 +56,13 @@ export interface MigrationConfig {
   migrationsTable?: string
 }
 
-export async function runMigrations(
-  client: ReturnType<typeof postgres>,
+export function runMigrations(
+  _client: ReturnType<typeof postgres>,
   config: MigrationConfig,
 ): Promise<void> {
   // This will be implemented with drizzle-kit
+  // eslint-disable-next-line no-console
   console.log('Running migrations from:', config.migrationsFolder)
   // Implementation will be added when setting up individual services
+  return Promise.resolve()
 }

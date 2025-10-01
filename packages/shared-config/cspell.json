@@ -13,7 +13,11 @@
     "lossless",
     "srcset",
     "preload",
-    "preconnect"
+    "preconnect",
+    "nosniff",
+    "hotlinking",
+    "webp",
+    "srcset"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "*.json"]
 }
