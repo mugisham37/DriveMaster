@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import { hash, compare } from 'bcrypt'
+import { sign, verify, TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken'
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-key-change-in-production'
 const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET != null || 'dev-refresh-secret-change-in-production'
+  process.env.JWT_REFRESH_SECRET ?? 'dev-refresh-secret-change-in-production'
 const JWT_EXPIRES_IN = '15m'
 const JWT_REFRESH_EXPIRES_IN = '7d'
 
@@ -62,28 +62,28 @@ export class AuthService {
    * Hash password using bcrypt with salt
    */
   static async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, SALT_ROUNDS)
+    return hash(password, SALT_ROUNDS)
   }
 
   /**
    * Verify password against hash
    */
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash)
+  static async verifyPassword(password: string, hashValue: string): Promise<boolean> {
+    return compare(password, hashValue)
   }
 
   /**
    * Generate JWT access token
    */
   static generateAccessToken(payload: Omit<JWTPayload, 'type'>): string {
-    return jwt.sign({ ...payload, type: 'access' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+    return sign({ ...payload, type: 'access' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
   }
 
   /**
    * Generate JWT refresh token
    */
   static generateRefreshToken(payload: Omit<JWTPayload, 'type'>): string {
-    return jwt.sign({ ...payload, type: 'refresh' }, JWT_REFRESH_SECRET, {
+    return sign({ ...payload, type: 'refresh' }, JWT_REFRESH_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRES_IN,
     })
   }
@@ -95,7 +95,7 @@ export class AuthService {
     const secret = type === 'access' ? JWT_SECRET : JWT_REFRESH_SECRET
 
     try {
-      const decoded = jwt.verify(token, secret) as JWTPayload
+      const decoded = verify(token, secret) as JWTPayload
 
       if (decoded.type !== type) {
         throw new Error(`Invalid token type. Expected ${type}, got ${decoded.type}`)
@@ -103,10 +103,10 @@ export class AuthService {
 
       return decoded
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
+      if (error instanceof TokenExpiredError) {
         throw new Error('Token has expired')
       }
-      if (error instanceof jwt.JsonWebTokenError) {
+      if (error instanceof JsonWebTokenError) {
         throw new Error('Invalid token')
       }
       throw error
@@ -116,7 +116,7 @@ export class AuthService {
   /**
    * Authenticate user with email and password (mock implementation)
    */
-  static async authenticate(credentials: LoginCredentials): Promise<AuthResult> {
+  static authenticate(_credentials: LoginCredentials): Promise<AuthResult> {
     // Mock implementation for testing
     throw new Error('Invalid email or password')
   }
@@ -124,7 +124,7 @@ export class AuthService {
   /**
    * Register new user (mock implementation)
    */
-  static async register(userData: RegisterData): Promise<AuthResult> {
+  static register(_userData: RegisterData): Promise<AuthResult> {
     // Mock implementation for testing
     throw new Error('Registration not implemented')
   }
@@ -132,7 +132,7 @@ export class AuthService {
   /**
    * Refresh access token using refresh token (mock implementation)
    */
-  static async refreshToken(refreshToken: string): Promise<TokenPair> {
+  static refreshToken(_refreshToken: string): Promise<TokenPair> {
     // Mock implementation for testing
     throw new Error('Token refresh not implemented')
   }
@@ -140,19 +140,19 @@ export class AuthService {
   /**
    * Validate token and return user context
    */
-  static async validateToken(token: string): Promise<UserContext> {
+  static validateToken(token: string): Promise<UserContext> {
     try {
       const decoded = this.verifyToken(token, 'access')
 
       // Get permissions for the user's roles
       const permissions = this.getRolePermissions(decoded.roles)
 
-      return {
+      return Promise.resolve({
         userId: decoded.userId,
         email: decoded.email,
         roles: decoded.roles,
         permissions,
-      }
+      })
     } catch (error) {
       throw new Error('Invalid or expired token')
     }
@@ -199,7 +199,7 @@ export class AuthService {
     const permissions = new Set<string>()
 
     for (const role of roles) {
-      const rolePerms = rolePermissions[role] || []
+      const rolePerms = rolePermissions[role] ?? []
       rolePerms.forEach((perm) => permissions.add(perm))
     }
 

@@ -1,9 +1,8 @@
-import crypto from 'crypto'
-import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
+
 import { SecurityMiddleware } from '../middleware/security.middleware'
-import { AdvancedSecurityMiddleware } from '../middleware/advanced-security.middleware'
-import EncryptionService from './encryption.service'
+
+import { EncryptionService } from './encryption.service'
 
 export interface SecurityTestResult {
   testName: string
@@ -11,7 +10,7 @@ export interface SecurityTestResult {
   severity: 'low' | 'medium' | 'high' | 'critical'
   description: string
   recommendation?: string
-  details?: any
+  details?: unknown
 }
 
 export interface SecurityAuditReport {
@@ -139,13 +138,13 @@ export class SecurityTestingService {
   /**
    * Test security configuration
    */
-  private static async testSecurityConfiguration(): Promise<SecurityTestResult[]> {
+  private static testSecurityConfiguration(): Promise<SecurityTestResult[]> {
     const results: SecurityTestResult[] = []
 
     // Test environment variables
     results.push({
       testName: 'JWT Secret Strength',
-      passed: process.env.JWT_SECRET ? process.env.JWT_SECRET.length >= 32 : false,
+      passed: (process.env.JWT_SECRET?.length ?? 0) >= 32,
       severity: 'critical',
       description: 'JWT secret should be at least 32 characters long',
       recommendation: 'Generate a strong JWT secret with at least 32 characters',
@@ -153,9 +152,7 @@ export class SecurityTestingService {
 
     results.push({
       testName: 'Encryption Key Strength',
-      passed: process.env.MASTER_ENCRYPTION_KEY
-        ? process.env.MASTER_ENCRYPTION_KEY.length >= 64
-        : false,
+      passed: (process.env.MASTER_ENCRYPTION_KEY?.length ?? 0) >= 64,
       severity: 'critical',
       description: 'Master encryption key should be at least 64 characters long',
       recommendation: 'Generate a strong encryption key with at least 64 characters',
@@ -177,7 +174,7 @@ export class SecurityTestingService {
       recommendation: 'Disable debug mode in production',
     })
 
-    return results
+    return Promise.resolve(results)
   }
 
   /**
@@ -300,7 +297,7 @@ export class SecurityTestingService {
   /**
    * Test input validation
    */
-  private static async testInputValidation(): Promise<SecurityTestResult[]> {
+  private static testInputValidation(): Promise<SecurityTestResult[]> {
     const results: SecurityTestResult[] = []
 
     // Test XSS patterns
@@ -345,7 +342,7 @@ export class SecurityTestingService {
       })
     }
 
-    return results
+    return Promise.resolve(results)
   }
 
   /**
@@ -406,16 +403,8 @@ export class SecurityTestingService {
   /**
    * Test HTTPS and security headers
    */
-  private static async testHttpsSecurity(): Promise<SecurityTestResult[]> {
+  private static testHttpsSecurity(): Promise<SecurityTestResult[]> {
     const results: SecurityTestResult[] = []
-
-    // Test security headers configuration
-    const requiredHeaders = [
-      'X-Content-Type-Options',
-      'X-Frame-Options',
-      'X-XSS-Protection',
-      'Referrer-Policy',
-    ]
 
     // This would be tested in integration tests with actual HTTP responses
     results.push({
@@ -426,13 +415,13 @@ export class SecurityTestingService {
       recommendation: 'Ensure all security headers are set correctly',
     })
 
-    return results
+    return Promise.resolve(results)
   }
 
   /**
    * Test compliance security
    */
-  private static async testComplianceSecurity(): Promise<SecurityTestResult[]> {
+  private static testComplianceSecurity(): Promise<SecurityTestResult[]> {
     const results: SecurityTestResult[] = []
 
     // Test audit logging
@@ -453,7 +442,7 @@ export class SecurityTestingService {
       recommendation: 'Implement automated data retention and deletion',
     })
 
-    return results
+    return Promise.resolve(results)
   }
 
   /**
@@ -630,15 +619,15 @@ export class SecurityTestingService {
   /**
    * Test authorization vulnerabilities
    */
-  private static async testAuthorizationVulnerabilities(
-    fastify: FastifyInstance,
+  private static testAuthorizationVulnerabilities(
+    _fastify: FastifyInstance,
   ): Promise<PenetrationTestResult[]> {
     const results: PenetrationTestResult[] = []
 
     // This would test for privilege escalation, accessing other users' data, etc.
     // Implementation would depend on specific authorization logic
 
-    return results
+    return Promise.resolve(results)
   }
 
   /**
@@ -703,7 +692,7 @@ export class SecurityTestingService {
     if (criticalIssues.length > 0) {
       recommendations.push('🚨 CRITICAL: Address all critical security issues immediately')
       criticalIssues.forEach((issue) => {
-        if (issue.recommendation) {
+        if (issue.recommendation !== undefined) {
           recommendations.push(`   - ${issue.recommendation}`)
         }
       })
@@ -712,7 +701,7 @@ export class SecurityTestingService {
     if (highIssues.length > 0) {
       recommendations.push('⚠️  HIGH: Address high-priority security issues')
       highIssues.forEach((issue) => {
-        if (issue.recommendation) {
+        if (issue.recommendation !== undefined) {
           recommendations.push(`   - ${issue.recommendation}`)
         }
       })
@@ -758,7 +747,7 @@ Generated: ${audit.timestamp.toISOString()}
       const severity = result.severity.toUpperCase()
       report += `${status} **${result.testName}** [${severity}]\n`
       report += `   ${result.description}\n`
-      if (!result.passed && result.recommendation) {
+      if (!result.passed && result.recommendation !== undefined) {
         report += `   💡 ${result.recommendation}\n`
       }
       report += '\n'

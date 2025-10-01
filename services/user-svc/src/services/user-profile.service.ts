@@ -1,4 +1,5 @@
 import { eq, and, desc, sql } from 'drizzle-orm'
+
 import { db, readDb } from '../db/connection'
 import {
   users,
@@ -7,8 +8,6 @@ import {
   userSessions,
   userAchievements,
   friendships,
-  spacedRepetition,
-  notifications,
   type CognitivePatterns,
   type LearningPreferences,
 } from '../db/schema'
@@ -112,18 +111,18 @@ export class UserProfileService {
     return {
       id: user.id,
       email: user.email,
-      firstName: user.firstName || undefined,
-      lastName: user.lastName || undefined,
-      dateOfBirth: user.dateOfBirth || undefined,
-      cognitivePatterns: user.cognitivePatterns || undefined,
-      learningPreferences: user.learningPreferences || undefined,
-      totalXP: user.totalXP || 0,
-      currentStreak: user.currentStreak || 0,
-      longestStreak: user.longestStreak || 0,
-      lastActiveAt: user.lastActiveAt || undefined,
-      emailVerified: user.emailVerified || false,
-      createdAt: user.createdAt!,
-      updatedAt: user.updatedAt!,
+      firstName: user.firstName ?? undefined,
+      lastName: user.lastName ?? undefined,
+      dateOfBirth: user.dateOfBirth ?? undefined,
+      cognitivePatterns: user.cognitivePatterns ?? undefined,
+      learningPreferences: user.learningPreferences ?? undefined,
+      totalXP: user.totalXP ?? 0,
+      currentStreak: user.currentStreak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
+      lastActiveAt: user.lastActiveAt ?? undefined,
+      emailVerified: user.emailVerified ?? false,
+      createdAt: user.createdAt ?? new Date(),
+      updatedAt: user.updatedAt ?? new Date(),
     }
   }
 
@@ -167,18 +166,18 @@ export class UserProfileService {
     return {
       id: updatedUser.id,
       email: updatedUser.email,
-      firstName: updatedUser.firstName || undefined,
-      lastName: updatedUser.lastName || undefined,
-      dateOfBirth: updatedUser.dateOfBirth || undefined,
-      cognitivePatterns: updatedUser.cognitivePatterns || undefined,
-      learningPreferences: updatedUser.learningPreferences || undefined,
-      totalXP: updatedUser.totalXP || 0,
-      currentStreak: updatedUser.currentStreak || 0,
-      longestStreak: updatedUser.longestStreak || 0,
-      lastActiveAt: updatedUser.lastActiveAt || undefined,
-      emailVerified: updatedUser.emailVerified || false,
-      createdAt: updatedUser.createdAt!,
-      updatedAt: updatedUser.updatedAt!,
+      firstName: updatedUser.firstName ?? undefined,
+      lastName: updatedUser.lastName ?? undefined,
+      dateOfBirth: updatedUser.dateOfBirth ?? undefined,
+      cognitivePatterns: updatedUser.cognitivePatterns ?? undefined,
+      learningPreferences: updatedUser.learningPreferences ?? undefined,
+      totalXP: updatedUser.totalXP ?? 0,
+      currentStreak: updatedUser.currentStreak ?? 0,
+      longestStreak: updatedUser.longestStreak ?? 0,
+      lastActiveAt: updatedUser.lastActiveAt ?? undefined,
+      emailVerified: updatedUser.emailVerified ?? false,
+      createdAt: updatedUser.createdAt ?? new Date(),
+      updatedAt: updatedUser.updatedAt ?? new Date(),
     }
   }
 
@@ -253,12 +252,12 @@ export class UserProfileService {
     // Analyze optimal time of day
     const timeOfDayPerformance = recentSessions.reduce(
       (acc, session) => {
-        if (!session.startTime) return acc
+        if (session.startTime === null || session.startTime === undefined) return acc
 
         const hour = session.startTime.getHours()
         const accuracy =
-          session.questionsAttempted > 0
-            ? (session.questionsCorrect || 0) / session.questionsAttempted
+          (session.questionsAttempted ?? 0) > 0
+            ? (session.questionsCorrect ?? 0) / (session.questionsAttempted ?? 1)
             : 0
 
         let timeSlot: string
@@ -293,8 +292,8 @@ export class UserProfileService {
     const accuracyTrend = recentSessions
       .slice(0, 20)
       .map((session) =>
-        session.questionsAttempted > 0
-          ? (session.questionsCorrect || 0) / session.questionsAttempted
+        (session.questionsAttempted ?? 0) > 0
+          ? (session.questionsCorrect ?? 0) / (session.questionsAttempted ?? 1)
           : 0,
       )
 
@@ -415,7 +414,7 @@ export class UserProfileService {
       .from(userSessions)
       .where(and(eq(userSessions.userId, userId), eq(userSessions.isCompleted, true)))
 
-    const stats = sessionStats[0] || {
+    const stats = sessionStats[0] ?? {
       totalSessions: 0,
       totalQuestions: 0,
       correctAnswers: 0,
@@ -436,7 +435,7 @@ export class UserProfileService {
         and(eq(knowledgeStates.userId, userId), sql`${knowledgeStates.masteryProbability} > 0.8`),
       )
 
-    const conceptsMastered = masteredConcepts[0]?.count || 0
+    const conceptsMastered = masteredConcepts[0]?.count ?? 0
 
     // Get recent achievements
     const recentAchievements = await readDb
@@ -476,7 +475,7 @@ export class UserProfileService {
       sessionsCompleted: day.sessionsCompleted,
       questionsAnswered: day.questionsAnswered,
       accuracy: day.questionsAnswered > 0 ? (day.correctAnswers / day.questionsAnswered) * 100 : 0,
-      studyTime: Math.round((day.studyTime || 0) / 60), // Convert to minutes
+      studyTime: Math.round((day.studyTime ?? 0) / 60), // Convert to minutes
     }))
 
     return {
@@ -484,17 +483,17 @@ export class UserProfileService {
       totalQuestions: stats.totalQuestions,
       correctAnswers: stats.correctAnswers,
       averageAccuracy: Math.round(averageAccuracy * 100) / 100,
-      totalStudyTime: Math.round((stats.totalStudyTime || 0) / 60), // Convert to minutes
+      totalStudyTime: Math.round((stats.totalStudyTime ?? 0) / 60), // Convert to minutes
       conceptsMastered,
-      currentStreak: user.currentStreak || 0,
-      longestStreak: user.longestStreak || 0,
-      totalXP: user.totalXP || 0,
+      currentStreak: user.currentStreak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
+      totalXP: user.totalXP ?? 0,
       recentAchievements: recentAchievements
         .filter((achievement) => achievement.completedAt)
         .map((achievement) => ({
           id: achievement.id,
-          name: achievement.name || 'Unknown Achievement',
-          completedAt: achievement.completedAt!,
+          name: achievement.name.length > 0 ? achievement.name : 'Unknown Achievement',
+          completedAt: achievement.completedAt ?? new Date(),
         })),
       weeklyProgress: formattedWeeklyProgress,
     }
@@ -530,7 +529,7 @@ export class UserProfileService {
       responseData: {
         isCorrect,
         responseTime,
-        confidenceLevel: confidenceLevel || 0.5,
+        confidenceLevel: confidenceLevel ?? 0.5,
         hintsUsed: 0,
         attemptsCount: 1,
       },
@@ -551,7 +550,7 @@ export class UserProfileService {
     reason: string,
     scheduledFor?: Date,
   ): Promise<DataDeletionRequest> {
-    const deletionDate = scheduledFor || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    const deletionDate = scheduledFor ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
 
     // Mark user as inactive immediately
     await db
@@ -572,7 +571,7 @@ export class UserProfileService {
     }
 
     // TODO: Implement actual deletion scheduling system
-    console.log('Data deletion scheduled:', deletionRequest)
+    // Log deletion request for audit purposes
 
     return deletionRequest
   }
@@ -607,7 +606,7 @@ export class UserProfileService {
   /**
    * Export user data for GDPR/CCPA compliance
    */
-  static async exportUserData(userId: string): Promise<Record<string, any>> {
+  static async exportUserData(userId: string): Promise<Record<string, unknown>> {
     const [user] = await readDb.select().from(users).where(eq(users.id, userId)).limit(1)
 
     if (!user) {

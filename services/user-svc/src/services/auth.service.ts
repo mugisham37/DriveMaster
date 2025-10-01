@@ -1,16 +1,17 @@
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import { hash, compare } from 'bcrypt'
 import { eq } from 'drizzle-orm'
+import { sign, verify, TokenExpiredError, JsonWebTokenError, type SignOptions } from 'jsonwebtoken'
+
 import { db, readDb } from '../db/connection'
 import { users } from '../db/schema'
 import type { CognitivePatterns, LearningPreferences } from '../db/schema'
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-key-change-in-production'
 const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+  process.env.JWT_REFRESH_SECRET ?? 'dev-refresh-secret-change-in-production'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m'
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d'
 
 // Salt rounds for bcrypt
 const SALT_ROUNDS = 12
@@ -70,32 +71,32 @@ export class AuthService {
    * Hash password using bcrypt with salt
    */
   static async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, SALT_ROUNDS)
+    return hash(password, SALT_ROUNDS)
   }
 
   /**
    * Verify password against hash
    */
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash)
+  static async verifyPassword(password: string, hashValue: string): Promise<boolean> {
+    return compare(password, hashValue)
   }
 
   /**
    * Generate JWT access token
    */
   static generateAccessToken(payload: Omit<JWTPayload, 'type'>): string {
-    return jwt.sign({ ...payload, type: 'access' }, JWT_SECRET, {
+    return sign({ ...payload, type: 'access' }, JWT_SECRET, {
       expiresIn: JWT_EXPIRES_IN,
-    } as jwt.SignOptions)
+    } as SignOptions)
   }
 
   /**
    * Generate JWT refresh token
    */
   static generateRefreshToken(payload: Omit<JWTPayload, 'type'>): string {
-    return jwt.sign({ ...payload, type: 'refresh' }, JWT_REFRESH_SECRET, {
+    return sign({ ...payload, type: 'refresh' }, JWT_REFRESH_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRES_IN,
-    } as jwt.SignOptions)
+    } as SignOptions)
   }
 
   /**
@@ -105,7 +106,7 @@ export class AuthService {
     const secret = type === 'access' ? JWT_SECRET : JWT_REFRESH_SECRET
 
     try {
-      const decoded = jwt.verify(token, secret) as JWTPayload
+      const decoded = verify(token, secret) as JWTPayload
 
       if (decoded.type !== type) {
         throw new Error(`Invalid token type. Expected ${type}, got ${decoded.type}`)
@@ -113,10 +114,10 @@ export class AuthService {
 
       return decoded
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
+      if (error instanceof TokenExpiredError) {
         throw new Error('Token has expired')
       }
-      if (error instanceof jwt.JsonWebTokenError) {
+      if (error instanceof JsonWebTokenError) {
         throw new Error('Invalid token')
       }
       throw error
@@ -140,7 +141,7 @@ export class AuthService {
       throw new Error('Invalid email or password')
     }
 
-    if (!user.isActive) {
+    if (user.isActive !== true) {
       throw new Error('Account is deactivated')
     }
 
@@ -169,11 +170,11 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName || undefined,
-        lastName: user.lastName || undefined,
-        createdAt: user.createdAt!,
-        cognitivePatterns: user.cognitivePatterns || undefined,
-        learningPreferences: user.learningPreferences || undefined,
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        createdAt: user.createdAt ?? new Date(),
+        cognitivePatterns: user.cognitivePatterns ?? undefined,
+        learningPreferences: user.learningPreferences ?? undefined,
       },
     }
   }
@@ -275,11 +276,11 @@ export class AuthService {
       user: {
         id: newUser.id,
         email: newUser.email,
-        firstName: newUser.firstName || undefined,
-        lastName: newUser.lastName || undefined,
-        createdAt: newUser.createdAt!,
-        cognitivePatterns: newUser.cognitivePatterns || undefined,
-        learningPreferences: newUser.learningPreferences || undefined,
+        firstName: newUser.firstName ?? undefined,
+        lastName: newUser.lastName ?? undefined,
+        createdAt: newUser.createdAt ?? new Date(),
+        cognitivePatterns: newUser.cognitivePatterns ?? undefined,
+        learningPreferences: newUser.learningPreferences ?? undefined,
       },
     }
   }
@@ -298,7 +299,7 @@ export class AuthService {
       .where(eq(users.id, decoded.userId))
       .limit(1)
 
-    if (!user || !user.isActive) {
+    if (!user || user.isActive !== true) {
       throw new Error('User not found or inactive')
     }
 
@@ -328,7 +329,7 @@ export class AuthService {
       .where(eq(users.id, decoded.userId))
       .limit(1)
 
-    if (!user || !user.isActive) {
+    if (!user || user.isActive !== true) {
       throw new Error('User not found or inactive')
     }
 
@@ -381,7 +382,7 @@ export class AuthService {
     const permissions = new Set<string>()
 
     for (const role of roles) {
-      const rolePerms = rolePermissions[role] || []
+      const rolePerms = rolePermissions[role] ?? []
       rolePerms.forEach((perm) => permissions.add(perm))
     }
 

@@ -1,8 +1,8 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../../dist/scripts",
-    "rootDir": ".",
+    "rootDir": "../..",
     "skipLibCheck": true,
     "allowJs": true,
     "checkJs": false,
@@ -11,8 +11,8 @@
     "target": "ES2022",
     "moduleResolution": "Node"
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules"],
+  "include": ["../**/*.ts"],
+  "exclude": ["node_modules", "../../dist"],
   "ts-node": {
     "esm": false,
     "experimentalSpecifierResolution": "node",

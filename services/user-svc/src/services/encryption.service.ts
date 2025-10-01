@@ -1,5 +1,6 @@
 import crypto from 'crypto'
-import bcrypt from 'bcrypt'
+
+import { hash, compare } from 'bcrypt'
 
 export interface EncryptionConfig {
   algorithm: string
@@ -33,7 +34,7 @@ export class EncryptionService {
     keyDerivationIterations: 100000,
   }
 
-  private static readonly masterKey = process.env.MASTER_ENCRYPTION_KEY || this.generateSecureKey()
+  private static readonly masterKey = process.env.MASTER_ENCRYPTION_KEY ?? this.generateSecureKey()
 
   /**
    * Generate a cryptographically secure random key
@@ -67,10 +68,15 @@ export class EncryptionService {
    */
   static encryptData(plaintext: string, key?: string): EncryptedData {
     try {
-      const encryptionKey = key ? Buffer.from(key, 'hex') : Buffer.from(this.masterKey, 'hex')
+      const encryptionKey =
+        key !== undefined ? Buffer.from(key, 'hex') : Buffer.from(this.masterKey, 'hex')
       const iv = crypto.randomBytes(this.config.ivLength)
 
-      const cipher = crypto.createCipher(this.config.algorithm, encryptionKey)
+      const cipher = crypto.createCipheriv(
+        this.config.algorithm,
+        encryptionKey,
+        iv,
+      ) as crypto.CipherGCM
       cipher.setAAD(Buffer.from('drivemaster-auth-data'))
 
       let encrypted = cipher.update(plaintext, 'utf8', 'hex')
@@ -96,13 +102,18 @@ export class EncryptionService {
    */
   static decryptData(encryptedData: EncryptedData, key?: string): string {
     try {
-      const encryptionKey = key ? Buffer.from(key, 'hex') : Buffer.from(this.masterKey, 'hex')
+      const encryptionKey =
+        key !== undefined ? Buffer.from(key, 'hex') : Buffer.from(this.masterKey, 'hex')
       const iv = Buffer.from(encryptedData.iv, 'hex')
 
       const [encrypted, authTagHex] = encryptedData.data.split(':')
       const authTag = Buffer.from(authTagHex, 'hex')
 
-      const decipher = crypto.createDecipher(encryptedData.algorithm, encryptionKey)
+      const decipher = crypto.createDecipheriv(
+        encryptedData.algorithm,
+        encryptionKey,
+        iv,
+      ) as crypto.DecipherGCM
       decipher.setAAD(Buffer.from('drivemaster-auth-data'))
       decipher.setAuthTag(authTag)
 
@@ -122,7 +133,7 @@ export class EncryptionService {
    */
   static async hashPassword(password: string): Promise<string> {
     try {
-      return await bcrypt.hash(password, this.config.saltRounds)
+      return await hash(password, this.config.saltRounds)
     } catch (error) {
       throw new Error(
         `Password hashing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -133,9 +144,9 @@ export class EncryptionService {
   /**
    * Verify password against hash
    */
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
+  static async verifyPassword(password: string, hashValue: string): Promise<boolean> {
     try {
-      return await bcrypt.compare(password, hash)
+      return await compare(password, hashValue)
     } catch (error) {
       throw new Error(
         `Password verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -148,13 +159,13 @@ export class EncryptionService {
    */
   static createSecureHash(data: string, salt?: string): HashResult {
     try {
-      const hashSalt = salt || this.generateSalt()
-      const hash = crypto
+      const hashSalt = salt ?? this.generateSalt()
+      const hashValue = crypto
         .pbkdf2Sync(data, hashSalt, this.config.keyDerivationIterations, 64, 'sha256')
         .toString('hex')
 
       return {
-        hash,
+        hash: hashValue,
         salt: hashSalt,
         algorithm: 'pbkdf2-sha256',
         iterations: this.config.keyDerivationIterations,
@@ -187,7 +198,7 @@ export class EncryptionService {
   /**
    * Encrypt PII (Personally Identifiable Information)
    */
-  static encryptPII(piiData: Record<string, any>): Record<string, EncryptedData> {
+  static encryptPII(piiData: Record<string, unknown>): Record<string, EncryptedData> {
     const encrypted: Record<string, EncryptedData> = {}
 
     for (const [key, value] of Object.entries(piiData)) {
@@ -202,15 +213,16 @@ export class EncryptionService {
   /**
    * Decrypt PII data
    */
-  static decryptPII(encryptedPII: Record<string, EncryptedData>): Record<string, any> {
-    const decrypted: Record<string, any> = {}
+  static decryptPII(encryptedPII: Record<string, EncryptedData>): Record<string, unknown> {
+    const decrypted: Record<string, unknown> = {}
 
     for (const [key, encryptedData] of Object.entries(encryptedPII)) {
       try {
         const decryptedValue = this.decryptData(encryptedData)
-        decrypted[key] = JSON.parse(decryptedValue)
+        decrypted[key] = JSON.parse(decryptedValue) as unknown
       } catch (error) {
         // Log error but don't fail entire operation
+        // eslint-disable-next-line no-console
         console.error(`Failed to decrypt PII field ${key}:`, error)
         decrypted[key] = null
       }
@@ -256,7 +268,7 @@ export class EncryptionService {
   /**
    * Encrypt data for database storage
    */
-  static encryptForStorage(data: any): string {
+  static encryptForStorage(data: unknown): string {
     const jsonData = JSON.stringify(data)
     const encrypted = this.encryptData(jsonData)
     return JSON.stringify(encrypted)
@@ -265,11 +277,11 @@ export class EncryptionService {
   /**
    * Decrypt data from database storage
    */
-  static decryptFromStorage(encryptedString: string): any {
+  static decryptFromStorage(encryptedString: string): unknown {
     try {
       const encryptedData = JSON.parse(encryptedString) as EncryptedData
       const decryptedJson = this.decryptData(encryptedData)
-      return JSON.parse(decryptedJson)
+      return JSON.parse(decryptedJson) as unknown
     } catch (error) {
       throw new Error(
         `Storage decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -281,16 +293,17 @@ export class EncryptionService {
    * Secure data anonymization for analytics
    */
   static anonymizeData(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     fieldsToAnonymize: string[],
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     const anonymized = { ...data }
 
     for (const field of fieldsToAnonymize) {
-      if (anonymized[field]) {
+      const fieldValue = anonymized[field]
+      if (fieldValue !== null && fieldValue !== undefined) {
         // Create consistent hash for analytics while removing PII
-        const hash = crypto.createHash('sha256').update(anonymized[field].toString()).digest('hex')
-        anonymized[field] = `anon_${hash.substring(0, 8)}`
+        const hashValue = crypto.createHash('sha256').update(String(fieldValue)).digest('hex')
+        anonymized[field] = `anon_${hashValue.substring(0, 8)}`
       }
     }
 
@@ -357,12 +370,13 @@ export class EncryptionService {
       const testPassword = 'test-password-123'
       const hashedPassword = crypto.createHash('sha256').update(testPassword).digest('hex')
 
-      if (!hashedPassword) {
+      if (hashedPassword.length === 0) {
         throw new Error('Password hashing test failed')
       }
 
       return true
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Encryption configuration validation failed:', error)
       return false
     }

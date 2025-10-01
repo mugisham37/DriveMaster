@@ -8,9 +8,9 @@ import {
   optimizeDatabase,
   closeMigrationConnection,
 } from '../db/migrate'
-import { IndexManager, DatabaseMaintenance, DatabaseMonitor } from '../db/utils'
+import { IndexManager, DatabaseMaintenance } from '../db/utils'
 import { DatabaseOptimizer, ConnectionManager, HealthMonitor } from '../db/optimization'
-import { DatabaseMonitoring, MaintenanceScheduler } from '../db/monitoring'
+import { DatabaseMonitoring } from '../db/monitoring'
 
 async function main() {
   const command = process.argv[2]

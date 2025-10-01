@@ -1,4 +1,5 @@
-import { eq, and, or, desc, asc, sql, inArray, not } from 'drizzle-orm'
+import { eq, and, or, desc, sql, inArray, not } from 'drizzle-orm'
+
 import { db } from '../db/connection'
 import {
   users,
@@ -7,7 +8,6 @@ import {
   userAchievements,
   achievements,
   notifications,
-  type LearningPreferences,
 } from '../db/schema'
 
 export interface FriendRequest {
@@ -102,7 +102,7 @@ export class SocialService {
       db.select().from(users).where(eq(users.id, addresseeId)).limit(1),
     ])
 
-    if (!requester.length || !addressee.length) {
+    if (requester.length === 0 || addressee.length === 0) {
       throw new Error('User not found')
     }
 
@@ -130,7 +130,7 @@ export class SocialService {
     }
 
     // Check addressee's privacy settings
-    const addresseePreferences = addressee[0].learningPreferences as LearningPreferences | null
+    const addresseePreferences = addressee[0].learningPreferences
     if (addresseePreferences && !addresseePreferences.socialFeatures) {
       throw new Error('User has disabled social features')
     }
@@ -156,18 +156,18 @@ export class SocialService {
         id: requester[0].id,
         firstName: requester[0].firstName,
         lastName: requester[0].lastName,
-        totalXP: requester[0].totalXP || 0,
-        currentStreak: requester[0].currentStreak || 0,
+        totalXP: requester[0].totalXP ?? 0,
+        currentStreak: requester[0].currentStreak ?? 0,
       },
       addresseeProfile: {
         id: addressee[0].id,
         firstName: addressee[0].firstName,
         lastName: addressee[0].lastName,
-        totalXP: addressee[0].totalXP || 0,
-        currentStreak: addressee[0].currentStreak || 0,
+        totalXP: addressee[0].totalXP ?? 0,
+        currentStreak: addressee[0].currentStreak ?? 0,
       },
       status: friendship.status,
-      createdAt: friendship.createdAt!,
+      createdAt: friendship.createdAt ?? new Date(),
     }
   }
 
@@ -181,7 +181,7 @@ export class SocialService {
       .where(and(eq(friendships.id, friendshipId), eq(friendships.addresseeId, userId)))
       .limit(1)
 
-    if (!friendship.length) {
+    if (friendship.length === 0) {
       throw new Error('Friend request not found')
     }
 
@@ -206,7 +206,7 @@ export class SocialService {
 
     const accepter = await db.select().from(users).where(eq(users.id, userId)).limit(1)
 
-    if (requester.length && accepter.length) {
+    if (requester.length > 0 && accepter.length > 0) {
       await this.sendFriendAcceptedNotification(friendship[0].requesterId, accepter[0])
     }
   }
@@ -221,7 +221,7 @@ export class SocialService {
       .where(and(eq(friendships.id, friendshipId), eq(friendships.addresseeId, userId)))
       .limit(1)
 
-    if (!friendship.length) {
+    if (friendship.length === 0) {
       throw new Error('Friend request not found')
     }
 
@@ -250,7 +250,7 @@ export class SocialService {
       )
       .limit(1)
 
-    if (!friendship.length) {
+    if (friendship.length === 0) {
       throw new Error('Friendship not found')
     }
 
@@ -325,9 +325,9 @@ export class SocialService {
 
     return friendsQuery.map((friend) => ({
       ...friend,
-      totalXP: friend.totalXP || 0,
-      currentStreak: friend.currentStreak || 0,
-      longestStreak: friend.longestStreak || 0,
+      totalXP: friend.totalXP ?? 0,
+      currentStreak: friend.currentStreak ?? 0,
+      longestStreak: friend.longestStreak ?? 0,
       isOnline: friend.lastActiveAt
         ? new Date().getTime() - friend.lastActiveAt.getTime() < 5 * 60 * 1000 // 5 minutes
         : false,
@@ -389,18 +389,18 @@ export class SocialService {
           id: userProfile.id,
           firstName: userProfile.firstName,
           lastName: userProfile.lastName,
-          totalXP: userProfile.totalXP || 0,
-          currentStreak: userProfile.currentStreak || 0,
+          totalXP: userProfile.totalXP ?? 0,
+          currentStreak: userProfile.currentStreak ?? 0,
         },
         addresseeProfile: {
           id: req.addresseeId,
           firstName: req.addresseeFirstName,
           lastName: req.addresseeLastName,
-          totalXP: req.addresseeTotalXP || 0,
-          currentStreak: req.addresseeCurrentStreak || 0,
+          totalXP: req.addresseeTotalXP ?? 0,
+          currentStreak: req.addresseeCurrentStreak ?? 0,
         },
         status: req.status,
-        createdAt: req.createdAt!,
+        createdAt: req.createdAt ?? new Date(),
       })),
       received: receivedRequests.map((req) => ({
         id: req.id,
@@ -410,18 +410,18 @@ export class SocialService {
           id: req.requesterId,
           firstName: req.requesterFirstName,
           lastName: req.requesterLastName,
-          totalXP: req.requesterTotalXP || 0,
-          currentStreak: req.requesterCurrentStreak || 0,
+          totalXP: req.requesterTotalXP ?? 0,
+          currentStreak: req.requesterCurrentStreak ?? 0,
         },
         addresseeProfile: {
           id: userProfile.id,
           firstName: userProfile.firstName,
           lastName: userProfile.lastName,
-          totalXP: userProfile.totalXP || 0,
-          currentStreak: userProfile.currentStreak || 0,
+          totalXP: userProfile.totalXP ?? 0,
+          currentStreak: userProfile.currentStreak ?? 0,
         },
         status: req.status,
-        createdAt: req.createdAt!,
+        createdAt: req.createdAt ?? new Date(),
       })),
     }
   }
@@ -435,14 +435,8 @@ export class SocialService {
     timeframe: 'all_time' | 'weekly' | 'monthly' = 'all_time',
     limit: number = 50,
   ): Promise<LeaderboardEntry[]> {
-    let baseQuery = db.select({
-      userId: users.id,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      totalXP: users.totalXP,
-      currentStreak: users.currentStreak,
-      longestStreak: users.longestStreak,
-    })
+    // Build the base query based on scope
+    let userIds: string[] = []
 
     if (scope === 'friends') {
       // Get user's friends
@@ -461,23 +455,32 @@ export class SocialService {
           ),
         )
 
-      const friendIdList = friendIds.map((f) => f.friendId)
-      friendIdList.push(userId) // Include the user themselves
-
-      baseQuery = baseQuery.from(users).where(inArray(users.id, friendIdList))
-    } else {
-      baseQuery = baseQuery.from(users)
+      userIds = friendIds.map((f) => f.friendId)
+      userIds.push(userId) // Include the user themselves
     }
 
-    // Filter users who have enabled social features
-    baseQuery = baseQuery.where(
-      and(
-        eq(users.isActive, true),
-        sql`${users.learningPreferences}->>'socialFeatures' = 'true' OR ${users.learningPreferences}->>'socialFeatures' IS NULL`,
-      ),
-    )
+    // Build the main query
+    const baseQuery = db
+      .select({
+        userId: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        totalXP: users.totalXP,
+        currentStreak: users.currentStreak,
+        longestStreak: users.longestStreak,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.isActive, true),
+          sql`${users.learningPreferences}->>'socialFeatures' = 'true' OR ${users.learningPreferences}->>'socialFeatures' IS NULL`,
+          ...(scope === 'friends' ? [inArray(users.id, userIds)] : []),
+        ),
+      )
+      .orderBy(desc(users.totalXP))
+      .limit(limit)
 
-    let leaderboardData = await baseQuery.orderBy(desc(users.totalXP)).limit(limit)
+    const leaderboardData = await baseQuery
 
     // Add weekly/monthly XP if needed
     if (timeframe !== 'all_time') {
@@ -497,24 +500,46 @@ export class SocialService {
 
       const xpMap = new Map(periodXP.map((p) => [p.userId, p.periodXP]))
 
-      leaderboardData = leaderboardData
-        .map((user) => ({
-          ...user,
-          periodXP: xpMap.get(user.userId) || 0,
-        }))
-        .sort((a, b) => (b.periodXP || 0) - (a.periodXP || 0))
+      // Create typed interface for user with period XP
+      interface UserWithPeriodXP {
+        userId: string
+        firstName: string | null
+        lastName: string | null
+        totalXP: number | null
+        currentStreak: number | null
+        longestStreak: number | null
+        periodXP: number
+      }
+
+      const usersWithPeriodXP: UserWithPeriodXP[] = leaderboardData.map((user) => ({
+        ...user,
+        periodXP: xpMap.get(user.userId) ?? 0,
+      }))
+
+      // Sort by period XP
+      usersWithPeriodXP.sort((a, b) => (b.periodXP ?? 0) - (a.periodXP ?? 0))
+
+      return usersWithPeriodXP.map((user, index) => ({
+        userId: user.userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        totalXP: user.totalXP ?? 0,
+        currentStreak: user.currentStreak ?? 0,
+        longestStreak: user.longestStreak ?? 0,
+        rank: index + 1,
+        ...(timeframe === 'weekly' && { weeklyXP: user.periodXP }),
+        ...(timeframe === 'monthly' && { monthlyXP: user.periodXP }),
+      }))
     }
 
     return leaderboardData.map((user, index) => ({
       userId: user.userId,
       firstName: user.firstName,
       lastName: user.lastName,
-      totalXP: user.totalXP || 0,
-      currentStreak: user.currentStreak || 0,
-      longestStreak: user.longestStreak || 0,
+      totalXP: user.totalXP ?? 0,
+      currentStreak: user.currentStreak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
       rank: index + 1,
-      ...(timeframe === 'weekly' && { weeklyXP: (user as any).periodXP || 0 }),
-      ...(timeframe === 'monthly' && { monthlyXP: (user as any).periodXP || 0 }),
     }))
   }
 
@@ -595,8 +620,8 @@ export class SocialService {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
-        totalXP: user.totalXP || 0,
-        currentStreak: user.currentStreak || 0,
+        totalXP: user.totalXP ?? 0,
+        currentStreak: user.currentStreak ?? 0,
         friendshipStatus,
       }
     })
@@ -607,26 +632,34 @@ export class SocialService {
    */
   static async shareProgress(userId: string, shareData: ProgressShare): Promise<void> {
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-    if (!user.length) {
+    if (user.length === 0) {
       throw new Error('User not found')
     }
 
-    let shareMessage = shareData.customMessage || ''
+    let shareMessage = shareData.customMessage ?? ''
 
     // Generate share message based on achievement or milestone
-    if (shareData.achievementId) {
+    if (shareData.achievementId !== null && shareData.achievementId !== undefined) {
       const achievement = await db
         .select()
         .from(achievements)
         .where(eq(achievements.id, shareData.achievementId))
         .limit(1)
 
-      if (achievement.length) {
+      if (achievement.length > 0) {
         shareMessage = `🎉 Just unlocked "${achievement[0].name}" achievement! ${shareMessage}`
       }
-    } else if (shareData.xpGained) {
+    } else if (
+      shareData.xpGained !== null &&
+      shareData.xpGained !== undefined &&
+      shareData.xpGained > 0
+    ) {
       shareMessage = `📈 Earned ${shareData.xpGained} XP today! Total: ${user[0].totalXP} XP ${shareMessage}`
-    } else if (shareData.streakMilestone) {
+    } else if (
+      shareData.streakMilestone !== null &&
+      shareData.streakMilestone !== undefined &&
+      shareData.streakMilestone > 0
+    ) {
       shareMessage = `🔥 ${shareData.streakMilestone} day learning streak! ${shareMessage}`
     }
 
@@ -639,12 +672,12 @@ export class SocialService {
         db.insert(notifications).values({
           userId: friendId,
           type: 'social',
-          title: `${user[0].firstName || 'Friend'} shared progress`,
+          title: `${user[0].firstName !== null && user[0].firstName !== undefined && user[0].firstName.length > 0 ? user[0].firstName : 'Friend'} shared progress`,
           body: shareMessage,
           data: {
             type: 'progress_share',
             fromUserId: userId,
-            fromUserName: `${user[0].firstName || ''} ${user[0].lastName || ''}`.trim(),
+            fromUserName: `${user[0].firstName ?? ''} ${user[0].lastName ?? ''}`.trim(),
             shareData,
           },
         }),
@@ -679,14 +712,14 @@ export class SocialService {
             eq(friendships.status, 'accepted'),
           ),
         )
-        .then((result) => result[0]?.count || 0),
+        .then((result) => result[0]?.count ?? 0),
 
       // Pending requests count
       db
         .select({ count: sql<number>`COUNT(*)` })
         .from(friendships)
         .where(and(eq(friendships.addresseeId, userId), eq(friendships.status, 'pending')))
-        .then((result) => result[0]?.count || 0),
+        .then((result) => result[0]?.count ?? 0),
 
       // Global rank
       this.getUserGlobalRank(userId),
@@ -720,7 +753,7 @@ export class SocialService {
             sql`${userSessions.startTime} >= NOW() - INTERVAL '7 days'`,
           ),
         )
-        .then((result) => result[0]?.xp || 0),
+        .then((result) => result[0]?.xp ?? 0),
 
       // Monthly XP
       db
@@ -732,7 +765,7 @@ export class SocialService {
             sql`${userSessions.startTime} >= NOW() - INTERVAL '30 days'`,
           ),
         )
-        .then((result) => result[0]?.xp || 0),
+        .then((result) => result[0]?.xp ?? 0),
     ])
 
     const friendsRank = await this.getUserFriendsRank(userId)
@@ -747,7 +780,7 @@ export class SocialService {
       recentAchievements: recentAchievements.map((a) => ({
         id: a.id,
         name: a.name,
-        completedAt: a.completedAt!,
+        completedAt: a.completedAt ?? new Date(),
       })),
     }
   }
@@ -762,20 +795,20 @@ export class SocialService {
       .where(eq(users.id, userId))
       .limit(1)
 
-    if (!userXP.length) return 0
+    if (userXP.length === 0) return 0
 
     const rank = await db
       .select({ count: sql<number>`COUNT(*) + 1` })
       .from(users)
       .where(
         and(
-          sql`${users.totalXP} > ${userXP[0].totalXP || 0}`,
+          sql`${users.totalXP} > ${userXP[0].totalXP ?? 0}`,
           eq(users.isActive, true),
           sql`${users.learningPreferences}->>'socialFeatures' = 'true' OR ${users.learningPreferences}->>'socialFeatures' IS NULL`,
         ),
       )
 
-    return rank[0]?.count || 1
+    return rank[0]?.count ?? 1
   }
 
   /**
@@ -785,9 +818,9 @@ export class SocialService {
     const friends = await this.getFriends(userId)
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
 
-    if (!user.length) return 0
+    if (user.length === 0) return 0
 
-    const userXP = user[0].totalXP || 0
+    const userXP = user[0].totalXP ?? 0
     const friendsWithHigherXP = friends.filter((friend) => friend.totalXP > userXP)
 
     return friendsWithHigherXP.length + 1
@@ -804,11 +837,11 @@ export class SocialService {
       userId,
       type: 'social',
       title: 'New Friend Request',
-      body: `${requester.firstName || 'Someone'} sent you a friend request`,
+      body: `${requester.firstName ?? 'Someone'} sent you a friend request`,
       data: {
         type: 'friend_request',
         fromUserId: requester.id,
-        fromUserName: `${requester.firstName || ''} ${requester.lastName || ''}`.trim(),
+        fromUserName: `${requester.firstName ?? ''} ${requester.lastName ?? ''}`.trim(),
       },
     })
   }
@@ -824,11 +857,11 @@ export class SocialService {
       userId,
       type: 'social',
       title: 'Friend Request Accepted',
-      body: `${accepter.firstName || 'Someone'} accepted your friend request`,
+      body: `${accepter.firstName ?? 'Someone'} accepted your friend request`,
       data: {
         type: 'friend_accepted',
         fromUserId: accepter.id,
-        fromUserName: `${accepter.firstName || ''} ${accepter.lastName || ''}`.trim(),
+        fromUserName: `${accepter.firstName ?? ''} ${accepter.lastName ?? ''}`.trim(),
       },
     })
   }

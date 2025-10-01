@@ -36,7 +36,9 @@
     "bgwriter",
     "indexrelid",
     "psql",
-    "hsts"
+    "hsts",
+    "anonymization",
+    "ciphertext"
   ],
   "flagWords": [],
   "ignorePaths": ["node_modules/**", "dist/**", "coverage/**", "*.log"]

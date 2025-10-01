@@ -13,12 +13,15 @@ export class ComplianceService {
   /**
    * Log audit event for compliance tracking
    */
-  static async logAuditEvent(event: AuditEvent): Promise<void> {
+  static logAuditEvent(event: AuditEvent): Promise<void> {
     // In production, this would write to a secure audit log
     // For now, we'll use structured logging
+    // eslint-disable-next-line no-console
     console.log('AUDIT_EVENT', {
       ...event,
       timestamp: event.timestamp.toISOString(),
     })
+
+    return Promise.resolve()
   }
 }
