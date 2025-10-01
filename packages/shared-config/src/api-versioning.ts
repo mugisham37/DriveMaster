@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 
+// Type definitions for better type safety
 export interface ApiVersion {
   version: string
   deprecated?: boolean
@@ -16,17 +17,112 @@ export interface VersionConfig {
   queryParamName: string
 }
 
+export interface RequestTransformer {
+  (request: Record<string, unknown>): Record<string, unknown>
+}
+
+export interface ResponseTransformer {
+  (response: Record<string, unknown>): Record<string, unknown>
+}
+
+export interface VersionHandler {
+  handler: (request: FastifyRequest, reply: FastifyReply) => Promise<Record<string, unknown>>
+  schema?: Record<string, unknown>
+  deprecated?: boolean
+  transformRequest?: RequestTransformer
+  transformResponse?: ResponseTransformer
+}
+
 export interface VersionedEndpoint {
   path: string
   method: string
-  versions: {
-    [version: string]: {
-      handler: Function
-      schema?: any
-      deprecated?: boolean
-      transformRequest?: (request: any) => any
-      transformResponse?: (response: any) => any
-    }
+  versions: Record<string, VersionHandler>
+}
+
+export interface ExtendedFastifyRequest extends FastifyRequest {
+  apiVersion?: string
+}
+
+export interface ApiDocumentation {
+  info: {
+    title: string
+    description: string
+    currentVersion: string
+    defaultVersion: string
+  }
+  versions: Record<string, VersionDocumentation>
+}
+
+export interface VersionDocumentation {
+  version: string
+  deprecated: boolean
+  deprecationDate?: string | undefined
+  sunsetDate?: string | undefined
+  supportedUntil?: string | undefined
+  endpoints: EndpointDocumentation[]
+}
+
+export interface EndpointDocumentation {
+  path: string
+  method: string
+  deprecated: boolean
+  schema?: Record<string, unknown>
+}
+
+export interface ErrorResponse {
+  error: string
+  requestedVersion: string
+  supportedVersions: string[]
+}
+
+export interface UserProfile {
+  cognitivePatterns?: Record<string, unknown> | undefined
+  learningPreferences?: Record<string, unknown> | undefined
+}
+
+export interface UserV1 {
+  cognitivePatterns?: Record<string, unknown> | undefined
+  learningPreferences?: Record<string, unknown> | undefined
+  [key: string]: unknown
+}
+
+export interface UserV2 {
+  profile?: UserProfile | undefined
+  [key: string]: unknown
+}
+
+export interface LearningEventV1 {
+  responseData?: Record<string, unknown> | undefined
+  contextData?: Record<string, unknown> | undefined
+  [key: string]: unknown
+}
+
+export interface LearningEventV2 {
+  metadata?:
+    | {
+        responseData?: Record<string, unknown> | undefined
+        contextData?: Record<string, unknown> | undefined
+      }
+    | undefined
+  [key: string]: unknown
+}
+
+export interface PaginationV1 {
+  items: Record<string, unknown>[]
+  page: number
+  limit: number
+  total: number
+}
+
+export interface PaginationV2 {
+  data: Record<string, unknown>[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
   }
 }
 
@@ -49,46 +145,49 @@ export class ApiVersionManager {
   /**
    * Middleware to handle API versioning
    */
-  middleware() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+  middleware(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       const requestedVersion = this.extractVersion(request)
       const resolvedVersion = this.resolveVersion(requestedVersion)
 
       // Add version info to request context
-      ;(request as any).apiVersion = resolvedVersion
+      ;(request as ExtendedFastifyRequest).apiVersion = resolvedVersion
 
       // Add version headers to response
-      reply.header('API-Version', resolvedVersion)
-      reply.header('API-Supported-Versions', this.getSupportedVersions().join(', '))
+      await reply.header('API-Version', resolvedVersion)
+      await reply.header('API-Supported-Versions', this.getSupportedVersions().join(', '))
 
       // Check if version is deprecated
       const versionInfo = this.getVersionInfo(resolvedVersion)
-      if (versionInfo?.deprecated) {
-        reply.header('API-Deprecation', 'true')
+      if (versionInfo?.deprecated === true) {
+        await reply.header('API-Deprecation', 'true')
         if (versionInfo.sunsetDate) {
-          reply.header('API-Sunset', versionInfo.sunsetDate.toISOString())
+          await reply.header('API-Sunset', versionInfo.sunsetDate.toISOString())
         }
-        reply.header('Warning', `299 - "API version ${resolvedVersion} is deprecated"`)
+        await reply.header('Warning', `299 - "API version ${resolvedVersion} is deprecated"`)
       }
 
       // Find and execute versioned handler
-      const endpointKey = `${request.method}:${request.routerPath}`
+      const endpointKey = `${request.method}:${request.routerPath ?? ''}`
       const endpoint = this.endpoints.get(endpointKey)
 
-      if (endpoint && endpoint.versions[resolvedVersion]) {
+      if (endpoint?.versions[resolvedVersion]) {
         const versionHandler = endpoint.versions[resolvedVersion]
 
         // Transform request if needed
-        if (versionHandler.transformRequest) {
-          request.body = versionHandler.transformRequest(request.body)
+        if (versionHandler?.transformRequest) {
+          const typedRequest = request as ExtendedFastifyRequest & { body: Record<string, unknown> }
+          typedRequest.body = versionHandler.transformRequest(typedRequest.body)
         }
 
         // Store original send method for response transformation
-        if (versionHandler.transformResponse) {
-          const originalSend = reply.send.bind(reply)
-          reply.send = function (payload: any) {
-            const transformedPayload = versionHandler.transformResponse(payload)
-            return originalSend(transformedPayload)
+        if (versionHandler?.transformResponse) {
+          const originalSend = reply.send.bind(reply) as (
+            payload: Record<string, unknown>,
+          ) => FastifyReply
+          reply.send = function (payload: Record<string, unknown>): FastifyReply {
+            const transformedPayload = versionHandler.transformResponse?.(payload)
+            return originalSend(transformedPayload ?? payload)
           }
         }
       }
@@ -100,21 +199,25 @@ export class ApiVersionManager {
    */
   private extractVersion(request: FastifyRequest): string | null {
     // Check header first
-    const headerVersion = request.headers[this.config.headerName.toLowerCase()] as string
-    if (headerVersion) {
+    const headerVersion = request.headers[this.config.headerName.toLowerCase()] as
+      | string
+      | undefined
+    if (headerVersion !== undefined && headerVersion !== null && headerVersion.length > 0) {
       return this.normalizeVersion(headerVersion)
     }
 
     // Check query parameter
-    const queryVersion = (request.query as any)[this.config.queryParamName]
-    if (queryVersion) {
+    const queryParams = request.query as Record<string, unknown>
+    const queryVersion = queryParams[this.config.queryParamName] as string | undefined
+    if (queryVersion !== undefined && queryVersion !== null && queryVersion.length > 0) {
       return this.normalizeVersion(queryVersion)
     }
 
     // Check URL path (e.g., /api/v1/users)
-    const pathMatch = request.url.match(/\/api\/v(\d+(?:\.\d+)?)/)
-    if (pathMatch) {
-      return `v${pathMatch[1]}`
+    const pathMatch = (request.url ?? '').match(/\/api\/v(\d+(?:\.\d+)?)/)
+    const matchedVersion = pathMatch?.[1]
+    if (matchedVersion !== undefined && matchedVersion !== null) {
+      return `v${matchedVersion}`
     }
 
     return null
@@ -124,7 +227,11 @@ export class ApiVersionManager {
    * Resolve version to a supported version
    */
   private resolveVersion(requestedVersion: string | null): string {
-    if (!requestedVersion) {
+    if (
+      requestedVersion === null ||
+      requestedVersion === undefined ||
+      requestedVersion.length === 0
+    ) {
       return this.config.defaultVersion
     }
 
@@ -135,7 +242,11 @@ export class ApiVersionManager {
 
     // Try to find compatible version (backward compatibility)
     const compatibleVersion = this.findCompatibleVersion(requestedVersion)
-    if (compatibleVersion) {
+    if (
+      compatibleVersion !== null &&
+      compatibleVersion !== undefined &&
+      compatibleVersion.length > 0
+    ) {
       return compatibleVersion
     }
 
@@ -161,7 +272,7 @@ export class ApiVersionManager {
       .filter((v) => this.extractMajorVersion(v.version) === requestedMajor)
       .sort((a, b) => this.compareVersions(b.version, a.version))
 
-    return compatibleVersions.length > 0 ? compatibleVersions[0].version : null
+    return compatibleVersions.length > 0 ? (compatibleVersions[0]?.version ?? null) : null
   }
 
   /**
@@ -192,7 +303,7 @@ export class ApiVersionManager {
    */
   private extractMajorVersion(version: string): number {
     const match = version.match(/v?(\d+)/)
-    return match ? parseInt(match[1], 10) : 0
+    return match ? parseInt(match[1] ?? '0', 10) : 0
   }
 
   /**
@@ -203,8 +314,8 @@ export class ApiVersionManager {
     const bParts = b.replace(/^v/, '').split('.').map(Number)
 
     for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-      const aPart = aParts[i] || 0
-      const bPart = bParts[i] || 0
+      const aPart = aParts[i] ?? 0
+      const bPart = bParts[i] ?? 0
 
       if (aPart > bPart) return 1
       if (aPart < bPart) return -1
@@ -216,13 +327,24 @@ export class ApiVersionManager {
   /**
    * Create version-specific route handler
    */
-  createVersionedHandler(versions: { [version: string]: Function }) {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
-      const version = (request as any).apiVersion || this.config.defaultVersion
+  createVersionedHandler(
+    versions: Record<
+      string,
+      (request: FastifyRequest, reply: FastifyReply) => Promise<Record<string, unknown>>
+    >,
+  ): (
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) => Promise<ErrorResponse | Record<string, unknown>> {
+    return async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<ErrorResponse | Record<string, unknown>> => {
+      const version = (request as ExtendedFastifyRequest).apiVersion ?? this.config.defaultVersion
       const handler = versions[version]
 
       if (!handler) {
-        reply.code(400)
+        await reply.code(400)
         return {
           error: 'Unsupported API version',
           requestedVersion: version,
@@ -237,8 +359,8 @@ export class ApiVersionManager {
   /**
    * Generate API documentation for all versions
    */
-  generateApiDocs(): any {
-    const docs: any = {
+  generateApiDocs(): ApiDocumentation {
+    const docs: ApiDocumentation = {
       info: {
         title: 'DriveMaster API',
         description: 'Adaptive driving test learning platform API',
@@ -249,14 +371,25 @@ export class ApiVersionManager {
     }
 
     for (const version of this.config.supported) {
-      docs.versions[version.version] = {
+      const versionDoc: VersionDocumentation = {
         version: version.version,
-        deprecated: version.deprecated || false,
-        deprecationDate: version.deprecationDate?.toISOString(),
-        sunsetDate: version.sunsetDate?.toISOString(),
-        supportedUntil: version.supportedUntil?.toISOString(),
+        deprecated: version.deprecated ?? false,
         endpoints: this.getEndpointsForVersion(version.version),
       }
+
+      if (version.deprecationDate !== undefined) {
+        versionDoc.deprecationDate = version.deprecationDate.toISOString()
+      }
+
+      if (version.sunsetDate !== undefined) {
+        versionDoc.sunsetDate = version.sunsetDate.toISOString()
+      }
+
+      if (version.supportedUntil !== undefined) {
+        versionDoc.supportedUntil = version.supportedUntil.toISOString()
+      }
+
+      docs.versions[version.version] = versionDoc
     }
 
     return docs
@@ -265,20 +398,20 @@ export class ApiVersionManager {
   /**
    * Get endpoints for specific version
    */
-  private getEndpointsForVersion(version: string): any[] {
-    const endpoints: any[] = []
+  private getEndpointsForVersion(version: string): EndpointDocumentation[] {
+    const endpoints: EndpointDocumentation[] = []
 
-    for (const [key, endpoint] of this.endpoints) {
-      if (endpoint.versions[version]) {
-        const versionHandler = endpoint.versions[version]
+    Array.from(this.endpoints.values()).forEach((endpoint) => {
+      const versionHandler = endpoint.versions[version]
+      if (versionHandler) {
         endpoints.push({
           path: endpoint.path,
           method: endpoint.method,
-          deprecated: versionHandler.deprecated || false,
-          schema: versionHandler.schema,
+          deprecated: versionHandler.deprecated ?? false,
+          ...(versionHandler.schema && { schema: versionHandler.schema }),
         })
       }
-    }
+    })
 
     return endpoints
   }
@@ -289,13 +422,20 @@ export class VersionTransformers {
   /**
    * Transform v1 user response to v2 format
    */
-  static transformUserV1ToV2(user: any): any {
+  static transformUserV1ToV2(user: UserV1): UserV2 {
+    const profile: UserProfile = {}
+
+    if (user.cognitivePatterns !== undefined) {
+      profile.cognitivePatterns = user.cognitivePatterns
+    }
+
+    if (user.learningPreferences !== undefined) {
+      profile.learningPreferences = user.learningPreferences
+    }
+
     return {
       ...user,
-      profile: {
-        cognitivePatterns: user.cognitivePatterns,
-        learningPreferences: user.learningPreferences,
-      },
+      profile,
       // Remove deprecated fields
       cognitivePatterns: undefined,
       learningPreferences: undefined,
@@ -305,26 +445,44 @@ export class VersionTransformers {
   /**
    * Transform v2 user request to v1 format
    */
-  static transformUserV2ToV1(user: any): any {
-    return {
+  static transformUserV2ToV1(user: UserV2): UserV1 {
+    const result: UserV1 = {
       ...user,
-      cognitivePatterns: user.profile?.cognitivePatterns,
-      learningPreferences: user.profile?.learningPreferences,
       // Remove new fields
       profile: undefined,
     }
+
+    if (user.profile?.cognitivePatterns !== undefined) {
+      result.cognitivePatterns = user.profile.cognitivePatterns
+    }
+
+    if (user.profile?.learningPreferences !== undefined) {
+      result.learningPreferences = user.profile.learningPreferences
+    }
+
+    return result
   }
 
   /**
    * Transform v1 learning event to v2 format
    */
-  static transformLearningEventV1ToV2(event: any): any {
+  static transformLearningEventV1ToV2(event: LearningEventV1): LearningEventV2 {
+    const metadata: {
+      responseData?: Record<string, unknown> | undefined
+      contextData?: Record<string, unknown> | undefined
+    } = {}
+
+    if (event.responseData !== undefined) {
+      metadata.responseData = event.responseData
+    }
+
+    if (event.contextData !== undefined) {
+      metadata.contextData = event.contextData
+    }
+
     return {
       ...event,
-      metadata: {
-        responseData: event.responseData,
-        contextData: event.contextData,
-      },
+      metadata,
       // Remove deprecated fields
       responseData: undefined,
       contextData: undefined,
@@ -334,7 +492,7 @@ export class VersionTransformers {
   /**
    * Transform paginated response format
    */
-  static transformPaginationV1ToV2(response: any): any {
+  static transformPaginationV1ToV2(response: PaginationV1): PaginationV2 {
     return {
       data: response.items,
       pagination: {
@@ -345,11 +503,6 @@ export class VersionTransformers {
         hasNext: response.page * response.limit < response.total,
         hasPrev: response.page > 1,
       },
-      // Remove old format
-      items: undefined,
-      page: undefined,
-      limit: undefined,
-      total: undefined,
     }
   }
 }

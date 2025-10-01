@@ -21,7 +21,7 @@ export const CacheConfigSchema = z.object({
   compression: z.object({
     enabled: z.boolean().default(true),
     threshold: z.number().default(1024), // 1KB
-    algorithm: z.enum(['lz4']).default('lz4'),
+    algorithm: z.enum(['deflate']).default('deflate'),
   }),
   performance: z.object({
     batchSize: z.number().default(100),

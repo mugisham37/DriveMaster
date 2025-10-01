@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs'
 import { EventEmitter } from 'events'
 import { promises as fs } from 'fs'
 import { join } from 'path'

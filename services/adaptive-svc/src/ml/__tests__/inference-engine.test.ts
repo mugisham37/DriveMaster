@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import * as tf from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs'
 import { MLInferenceEngine } from '../inference-engine'
 
 // Mock TensorFlow.js
-vi.mock('@tensorflow/tfjs-node', () => ({
+vi.mock('@tensorflow/tfjs', () => ({
   ready: vi.fn().mockResolvedValue(undefined),
   getBackend: vi.fn().mockReturnValue('cpu'),
   loadLayersModel: vi.fn(),

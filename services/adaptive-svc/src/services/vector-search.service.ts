@@ -1,5 +1,5 @@
 import { Pinecone } from '@pinecone-database/pinecone'
-import * as tf from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs'
 import { EventEmitter } from 'events'
 import { logger } from '@drivemaster/shared-config'
 

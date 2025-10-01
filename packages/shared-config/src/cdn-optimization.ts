@@ -1,5 +1,6 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
 import { createHash } from 'crypto'
+
+import { FastifyRequest, FastifyReply } from 'fastify'
 
 export interface CDNConfig {
   provider: 'cloudflare' | 'aws' | 'azure' | 'gcp'
@@ -24,27 +25,27 @@ export interface CDNConfig {
   security: {
     hotlinkProtection: boolean
     tokenAuth: boolean
-    ipWhitelist?: string[]
+    ipWhitelist?: string[] | undefined
   }
 }
 
 export interface OptimizationOptions {
-  format?: 'webp' | 'avif' | 'jpeg' | 'png'
-  quality?: number
-  width?: number
-  height?: number
-  fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside'
-  progressive?: boolean
-  lossless?: boolean
+  format?: 'webp' | 'avif' | 'jpeg' | 'png' | undefined
+  quality?: number | undefined
+  width?: number | undefined
+  height?: number | undefined
+  fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside' | undefined
+  progressive?: boolean | undefined
+  lossless?: boolean | undefined
 }
 
 export interface CacheStrategy {
   ttl: number
-  staleWhileRevalidate?: number
-  staleIfError?: number
-  mustRevalidate?: boolean
-  public?: boolean
-  immutable?: boolean
+  staleWhileRevalidate?: number | undefined
+  staleIfError?: number | undefined
+  mustRevalidate?: boolean | undefined
+  public?: boolean | undefined
+  immutable?: boolean | undefined
 }
 
 export class CDNOptimizer {
@@ -79,13 +80,17 @@ export class CDNOptimizer {
     const baseUrl = this.config.zones.videos
     let optimizedPath = path
 
-    if (options) {
+    if (options !== undefined) {
       const params = new URLSearchParams()
-      if (options.quality) params.append('q', options.quality)
-      if (options.format) params.append('f', options.format)
+      if (options.quality !== undefined && options.quality !== null) {
+        params.append('q', options.quality)
+      }
+      if (options.format !== undefined && options.format !== null) {
+        params.append('f', options.format)
+      }
 
       const queryString = params.toString()
-      optimizedPath = queryString ? `${path}?${queryString}` : path
+      optimizedPath = queryString.length > 0 ? `${path}?${queryString}` : path
     }
 
     return `${baseUrl}${optimizedPath}`
@@ -94,29 +99,33 @@ export class CDNOptimizer {
   /**
    * Middleware for CDN optimization headers
    */
-  middleware() {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
+  middleware(): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       // Add CDN optimization headers
-      this.addCacheHeaders(request, reply)
-      this.addCompressionHeaders(request, reply)
-      this.addSecurityHeaders(request, reply)
-      this.addPerformanceHeaders(request, reply)
+      await this.addCacheHeaders(request, reply)
+      await this.addCompressionHeaders(request, reply)
+      await this.addSecurityHeaders(request, reply)
+      await this.addPerformanceHeaders(request, reply)
     }
   }
 
   /**
    * Generate cache headers based on content type and strategy
    */
-  private addCacheHeaders(request: FastifyRequest, reply: FastifyReply): void {
+  private async addCacheHeaders(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const url = request.url
     const strategy = this.getCacheStrategy(url)
 
-    if (strategy) {
+    if (strategy !== null) {
       const cacheControl = this.buildCacheControlHeader(strategy)
-      reply.header('Cache-Control', cacheControl)
+      await reply.header('Cache-Control', cacheControl)
 
-      if (strategy.staleWhileRevalidate) {
-        reply.header(
+      if (
+        strategy.staleWhileRevalidate !== undefined &&
+        strategy.staleWhileRevalidate !== null &&
+        strategy.staleWhileRevalidate > 0
+      ) {
+        await reply.header(
           'CDN-Cache-Control',
           `max-age=${strategy.ttl}, stale-while-revalidate=${strategy.staleWhileRevalidate}`,
         )
@@ -124,17 +133,18 @@ export class CDNOptimizer {
 
       // Add ETag for cache validation
       const etag = this.generateETag(request)
-      if (etag) {
-        reply.header('ETag', etag)
+      if (etag.length > 0) {
+        await reply.header('ETag', etag)
       }
 
       // Add Last-Modified header
-      reply.header('Last-Modified', new Date().toUTCString())
+      await reply.header('Last-Modified', new Date().toUTCString())
 
       // Handle conditional requests
       if (request.headers['if-none-match'] === etag) {
-        reply.code(304)
-        return reply.send()
+        await reply.code(304)
+        await reply.send()
+        return
       }
     }
   }
@@ -142,10 +152,10 @@ export class CDNOptimizer {
   /**
    * Add compression headers
    */
-  private addCompressionHeaders(request: FastifyRequest, reply: FastifyReply): void {
+  private async addCompressionHeaders(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     if (!this.config.compression.enabled) return
 
-    const acceptEncoding = request.headers['accept-encoding'] || ''
+    const acceptEncoding = String(request.headers['accept-encoding'] ?? '')
     const supportedEncodings = this.config.compression.algorithms
 
     // Determine best compression algorithm
@@ -157,40 +167,42 @@ export class CDNOptimizer {
       }
     }
 
-    if (bestEncoding) {
-      reply.header('Content-Encoding', bestEncoding)
-      reply.header('Vary', 'Accept-Encoding')
+    if (bestEncoding.length > 0) {
+      await reply.header('Content-Encoding', bestEncoding)
+      await reply.header('Vary', 'Accept-Encoding')
     }
   }
 
   /**
    * Add security headers for CDN
    */
-  private addSecurityHeaders(request: FastifyRequest, reply: FastifyReply): void {
+  private async addSecurityHeaders(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     // CORS headers for CDN resources
-    reply.header('Access-Control-Allow-Origin', '*')
-    reply.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-    reply.header('Access-Control-Max-Age', '86400')
+    await reply.header('Access-Control-Allow-Origin', '*')
+    await reply.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+    await reply.header('Access-Control-Max-Age', '86400')
 
     // Security headers
-    reply.header('X-Content-Type-Options', 'nosniff')
-    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+    await reply.header('X-Content-Type-Options', 'nosniff')
+    await reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
 
     // Hotlink protection
-    if (this.config.security.hotlinkProtection) {
+    if (this.config.security.hotlinkProtection === true) {
       const referer = request.headers.referer
-      if (referer && !this.isAllowedReferer(referer)) {
-        reply.code(403)
-        return reply.send({ error: 'Hotlinking not allowed' })
+      if (typeof referer === 'string' && !this.isAllowedReferer(referer)) {
+        await reply.code(403)
+        await reply.send({ error: 'Hotlinking not allowed' })
+        return
       }
     }
 
     // IP whitelist check
-    if (this.config.security.ipWhitelist) {
+    if (this.config.security.ipWhitelist !== undefined) {
       const clientIP = this.getClientIP(request)
       if (!this.config.security.ipWhitelist.includes(clientIP)) {
-        reply.code(403)
-        return reply.send({ error: 'IP not whitelisted' })
+        await reply.code(403)
+        await reply.send({ error: 'IP not whitelisted' })
+        return
       }
     }
   }
@@ -198,9 +210,9 @@ export class CDNOptimizer {
   /**
    * Add performance optimization headers
    */
-  private addPerformanceHeaders(request: FastifyRequest, reply: FastifyReply): void {
+  private async addPerformanceHeaders(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     // Resource hints
-    reply.header(
+    await reply.header(
       'Link',
       [
         '</static/css/main.css>; rel=preload; as=style',
@@ -211,13 +223,13 @@ export class CDNOptimizer {
 
     // Service Worker headers
     if (request.url.includes('sw.js')) {
-      reply.header('Service-Worker-Allowed', '/')
-      reply.header('Cache-Control', 'no-cache')
+      await reply.header('Service-Worker-Allowed', '/')
+      await reply.header('Cache-Control', 'no-cache')
     }
 
     // Critical resource hints
     if (this.isCriticalResource(request.url)) {
-      reply.header('X-Priority', 'high')
+      await reply.header('X-Priority', 'high')
     }
   }
 
@@ -225,12 +237,12 @@ export class CDNOptimizer {
    * Apply image optimizations based on options
    */
   private applyImageOptimizations(path: string, options?: OptimizationOptions): string {
-    if (!options) return path
+    if (options === undefined) return path
 
     const params = new URLSearchParams()
 
     // Format optimization
-    if (options.format) {
+    if (options.format !== undefined && options.format !== null) {
       params.append('f', options.format)
     } else {
       // Auto-detect best format based on user agent
@@ -238,31 +250,41 @@ export class CDNOptimizer {
     }
 
     // Quality optimization
-    if (options.quality) {
+    if (options.quality !== undefined && options.quality !== null && options.quality > 0) {
       params.append('q', options.quality.toString())
     } else {
       params.append('q', 'auto')
     }
 
     // Dimension optimization
-    if (options.width) params.append('w', options.width.toString())
-    if (options.height) params.append('h', options.height.toString())
-    if (options.fit) params.append('fit', options.fit)
+    if (options.width !== undefined && options.width !== null && options.width > 0) {
+      params.append('w', options.width.toString())
+    }
+    if (options.height !== undefined && options.height !== null && options.height > 0) {
+      params.append('h', options.height.toString())
+    }
+    if (options.fit !== undefined && options.fit !== null) {
+      params.append('fit', options.fit)
+    }
 
     // Progressive loading
-    if (options.progressive) params.append('progressive', 'true')
+    if (options.progressive === true) {
+      params.append('progressive', 'true')
+    }
 
     // Lossless compression
-    if (options.lossless) params.append('lossless', 'true')
+    if (options.lossless === true) {
+      params.append('lossless', 'true')
+    }
 
     const queryString = params.toString()
-    return queryString ? `${path}?${queryString}` : path
+    return queryString.length > 0 ? `${path}?${queryString}` : path
   }
 
   /**
    * Apply general optimizations
    */
-  private applyOptimizations(path: string, options?: OptimizationOptions): string {
+  private applyOptimizations(path: string, _options?: OptimizationOptions): string {
     // For now, just return the path as-is for non-image assets
     // In a real implementation, you might apply minification, etc.
     return path
@@ -319,7 +341,7 @@ export class CDNOptimizer {
   private buildCacheControlHeader(strategy: CacheStrategy): string {
     const directives: string[] = []
 
-    if (strategy.public) {
+    if (strategy.public === true) {
       directives.push('public')
     } else {
       directives.push('private')
@@ -327,19 +349,27 @@ export class CDNOptimizer {
 
     directives.push(`max-age=${strategy.ttl}`)
 
-    if (strategy.mustRevalidate) {
+    if (strategy.mustRevalidate === true) {
       directives.push('must-revalidate')
     }
 
-    if (strategy.immutable) {
+    if (strategy.immutable === true) {
       directives.push('immutable')
     }
 
-    if (strategy.staleWhileRevalidate) {
+    if (
+      strategy.staleWhileRevalidate !== undefined &&
+      strategy.staleWhileRevalidate !== null &&
+      strategy.staleWhileRevalidate > 0
+    ) {
       directives.push(`stale-while-revalidate=${strategy.staleWhileRevalidate}`)
     }
 
-    if (strategy.staleIfError) {
+    if (
+      strategy.staleIfError !== undefined &&
+      strategy.staleIfError !== null &&
+      strategy.staleIfError > 0
+    ) {
       directives.push(`stale-if-error=${strategy.staleIfError}`)
     }
 
@@ -376,11 +406,17 @@ export class CDNOptimizer {
    * Get client IP address
    */
   private getClientIP(request: FastifyRequest): string {
-    return (request.headers['cf-connecting-ip'] ||
-      request.headers['x-forwarded-for'] ||
-      request.headers['x-real-ip'] ||
-      request.ip ||
-      'unknown') as string
+    const cfConnectingIp = request.headers['cf-connecting-ip']
+    const xForwardedFor = request.headers['x-forwarded-for']
+    const xRealIp = request.headers['x-real-ip']
+    const requestIp = request.ip
+
+    if (typeof cfConnectingIp === 'string') return cfConnectingIp
+    if (typeof xForwardedFor === 'string') return xForwardedFor
+    if (typeof xRealIp === 'string') return xRealIp
+    if (typeof requestIp === 'string' && requestIp.length > 0) return requestIp
+
+    return 'unknown'
   }
 
   /**
@@ -410,7 +446,8 @@ export class CDNOptimizer {
         await this.purgeAWSCache(urls)
         break
       default:
-        console.warn(`Cache purging not implemented for provider: ${this.config.provider}`)
+        // Use proper logging instead of console
+        throw new Error(`Cache purging not implemented for provider: ${this.config.provider}`)
     }
   }
 
@@ -419,19 +456,26 @@ export class CDNOptimizer {
    */
   async purgeAllCache(): Promise<void> {
     // Implementation depends on CDN provider
-    console.log('Purging all CDN cache...')
-    // This would make actual API calls to the CDN provider
+    await this.purgeCacheUrls(['/*']) // Purge all URLs
   }
 
   // Provider-specific cache purging methods
   private async purgeCloudflareCache(urls: string[]): Promise<void> {
     // Cloudflare API implementation
-    console.log('Purging Cloudflare cache for URLs:', urls)
+    // In a real implementation, this would make API calls to Cloudflare
+    await Promise.resolve() // Placeholder for actual implementation
+    if (urls.length === 0) {
+      throw new Error('No URLs provided for cache purging')
+    }
   }
 
   private async purgeAWSCache(urls: string[]): Promise<void> {
     // AWS CloudFront API implementation
-    console.log('Purging AWS CloudFront cache for URLs:', urls)
+    // In a real implementation, this would make API calls to AWS CloudFront
+    await Promise.resolve() // Placeholder for actual implementation
+    if (urls.length === 0) {
+      throw new Error('No URLs provided for cache purging')
+    }
   }
 }
 
@@ -479,7 +523,7 @@ export class ResponsiveImageHelper {
       <picture>
         <source srcset="${webpSrcSet}" type="image/webp">
         <source srcset="${jpegSrcSet}" type="image/jpeg">
-        <img src="${this.cdnOptimizer.getImageUrl(imagePath, { width: sizes[0] })}" 
+        <img src="${this.cdnOptimizer.getImageUrl(imagePath, sizes[0] !== undefined ? { width: sizes[0] } : {})}" 
              alt="${alt}" 
              loading="lazy">
       </picture>

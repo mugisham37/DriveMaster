@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Mock TensorFlow.js first
-vi.mock('@tensorflow/tfjs-node', () => ({
+vi.mock('@tensorflow/tfjs', () => ({
   ready: vi.fn().mockResolvedValue(undefined),
   getBackend: vi.fn().mockReturnValue('cpu'),
   sequential: vi.fn().mockReturnValue({

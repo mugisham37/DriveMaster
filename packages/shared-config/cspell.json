@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "nosniff",
+    "hotlinking",
+    "drivemaster",
+    "fastify",
+    "cloudflare",
+    "avif",
+    "webp",
+    "jpeg",
+    "lossless",
+    "srcset",
+    "preload",
+    "preconnect"
+  ],
+  "ignorePaths": ["node_modules/**", "dist/**", "*.json"]
+}

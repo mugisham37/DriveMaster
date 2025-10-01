@@ -1,6 +1,6 @@
 import Redis from 'ioredis'
 import NodeCache from 'node-cache'
-import { compress, decompress } from 'lz4'
+import * as pako from 'pako'
 import {
   CacheConfig,
   CacheLayer,
@@ -367,12 +367,13 @@ export class CacheManager {
 
   private async compressValue<T>(value: T): Promise<Buffer> {
     const serialized = JSON.stringify(value)
-    return compress(Buffer.from(serialized))
+    const compressed = pako.deflate(serialized)
+    return Buffer.from(compressed)
   }
 
   private async decompressValue<T>(compressed: Buffer): Promise<T> {
-    const decompressed = decompress(compressed)
-    return JSON.parse(decompressed.toString())
+    const decompressed = pako.inflate(compressed, { to: 'string' })
+    return JSON.parse(decompressed)
   }
 
   private isEntry<T>(value: any): value is CacheEntry<T> {

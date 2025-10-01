@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs'
 import { createHash } from 'crypto'
 import { performance } from 'perf_hooks'
 

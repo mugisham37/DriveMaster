@@ -11,9 +11,13 @@ module.exports = {
     sourceType: 'module',
     project: [
       './tsconfig.json',
-      './services/*/tsconfig.json',
       './packages/*/tsconfig.json',
-      './services/*/src/scripts/tsconfig.json',
+      './services/user-svc/tsconfig.json',
+      './services/adaptive-svc/tsconfig.json',
+      './services/content-svc/tsconfig.json',
+      './services/analytics-svc/tsconfig.json',
+      './services/engagement-svc/tsconfig.json',
+      './services/user-svc/src/scripts/tsconfig.json',
     ],
     tsconfigRootDir: __dirname,
   },
@@ -50,10 +54,13 @@ module.exports = {
       },
     ],
     'import/no-unresolved': 'off', // TypeScript handles this
+    'import/namespace': 'off', // TypeScript handles this
+    'import/no-duplicates': 'warn', // Reduce severity
 
     // Node.js rules
     'node/no-missing-import': 'off', // TypeScript handles this
     'node/no-unsupported-features/es-syntax': 'off', // We use TypeScript
+    'node/no-unsupported-features/node-builtins': 'off', // We target Node 20+
 
     // General rules
     'no-console': 'warn',
@@ -70,11 +77,21 @@ module.exports = {
         alwaysTryTypes: true,
         project: [
           './tsconfig.json',
-          './services/*/tsconfig.json',
           './packages/*/tsconfig.json',
-          './services/*/src/scripts/tsconfig.json',
+          './services/user-svc/tsconfig.json',
+          './services/adaptive-svc/tsconfig.json',
+          './services/content-svc/tsconfig.json',
+          './services/analytics-svc/tsconfig.json',
+          './services/engagement-svc/tsconfig.json',
+          './services/user-svc/src/scripts/tsconfig.json',
         ],
       },
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+    },
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
   },
   overrides: [

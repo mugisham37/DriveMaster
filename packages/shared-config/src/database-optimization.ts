@@ -1,5 +1,6 @@
-import { Pool, PoolClient, PoolConfig } from 'pg'
 import { performance } from 'perf_hooks'
+
+import { Pool, PoolClient, PoolConfig } from 'pg'
 
 export interface DatabaseConfig {
   primary: {
