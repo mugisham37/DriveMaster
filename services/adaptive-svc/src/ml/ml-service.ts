@@ -32,6 +32,59 @@ export interface MLInsights {
   nextMilestone: string
 }
 
+export interface UserProfile {
+  createdAt?: Date
+  totalSessions?: number
+  avgSessionLength?: number
+  overallAccuracy?: number
+  avgMastery?: number
+  conceptsCompleted?: number
+  currentStreak?: number
+  maxStreak?: number
+  achievementsUnlocked?: number
+  preferredTimeOfDay?: number
+  avgResponseTime?: number
+  helpRequestFrequency?: number
+  friendsCount?: number
+  socialInteractions?: number
+}
+
+export interface RecentActivity {
+  createdAt: Date | string
+  masteryAfter?: number
+  masteryBefore?: number
+}
+
+export interface KnowledgeState {
+  currentMastery?: number
+  learningVelocity?: number
+  totalInteractions?: number
+  correctAnswers?: number
+  pL0?: number
+  pT?: number
+  pG?: number
+  pS?: number
+  decayRate?: number
+  lastInteraction?: Date
+}
+
+export interface ContextualInfo {
+  fatigueLevel?: number
+  studyStreak?: number
+  sessionLength?: number
+  conceptDifficulty?: number
+  avgResponseTime?: number
+  avgConfidence?: number
+  recentEngagement?: number
+  completionRate?: number
+  preferredContentType?: string
+}
+
+export interface ConceptMastery {
+  concept: string
+  mastery: number
+}
+
 export class MLService {
   private inferenceEngine: MLInferenceEngine
   private vectorEngine: VectorSearchEngine
@@ -40,10 +93,10 @@ export class MLService {
 
   constructor(config?: Partial<MLServiceConfig>) {
     this.config = {
-      pineconeApiKey: config?.pineconeApiKey || process.env.PINECONE_API_KEY || '',
+      pineconeApiKey: config?.pineconeApiKey ?? process.env.PINECONE_API_KEY ?? '',
       pineconeEnvironment:
-        config?.pineconeEnvironment || process.env.PINECONE_ENVIRONMENT || 'us-west1-gcp',
-      modelBasePath: config?.modelBasePath || process.env.ML_MODEL_PATH || './models',
+        config?.pineconeEnvironment ?? process.env.PINECONE_ENVIRONMENT ?? 'us-west1-gcp',
+      modelBasePath: config?.modelBasePath ?? process.env.ML_MODEL_PATH ?? './models',
       enableModelDrift: config?.enableModelDrift ?? true,
       enableABTesting: config?.enableABTesting ?? true,
     }
@@ -59,143 +112,130 @@ export class MLService {
    * Initialize ML service with models and vector indexes
    */
   async initialize(): Promise<void> {
-    try {
-      console.log('Initializing ML Service...')
+    // Initialize vector search engine
+    await this.vectorEngine.initialize()
 
-      // Initialize vector search engine
-      await this.vectorEngine.initialize()
+    // Load ML models
+    await this.loadModels()
 
-      // Load ML models
-      await this.loadModels()
-
-      this.initialized = true
-      console.log('ML Service initialized successfully')
-    } catch (error) {
-      console.error('Failed to initialize ML Service:', error)
-      throw error
-    }
+    this.initialized = true
   }
 
   /**
    * Load all ML models
    */
   private async loadModels(): Promise<void> {
-    try {
-      // Load learning outcome prediction model
-      await this.inferenceEngine.loadModel(
-        `${this.config.modelBasePath}/learning-outcome/model.json`,
-        {
-          id: 'learning-outcome-predictor',
-          name: 'Learning Outcome Predictor',
-          version: '1.0.0',
-          type: 'classification',
-          inputShape: [15], // Number of features
-          outputShape: [1],
-          metadata: {
-            accuracy: 0.87,
-            f1Score: 0.84,
-            trainingDate: new Date('2024-01-15'),
-            features: [
-              'currentMastery',
-              'learningVelocity',
-              'totalInteractions',
-              'accuracyRate',
-              'pL0',
-              'pT',
-              'pG',
-              'pS',
-              'decayRate',
-              'timeOfDay',
-              'dayOfWeek',
-              'hoursSinceLastInteraction',
-              'fatigueLevel',
-              'studyStreak',
-              'sessionLength',
-            ],
-            description: 'Predicts probability of successful learning outcome',
-          },
+    // Load learning outcome prediction model
+    await this.inferenceEngine.loadModel(
+      `${this.config.modelBasePath}/learning-outcome/model.json`,
+      {
+        id: 'learning-outcome-predictor',
+        name: 'Learning Outcome Predictor',
+        version: '1.0.0',
+        type: 'classification',
+        inputShape: [15], // Number of features
+        outputShape: [1],
+        metadata: {
+          accuracy: 0.87,
+          f1Score: 0.84,
+          trainingDate: new Date('2024-01-15'),
+          features: [
+            'currentMastery',
+            'learningVelocity',
+            'totalInteractions',
+            'accuracyRate',
+            'pL0',
+            'pT',
+            'pG',
+            'pS',
+            'decayRate',
+            'timeOfDay',
+            'dayOfWeek',
+            'hoursSinceLastInteraction',
+            'fatigueLevel',
+            'studyStreak',
+            'sessionLength',
+          ],
+          description: 'Predicts probability of successful learning outcome',
         },
-      )
+      },
+    )
 
-      // Load difficulty optimization model
-      await this.inferenceEngine.loadModel(
-        `${this.config.modelBasePath}/difficulty-optimizer/model.json`,
-        {
-          id: 'difficulty-optimizer',
-          name: 'Difficulty Optimizer',
-          version: '1.0.0',
-          type: 'regression',
-          inputShape: [15],
-          outputShape: [1],
-          metadata: {
-            accuracy: 0.82,
-            trainingDate: new Date('2024-01-15'),
-            features: [
-              'currentMastery',
-              'learningVelocity',
-              'totalInteractions',
-              'accuracyRate',
-              'pL0',
-              'pT',
-              'pG',
-              'pS',
-              'decayRate',
-              'timeOfDay',
-              'dayOfWeek',
-              'hoursSinceLastInteraction',
-              'fatigueLevel',
-              'studyStreak',
-              'sessionLength',
-            ],
-            description: 'Predicts optimal difficulty level for maximum learning',
-          },
+    // Load difficulty optimization model
+    await this.inferenceEngine.loadModel(
+      `${this.config.modelBasePath}/difficulty-optimizer/model.json`,
+      {
+        id: 'difficulty-optimizer',
+        name: 'Difficulty Optimizer',
+        version: '1.0.0',
+        type: 'regression',
+        inputShape: [15],
+        outputShape: [1],
+        metadata: {
+          accuracy: 0.82,
+          trainingDate: new Date('2024-01-15'),
+          features: [
+            'currentMastery',
+            'learningVelocity',
+            'totalInteractions',
+            'accuracyRate',
+            'pL0',
+            'pT',
+            'pG',
+            'pS',
+            'decayRate',
+            'timeOfDay',
+            'dayOfWeek',
+            'hoursSinceLastInteraction',
+            'fatigueLevel',
+            'studyStreak',
+            'sessionLength',
+          ],
+          description: 'Predicts optimal difficulty level for maximum learning',
         },
-      )
+      },
+    )
 
-      // Load dropout prediction model
-      await this.inferenceEngine.loadModel(
-        `${this.config.modelBasePath}/dropout-predictor/model.json`,
-        {
-          id: 'dropout-predictor',
-          name: 'Dropout Risk Predictor',
-          version: '1.0.0',
-          type: 'classification',
-          inputShape: [18], // Different feature set for dropout prediction
-          outputShape: [1],
-          metadata: {
-            accuracy: 0.91,
-            f1Score: 0.88,
-            trainingDate: new Date('2024-01-15'),
-            features: [
-              'daysSinceRegistration',
-              'totalSessions',
-              'avgSessionLength',
-              'sessionsLast7Days',
-              'sessionsLast30Days',
-              'activityTrend',
-              'overallAccuracy',
-              'avgMastery',
-              'conceptsCompleted',
-              'streakLength',
-              'maxStreak',
-              'achievementsUnlocked',
-              'preferredTimeOfDay',
-              'avgResponseTime',
-              'helpRequestFrequency',
-              'friendsCount',
-              'socialInteractions',
-              'engagementScore',
-            ],
-            description: 'Predicts risk of user dropout within next 7 days',
-          },
+    // Load dropout prediction model
+    await this.inferenceEngine.loadModel(
+      `${this.config.modelBasePath}/dropout-predictor/model.json`,
+      {
+        id: 'dropout-predictor',
+        name: 'Dropout Risk Predictor',
+        version: '1.0.0',
+        type: 'classification',
+        inputShape: [18], // Different feature set for dropout prediction
+        outputShape: [1],
+        metadata: {
+          accuracy: 0.91,
+          f1Score: 0.88,
+          trainingDate: new Date('2024-01-15'),
+          features: [
+            'daysSinceRegistration',
+            'totalSessions',
+            'avgSessionLength',
+            'sessionsLast7Days',
+            'sessionsLast30Days',
+            'activityTrend',
+            'overallAccuracy',
+            'avgMastery',
+            'conceptsCompleted',
+            'streakLength',
+            'maxStreak',
+            'achievementsUnlocked',
+            'preferredTimeOfDay',
+            'avgResponseTime',
+            'helpRequestFrequency',
+            'friendsCount',
+            'socialInteractions',
+            'engagementScore',
+          ],
+          description: 'Predicts risk of user dropout within next 7 days',
         },
-      )
+      },
+    )
 
-      console.log('All ML models loaded successfully')
-    } catch (error) {
-      console.warn('Some ML models failed to load, using fallback algorithms:', error)
-      // Continue without ML models - fallback to algorithmic approaches
-    }
+    // All ML models loaded successfully
   }
 
   /**
@@ -217,101 +257,92 @@ export class MLService {
       throw new Error('ML Service not initialized')
     }
 
-    try {
-      // Get vector-based recommendations
-      const query: RecommendationQuery = {
-        userId,
-        conceptKey,
-        ...(options.contentType && { contentType: options.contentType }),
-        ...(options.targetDifficulty !== undefined && {
-          targetDifficulty: options.targetDifficulty,
-        }),
-        ...(options.excludeIds && { excludeIds: options.excludeIds }),
-        topK: (options.maxItems || 10) * 2, // Get more candidates for ML filtering
-      }
-
-      const vectorRecommendations = await this.vectorEngine.getContentRecommendations(query)
-
-      // Enhance recommendations with ML predictions
-      const enhancedRecommendations: EnhancedRecommendation[] = []
-
-      for (const item of vectorRecommendations.hybrid) {
-        try {
-          // Get ML predictions for this item
-          const itemContextualInfo = {
-            ...contextualInfo,
-            conceptDifficulty: item.metadata.difficulty,
-            // Map contentType to appropriate contextual info if needed
-          }
-
-          const [learningOutcome, optimalDifficulty] = await Promise.all([
-            this.inferenceEngine
-              .predictLearningOutcome(userId, conceptKey, knowledgeState, itemContextualInfo)
-              .catch(() => ({ prediction: 0.5, confidence: 0.5 }) as InferenceResult),
-
-            this.inferenceEngine
-              .predictOptimalDifficulty(userId, conceptKey, knowledgeState, itemContextualInfo)
-              .catch(() => ({ prediction: 0.5, confidence: 0.5 }) as InferenceResult),
-          ])
-
-          // Calculate engagement score based on item metadata and user preferences
-          const engagementScore = this.calculateEngagementScore(
-            item,
-            knowledgeState,
-            contextualInfo,
-          )
-
-          // Combine vector similarity with ML predictions
-          const combinedScore = this.combineScores(
-            item.score,
-            learningOutcome.prediction as number,
-            engagementScore,
-            Math.abs((optimalDifficulty.prediction as number) - item.metadata.difficulty),
-          )
-
-          enhancedRecommendations.push({
-            itemId: item.id,
-            score: combinedScore,
-            confidence: (learningOutcome.confidence + optimalDifficulty.confidence) / 2,
-            reasoning: this.generateReasoning(
-              item,
-              learningOutcome,
-              optimalDifficulty,
-              engagementScore,
-            ),
-            metadata: item.metadata,
-            mlPredictions: {
-              learningOutcome: learningOutcome.prediction as number,
-              optimalDifficulty: optimalDifficulty.prediction as number,
-              engagementScore,
-            },
-          })
-        } catch (error) {
-          console.warn(`Failed to enhance recommendation for item ${item.id}:`, error)
-          // Fallback to vector score only
-          enhancedRecommendations.push({
-            itemId: item.id,
-            score: item.score,
-            confidence: 0.5,
-            reasoning: 'Based on content similarity',
-            metadata: item.metadata,
-            mlPredictions: {
-              learningOutcome: 0.5,
-              optimalDifficulty: 0.5,
-              engagementScore: 0.5,
-            },
-          })
-        }
-      }
-
-      // Sort by combined score and return top items
-      return enhancedRecommendations
-        .sort((a, b) => b.score - a.score)
-        .slice(0, options.maxItems || 10)
-    } catch (error) {
-      console.error('Failed to get enhanced recommendations:', error)
-      throw error
+    // Get vector-based recommendations
+    const query: RecommendationQuery = {
+      userId,
+      conceptKey,
+      ...(options.contentType != null && { contentType: options.contentType }),
+      ...(options.targetDifficulty !== undefined && {
+        targetDifficulty: options.targetDifficulty,
+      }),
+      ...(options.excludeIds != null && { excludeIds: options.excludeIds }),
+      topK: (options.maxItems ?? 10) * 2, // Get more candidates for ML filtering
     }
+
+    const vectorRecommendations = await this.vectorEngine.getContentRecommendations(query)
+
+    // Enhance recommendations with ML predictions
+    const enhancedRecommendations: EnhancedRecommendation[] = []
+
+    for (const item of vectorRecommendations.hybrid) {
+      try {
+        // Get ML predictions for this item
+        const itemContextualInfo: ContextualInfo = {
+          ...contextualInfo,
+          conceptDifficulty:
+            typeof item.metadata.difficulty === 'number' ? item.metadata.difficulty : 0.5,
+          // Map contentType to appropriate contextual info if needed
+        }
+
+        const [learningOutcome, optimalDifficulty] = await Promise.all([
+          this.inferenceEngine
+            .predictLearningOutcome(userId, conceptKey, knowledgeState, itemContextualInfo)
+            .catch(() => ({ prediction: 0.5, confidence: 0.5 }) as InferenceResult),
+
+          this.inferenceEngine
+            .predictOptimalDifficulty(userId, conceptKey, knowledgeState, itemContextualInfo)
+            .catch(() => ({ prediction: 0.5, confidence: 0.5 }) as InferenceResult),
+        ])
+
+        // Calculate engagement score based on item metadata and user preferences
+        const engagementScore = this.calculateEngagementScore(item, knowledgeState, contextualInfo)
+
+        // Combine vector similarity with ML predictions
+        const combinedScore = this.combineScores(
+          item.score,
+          learningOutcome.prediction as number,
+          engagementScore,
+          Math.abs((optimalDifficulty.prediction as number) - item.metadata.difficulty),
+        )
+
+        enhancedRecommendations.push({
+          itemId: item.id,
+          score: combinedScore,
+          confidence: (learningOutcome.confidence + optimalDifficulty.confidence) / 2,
+          reasoning: this.generateReasoning(
+            item,
+            learningOutcome,
+            optimalDifficulty,
+            engagementScore,
+          ),
+          metadata: item.metadata,
+          mlPredictions: {
+            learningOutcome: learningOutcome.prediction as number,
+            optimalDifficulty: optimalDifficulty.prediction as number,
+            engagementScore,
+          },
+        })
+      } catch (error) {
+        // Failed to enhance recommendation for item, fallback to vector score only
+        enhancedRecommendations.push({
+          itemId: item.id,
+          score: item.score,
+          confidence: 0.5,
+          reasoning: 'Based on content similarity',
+          metadata: item.metadata,
+          mlPredictions: {
+            learningOutcome: 0.5,
+            optimalDifficulty: 0.5,
+            engagementScore: 0.5,
+          },
+        })
+      }
+    }
+
+    // Sort by combined score and return top items
+    return enhancedRecommendations
+      .sort((a, b) => b.score - a.score)
+      .slice(0, options.maxItems ?? 10)
   }
 
   /**
@@ -319,64 +350,66 @@ export class MLService {
    */
   async getUserMLInsights(
     userId: string,
-    userProfile: Record<string, unknown>,
-    knowledgeStates: Record<string, unknown>,
-    recentActivity: Record<string, unknown>[],
+    userProfile: UserProfile,
+    knowledgeStates: Record<string, KnowledgeState>,
+    recentActivity: RecentActivity[],
   ): Promise<MLInsights> {
     if (!this.initialized) {
       throw new Error('ML Service not initialized')
     }
 
-    try {
-      // Predict dropout risk
-      const dropoutPrediction = await this.inferenceEngine
-        .predictDropoutRisk(userId, userProfile, recentActivity)
-        .catch(() => ({ prediction: 0.3, confidence: 0.5 }) as InferenceResult)
+    // Convert UserProfile to match inference engine expectations
+    const inferenceUserProfile = {
+      ...userProfile,
+      createdAt: userProfile.createdAt ?? new Date(),
+    }
 
-      // Calculate learning velocity from knowledge states
-      const masteryValues = Object.values(knowledgeStates).map((ks: any) => ks.currentMastery || 0)
-      const avgMastery = masteryValues.reduce((a, b) => a + b, 0) / masteryValues.length
-      const learningVelocity = this.calculateLearningVelocity(recentActivity)
+    // Predict dropout risk
+    const dropoutPrediction = await this.inferenceEngine
+      .predictDropoutRisk(userId, inferenceUserProfile, recentActivity)
+      .catch(() => ({ prediction: 0.3, confidence: 0.5 }) as InferenceResult)
 
-      // Determine optimal study time based on activity patterns
-      const optimalStudyTime = this.determineOptimalStudyTime(recentActivity)
+    // Calculate learning velocity from knowledge states
+    const masteryValues = Object.values(knowledgeStates).map((ks) => ks.currentMastery ?? 0)
+    const avgMastery =
+      masteryValues.length > 0 ? masteryValues.reduce((a, b) => a + b, 0) / masteryValues.length : 0
+    const learningVelocity = this.calculateLearningVelocity(recentActivity)
 
-      // Calculate recommended difficulty based on current performance
-      const recommendedDifficulty = Math.min(0.9, Math.max(0.1, avgMastery + 0.1))
+    // Determine optimal study time based on activity patterns
+    const optimalStudyTime = this.determineOptimalStudyTime(recentActivity)
 
-      // Identify strong and weak concepts
-      const conceptMasteries = Object.entries(knowledgeStates)
-        .map(([concept, ks]: [string, any]) => ({
-          concept,
-          mastery: ks.currentMastery || 0,
-        }))
-        .sort((a, b) => b.mastery - a.mastery)
+    // Calculate recommended difficulty based on current performance
+    const recommendedDifficulty = Math.min(0.9, Math.max(0.1, avgMastery + 0.1))
 
-      const strongConcepts = conceptMasteries
-        .filter((c) => c.mastery > 0.7)
-        .slice(0, 5)
-        .map((c) => c.concept)
+    // Identify strong and weak concepts
+    const conceptMasteries: ConceptMastery[] = Object.entries(knowledgeStates)
+      .map(([concept, ks]) => ({
+        concept,
+        mastery: ks.currentMastery ?? 0,
+      }))
+      .sort((a, b) => b.mastery - a.mastery)
 
-      const weakConcepts = conceptMasteries
-        .filter((c) => c.mastery < 0.3)
-        .slice(0, 5)
-        .map((c) => c.concept)
+    const strongConcepts = conceptMasteries
+      .filter((c) => c.mastery > 0.7)
+      .slice(0, 5)
+      .map((c) => c.concept)
 
-      // Determine next milestone
-      const nextMilestone = this.determineNextMilestone(conceptMasteries, userProfile)
+    const weakConcepts = conceptMasteries
+      .filter((c) => c.mastery < 0.3)
+      .slice(0, 5)
+      .map((c) => c.concept)
 
-      return {
-        dropoutRisk: dropoutPrediction.prediction as number,
-        learningVelocity,
-        optimalStudyTime,
-        recommendedDifficulty,
-        strongConcepts,
-        weakConcepts,
-        nextMilestone,
-      }
-    } catch (error) {
-      console.error('Failed to get ML insights:', error)
-      throw error
+    // Determine next milestone
+    const nextMilestone = this.determineNextMilestone(conceptMasteries, userProfile)
+
+    return {
+      dropoutRisk: dropoutPrediction.prediction as number,
+      learningVelocity,
+      optimalStudyTime,
+      recommendedDifficulty,
+      strongConcepts,
+      weakConcepts,
+      nextMilestone,
     }
   }
 
@@ -385,8 +418,8 @@ export class MLService {
    */
   async updateUserProfile(
     userId: string,
-    learningHistory: any[],
-    preferences: Record<string, any>,
+    learningHistory: RecentActivity[],
+    preferences: Record<string, unknown>,
     knowledgeStates: Record<string, number>,
   ): Promise<void> {
     if (!this.initialized) return
@@ -399,7 +432,7 @@ export class MLService {
         knowledgeStates,
       })
     } catch (error) {
-      console.error('Failed to update user profile:', error)
+      // Failed to update user profile
     }
   }
 
@@ -421,7 +454,7 @@ export class MLService {
       const embedding = await this.vectorEngine.generateContentEmbedding(content)
       await this.vectorEngine.indexContent(embedding)
     } catch (error) {
-      console.error('Failed to index content:', error)
+      // Failed to index content
     }
   }
 
@@ -430,27 +463,31 @@ export class MLService {
    */
   private calculateEngagementScore(
     item: SimilarityResult,
-    knowledgeState: any,
-    contextualInfo: Record<string, any>,
+    knowledgeState: KnowledgeState,
+    contextualInfo: ContextualInfo,
   ): number {
     let score = 0.5 // Base score
 
     // Difficulty alignment
-    const userMastery = knowledgeState?.currentMastery || 0.3
-    const difficultyGap = Math.abs(item.metadata.difficulty - (userMastery + 0.1))
+    const userMastery = knowledgeState.currentMastery ?? 0.3
+    const itemDifficulty =
+      typeof item.metadata.difficulty === 'number' ? item.metadata.difficulty : 0.5
+    const difficultyGap = Math.abs(itemDifficulty - (userMastery + 0.1))
     score += (1 - difficultyGap) * 0.3
 
     // Content type preference
-    const preferredType = Boolean(contextualInfo.preferredContentType) || 'question'
+    const preferredType = contextualInfo.preferredContentType ?? 'question'
     if (item.metadata.contentType === preferredType) {
       score += 0.2
     }
 
     // Recency bonus for new content
-    const createdAt = new Date(item.metadata.createdAt)
-    const daysSinceCreated = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
-    if (daysSinceCreated < 7) {
-      score += 0.1
+    if (item.metadata.createdAt != null) {
+      const createdAt = new Date(item.metadata.createdAt as string)
+      const daysSinceCreated = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      if (daysSinceCreated < 7) {
+        score += 0.1
+      }
     }
 
     return Math.min(1, Math.max(0, score))
@@ -510,7 +547,7 @@ export class MLService {
   /**
    * Calculate learning velocity from recent activity
    */
-  private calculateLearningVelocity(recentActivity: any[]): number {
+  private calculateLearningVelocity(recentActivity: RecentActivity[]): number {
     if (recentActivity.length < 2) return 1.0
 
     const sortedActivity = recentActivity
@@ -519,8 +556,9 @@ export class MLService {
 
     if (sortedActivity.length < 2) return 1.0
 
-    const masteryGains = sortedActivity.map((a) => a.masteryAfter - a.masteryBefore)
-    const avgGain = masteryGains.reduce((a, b) => a + b, 0) / masteryGains.length
+    const masteryGains = sortedActivity.map((a) => (a.masteryAfter ?? 0) - (a.masteryBefore ?? 0))
+    const avgGain =
+      masteryGains.length > 0 ? masteryGains.reduce((a, b) => a + b, 0) / masteryGains.length : 0
 
     return Math.max(0.1, Math.min(3.0, 1 + avgGain * 10))
   }
@@ -528,15 +566,21 @@ export class MLService {
   /**
    * Determine optimal study time based on activity patterns
    */
-  private determineOptimalStudyTime(recentActivity: any[]): string {
-    const hourCounts = new Array(24).fill(0)
+  private determineOptimalStudyTime(recentActivity: RecentActivity[]): string {
+    const hourCounts: number[] = Array.from({ length: 24 }, () => 0)
 
     for (const activity of recentActivity) {
       const hour = new Date(activity.createdAt).getHours()
-      hourCounts[hour]++
+      if (hour >= 0 && hour < 24) {
+        const currentCount = hourCounts[hour]
+        if (typeof currentCount === 'number') {
+          hourCounts[hour] = currentCount + 1
+        }
+      }
     }
 
-    const peakHour = hourCounts.indexOf(Math.max(...hourCounts))
+    const maxCount = hourCounts.reduce((max: number, count: number) => Math.max(max, count), 0)
+    const peakHour = hourCounts.indexOf(maxCount)
     return `${peakHour}:00`
   }
 
@@ -544,8 +588,8 @@ export class MLService {
    * Determine next learning milestone
    */
   private determineNextMilestone(
-    conceptMasteries: { concept: string; mastery: number }[],
-    _userProfile: any,
+    conceptMasteries: ConceptMastery[],
+    _userProfile: UserProfile,
   ): string {
     const weakestConcept = conceptMasteries[conceptMasteries.length - 1]
 
@@ -569,7 +613,7 @@ export class MLService {
   getHealthStatus(): {
     initialized: boolean
     modelsLoaded: number
-    vectorIndexStats: any
+    vectorIndexStats: string
   } {
     return {
       initialized: this.initialized,
@@ -585,6 +629,5 @@ export class MLService {
     this.inferenceEngine.dispose()
     this.vectorEngine.dispose()
     this.initialized = false
-    console.log('ML Service disposed')
   }
 }

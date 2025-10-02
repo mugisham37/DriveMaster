@@ -34,11 +34,18 @@ export interface ModelServingConfig {
   batchTimeoutMs: number
 }
 
+export interface PredictionResult {
+  prediction: number | number[]
+  confidence: number
+  latency: number
+  cached: boolean
+}
+
 export interface BatchInferenceRequest {
   id: string
   features: Record<string, number>
   timestamp: number
-  resolve: (result: unknown) => void
+  resolve: (result: PredictionResult) => void
   reject: (error: unknown) => void
 }
 
@@ -143,11 +150,8 @@ export class ModelServer extends EventEmitter {
         await this.warmupModel(metadata.id, servingConfig.warmupRequests)
       }
 
-      console.log(`Model ${metadata.id} loaded successfully`)
-
       this.emit('modelLoaded', { modelId: metadata.id })
     } catch (error) {
-      console.error(`Failed to load model ${metadata.id}:`, error)
       throw new Error(`Model loading failed: ${(error as Error).message}`)
     }
   }
@@ -193,8 +197,6 @@ export class ModelServer extends EventEmitter {
     const metadata = this.modelMetadata.get(modelId)
     if (!metadata) return
 
-    console.log(`Warming up model ${modelId} with ${warmupRequests} requests...`)
-
     const dummyFeatures: Record<string, number> = {}
     metadata.features.forEach((feature) => {
       dummyFeatures[feature] = Math.random()
@@ -206,7 +208,6 @@ export class ModelServer extends EventEmitter {
     )
 
     await Promise.all(warmupPromises)
-    console.log(`Model ${modelId} warmup completed`)
   }
 
   /**
@@ -216,12 +217,7 @@ export class ModelServer extends EventEmitter {
     modelId: string,
     features: Record<string, number>,
     options: { timeout?: number; priority?: 'high' | 'normal' | 'low' } = {},
-  ): Promise<{
-    prediction: number | number[]
-    confidence: number
-    latency: number
-    cached: boolean
-  }> {
+  ): Promise<PredictionResult> {
     const config = this.modelConfigs.get(modelId)
     if (!config) {
       throw new Error(`Model ${modelId} not found`)
@@ -248,12 +244,7 @@ export class ModelServer extends EventEmitter {
   private async directPredict(
     modelId: string,
     features: Record<string, number>,
-  ): Promise<{
-    prediction: number | number[]
-    confidence: number
-    latency: number
-    cached: boolean
-  }> {
+  ): Promise<PredictionResult> {
     const startTime = performance.now()
     const model = this.models.get(modelId)
     const metadata = this.modelMetadata.get(modelId)
@@ -263,7 +254,7 @@ export class ModelServer extends EventEmitter {
     }
 
     // Convert features to tensor
-    const featureArray = metadata.features.map((feature) => features[feature] || 0)
+    const featureArray = metadata.features.map((feature) => features[feature] ?? 0)
     const inputTensor = tf.tensor2d([featureArray], [1, featureArray.length])
 
     try {
@@ -312,14 +303,13 @@ export class ModelServer extends EventEmitter {
     modelId: string,
     features: Record<string, number>,
     options: { timeout?: number; priority?: 'high' | 'normal' | 'low' },
-  ): Promise<{
-    prediction: number | number[]
-    confidence: number
-    latency: number
-    cached: boolean
-  }> {
-    const config = this.modelConfigs.get(modelId)!
-    const queue = this.requestQueue.get(modelId)!
+  ): Promise<PredictionResult> {
+    const config = this.modelConfigs.get(modelId)
+    const queue = this.requestQueue.get(modelId)
+
+    if (!config || !queue) {
+      throw new Error(`Model ${modelId} not found or not properly configured`)
+    }
 
     return new Promise((resolve, reject) => {
       const request: BatchInferenceRequest = {
@@ -346,15 +336,15 @@ export class ModelServer extends EventEmitter {
           queue.splice(index, 1)
           reject(new Error('Request timeout'))
         }
-      }, options.timeout || config.timeoutMs)
+      }, options.timeout ?? config.timeoutMs)
 
       // Process batch if queue is full or start timer
       if (queue.length >= config.batchSize) {
-        this.processBatch(modelId)
+        void this.processBatch(modelId)
         clearTimeout(timeout)
       } else if (!this.batchTimers.has(modelId)) {
         const timer = setTimeout(() => {
-          this.processBatch(modelId)
+          void this.processBatch(modelId)
           clearTimeout(timeout)
         }, config.batchTimeoutMs)
         this.batchTimers.set(modelId, timer)
@@ -366,10 +356,14 @@ export class ModelServer extends EventEmitter {
    * Process a batch of inference requests
    */
   private async processBatch(modelId: string): Promise<void> {
-    const queue = this.requestQueue.get(modelId)!
-    const config = this.modelConfigs.get(modelId)!
-    const model = this.models.get(modelId)!
-    const metadata = this.modelMetadata.get(modelId)!
+    const queue = this.requestQueue.get(modelId)
+    const config = this.modelConfigs.get(modelId)
+    const model = this.models.get(modelId)
+    const metadata = this.modelMetadata.get(modelId)
+
+    if (!queue || !config || !model || !metadata) {
+      return
+    }
 
     if (queue.length === 0) return
 
@@ -382,12 +376,11 @@ export class ModelServer extends EventEmitter {
 
     // Extract batch
     const batch = queue.splice(0, config.batchSize)
-    const startTime = performance.now()
 
     try {
       // Prepare batch tensor
       const batchFeatures = batch.map((req) =>
-        metadata.features.map((feature) => req.features[feature] || 0),
+        metadata.features.map((feature) => req.features[feature] ?? 0),
       )
       const inputTensor = tf.tensor2d(batchFeatures)
 
@@ -399,7 +392,7 @@ export class ModelServer extends EventEmitter {
       const outputSize = metadata.outputShape.reduce((a, b) => a * b, 1)
       for (let i = 0; i < batch.length; i++) {
         const request = batch[i]
-        if (!request) continue
+        if (request == null) continue
 
         const startIdx = i * outputSize
         const endIdx = startIdx + outputSize
@@ -436,14 +429,14 @@ export class ModelServer extends EventEmitter {
     } catch (error) {
       // Reject all requests in batch
       batch.forEach((request) => {
-        if (request) {
+        if (request != null) {
           request.reject(error)
         }
       })
 
       // Update performance stats for failures
       batch.forEach((request) => {
-        if (request) {
+        if (request != null) {
           this.updatePerformanceStats(modelId, performance.now() - request.timestamp, false)
         }
       })
@@ -465,7 +458,9 @@ export class ModelServer extends EventEmitter {
     }
 
     // Update latency metrics
-    const latencyHistory = this.latencyHistory.get(modelId)!
+    const latencyHistory = this.latencyHistory.get(modelId)
+    if (!latencyHistory) return
+
     latencyHistory.push(latency)
 
     // Keep only recent latency data
@@ -475,9 +470,12 @@ export class ModelServer extends EventEmitter {
 
     // Calculate percentiles
     const sortedLatencies = [...latencyHistory].sort((a, b) => a - b)
-    stats.avgLatency = latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length
-    stats.p95Latency = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] || 0
-    stats.p99Latency = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] || 0
+    stats.avgLatency =
+      latencyHistory.length > 0
+        ? latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length
+        : 0
+    stats.p95Latency = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] ?? 0
+    stats.p99Latency = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] ?? 0
 
     // Calculate throughput (requests per second over last minute)
     const oneMinuteAgo = Date.now() - 60000
@@ -599,7 +597,6 @@ export class ModelServer extends EventEmitter {
         this.batchTimers.delete(modelId)
       }
 
-      console.log(`Model ${modelId} unloaded`)
       this.emit('modelUnloaded', { modelId })
     }
   }
@@ -608,8 +605,6 @@ export class ModelServer extends EventEmitter {
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
-    console.log('Shutting down model server...')
-
     // Clear all batch timers
     for (const timer of this.batchTimers.values()) {
       clearTimeout(timer)
@@ -622,9 +617,8 @@ export class ModelServer extends EventEmitter {
     }
 
     // Dispose all models
-    for (const [modelId, model] of this.models) {
+    for (const [, model] of this.models) {
       model.dispose()
-      console.log(`Model ${modelId} disposed`)
     }
 
     this.models.clear()
@@ -634,7 +628,6 @@ export class ModelServer extends EventEmitter {
     this.requestQueue.clear()
     this.latencyHistory.clear()
 
-    console.log('Model server shutdown complete')
     this.emit('shutdown')
   }
 }

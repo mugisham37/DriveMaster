@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 
-import { Pinecone } from '@pinecone-database/pinecone'
+import { LoggingManager } from '@drivemaster/telemetry'
+import { Pinecone, type Index, type RecordMetadata } from '@pinecone-database/pinecone'
 import * as tf from '@tensorflow/tfjs'
 
 export interface VectorEmbedding {
@@ -12,7 +13,7 @@ export interface VectorEmbedding {
 export interface SimilarityResult {
   id: string
   score: number
-  metadata: Record<string, any>
+  metadata: RecordMetadata
 }
 
 export interface ContentEmbedding extends VectorEmbedding {
@@ -38,29 +39,84 @@ export interface UserProfileEmbedding extends VectorEmbedding {
   }
 }
 
+export type ContentType = 'question' | 'explanation' | 'example' | 'practice'
+
 export interface RecommendationQuery {
   userId: string
   conceptKey?: string
-  contentType?: string
+  contentType?: ContentType
   targetDifficulty?: number
   excludeIds?: string[]
   topK?: number
 }
 
+// Pinecone-specific interfaces
+interface PineconeQueryFilter {
+  [key: string]: {
+    $eq?: string | number
+    $gte?: number
+    $lte?: number
+  }
+}
+
+interface PineconeQueryOptions {
+  vector: number[]
+  topK: number
+  filter?: PineconeQueryFilter
+  includeMetadata?: boolean
+  includeValues?: boolean
+}
+
+interface PineconeUpsertVector {
+  id: string
+  values: number[]
+  metadata: RecordMetadata
+}
+
+interface PineconeMatch {
+  id: string
+  score?: number
+  metadata?: RecordMetadata
+}
+
+interface PineconeQueryResult {
+  matches?: PineconeMatch[]
+  namespace?: string
+}
+
+interface PineconeVector {
+  id: string
+  values: number[]
+  metadata?: RecordMetadata
+}
+
+interface PineconeFetchResult {
+  vectors?: Record<string, PineconeVector>
+}
+
 export class VectorSearchEngine {
   private pinecone: Pinecone
-  private contentIndex: any
-  private userIndex: any
+  private contentIndex!: Index<RecordMetadata>
+  private userIndex!: Index<RecordMetadata>
   private embeddingModel: tf.LayersModel | null = null
   private readonly embeddingDimension = 384 // Sentence transformer dimension
   private readonly contentIndexName = 'drivemaster-content'
   private readonly userIndexName = 'drivemaster-users'
-  private queryCache: Map<string, { result: any; timestamp: number }> = new Map()
+  private queryCache: Map<string, { result: SimilarityResult[]; timestamp: number }> = new Map()
   private readonly cacheTimeout = 5 * 60 * 1000 // 5 minutes
+  private logger: LoggingManager
 
   constructor(apiKey: string, _environment: string = 'us-west1-gcp') {
     this.pinecone = new Pinecone({
       apiKey,
+    })
+
+    // Initialize logger
+    this.logger = LoggingManager.getInstance({
+      serviceName: 'adaptive-svc',
+      serviceVersion: '1.0.0',
+      environment: process.env.NODE_ENV ?? 'development',
+      enableLogging: true,
     })
   }
 
@@ -79,14 +135,14 @@ export class VectorSearchEngine {
       this.userIndex = this.pinecone.Index(this.userIndexName)
 
       // Load embedding model
-      await this.loadEmbeddingModel()
+      this.loadEmbeddingModel()
 
       // Warm up the indexes
       await this.warmupIndexes()
 
-      console.log('Vector Search Engine initialized successfully')
+      this.logger.info('Vector Search Engine initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize Vector Search Engine:', error)
+      this.logger.error('Failed to initialize Vector Search Engine', error as Error)
       throw error
     }
   }
@@ -97,7 +153,7 @@ export class VectorSearchEngine {
   private async ensureIndexesExist(): Promise<void> {
     try {
       const indexList = await this.pinecone.listIndexes()
-      const existingIndexes = indexList.indexes?.map((idx) => idx.name) || []
+      const existingIndexes = indexList.indexes?.map((idx) => idx.name) ?? []
 
       // Create content index if it doesn't exist
       if (!existingIndexes.includes(this.contentIndexName)) {
@@ -112,7 +168,7 @@ export class VectorSearchEngine {
             },
           },
         })
-        console.log(`Created content index: ${this.contentIndexName}`)
+        this.logger.info(`Created content index: ${this.contentIndexName}`)
       }
 
       // Create user index if it doesn't exist
@@ -128,10 +184,10 @@ export class VectorSearchEngine {
             },
           },
         })
-        console.log(`Created user index: ${this.userIndexName}`)
+        this.logger.info(`Created user index: ${this.userIndexName}`)
       }
     } catch (error) {
-      console.error('Failed to ensure indexes exist:', error)
+      this.logger.error('Failed to ensure indexes exist', error as Error)
       throw error
     }
   }
@@ -142,35 +198,34 @@ export class VectorSearchEngine {
   private async warmupIndexes(): Promise<void> {
     try {
       // Create dummy vectors for warmup
-      const dummyVector = new Array(this.embeddingDimension).fill(0.1)
+      const dummyVector: number[] = new Array(this.embeddingDimension).fill(0.1) as number[]
 
       // Warmup content index
       await this.contentIndex.query({
         vector: dummyVector,
         topK: 1,
         includeMetadata: false,
-      })
+      } as PineconeQueryOptions)
 
       // Warmup user index
       await this.userIndex.query({
         vector: dummyVector,
         topK: 1,
         includeMetadata: false,
-      })
+      } as PineconeQueryOptions)
 
-      console.log('Indexes warmed up successfully')
+      this.logger.info('Indexes warmed up successfully')
     } catch (error) {
-      console.warn(
-        'Index warmup failed (this is normal for empty indexes):',
-        (error as Error).message,
-      )
+      this.logger.warn('Index warmup failed (this is normal for empty indexes)', {
+        error: (error as Error).message,
+      })
     }
   }
 
   /**
    * Load embedding model for text vectorization
    */
-  private async loadEmbeddingModel(): Promise<void> {
+  private loadEmbeddingModel(): void {
     try {
       // In production, this would load a sentence transformer model
       // For now, we'll create a simple embedding model
@@ -182,9 +237,9 @@ export class VectorSearchEngine {
         ],
       })
 
-      console.log('Embedding model loaded')
+      this.logger.info('Embedding model loaded')
     } catch (error) {
-      console.error('Failed to load embedding model:', error)
+      this.logger.error('Failed to load embedding model', error as Error)
       throw error
     }
   }
@@ -212,7 +267,7 @@ export class VectorSearchEngine {
 
       return Array.from(embeddingData)
     } catch (error) {
-      console.error('Failed to generate text embedding:', error)
+      this.logger.error('Failed to generate text embedding', error as Error)
       throw error
     }
   }
@@ -222,14 +277,15 @@ export class VectorSearchEngine {
    */
   private tokenizeText(text: string): number[] {
     const words = text.toLowerCase().split(/\s+/).slice(0, 512) // Limit to 512 tokens
-    const tokens = new Array(512).fill(0)
+    const tokens: number[] = new Array(512).fill(0) as number[]
 
     for (let i = 0; i < words.length; i++) {
       // Simple hash-based tokenization
-      const hash = createHash('md5')
-        .update(words[i] || '')
-        .digest('hex')
-      tokens[i] = (parseInt(hash.substring(0, 8), 16) % 50000) / 50000 // Normalize to [0,1]
+      const word = words[i]
+      if (word != null && word.length > 0) {
+        const hash = createHash('md5').update(word).digest('hex')
+        tokens[i] = (parseInt(hash.substring(0, 8), 16) % 50000) / 50000 // Normalize to [0,1]
+      }
     }
 
     return tokens
@@ -264,7 +320,7 @@ export class VectorSearchEngine {
         contentId: content.id,
         conceptKey: content.conceptKey,
         difficulty: content.difficulty,
-        contentType: content.contentType as any,
+        contentType: content.contentType as ContentType,
         tags: content.tags,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -277,8 +333,8 @@ export class VectorSearchEngine {
    */
   async generateUserProfileEmbedding(userProfile: {
     userId: string
-    learningHistory: any[]
-    preferences: Record<string, any>
+    learningHistory: Record<string, unknown>[]
+    preferences: Record<string, unknown>
     knowledgeStates: Record<string, number>
   }): Promise<UserProfileEmbedding> {
     // Create user profile text representation
@@ -290,11 +346,14 @@ export class VectorSearchEngine {
       .filter(([_, mastery]) => mastery < 0.3)
       .map(([concept, _]) => concept)
 
+    const learningStyle = (userProfile.preferences.learningStyle as string) ?? 'visual'
+    const preferredDifficulty = (userProfile.preferences.preferredDifficulty as number) ?? 0.5
+
     const profileText = [
-      `Learning style: ${userProfile.preferences.learningStyle || 'visual'}`,
+      `Learning style: ${learningStyle}`,
       `Strong concepts: ${strongConcepts.join(', ')}`,
       `Weak concepts: ${weakConcepts.join(', ')}`,
-      `Preferred difficulty: ${userProfile.preferences.preferredDifficulty || 0.5}`,
+      `Preferred difficulty: ${preferredDifficulty}`,
     ].join(' ')
 
     const embedding = await this.generateTextEmbedding(profileText)
@@ -304,8 +363,8 @@ export class VectorSearchEngine {
       values: embedding,
       metadata: {
         userId: userProfile.userId,
-        learningStyle: userProfile.preferences.learningStyle || 'visual',
-        preferredDifficulty: userProfile.preferences.preferredDifficulty || 0.5,
+        learningStyle,
+        preferredDifficulty,
         strongConcepts,
         weakConcepts,
         lastUpdated: new Date().toISOString(),
@@ -323,12 +382,12 @@ export class VectorSearchEngine {
           id: contentEmbedding.id,
           values: contentEmbedding.values,
           metadata: contentEmbedding.metadata,
-        },
+        } as PineconeUpsertVector,
       ])
 
-      console.log(`Content ${contentEmbedding.id} indexed successfully`)
+      this.logger.info(`Content ${contentEmbedding.id} indexed successfully`)
     } catch (error) {
-      console.error(`Failed to index content ${contentEmbedding.id}:`, error)
+      this.logger.error(`Failed to index content ${contentEmbedding.id}`, error as Error)
       throw error
     }
   }
@@ -343,12 +402,12 @@ export class VectorSearchEngine {
           id: userEmbedding.id,
           values: userEmbedding.values,
           metadata: userEmbedding.metadata,
-        },
+        } as PineconeUpsertVector,
       ])
 
-      console.log(`User profile ${userEmbedding.id} indexed successfully`)
+      this.logger.info(`User profile ${userEmbedding.id} indexed successfully`)
     } catch (error) {
-      console.error(`Failed to index user profile ${userEmbedding.id}:`, error)
+      this.logger.error(`Failed to index user profile ${userEmbedding.id}`, error as Error)
       throw error
     }
   }
@@ -361,17 +420,20 @@ export class VectorSearchEngine {
       const batchSize = 100
       for (let i = 0; i < contentEmbeddings.length; i += batchSize) {
         const batch = contentEmbeddings.slice(i, i + batchSize)
-        const vectors = batch.map((embedding) => ({
-          id: embedding.id,
-          values: embedding.values,
-          metadata: embedding.metadata,
-        }))
+        const vectors = batch.map(
+          (embedding) =>
+            ({
+              id: embedding.id,
+              values: embedding.values,
+              metadata: embedding.metadata,
+            }) as PineconeUpsertVector,
+        )
 
         await this.contentIndex.upsert(vectors)
-        console.log(`Batch ${Math.floor(i / batchSize) + 1} indexed (${vectors.length} items)`)
+        this.logger.info(`Batch ${Math.floor(i / batchSize) + 1} indexed (${vectors.length} items)`)
       }
     } catch (error) {
-      console.error('Failed to batch index content:', error)
+      this.logger.error('Failed to batch index content', error as Error)
       throw error
     }
   }
@@ -395,11 +457,11 @@ export class VectorSearchEngine {
       }
 
       // Build optimized filter for metadata
-      const filter: Record<string, any> = {}
-      if (query.conceptKey) {
+      const filter: PineconeQueryFilter = {}
+      if (query.conceptKey != null && query.conceptKey.length > 0) {
         filter.conceptKey = { $eq: query.conceptKey }
       }
-      if (query.contentType) {
+      if (query.contentType != null && query.contentType.length > 0) {
         filter.contentType = { $eq: query.contentType }
       }
       if (query.targetDifficulty !== undefined) {
@@ -412,31 +474,35 @@ export class VectorSearchEngine {
       }
 
       // Perform optimized similarity search
-      const searchResult = await this.contentIndex.query({
+      const searchResult = (await this.contentIndex.query({
         vector: userEmbedding.values,
-        topK: Math.min(query.topK || 10, 50), // Limit to prevent excessive results
+        topK: Math.min(query.topK ?? 10, 50), // Limit to prevent excessive results
         filter,
         includeMetadata: true,
         includeValues: false, // Don't return vectors to save bandwidth
-      })
+      } as PineconeQueryOptions)) as PineconeQueryResult
 
       // Process and filter results
-      let results =
-        searchResult.matches
-          ?.filter((match: any) => {
+      let results: SimilarityResult[] = []
+
+      if (searchResult.matches != null && searchResult.matches.length > 0) {
+        results = searchResult.matches
+          .filter((match: PineconeMatch) => {
             // Filter out excluded IDs
-            if (query.excludeIds?.includes(match.id)) return false
+            const excludeIds = query.excludeIds
+            if (excludeIds != null && excludeIds.includes(match.id)) return false
 
             // Additional quality filters
-            if (match.score < 0.3) return false // Minimum similarity threshold
+            if ((match.score ?? 0) < 0.3) return false // Minimum similarity threshold
 
             return true
           })
-          .map((match: any) => ({
+          .map((match: PineconeMatch) => ({
             id: match.id,
-            score: match.score || 0,
-            metadata: match.metadata || {},
-          })) || []
+            score: match.score ?? 0,
+            metadata: match.metadata ?? {},
+          }))
+      }
 
       // Apply diversity filtering to avoid too similar results
       results = this.diversifyResults(results, 0.8) // 80% similarity threshold
@@ -452,7 +518,7 @@ export class VectorSearchEngine {
 
       return results
     } catch (error) {
-      console.error('Failed to find similar content:', error)
+      this.logger.error('Failed to find similar content', error as Error)
       throw error
     }
   }
@@ -517,9 +583,9 @@ export class VectorSearchEngine {
     factors++
 
     // Difficulty similarity
-    const difficultyDiff = Math.abs(
-      (content1.metadata.difficulty || 0.5) - (content2.metadata.difficulty || 0.5),
-    )
+    const difficulty1 = (content1.metadata.difficulty as number) ?? 0.5
+    const difficulty2 = (content2.metadata.difficulty as number) ?? 0.5
+    const difficultyDiff = Math.abs(difficulty1 - difficulty2)
     similarity += (1 - difficultyDiff) * 0.3
     factors++
 
@@ -529,12 +595,12 @@ export class VectorSearchEngine {
   /**
    * Generate cache key for queries
    */
-  private generateCacheKey(type: string, query: any): string {
+  private generateCacheKey(type: string, query: RecommendationQuery): string {
     const keyData = {
       type,
       ...query,
       // Sort arrays for consistent keys
-      excludeIds: query.excludeIds?.sort(),
+      excludeIds: query.excludeIds?.slice().sort(),
     }
     return createHash('md5').update(JSON.stringify(keyData)).digest('hex')
   }
@@ -576,25 +642,28 @@ export class VectorSearchEngine {
         throw new Error(`User profile embedding not found for user ${userId}`)
       }
 
-      const searchResult = await this.userIndex.query({
+      const searchResult = (await this.userIndex.query({
         vector: userEmbedding.values,
         topK: topK + 1, // +1 to exclude self
         includeMetadata: true,
-      })
+      } as PineconeQueryOptions)) as PineconeQueryResult
 
       // Filter out the querying user
-      const results =
-        searchResult.matches
-          ?.filter((match: any) => match.id !== userId)
-          .map((match: any) => ({
+      let results: SimilarityResult[] = []
+
+      if (searchResult.matches != null && searchResult.matches.length > 0) {
+        results = searchResult.matches
+          .filter((match: PineconeMatch) => match.id !== userId)
+          .map((match: PineconeMatch) => ({
             id: match.id,
-            score: match.score || 0,
-            metadata: match.metadata || {},
-          })) || []
+            score: match.score ?? 0,
+            metadata: match.metadata ?? {},
+          }))
+      }
 
       return results.slice(0, topK)
     } catch (error) {
-      console.error('Failed to find similar users:', error)
+      this.logger.error('Failed to find similar users', error as Error)
       throw error
     }
   }
@@ -631,7 +700,7 @@ export class VectorSearchEngine {
       }
 
       // Hybrid recommendations (combine and re-rank)
-      const hybrid = this.combineRecommendations(contentBased, collaborative, query.topK || 10)
+      const hybrid = this.combineRecommendations(contentBased, collaborative, query.topK ?? 10)
 
       return {
         contentBased,
@@ -639,7 +708,7 @@ export class VectorSearchEngine {
         hybrid,
       }
     } catch (error) {
-      console.error('Failed to get content recommendations:', error)
+      this.logger.error('Failed to get content recommendations', error as Error)
       throw error
     }
   }
@@ -687,18 +756,18 @@ export class VectorSearchEngine {
    */
   private async getUserEmbedding(userId: string): Promise<UserProfileEmbedding | null> {
     try {
-      const result = await this.userIndex.fetch([userId])
+      const result = (await this.userIndex.fetch([userId])) as PineconeFetchResult
       const vector = result.vectors?.[userId]
 
-      if (!vector) return null
+      if (vector == null) return null
 
       return {
         id: userId,
-        values: vector.values || [],
+        values: vector.values ?? [],
         metadata: vector.metadata as UserProfileEmbedding['metadata'],
       }
     } catch (error) {
-      console.error(`Failed to get user embedding for ${userId}:`, error)
+      this.logger.error(`Failed to get user embedding for ${userId}`, error as Error)
       return null
     }
   }
@@ -708,8 +777,8 @@ export class VectorSearchEngine {
    */
   async updateUserProfile(userProfile: {
     userId: string
-    learningHistory: any[]
-    preferences: Record<string, any>
+    learningHistory: Record<string, unknown>[]
+    preferences: Record<string, unknown>
     knowledgeStates: Record<string, number>
   }): Promise<void> {
     const embedding = await this.generateUserProfileEmbedding(userProfile)
@@ -722,9 +791,9 @@ export class VectorSearchEngine {
   async deleteContent(contentId: string): Promise<void> {
     try {
       await this.contentIndex.deleteOne(contentId)
-      console.log(`Content ${contentId} deleted from index`)
+      this.logger.info(`Content ${contentId} deleted from index`)
     } catch (error) {
-      console.error(`Failed to delete content ${contentId}:`, error)
+      this.logger.error(`Failed to delete content ${contentId}`, error as Error)
       throw error
     }
   }
@@ -735,9 +804,9 @@ export class VectorSearchEngine {
   async deleteUserProfile(userId: string): Promise<void> {
     try {
       await this.userIndex.deleteOne(userId)
-      console.log(`User profile ${userId} deleted from index`)
+      this.logger.info(`User profile ${userId} deleted from index`)
     } catch (error) {
-      console.error(`Failed to delete user profile ${userId}:`, error)
+      this.logger.error(`Failed to delete user profile ${userId}`, error as Error)
       throw error
     }
   }
@@ -746,8 +815,8 @@ export class VectorSearchEngine {
    * Get index statistics
    */
   async getIndexStats(): Promise<{
-    contentIndex: any
-    userIndex: unknown
+    contentIndex: Record<string, unknown>
+    userIndex: Record<string, unknown>
   }> {
     try {
       const [contentStats, userStats] = await Promise.all([
@@ -756,11 +825,11 @@ export class VectorSearchEngine {
       ])
 
       return {
-        contentIndex: contentStats,
-        userIndex: userStats,
+        contentIndex: contentStats as Record<string, unknown>,
+        userIndex: userStats as Record<string, unknown>,
       }
     } catch (error) {
-      console.error('Failed to get index statistics:', error)
+      this.logger.error('Failed to get index statistics', error as Error)
       throw error
     }
   }
@@ -773,6 +842,6 @@ export class VectorSearchEngine {
       this.embeddingModel.dispose()
       this.embeddingModel = null
     }
-    console.log('Vector Search Engine disposed')
+    this.logger.info('Vector Search Engine disposed')
   }
 }
