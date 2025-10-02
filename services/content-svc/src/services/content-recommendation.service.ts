@@ -1,37 +1,9 @@
-import { eq, and, desc, asc, sql, gte, lte, inArray, ne } from 'drizzle-orm'
-import { db, items, concepts, categories, contentAnalytics } from '../db/connection.js'
+import { eq, and, desc, sql, gte, lte, ne } from 'drizzle-orm'
+
+import { db, items, contentAnalytics } from '../db/connection.js'
+import type { ContentRecommendation, UserProfile, DatabaseItem } from '../types/index.js'
+
 import { ContentAnalyticsService } from './content-analytics.service.js'
-
-export interface UserProfile {
-  userId: string
-  learningStyle: 'visual' | 'auditory' | 'kinesthetic' | 'reading'
-  difficultyPreference: number // 0-1 scale
-  avgResponseTime: number
-  successRate: number
-  engagementScore: number
-  preferredContentTypes: string[]
-  weakConcepts: string[]
-  strongConcepts: string[]
-  studyPatterns: {
-    preferredTimeOfDay: 'morning' | 'afternoon' | 'evening'
-    sessionDuration: number
-    frequency: number
-  }
-}
-
-export interface ContentRecommendation {
-  itemId: string
-  score: number
-  reason: string
-  confidence: number
-  metadata: {
-    difficulty: number
-    estimatedTime: number
-    contentType: string
-    conceptKey: string
-    categoryKey: string
-  }
-}
 
 export interface RecommendationContext {
   userId: string
@@ -41,6 +13,20 @@ export interface RecommendationContext {
   deviceType?: 'mobile' | 'tablet' | 'desktop'
   previousItems?: string[]
   targetDifficulty?: number
+}
+
+interface ConceptPerformance {
+  averageScore: number
+  attempts: number
+  lastAttempt: Date
+  trend: 'improving' | 'stable' | 'declining'
+  strugglingAreas: string[]
+}
+
+interface ContentEffectiveness {
+  qualityScore: number
+  engagementScore: number
+  successRate: number
 }
 
 export class ContentRecommendationService {
@@ -56,7 +42,7 @@ export class ContentRecommendationService {
     limit = 10,
   ): Promise<ContentRecommendation[]> {
     // Get user profile
-    const userProfile = await this.getUserProfile(context.userId)
+    const userProfile = this.getUserProfile(context.userId)
 
     // Get candidate items
     const candidates = await this.getCandidateItems(context)
@@ -72,10 +58,10 @@ export class ContentRecommendationService {
           confidence: score.confidence,
           metadata: {
             difficulty: item.difficulty,
-            estimatedTime: item.estimatedTime || 0,
+            estimatedTime: item.estimatedTime ?? 0,
             contentType: item.type,
-            conceptKey: item.concept?.key || '',
-            categoryKey: item.concept?.category?.key || '',
+            conceptKey: item.concept?.key ?? '',
+            categoryKey: '', // Category key not directly available in this query
           },
         }
       }),
@@ -91,10 +77,10 @@ export class ContentRecommendationService {
     conceptId: string,
     limit = 5,
   ): Promise<ContentRecommendation[]> {
-    const userProfile = await this.getUserProfile(userId)
+    const userProfile = this.getUserProfile(userId)
 
     // Get user's recent performance on this concept
-    const recentPerformance = await this.getRecentConceptPerformance(userId, conceptId)
+    const recentPerformance = this.getRecentConceptPerformance(userId, conceptId)
 
     // Determine optimal difficulty based on performance
     const targetDifficulty = this.calculateOptimalDifficulty(recentPerformance, userProfile)
@@ -140,10 +126,10 @@ export class ContentRecommendationService {
           confidence: adaptiveScore.confidence,
           metadata: {
             difficulty: item.difficulty,
-            estimatedTime: item.estimatedTime || 0,
+            estimatedTime: item.estimatedTime ?? 0,
             contentType: item.type,
-            conceptKey: item.concept?.key || '',
-            categoryKey: item.concept?.category?.key || '',
+            conceptKey: item.concept?.key ?? '',
+            categoryKey: '', // Category key not directly available in this query
           },
         }
       }),
@@ -170,20 +156,29 @@ export class ContentRecommendationService {
     }
 
     // Find similar items based on multiple criteria
+    const whereConditions = [
+      ne(items.id, itemId), // Exclude the source item
+      eq(items.isActive, true),
+      // Same concept or category
+      sql`(${items.conceptId} = ${sourceItem.conceptId} OR ${items.conceptId} IN (
+        SELECT id FROM concepts WHERE category_id = ${sourceItem.concept?.categoryId}
+      ))`,
+    ]
+
+    // Add difficulty range if available
+    if (sourceItem.difficulty !== null) {
+      const targetDifficulty = sourceItem.difficulty ?? 0.5
+      whereConditions.push(gte(items.difficulty, targetDifficulty - 0.2))
+      whereConditions.push(lte(items.difficulty, targetDifficulty + 0.2))
+    }
+
+    // Add content type filter if available
+    if (sourceItem.type !== null) {
+      whereConditions.push(eq(items.type, sourceItem.type))
+    }
+
     const similarItems = await db.query.items.findMany({
-      where: and(
-        ne(items.id, itemId), // Exclude the source item
-        eq(items.isActive, true),
-        // Same concept or category
-        sql`(${items.conceptId} = ${sourceItem.conceptId} OR ${items.conceptId} IN (
-          SELECT id FROM concepts WHERE category_id = ${sourceItem.concept?.categoryId}
-        ))`,
-        // Similar difficulty range
-        gte(items.difficulty, sourceItem.difficulty - 0.2),
-        lte(items.difficulty, sourceItem.difficulty + 0.2),
-        // Same content type preference
-        eq(items.type, sourceItem.type),
-      ),
+      where: and(...whereConditions),
       with: {
         concept: {
           with: {
@@ -213,10 +208,10 @@ export class ContentRecommendationService {
           confidence: 0.8,
           metadata: {
             difficulty: item.difficulty,
-            estimatedTime: item.estimatedTime || 0,
+            estimatedTime: item.estimatedTime ?? 0,
             contentType: item.type,
-            conceptKey: item.concept?.key || '',
-            categoryKey: item.concept?.category?.key || '',
+            conceptKey: item.concept?.key ?? '',
+            categoryKey: '', // Category key not directly available in this query
           },
         }
       }),
@@ -265,7 +260,13 @@ export class ContentRecommendationService {
           },
         })
 
-        if (!item || (categoryId && item.concept?.categoryId !== categoryId)) {
+        if (
+          !item ||
+          (categoryId !== undefined &&
+            categoryId !== null &&
+            categoryId !== '' &&
+            item.concept?.categoryId !== categoryId)
+        ) {
           return null
         }
 
@@ -282,28 +283,34 @@ export class ContentRecommendationService {
           confidence: 0.7,
           metadata: {
             difficulty: item.difficulty,
-            estimatedTime: item.estimatedTime || 0,
+            estimatedTime: item.estimatedTime ?? 0,
             contentType: item.type,
-            conceptKey: item.concept?.key || '',
-            categoryKey: item.concept?.category?.key || '',
+            conceptKey: item.concept?.key ?? '',
+            categoryKey: '', // Category key not directly available in this query
           },
         }
       }),
     )
 
-    return recommendations
-      .filter((rec): rec is ContentRecommendation => rec !== null)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
+    const validRecommendations = recommendations.filter(
+      (rec): rec is ContentRecommendation => rec !== null,
+    )
+    return validRecommendations.sort((a, b) => b.score - a.score).slice(0, limit)
   }
 
   // Private helper methods
-  private async getUserProfile(userId: string): Promise<UserProfile> {
+  private getUserProfile(userId: string): UserProfile {
     // In a real implementation, this would fetch from user analytics
     // For now, return a default profile
     return {
       userId,
+      skillLevel: 0.6,
+      preferredDifficulty: 0.6,
       learningStyle: 'visual',
+      completedConcepts: [],
+      weakAreas: [],
+      strongAreas: [],
+      averageResponseTime: 45000,
       difficultyPreference: 0.6,
       avgResponseTime: 45000,
       successRate: 0.75,
@@ -319,7 +326,7 @@ export class ContentRecommendationService {
     }
   }
 
-  private async getCandidateItems(context: RecommendationContext) {
+  private async getCandidateItems(context: RecommendationContext): Promise<DatabaseItem[]> {
     let query = db.query.items.findMany({
       where: and(eq(items.isActive, true), eq(items.status, 'PUBLISHED')),
       with: {
@@ -333,7 +340,11 @@ export class ContentRecommendationService {
     })
 
     // Filter by concept if specified
-    if (context.currentConceptId) {
+    if (
+      context.currentConceptId !== undefined &&
+      context.currentConceptId !== null &&
+      context.currentConceptId !== ''
+    ) {
       query = db.query.items.findMany({
         where: and(
           eq(items.conceptId, context.currentConceptId),
@@ -354,24 +365,25 @@ export class ContentRecommendationService {
     const candidates = await query
 
     // Filter out previously seen items
-    if (context.previousItems && context.previousItems.length > 0) {
-      return candidates.filter((item) => !context.previousItems!.includes(item.id))
+    if (context.previousItems !== undefined && context.previousItems.length > 0) {
+      return candidates.filter((item) => !(context.previousItems?.includes(item.id) ?? false))
     }
 
     return candidates
   }
 
   private async calculateRecommendationScore(
-    item: any,
+    item: DatabaseItem,
     userProfile: UserProfile,
     context: RecommendationContext,
-  ) {
+  ): Promise<{ totalScore: number; reason: string; confidence: number }> {
     let totalScore = 0.5 // Base score
     let confidence = 0.5
     const reasons: string[] = []
 
     // Difficulty matching
-    const difficultyMatch = 1 - Math.abs(item.difficulty - userProfile.difficultyPreference)
+    const itemDifficulty = item.difficulty ?? 0.5
+    const difficultyMatch = 1 - Math.abs(itemDifficulty - userProfile.difficultyPreference)
     totalScore += difficultyMatch * 0.25
     if (difficultyMatch > 0.8) {
       reasons.push('matches your preferred difficulty level')
@@ -379,14 +391,25 @@ export class ContentRecommendationService {
     }
 
     // Content type preference
-    if (userProfile.preferredContentTypes.includes(item.type)) {
+    if (
+      item.type !== null &&
+      Array.isArray(userProfile.preferredContentTypes) &&
+      userProfile.preferredContentTypes.includes(item.type)
+    ) {
       totalScore += 0.2
       reasons.push('matches your preferred content type')
       confidence += 0.1
     }
 
     // Time availability
-    if (context.timeAvailable && item.estimatedTime) {
+    if (
+      context.timeAvailable !== undefined &&
+      context.timeAvailable !== null &&
+      context.timeAvailable > 0 &&
+      item.estimatedTime !== undefined &&
+      item.estimatedTime !== null &&
+      item.estimatedTime > 0
+    ) {
       if (item.estimatedTime <= context.timeAvailable * 60) {
         // Convert minutes to seconds
         totalScore += 0.15
@@ -430,21 +453,24 @@ export class ContentRecommendationService {
     }
   }
 
-  private async getRecentConceptPerformance(userId: string, conceptId: string) {
+  private getRecentConceptPerformance(_userId: string, _conceptId: string): ConceptPerformance {
     // In a real implementation, this would query user performance data
     // For now, return mock data
     return {
       averageScore: 0.75,
       attempts: 15,
       lastAttempt: new Date(),
-      trend: 'improving', // 'improving', 'stable', 'declining'
+      trend: 'improving' as const,
       strugglingAreas: [],
     }
   }
 
-  private calculateOptimalDifficulty(recentPerformance: any, userProfile: UserProfile): number {
-    const basePreference = userProfile.difficultyPreference
-    const performanceAdjustment = (recentPerformance.averageScore - 0.7) * 0.2 // Adjust based on performance
+  private calculateOptimalDifficulty(
+    recentPerformance: ConceptPerformance,
+    userProfile: UserProfile,
+  ): number {
+    const basePreference: number = Number(userProfile.difficultyPreference)
+    const performanceAdjustment: number = (recentPerformance.averageScore - 0.7) * 0.2 // Adjust based on performance
 
     // If user is performing well, slightly increase difficulty
     // If struggling, slightly decrease difficulty
@@ -452,24 +478,25 @@ export class ContentRecommendationService {
   }
 
   private calculateAdaptiveScore(
-    item: any,
-    effectiveness: any,
+    item: DatabaseItem,
+    effectiveness: ContentEffectiveness,
     userProfile: UserProfile,
-    recentPerformance: any,
-  ) {
+    recentPerformance: ConceptPerformance,
+  ): { score: number; reason: string; confidence: number } {
     let score = 0.5
     const reasons: string[] = []
 
     // Performance-based scoring
+    const itemDifficulty = item.difficulty ?? 0.5
     if (
       recentPerformance.trend === 'declining' &&
-      item.difficulty < userProfile.difficultyPreference
+      itemDifficulty < userProfile.difficultyPreference
     ) {
       score += 0.3
       reasons.push('easier content to build confidence')
     } else if (
       recentPerformance.trend === 'improving' &&
-      item.difficulty > userProfile.difficultyPreference
+      itemDifficulty > userProfile.difficultyPreference
     ) {
       score += 0.2
       reasons.push('challenging content to maintain growth')
@@ -494,7 +521,7 @@ export class ContentRecommendationService {
     }
   }
 
-  private calculateSimilarityScore(sourceItem: any, targetItem: any): number {
+  private calculateSimilarityScore(sourceItem: DatabaseItem, targetItem: DatabaseItem): number {
     let similarity = 0
 
     // Same concept
@@ -508,11 +535,17 @@ export class ContentRecommendationService {
     }
 
     // Similar difficulty
-    const difficultyDiff = Math.abs(sourceItem.difficulty - targetItem.difficulty)
+    const sourceDifficulty = sourceItem.difficulty ?? 0.5
+    const targetDifficulty = targetItem.difficulty ?? 0.5
+    const difficultyDiff = Math.abs(sourceDifficulty - targetDifficulty)
     similarity += Math.max(0, 0.2 - difficultyDiff) * 2 // 0.2 max difference for full points
 
     // Same content type
-    if (sourceItem.type === targetItem.type) {
+    if (
+      sourceItem.type !== null &&
+      targetItem.type !== null &&
+      sourceItem.type === targetItem.type
+    ) {
       similarity += 0.2
     }
 

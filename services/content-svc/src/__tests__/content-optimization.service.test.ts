@@ -1,3 +1,4 @@
+// cSpell:ignore dropoff
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { ContentOptimizationService } from '../services/content-optimization.service.js'
 import { ContentAnalyticsService } from '../services/content-analytics.service.js'

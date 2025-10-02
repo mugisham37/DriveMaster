@@ -1,10 +1,15 @@
-import { eq, and, desc, asc, sql, inArray, gte, lte } from 'drizzle-orm'
-import { db, items, mediaAssets, itemMediaAssets, concepts, categories } from '../db/connection.js'
+import { eq, and, inArray } from 'drizzle-orm'
+
+import { db, items, concepts, categories } from '../db/connection.js'
 import type {
-  DeviceCapabilities,
-  NetworkConditions,
-  PreloadManifest,
-} from './content-delivery.service.js'
+  CategoryWithRelations,
+  ConceptWithItems,
+  ItemWithMediaAssets,
+  MediaAssetRecord,
+} from '../types/database.js'
+import { safeGetNumber, safeGetString, safeGetOptionalString } from '../types/database.js'
+
+import type { DeviceCapabilities, NetworkConditions } from './content-delivery.service.js'
 
 export interface SyncManifest {
   version: string
@@ -37,7 +42,7 @@ export interface SyncConcept {
 export interface SyncItem {
   id: string
   slug: string
-  title?: string
+  title?: string | undefined
   body: string
   type: string
   difficulty: number
@@ -53,7 +58,7 @@ export interface SyncMediaAsset {
   type: string
   size: number
   format: string
-  dimensions?: { width: number; height: number }
+  dimensions?: { width: number; height: number } | undefined
   checksum: string
 }
 
@@ -90,7 +95,6 @@ export interface OfflineContent {
 }
 
 export class OfflineSyncService {
-  private readonly MAX_SYNC_SIZE = 500 * 1024 * 1024 // 500MB default limit
   private readonly SYNC_VERSION = '1.0.0'
   private readonly CACHE_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
@@ -115,15 +119,22 @@ export class OfflineSyncService {
     let totalSize = 0
 
     for (const category of categoriesToSync) {
-      const remainingSize = options.maxSize ? options.maxSize - totalSize : undefined
-      const syncCategory = await this.buildSyncCategory(category, options, remainingSize)
+      const remainingSize =
+        typeof options.maxSize === 'number' && options.maxSize > 0
+          ? options.maxSize - totalSize
+          : undefined
+      const syncCategory = this.buildSyncCategory(category, options, remainingSize)
 
       if (syncCategory.size > 0) {
         syncCategories.push(syncCategory)
         totalSize += syncCategory.size
 
         // Check if we've reached the size limit
-        if (options.maxSize && totalSize >= options.maxSize) {
+        if (
+          typeof options.maxSize === 'number' &&
+          options.maxSize > 0 &&
+          totalSize >= options.maxSize
+        ) {
           break
         }
       }
@@ -141,9 +152,10 @@ export class OfflineSyncService {
       categories: syncCategories,
       totalSize,
       estimatedSyncTime,
-      priority: options.priority || 'medium',
+      priority: options.priority ?? 'medium',
     }
 
+    // eslint-disable-next-line no-console
     console.log(`Generated sync manifest in ${Date.now() - startTime}ms:`, {
       categories: syncCategories.length,
       totalSize: `${(totalSize / 1024 / 1024).toFixed(2)}MB`,
@@ -191,7 +203,7 @@ export class OfflineSyncService {
             // Sync media assets
             for (const mediaAsset of item.mediaAssets) {
               if (!offlineContent.mediaAssets.has(mediaAsset.id)) {
-                await this.syncMediaAsset(mediaAsset, offlineContent)
+                this.syncMediaAsset(mediaAsset, offlineContent)
               }
             }
 
@@ -222,7 +234,7 @@ export class OfflineSyncService {
             }
 
             if (this.syncProgress.status === 'error') {
-              throw new Error(this.syncProgress.error || 'Sync cancelled')
+              throw new Error(this.syncProgress.error ?? 'Sync cancelled')
             }
           }
         }
@@ -237,6 +249,7 @@ export class OfflineSyncService {
 
       offlineContent.size = this.syncProgress.downloadedSize
 
+      // eslint-disable-next-line no-console
       console.log(`Sync completed in ${Date.now() - startTime}ms:`, {
         items: offlineContent.items.size,
         mediaAssets: offlineContent.mediaAssets.size,
@@ -273,10 +286,12 @@ export class OfflineSyncService {
       changes.updated.length === 0 &&
       changes.removed.length === 0
     ) {
+      // eslint-disable-next-line no-console
       console.log('No changes detected, skipping incremental sync')
       return existingContent
     }
 
+    // eslint-disable-next-line no-console
     console.log('Incremental sync changes:', {
       added: changes.added.length,
       updated: changes.updated.length,
@@ -319,7 +334,7 @@ export class OfflineSyncService {
         // Sync media assets
         for (const mediaAsset of item.mediaAssets) {
           if (!updatedContent.mediaAssets.has(mediaAsset.id)) {
-            await this.syncMediaAsset(mediaAsset, updatedContent)
+            this.syncMediaAsset(mediaAsset, updatedContent)
           }
         }
 
@@ -338,6 +353,7 @@ export class OfflineSyncService {
       0,
     )
 
+    // eslint-disable-next-line no-console
     console.log(`Incremental sync completed in ${Date.now() - startTime}ms`)
 
     return updatedContent
@@ -385,7 +401,7 @@ export class OfflineSyncService {
       }
 
       // Check if item has been updated
-      if (dbItem.updatedAt > content.lastSync) {
+      if (dbItem.updatedAt != null && dbItem.updatedAt > content.lastSync) {
         issues.push({
           type: 'expired',
           itemId,
@@ -435,8 +451,8 @@ export class OfflineSyncService {
   }
 
   // Private Helper Methods
-  private async getCategoriesToSync(categoryKeys?: string[]) {
-    if (categoryKeys && categoryKeys.length > 0) {
+  private async getCategoriesToSync(categoryKeys?: string[]): Promise<CategoryWithRelations[]> {
+    if (categoryKeys != null && categoryKeys.length > 0) {
       return await db.query.categories.findMany({
         where: and(inArray(categories.key, categoryKeys), eq(categories.isActive, true)),
         with: {
@@ -481,71 +497,79 @@ export class OfflineSyncService {
     })
   }
 
-  private async buildSyncCategory(
-    category: any,
+  private buildSyncCategory(
+    category: CategoryWithRelations,
     options: SyncOptions,
     maxSize?: number,
-  ): Promise<SyncCategory> {
+  ): SyncCategory {
     const syncConcepts: SyncConcept[] = []
     let categorySize = 0
 
-    for (const concept of category.concepts) {
-      const syncConcept = await this.buildSyncConcept(concept, options)
+    if (category.concepts != null) {
+      for (const concept of category.concepts) {
+        const syncConcept = this.buildSyncConcept(concept, options)
 
-      if (syncConcept.size > 0) {
-        // Check if adding this concept would exceed the size limit
-        if (maxSize && categorySize + syncConcept.size > maxSize) {
-          break
+        if (syncConcept.size > 0) {
+          // Check if adding this concept would exceed the size limit
+          if (
+            typeof maxSize === 'number' &&
+            maxSize > 0 &&
+            categorySize + syncConcept.size > maxSize
+          ) {
+            break
+          }
+
+          syncConcepts.push(syncConcept)
+          categorySize += syncConcept.size
         }
-
-        syncConcepts.push(syncConcept)
-        categorySize += syncConcept.size
       }
     }
 
     return {
-      id: category.id,
-      key: category.key,
-      name: category.name,
+      id: safeGetString(category.id),
+      key: safeGetString(category.key),
+      name: safeGetString(category.name),
       concepts: syncConcepts,
       size: categorySize,
       priority: this.calculateCategoryPriority(category),
     }
   }
 
-  private async buildSyncConcept(concept: any, options: SyncOptions): Promise<SyncConcept> {
+  private buildSyncConcept(concept: ConceptWithItems, options: SyncOptions): SyncConcept {
     const syncItems: SyncItem[] = []
     let conceptSize = 0
 
-    for (const item of concept.items) {
-      const syncItem = await this.buildSyncItem(item, options)
-      syncItems.push(syncItem)
-      conceptSize += syncItem.size
+    if (concept.items != null) {
+      for (const item of concept.items) {
+        const syncItem = this.buildSyncItem(item, options)
+        syncItems.push(syncItem)
+        conceptSize += syncItem.size
+      }
     }
 
     return {
-      id: concept.id,
-      key: concept.key,
-      name: concept.name,
+      id: safeGetString(concept.id),
+      key: safeGetString(concept.key),
+      name: safeGetString(concept.name),
       items: syncItems,
       size: conceptSize,
-      difficulty: concept.difficulty || 0.5,
-      estimatedTime: concept.estimatedTime || 0,
+      difficulty: safeGetNumber(concept.difficulty, 0.5),
+      estimatedTime: safeGetNumber(concept.estimatedTime, 0),
     }
   }
 
-  private async buildSyncItem(item: any, options: SyncOptions): Promise<SyncItem> {
+  private buildSyncItem(item: ItemWithMediaAssets, options: SyncOptions): SyncItem {
     const syncMediaAssets: SyncMediaAsset[] = []
     let itemSize = 0
 
     // Calculate base item size (text content)
     const textSize = new Blob([
       JSON.stringify({
-        id: item.id,
-        slug: item.slug,
-        title: item.title,
-        body: item.body,
-        type: item.type,
+        id: safeGetString(item.id),
+        slug: safeGetString(item.slug),
+        title: safeGetOptionalString(item.title),
+        body: safeGetString(item.body),
+        type: safeGetString(item.type),
         options: item.options,
         correctAnswer: item.correctAnswer,
       }),
@@ -554,59 +578,68 @@ export class OfflineSyncService {
     itemSize += textSize
 
     // Process media assets if enabled
-    if (options.includeMedia && item.mediaAssets) {
+    if (options.includeMedia === true && item.mediaAssets != null) {
       for (const itemMedia of item.mediaAssets) {
         const mediaAsset = itemMedia.mediaAsset
 
-        // Estimate optimized size based on device capabilities and compression level
-        const optimizedSize = this.estimateOptimizedMediaSize(
-          mediaAsset,
-          options.deviceCapabilities,
-          options.compressionLevel || 'medium',
-        )
+        if (mediaAsset != null) {
+          // Estimate optimized size based on device capabilities and compression level
+          const optimizedSize = this.estimateOptimizedMediaSize(
+            mediaAsset,
+            options.deviceCapabilities,
+            options.compressionLevel ?? 'medium',
+          )
 
-        const syncMediaAsset: SyncMediaAsset = {
-          id: mediaAsset.id,
-          url: mediaAsset.storageUrl,
-          optimizedUrl: mediaAsset.cdnUrl || mediaAsset.storageUrl,
-          type: mediaAsset.type,
-          size: optimizedSize,
-          format: this.getOptimalFormat(mediaAsset.type, options.deviceCapabilities),
-          dimensions:
-            mediaAsset.width && mediaAsset.height
-              ? {
-                  width: mediaAsset.width,
-                  height: mediaAsset.height,
-                }
-              : undefined,
-          checksum: this.generateChecksum(mediaAsset.id + mediaAsset.filename),
+          const syncMediaAsset: SyncMediaAsset = {
+            id: safeGetString(mediaAsset.id),
+            url: safeGetString(mediaAsset.storageUrl),
+            optimizedUrl:
+              safeGetOptionalString(mediaAsset.cdnUrl) ?? safeGetString(mediaAsset.storageUrl),
+            type: safeGetString(mediaAsset.type),
+            size: optimizedSize,
+            format: this.getOptimalFormat(
+              safeGetString(mediaAsset.type),
+              options.deviceCapabilities,
+            ),
+            dimensions:
+              typeof mediaAsset.width === 'number' && typeof mediaAsset.height === 'number'
+                ? {
+                    width: mediaAsset.width,
+                    height: mediaAsset.height,
+                  }
+                : undefined,
+            checksum: this.generateChecksum(
+              safeGetString(mediaAsset.id) + safeGetString(mediaAsset.filename),
+            ),
+          }
+
+          syncMediaAssets.push(syncMediaAsset)
+          itemSize += optimizedSize
         }
-
-        syncMediaAssets.push(syncMediaAsset)
-        itemSize += optimizedSize
       }
     }
 
     return {
-      id: item.id,
-      slug: item.slug,
-      title: item.title,
-      body: item.body,
-      type: item.type,
-      difficulty: item.difficulty || 0.5,
+      id: safeGetString(item.id),
+      slug: safeGetString(item.slug),
+      title: safeGetOptionalString(item.title) ?? undefined,
+      body: safeGetString(item.body),
+      type: safeGetString(item.type),
+      difficulty: safeGetNumber(item.difficulty, 0.5),
       mediaAssets: syncMediaAssets,
       size: itemSize,
       offline: true,
     }
   }
 
-  private async syncMediaAsset(mediaAsset: SyncMediaAsset, content: OfflineContent): Promise<void> {
+  private syncMediaAsset(mediaAsset: SyncMediaAsset, content: OfflineContent): void {
     // In a real implementation, this would download and cache the media asset
     // For now, we'll just add it to the content map
     content.mediaAssets.set(mediaAsset.id, mediaAsset)
   }
 
   private calculateSyncTime(totalSize: number, networkConditions: NetworkConditions): number {
+    // cSpell:ignore Mbps
     // Convert downlink from Mbps to bytes per second
     const bytesPerSecond = (networkConditions.downlink * 1024 * 1024) / 8
 
@@ -625,7 +658,7 @@ export class OfflineSyncService {
     )
   }
 
-  private calculateCategoryPriority(category: any): number {
+  private calculateCategoryPriority(category: CategoryWithRelations): number {
     // Priority based on category importance and usage
     const priorityMap: Record<string, number> = {
       traffic_signs: 10,
@@ -637,15 +670,17 @@ export class OfflineSyncService {
       hazard_perception: 8,
     }
 
-    return priorityMap[category.key] || 5
+    const categoryKey = safeGetString(category.key)
+    const priority = priorityMap[categoryKey]
+    return typeof priority === 'number' ? priority : 5
   }
 
   private estimateOptimizedMediaSize(
-    mediaAsset: any,
+    mediaAsset: MediaAssetRecord,
     deviceCapabilities: DeviceCapabilities,
     compressionLevel: string,
   ): number {
-    const originalSize = mediaAsset.size
+    const originalSize = safeGetNumber(mediaAsset?.size, 0)
 
     // Compression ratios based on level and format
     const compressionRatios = {
@@ -654,7 +689,7 @@ export class OfflineSyncService {
       high: 0.4,
     }
 
-    const ratio = compressionRatios[compressionLevel as keyof typeof compressionRatios] || 0.6
+    const ratio = compressionRatios[compressionLevel as keyof typeof compressionRatios] ?? 0.6
 
     // Additional reduction for modern formats
     if (deviceCapabilities.supportsAVIF) {
@@ -693,8 +728,8 @@ export class OfflineSyncService {
   ): { added: string[]; updated: string[]; removed: string[] } {
     const oldItems = new Set<string>()
     const newItems = new Set<string>()
-    const oldItemMap = new Map<string, any>()
-    const newItemMap = new Map<string, any>()
+    const oldItemMap = new Map<string, SyncItem>()
+    const newItemMap = new Map<string, SyncItem>()
 
     // Build maps of old items
     for (const category of oldManifest.categories) {
@@ -766,8 +801,8 @@ export class OfflineSyncService {
   }
 
   private async waitForResume(): Promise<void> {
-    return new Promise((resolve) => {
-      const checkStatus = () => {
+    return new Promise<void>((resolve) => {
+      const checkStatus = (): void => {
         if (this.syncProgress.status === 'syncing') {
           resolve()
         } else {

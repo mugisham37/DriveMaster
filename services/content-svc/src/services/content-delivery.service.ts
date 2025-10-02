@@ -1,6 +1,8 @@
-import { eq, and, desc, asc, sql, inArray } from 'drizzle-orm'
-import { db, mediaAssets, items, itemMediaAssets } from '../db/connection.js'
 import { createHash } from 'crypto'
+
+import { eq } from 'drizzle-orm'
+
+import { db, mediaAssets, items } from '../db/connection.js'
 
 export interface DeviceCapabilities {
   screenWidth: number
@@ -11,14 +13,14 @@ export interface DeviceCapabilities {
   supportsVideo: boolean
   maxVideoResolution: '480p' | '720p' | '1080p' | '4k'
   connectionType: 'slow-2g' | '2g' | '3g' | '4g' | '5g' | 'wifi'
-  bandwidth: number // Mbps
+  bandwidth: number // cSpell:ignore Mbps
   isLowEndDevice: boolean
   supportedCodecs: string[]
 }
 
 export interface NetworkConditions {
   effectiveType: 'slow-2g' | '2g' | '3g' | '4g'
-  downlink: number // Mbps
+  downlink: number // cSpell:ignore Mbps
   rtt: number // Round trip time in ms
   saveData: boolean
 }
@@ -60,7 +62,7 @@ export interface PreloadManifest {
 }
 
 export class ContentDeliveryService {
-  private readonly CDN_BASE_URL = process.env.CDN_BASE_URL || 'https://cdn.drivemaster.com'
+  private readonly CDN_BASE_URL = process.env.CDN_BASE_URL ?? 'https://cdn.drivemaster.com'
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
   private readonly compressionCache = new Map<string, OptimizedContent>()
 
@@ -97,7 +99,7 @@ export class ContentDeliveryService {
     }
 
     // Generate optimized content
-    const optimizedContent = await this.generateOptimizedContent(
+    const optimizedContent = this.generateOptimizedContent(
       mediaAsset,
       deliveryOptions,
       deviceCapabilities,
@@ -150,13 +152,13 @@ export class ContentDeliveryService {
     }
 
     // Set maximum dimensions based on device screen
-    if (!options.maxWidth) {
+    if (typeof options.maxWidth !== 'number' || options.maxWidth <= 0) {
       options.maxWidth = Math.min(
         deviceCapabilities.screenWidth * deviceCapabilities.pixelDensity,
         2048,
       )
     }
-    if (!options.maxHeight) {
+    if (typeof options.maxHeight !== 'number' || options.maxHeight <= 0) {
       options.maxHeight = Math.min(
         deviceCapabilities.screenHeight * deviceCapabilities.pixelDensity,
         2048,
@@ -171,26 +173,34 @@ export class ContentDeliveryService {
     return options
   }
 
-  private async generateOptimizedContent(
-    mediaAsset: any,
+  private generateOptimizedContent(
+    mediaAsset: typeof mediaAssets.$inferSelect,
     options: ContentDeliveryOptions,
     deviceCapabilities: DeviceCapabilities,
     cacheKey: string,
-  ): Promise<OptimizedContent> {
+  ): OptimizedContent {
     // Calculate quality parameters
     const qualityMap = { low: 60, medium: 80, high: 95 }
-    const quality = qualityMap[options.quality as keyof typeof qualityMap] || 80
+    const quality =
+      qualityMap[options.quality as keyof typeof qualityMap] !== undefined
+        ? qualityMap[options.quality as keyof typeof qualityMap]
+        : 80
 
     // Calculate optimal dimensions
+    const originalWidth = typeof mediaAsset.width === 'number' ? mediaAsset.width : 1920
+    const originalHeight = typeof mediaAsset.height === 'number' ? mediaAsset.height : 1080
+    const maxWidth = typeof options.maxWidth === 'number' ? options.maxWidth : 1920
+    const maxHeight = typeof options.maxHeight === 'number' ? options.maxHeight : 1080
+
     const { width, height } = this.calculateOptimalDimensions(
-      mediaAsset.width || 1920,
-      mediaAsset.height || 1080,
-      options.maxWidth || 1920,
-      options.maxHeight || 1080,
+      originalWidth,
+      originalHeight,
+      maxWidth,
+      maxHeight,
     )
 
     // Generate optimized URL with parameters
-    const optimizedUrl = this.buildOptimizedUrl(mediaAsset.cdnUrl || mediaAsset.storageUrl, {
+    const optimizedUrl = this.buildOptimizedUrl(mediaAsset.cdnUrl ?? mediaAsset.storageUrl, {
       format: options.format,
       width,
       height,
@@ -203,15 +213,15 @@ export class ContentDeliveryService {
       mediaAsset.size,
       width,
       height,
-      mediaAsset.width || 1920,
-      mediaAsset.height || 1080,
+      originalWidth,
+      originalHeight,
       quality,
       options.format,
     )
 
     return {
       id: mediaAsset.id,
-      originalUrl: mediaAsset.cdnUrl || mediaAsset.storageUrl,
+      originalUrl: mediaAsset.cdnUrl ?? mediaAsset.storageUrl,
       optimizedUrl,
       format: options.format,
       width,
@@ -224,7 +234,7 @@ export class ContentDeliveryService {
   }
 
   // Content Caching Strategies
-  async getCachedContent(cacheKey: string): Promise<OptimizedContent | null> {
+  getCachedContent(cacheKey: string): OptimizedContent | null {
     const cached = this.compressionCache.get(cacheKey)
     if (cached && cached.expiresAt > new Date()) {
       return cached
@@ -232,11 +242,11 @@ export class ContentDeliveryService {
     return null
   }
 
-  async setCachedContent(cacheKey: string, content: OptimizedContent): Promise<void> {
+  setCachedContent(cacheKey: string, content: OptimizedContent): void {
     this.compressionCache.set(cacheKey, content)
   }
 
-  async invalidateCache(mediaAssetId: string): Promise<void> {
+  invalidateCache(mediaAssetId: string): void {
     // Remove all cached versions of this media asset
     for (const [key, content] of this.compressionCache.entries()) {
       if (content.id === mediaAssetId) {
@@ -323,6 +333,8 @@ export class ContentDeliveryService {
         )
         manifests.push(manifest)
       } catch (error) {
+        // Using console.error is acceptable for error logging
+        // eslint-disable-next-line no-console
         console.error(`Failed to generate preload manifest for item ${itemId}:`, error)
       }
     }
@@ -371,7 +383,7 @@ export class ContentDeliveryService {
     }
 
     // Generate compressed content
-    const optimizedContent = await this.generateOptimizedContent(
+    const optimizedContent = this.generateOptimizedContent(
       mediaAsset,
       compressionParams,
       deviceCapabilities,
@@ -445,7 +457,10 @@ export class ContentDeliveryService {
 
     // Calculate compression ratio based on quality and format
     const formatMultipliers = { avif: 0.3, webp: 0.5, jpeg: 0.7, png: 0.9 }
-    const formatMultiplier = formatMultipliers[format as keyof typeof formatMultipliers] || 0.7
+    const formatMultiplier =
+      formatMultipliers[format as keyof typeof formatMultipliers] !== undefined
+        ? formatMultipliers[format as keyof typeof formatMultipliers]
+        : 0.7
 
     const qualityMultiplier = quality / 100
 
@@ -453,7 +468,7 @@ export class ContentDeliveryService {
   }
 
   private calculateCompressionForTargetSize(
-    mediaAsset: any,
+    mediaAsset: typeof mediaAssets.$inferSelect,
     targetSize: number,
     deviceCapabilities: DeviceCapabilities,
   ): ContentDeliveryOptions {
@@ -462,7 +477,7 @@ export class ContentDeliveryService {
 
     // Start with high quality and adjust down
     let quality: 'low' | 'medium' | 'high' = 'high'
-    let format = deviceCapabilities.supportsAVIF
+    let format: ContentDeliveryOptions['format'] = deviceCapabilities.supportsAVIF
       ? 'avif'
       : deviceCapabilities.supportsWebP
         ? 'webp'
@@ -477,12 +492,12 @@ export class ContentDeliveryService {
 
     // Calculate dimensions to achieve target size
     const dimensionReduction = Math.sqrt(compressionRatio)
-    const maxWidth = Math.round((mediaAsset.width || 1920) * dimensionReduction)
-    const maxHeight = Math.round((mediaAsset.height || 1080) * dimensionReduction)
+    const maxWidth = Math.round((mediaAsset.width ?? 1920) * dimensionReduction)
+    const maxHeight = Math.round((mediaAsset.height ?? 1080) * dimensionReduction)
 
     return {
       quality,
-      format: format as any,
+      format,
       maxWidth,
       maxHeight,
       progressive: true,
@@ -491,17 +506,22 @@ export class ContentDeliveryService {
     }
   }
 
+  // cSpell:ignore Mbps
   private calculateLoadTime(sizeBytes: number, bandwidthMbps: number): number {
     const sizeMb = sizeBytes / (1024 * 1024)
     return Math.round((sizeMb / bandwidthMbps) * 1000) // Return in milliseconds
   }
 
   private calculatePreloadPriority(
-    item: any,
+    item: typeof items.$inferSelect,
     networkConditions: NetworkConditions,
   ): 'high' | 'medium' | 'low' {
     // High priority for critical content on good connections
-    if (item.difficulty > 0.8 && networkConditions.downlink > 5) {
+    if (
+      typeof item.difficulty === 'number' &&
+      item.difficulty > 0.8 &&
+      networkConditions.downlink > 5
+    ) {
       return 'high'
     }
 
@@ -530,7 +550,7 @@ export class ContentDeliveryService {
 
   private generateCacheKey(
     mediaAssetId: string,
-    options: ContentDeliveryOptions | any,
+    options: ContentDeliveryOptions,
     deviceCapabilities: DeviceCapabilities,
   ): string {
     const keyData = {
@@ -550,7 +570,7 @@ export class ContentDeliveryService {
   }
 
   // Cache Management
-  async clearExpiredCache(): Promise<number> {
+  clearExpiredCache(): number {
     const now = new Date()
     let cleared = 0
 

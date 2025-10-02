@@ -1,3 +1,4 @@
+// cSpell:ignore dropoff
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import Fastify from 'fastify'
 import { ContentAnalyticsService } from '../services/content-analytics.service.js'

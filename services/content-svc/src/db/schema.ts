@@ -1,3 +1,4 @@
+import { relations, sql } from 'drizzle-orm'
 import {
   pgTable,
   uuid,
@@ -12,7 +13,6 @@ import {
   uniqueIndex,
   pgEnum,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
 
 // Enums for content management
 export const contentStatusEnum = pgEnum('content_status', [
@@ -95,7 +95,7 @@ export interface ItemOptions {
     text: string
     isCorrect: boolean
   }>
-  correctAnswer?: any
+  correctAnswer?: unknown
   explanation?: string
   hints?: string[]
 }
@@ -124,7 +124,10 @@ export const categories = pgTable(
     parentId: uuid('parent_id'),
 
     // Metadata
-    metadata: jsonb('metadata').$type<CategoryMetadata>().default({}),
+    metadata: jsonb('metadata')
+      .$type<CategoryMetadata>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -167,7 +170,10 @@ export const concepts = pgTable(
     successRate: real('success_rate').default(0.5),
 
     // Metadata
-    metadata: jsonb('metadata').$type<ConceptMetadata>().default({}),
+    metadata: jsonb('metadata')
+      .$type<ConceptMetadata>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     tags: jsonb('tags').$type<string[]>().default([]),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -201,6 +207,7 @@ export const conceptPrerequisites = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
   },
   (table) => ({
+    // cSpell:ignore Prereq prereq
     conceptPrereqIdx: uniqueIndex('concept_prerequisites_concept_prereq_idx').on(
       table.conceptId,
       table.prerequisiteId,
@@ -268,9 +275,18 @@ export const items = pgTable(
     abTestWeight: real('ab_test_weight').default(1.0),
 
     // Metadata and tagging
-    tags: jsonb('tags').$type<string[]>().default([]),
-    keywords: jsonb('keywords').$type<string[]>().default([]),
-    metadata: jsonb('metadata').$type<ItemMetadata>().default({}),
+    tags: jsonb('tags')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    keywords: jsonb('keywords')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    metadata: jsonb('metadata')
+      .$type<ItemMetadata>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
 
     // Audit trail
     createdAt: timestamp('created_at').defaultNow(),
@@ -425,7 +441,7 @@ export const contentAnalytics = pgTable(
     successfulAttempts: integer('successful_attempts').default(0),
     avgResponseTime: real('avg_response_time').default(0.0),
     avgConfidence: real('avg_confidence').default(0.0),
-    dropoffRate: real('dropoff_rate').default(0.0),
+    dropOffRate: real('drop_off_rate').default(0.0),
 
     // Engagement metrics
     engagementScore: real('engagement_score').default(0.0),

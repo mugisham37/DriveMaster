@@ -44,16 +44,18 @@ export interface SearchQuery {
   sortOrder?: 'asc' | 'desc'
 }
 
+export interface SearchHit {
+  id: string
+  type: string
+  score: number
+  source: Record<string, unknown>
+  highlight?: Record<string, string[]> | undefined
+}
+
 export interface SearchResult {
-  hits: Array<{
-    id: string
-    type: string
-    score: number
-    source: any
-    highlight?: any
-  }>
+  hits: SearchHit[]
   total: number
-  aggregations?: any
+  aggregations?: Record<string, unknown> | undefined
   took: number
 }
 
@@ -66,7 +68,7 @@ export class ElasticsearchService {
     this.indexName = indexName
   }
 
-  async initialize() {
+  async initialize(): Promise<void> {
     try {
       // Check if index exists
       const indexExists = await this.client.indices.exists({ index: this.indexName })
@@ -78,12 +80,14 @@ export class ElasticsearchService {
         await this.updateMapping()
       }
     } catch (error) {
+      // Using console.error is acceptable for initialization errors
+      // eslint-disable-next-line no-console
       console.error('Failed to initialize Elasticsearch:', error)
       throw error
     }
   }
 
-  private async createIndex() {
+  private async createIndex(): Promise<void> {
     const mapping = {
       mappings: {
         properties: {
@@ -136,7 +140,7 @@ export class ElasticsearchService {
     })
   }
 
-  private async updateMapping() {
+  private async updateMapping(): Promise<void> {
     const mapping = {
       properties: {
         entityType: { type: 'keyword' },
@@ -177,12 +181,13 @@ export class ElasticsearchService {
         ...mapping,
       })
     } catch (error) {
-      // Ignore mapping conflicts for existing fields
+      // Ignore mapping conflicts for existing fields - this is expected behavior
+      // eslint-disable-next-line no-console
       console.warn('Mapping update warning:', error)
     }
   }
 
-  async indexDocument(document: SearchDocument) {
+  async indexDocument(document: SearchDocument): Promise<void> {
     try {
       await this.client.index({
         index: this.indexName,
@@ -193,19 +198,22 @@ export class ElasticsearchService {
         },
       })
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to index document:', error)
       throw error
     }
   }
 
-  async removeDocument(entityType: string, entityId: string) {
+  async removeDocument(entityType: string, entityId: string): Promise<void> {
     try {
       await this.client.delete({
         index: this.indexName,
         id: `${entityType}_${entityId}`,
       })
-    } catch (error) {
-      if (error.meta?.statusCode !== 404) {
+    } catch (error: unknown) {
+      const esError = error as { meta?: { statusCode?: number } }
+      if (esError.meta?.statusCode !== 404) {
+        // eslint-disable-next-line no-console
         console.error('Failed to remove document:', error)
         throw error
       }
@@ -215,11 +223,11 @@ export class ElasticsearchService {
   async search(searchParams: SearchQuery): Promise<SearchResult> {
     try {
       // Build Elasticsearch query
-      const must: any[] = []
-      const filter: any[] = []
+      const must: Record<string, unknown>[] = []
+      const filter: Record<string, unknown>[] = []
 
       // Main search query
-      if (searchParams.query) {
+      if (searchParams.query.trim() !== '') {
         must.push({
           multi_match: {
             query: searchParams.query,
@@ -233,15 +241,15 @@ export class ElasticsearchService {
       // Filters
       filter.push({ term: { isActive: true } })
 
-      if (searchParams.entityTypes) {
+      if (searchParams.entityTypes != null && searchParams.entityTypes.length > 0) {
         filter.push({ terms: { entityType: searchParams.entityTypes } })
       }
 
-      if (searchParams.categoryKeys) {
+      if (searchParams.categoryKeys != null && searchParams.categoryKeys.length > 0) {
         filter.push({ terms: { categoryKey: searchParams.categoryKeys } })
       }
 
-      if (searchParams.conceptKeys) {
+      if (searchParams.conceptKeys != null && searchParams.conceptKeys.length > 0) {
         filter.push({ terms: { conceptKey: searchParams.conceptKeys } })
       }
 
@@ -256,32 +264,32 @@ export class ElasticsearchService {
         })
       }
 
-      if (searchParams.tags) {
+      if (searchParams.tags != null && searchParams.tags.length > 0) {
         filter.push({ terms: { tags: searchParams.tags } })
       }
 
-      if (searchParams.itemTypes) {
+      if (searchParams.itemTypes != null && searchParams.itemTypes.length > 0) {
         filter.push({ terms: { itemType: searchParams.itemTypes } })
       }
 
       // Sort configuration
-      let sort: any[] = []
+      const sort: Record<string, unknown>[] = []
 
       switch (searchParams.sortBy) {
         case 'relevance':
-          sort = [{ _score: { order: searchParams.sortOrder || 'desc' } }]
+          sort.push({ _score: { order: searchParams.sortOrder ?? 'desc' } })
           break
         case 'difficulty':
-          sort = [{ difficulty: { order: searchParams.sortOrder || 'desc' } }]
+          sort.push({ difficulty: { order: searchParams.sortOrder ?? 'desc' } })
           break
         case 'popularity':
-          sort = [{ popularity: { order: searchParams.sortOrder || 'desc' } }]
+          sort.push({ popularity: { order: searchParams.sortOrder ?? 'desc' } })
           break
         case 'created':
-          sort = [{ createdAt: { order: searchParams.sortOrder || 'desc' } }]
+          sort.push({ createdAt: { order: searchParams.sortOrder ?? 'desc' } })
           break
         case 'updated':
-          sort = [{ updatedAt: { order: searchParams.sortOrder || 'desc' } }]
+          sort.push({ updatedAt: { order: searchParams.sortOrder ?? 'desc' } })
           break
       }
 
@@ -295,8 +303,8 @@ export class ElasticsearchService {
             },
           },
           sort,
-          from: searchParams.offset || 0,
-          size: searchParams.limit || 20,
+          from: searchParams.offset ?? 0,
+          size: searchParams.limit ?? 20,
           highlight: {
             fields: {
               title: {},
@@ -306,6 +314,7 @@ export class ElasticsearchService {
               },
             },
           },
+          // cSpell:ignore aggs
           aggs: {
             categories: {
               terms: { field: 'categoryKey', size: 10 },
@@ -328,10 +337,18 @@ export class ElasticsearchService {
 
       const response = await this.client.search(searchQuery)
 
+      interface ElasticsearchHit {
+        _source: Record<string, unknown>
+        _score: number
+        highlight?: Record<string, string[]>
+      }
+
+      const hits = response.hits.hits as ElasticsearchHit[]
+
       return {
-        hits: response.hits.hits.map((hit: any) => ({
-          id: hit._source.entityId,
-          type: hit._source.entityType,
+        hits: hits.map((hit) => ({
+          id: String(hit._source.entityId),
+          type: String(hit._source.entityType),
           score: hit._score,
           source: hit._source,
           highlight: hit.highlight,
@@ -339,17 +356,18 @@ export class ElasticsearchService {
         total:
           typeof response.hits.total === 'number'
             ? response.hits.total
-            : response.hits.total?.value || 0,
+            : (response.hits.total?.value ?? 0),
         aggregations: response.aggregations,
         took: response.took,
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Search error:', error)
       throw error
     }
   }
 
-  async bulkIndex(documents: SearchDocument[]) {
+  async bulkIndex(documents: SearchDocument[]): Promise<unknown> {
     if (documents.length === 0) return
 
     const body = documents.flatMap((doc) => [
@@ -361,20 +379,22 @@ export class ElasticsearchService {
       const response = await this.client.bulk({ body })
 
       if (response.errors) {
+        // eslint-disable-next-line no-console
         console.error(
           'Bulk indexing errors:',
-          response.items.filter((item) => item.index?.error),
+          response.items.filter((item: { index?: { error?: unknown } }) => item.index?.error),
         )
       }
 
       return response
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Bulk indexing failed:', error)
       throw error
     }
   }
 
-  async reindex() {
+  async reindex(): Promise<void> {
     try {
       // Delete existing index
       await this.client.indices.delete({ index: this.indexName })
@@ -382,23 +402,31 @@ export class ElasticsearchService {
       // Recreate index
       await this.createIndex()
 
+      // eslint-disable-next-line no-console
       console.log('Elasticsearch index recreated successfully')
     } catch (error) {
+      // eslint-disable-next-line no-console
+      // cSpell:ignore Reindexing
+      // eslint-disable-next-line no-console
       console.error('Reindexing failed:', error)
       throw error
     }
   }
 
-  async getHealth() {
+  async getHealth(): Promise<{
+    cluster: unknown
+    index: unknown
+  } | null> {
     try {
       const health = await this.client.cluster.health()
       const indexStats = await this.client.indices.stats({ index: this.indexName })
 
       return {
         cluster: health,
-        index: indexStats.indices?.[this.indexName] || null,
+        index: indexStats.indices?.[this.indexName] ?? null,
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Health check failed:', error)
       return null
     }

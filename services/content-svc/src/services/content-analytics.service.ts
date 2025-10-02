@@ -1,5 +1,6 @@
-import { eq, and, desc, asc, sql, gte, lte, count, avg, sum } from 'drizzle-orm'
-import { db, items, concepts, categories, contentAnalytics, abTests } from '../db/connection.js'
+import { eq, and, asc, sql, gte, lte, avg, sum } from 'drizzle-orm'
+
+import { db, items, contentAnalytics } from '../db/connection.js'
 
 export interface ContentEffectivenessMetrics {
   itemId: string
@@ -9,7 +10,8 @@ export interface ContentEffectivenessMetrics {
   avgResponseTime: number
   avgConfidence: number
   engagementScore: number
-  dropoffRate: number
+  // cSpell:ignore dropoff
+  dropOffRate: number
   knowledgeGain: number
   retentionRate: number
   difficultyRating: number
@@ -40,7 +42,7 @@ export interface UserInteractionEvent {
   deviceType?: string
   sessionId?: string
   timestamp: Date
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface ContentQualityAssessment {
@@ -66,7 +68,7 @@ export class ContentAnalyticsService {
 
     // Calculate engagement score if not provided
     const engagementScore =
-      interaction.engagementScore || this.calculateEngagementScore(interaction)
+      interaction.engagementScore ?? this.calculateEngagementScore(interaction)
 
     // Update content analytics
     await db
@@ -79,11 +81,11 @@ export class ContentAnalyticsService {
         periodEnd,
         totalViews: interaction.eventType === 'view' ? 1 : 0,
         totalAttempts: interaction.eventType === 'attempt' ? 1 : 0,
-        successfulAttempts: interaction.isCorrect ? 1 : 0,
-        avgResponseTime: interaction.responseTime || 0,
-        avgConfidence: interaction.confidence || 0,
+        successfulAttempts: interaction.isCorrect === true ? 1 : 0,
+        avgResponseTime: interaction.responseTime ?? 0,
+        avgConfidence: interaction.confidence ?? 0,
         engagementScore,
-        dropoffRate: interaction.eventType === 'skip' ? 1 : 0,
+        dropOffRate: interaction.eventType === 'skip' ? 1 : 0,
       })
       .onConflictDoUpdate({
         target: [
@@ -95,15 +97,17 @@ export class ContentAnalyticsService {
         set: {
           totalViews: sql`${contentAnalytics.totalViews} + ${interaction.eventType === 'view' ? 1 : 0}`,
           totalAttempts: sql`${contentAnalytics.totalAttempts} + ${interaction.eventType === 'attempt' ? 1 : 0}`,
-          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${interaction.isCorrect ? 1 : 0}`,
-          avgResponseTime: interaction.responseTime
-            ? sql`(${contentAnalytics.avgResponseTime} * ${contentAnalytics.totalAttempts} + ${interaction.responseTime}) / (${contentAnalytics.totalAttempts} + 1)`
-            : contentAnalytics.avgResponseTime,
-          avgConfidence: interaction.confidence
-            ? sql`(${contentAnalytics.avgConfidence} * ${contentAnalytics.totalAttempts} + ${interaction.confidence}) / (${contentAnalytics.totalAttempts} + 1)`
-            : contentAnalytics.avgConfidence,
+          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${interaction.isCorrect === true ? 1 : 0}`,
+          avgResponseTime:
+            typeof interaction.responseTime === 'number' && interaction.responseTime > 0
+              ? sql`(${contentAnalytics.avgResponseTime} * ${contentAnalytics.totalAttempts} + ${interaction.responseTime}) / (${contentAnalytics.totalAttempts} + 1)`
+              : sql`${contentAnalytics.avgResponseTime}`,
+          avgConfidence:
+            typeof interaction.confidence === 'number' && interaction.confidence > 0
+              ? sql`(${contentAnalytics.avgConfidence} * ${contentAnalytics.totalAttempts} + ${interaction.confidence}) / (${contentAnalytics.totalAttempts} + 1)`
+              : sql`${contentAnalytics.avgConfidence}`,
           engagementScore: sql`(${contentAnalytics.engagementScore} * ${contentAnalytics.totalAttempts} + ${engagementScore}) / (${contentAnalytics.totalAttempts} + 1)`,
-          dropoffRate: sql`(${contentAnalytics.dropoffRate} * ${contentAnalytics.totalViews} + ${interaction.eventType === 'skip' ? 1 : 0}) / (${contentAnalytics.totalViews} + 1)`,
+          dropOffRate: sql`(${contentAnalytics.dropOffRate} * ${contentAnalytics.totalViews} + ${interaction.eventType === 'skip' ? 1 : 0}) / (${contentAnalytics.totalViews} + 1)`,
         },
       })
 
@@ -127,7 +131,7 @@ export class ContentAnalyticsService {
         avgResponseTime: avg(contentAnalytics.avgResponseTime),
         avgConfidence: avg(contentAnalytics.avgConfidence),
         avgEngagement: avg(contentAnalytics.engagementScore),
-        avgDropoff: avg(contentAnalytics.dropoffRate),
+        avgDropoff: avg(contentAnalytics.dropOffRate),
         avgKnowledgeGain: avg(contentAnalytics.knowledgeGain),
         avgRetention: avg(contentAnalytics.retentionRate),
         avgDifficulty: avg(contentAnalytics.difficultyRating),
@@ -143,32 +147,57 @@ export class ContentAnalyticsService {
       )
 
     const result = analytics[0]
-    const successRate =
-      result.totalAttempts > 0
-        ? Number(result.successfulAttempts) / Number(result.totalAttempts)
-        : 0
+    if (!result) {
+      // Return default metrics if no data found
+      return {
+        itemId,
+        totalViews: 0,
+        totalAttempts: 0,
+        successRate: 0,
+        avgResponseTime: 0,
+        avgConfidence: 0,
+        engagementScore: 0,
+        dropOffRate: 0,
+        knowledgeGain: 0,
+        retentionRate: 0,
+        difficultyRating: 0,
+        qualityScore: 0,
+      }
+    }
+
+    const totalAttempts = Number(result.totalAttempts) !== 0 ? Number(result.totalAttempts) : 0
+    const successfulAttempts =
+      Number(result.successfulAttempts) !== 0 ? Number(result.successfulAttempts) : 0
+    const successRate = totalAttempts > 0 ? successfulAttempts / totalAttempts : 0
 
     // Calculate quality score based on multiple factors
+    const avgEngagement = Number(result.avgEngagement) !== 0 ? Number(result.avgEngagement) : 0
+    const avgResponseTime =
+      Number(result.avgResponseTime) !== 0 ? Number(result.avgResponseTime) : 0
+    const avgDropoff = Number(result.avgDropoff) !== 0 ? Number(result.avgDropoff) : 0
+    const avgKnowledgeGain =
+      Number(result.avgKnowledgeGain) !== 0 ? Number(result.avgKnowledgeGain) : 0
+
     const qualityScore = this.calculateQualityScore({
       successRate,
-      engagementScore: Number(result.avgEngagement) || 0,
-      responseTime: Number(result.avgResponseTime) || 0,
-      dropoffRate: Number(result.avgDropoff) || 0,
-      knowledgeGain: Number(result.avgKnowledgeGain) || 0,
+      engagementScore: avgEngagement,
+      responseTime: avgResponseTime,
+      dropOffRate: avgDropoff,
+      knowledgeGain: avgKnowledgeGain,
     })
 
     return {
       itemId,
-      totalViews: Number(result.totalViews) || 0,
-      totalAttempts: Number(result.totalAttempts) || 0,
+      totalViews: Number(result.totalViews) !== 0 ? Number(result.totalViews) : 0,
+      totalAttempts,
       successRate,
-      avgResponseTime: Number(result.avgResponseTime) || 0,
-      avgConfidence: Number(result.avgConfidence) || 0,
-      engagementScore: Number(result.avgEngagement) || 0,
-      dropoffRate: Number(result.avgDropoff) || 0,
-      knowledgeGain: Number(result.avgKnowledgeGain) || 0,
-      retentionRate: Number(result.avgRetention) || 0,
-      difficultyRating: Number(result.avgDifficulty) || 0,
+      avgResponseTime,
+      avgConfidence: Number(result.avgConfidence) !== 0 ? Number(result.avgConfidence) : 0,
+      engagementScore: avgEngagement,
+      dropOffRate: avgDropoff,
+      knowledgeGain: avgKnowledgeGain,
+      retentionRate: Number(result.avgRetention) !== 0 ? Number(result.avgRetention) : 0,
+      difficultyRating: Number(result.avgDifficulty) !== 0 ? Number(result.avgDifficulty) : 0,
       qualityScore,
     }
   }
@@ -176,7 +205,6 @@ export class ContentAnalyticsService {
   // Generate content recommendations based on performance data
   async generateContentRecommendations(
     conceptId?: string,
-    categoryId?: string,
     limit = 20,
   ): Promise<ContentRecommendation[]> {
     const timeRange = {
@@ -185,13 +213,17 @@ export class ContentAnalyticsService {
     }
 
     // Get items to analyze
-    let itemsQuery = db.select().from(items).where(eq(items.isActive, true))
+    const whereConditions = [eq(items.isActive, true)]
 
-    if (conceptId) {
-      itemsQuery = itemsQuery.where(eq(items.conceptId, conceptId))
+    if (typeof conceptId === 'string' && conceptId.length > 0) {
+      whereConditions.push(eq(items.conceptId, conceptId))
     }
 
-    const itemsToAnalyze = await itemsQuery.limit(limit * 2) // Get more to filter
+    const itemsToAnalyze = await db
+      .select()
+      .from(items)
+      .where(and(...whereConditions))
+      .limit(limit * 2) // Get more to filter
 
     const recommendations: ContentRecommendation[] = []
 
@@ -282,7 +314,8 @@ export class ContentAnalyticsService {
     }
 
     // Assess dropoff rate
-    if (effectiveness.dropoffRate > 0.3) {
+    // cSpell:ignore dropoff
+    if (effectiveness.dropOffRate > 0.3) {
       issues.push({
         type: 'engagement' as const,
         severity: 'high' as const,
@@ -309,7 +342,16 @@ export class ContentAnalyticsService {
     itemId: string,
     period: 'daily' | 'weekly' | 'monthly' = 'daily',
     days = 30,
-  ) {
+  ): Promise<
+    Array<{
+      date: Date
+      successRate: number
+      engagementScore: number
+      avgResponseTime: number
+      totalAttempts: number
+      dropOffRate: number
+    }>
+  > {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
     const trends = await db
@@ -325,14 +367,19 @@ export class ContentAnalyticsService {
       )
       .orderBy(asc(contentAnalytics.periodStart))
 
-    return trends.map((trend) => ({
-      date: trend.periodStart,
-      successRate: trend.totalAttempts > 0 ? trend.successfulAttempts / trend.totalAttempts : 0,
-      engagementScore: trend.engagementScore,
-      avgResponseTime: trend.avgResponseTime,
-      totalAttempts: trend.totalAttempts,
-      dropoffRate: trend.dropoffRate,
-    }))
+    return trends.map((trend) => {
+      const totalAttempts = trend.totalAttempts ?? 0
+      const successfulAttempts = trend.successfulAttempts ?? 0
+
+      return {
+        date: trend.periodStart,
+        successRate: totalAttempts > 0 ? successfulAttempts / totalAttempts : 0,
+        engagementScore: trend.engagementScore ?? 0,
+        avgResponseTime: trend.avgResponseTime ?? 0,
+        totalAttempts,
+        dropOffRate: trend.dropOffRate ?? 0,
+      }
+    })
   }
 
   // Get top performing content
@@ -341,7 +388,15 @@ export class ContentAnalyticsService {
     categoryId?: string,
     limit = 10,
     metric: 'success_rate' | 'engagement' | 'quality_score' = 'quality_score',
-  ) {
+  ): Promise<
+    Array<{
+      item: typeof items.$inferSelect | null
+      successRate: number
+      engagementScore: number
+      qualityScore: number
+      totalAttempts: number
+    }>
+  > {
     const timeRange = {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       end: new Date(),
@@ -369,11 +424,12 @@ export class ContentAnalyticsService {
     // Calculate quality scores and sort
     const contentWithScores = await Promise.all(
       performanceData.map(async (data) => {
+        const avgEngagement = Number(data.avgEngagement) !== 0 ? Number(data.avgEngagement) : 0
         const qualityScore = this.calculateQualityScore({
           successRate: data.avgSuccessRate,
-          engagementScore: Number(data.avgEngagement) || 0,
+          engagementScore: avgEngagement,
           responseTime: 0, // Would need to calculate separately
-          dropoffRate: 0, // Would need to calculate separately
+          dropOffRate: 0, // Would need to calculate separately
           knowledgeGain: 0, // Would need to calculate separately
         })
 
@@ -391,7 +447,7 @@ export class ContentAnalyticsService {
         return {
           item,
           successRate: data.avgSuccessRate,
-          engagementScore: Number(data.avgEngagement) || 0,
+          engagementScore: avgEngagement,
           qualityScore,
           totalAttempts: Number(data.totalAttempts),
         }
@@ -401,11 +457,11 @@ export class ContentAnalyticsService {
     // Filter by concept/category if specified
     let filteredContent = contentWithScores.filter((c) => c.item)
 
-    if (conceptId) {
+    if (typeof conceptId === 'string' && conceptId.length > 0) {
       filteredContent = filteredContent.filter((c) => c.item?.conceptId === conceptId)
     }
 
-    if (categoryId) {
+    if (typeof categoryId === 'string' && categoryId.length > 0) {
       filteredContent = filteredContent.filter((c) => c.item?.concept?.categoryId === categoryId)
     }
 
@@ -422,7 +478,10 @@ export class ContentAnalyticsService {
       }
     })
 
-    return filteredContent.slice(0, limit)
+    return filteredContent.slice(0, limit).map((content) => ({
+      ...content,
+      item: content.item ?? null,
+    }))
   }
 
   // Private helper methods
@@ -431,14 +490,15 @@ export class ContentAnalyticsService {
 
     // Positive engagement indicators
     if (interaction.eventType === 'complete') score += 0.3
-    if (interaction.isCorrect) score += 0.2
-    if (interaction.confidence && interaction.confidence >= 4) score += 0.1
-    if (interaction.responseTime && interaction.responseTime < 30000) score += 0.1
+    if (interaction.isCorrect === true) score += 0.2
+    if (typeof interaction.confidence === 'number' && interaction.confidence >= 4) score += 0.1
+    if (typeof interaction.responseTime === 'number' && interaction.responseTime < 30000)
+      score += 0.1
 
     // Negative engagement indicators
     if (interaction.eventType === 'skip') score -= 0.4
-    if (interaction.hintsUsed && interaction.hintsUsed > 2) score -= 0.1
-    if (interaction.attemptsCount && interaction.attemptsCount > 3) score -= 0.1
+    if (typeof interaction.hintsUsed === 'number' && interaction.hintsUsed > 2) score -= 0.1
+    if (typeof interaction.attemptsCount === 'number' && interaction.attemptsCount > 3) score -= 0.1
 
     return Math.max(0, Math.min(1, score))
   }
@@ -447,7 +507,7 @@ export class ContentAnalyticsService {
     successRate: number
     engagementScore: number
     responseTime: number
-    dropoffRate: number
+    dropOffRate: number
     knowledgeGain: number
   }): number {
     // Weighted quality score calculation
@@ -455,6 +515,7 @@ export class ContentAnalyticsService {
       successRate: 0.25,
       engagementScore: 0.25,
       responseTime: 0.15, // Lower is better
+      // cSpell:ignore dropoff
       dropoffRate: 0.15, // Lower is better
       knowledgeGain: 0.2,
     }
@@ -463,7 +524,8 @@ export class ContentAnalyticsService {
     const normalizedResponseTime = Math.max(0, 1 - (metrics.responseTime - 30000) / 60000)
 
     // Invert dropoff rate (lower is better)
-    const invertedDropoffRate = 1 - metrics.dropoffRate
+    // cSpell:ignore dropoff
+    const invertedDropoffRate = 1 - metrics.dropOffRate
 
     const score =
       metrics.successRate * weights.successRate +
@@ -476,7 +538,7 @@ export class ContentAnalyticsService {
   }
 
   private analyzeItemPerformance(
-    item: any,
+    item: typeof items.$inferSelect,
     effectiveness: ContentEffectivenessMetrics,
   ): ContentRecommendation | null {
     // Skip items with insufficient data
@@ -517,7 +579,7 @@ export class ContentAnalyticsService {
       ]
       recommendations.expectedImpact = 0.6
       recommendations.confidence = 0.8
-    } else if (effectiveness.dropoffRate > 0.4) {
+    } else if (effectiveness.dropOffRate > 0.4) {
       recommendations.recommendationType = 'improve'
       recommendations.priority = 'high'
       recommendations.reason = 'High abandonment rate indicates engagement issues'
@@ -548,32 +610,28 @@ export class ContentAnalyticsService {
     itemId: string,
     interaction: UserInteractionEvent,
   ): Promise<void> {
-    // Update item-level statistics
-    const updates: any = {}
-
+    // Update item-level statistics using raw SQL for complex calculations
     if (interaction.eventType === 'attempt') {
-      updates.totalAttempts = sql`${items.totalAttempts} + 1`
+      const updateQuery = sql`
+        UPDATE items 
+        SET 
+          total_attempts = total_attempts + 1,
+          correct_attempts = correct_attempts + ${interaction.isCorrect === true ? 1 : 0},
+          success_rate = (correct_attempts + ${interaction.isCorrect === true ? 1 : 0})::float / GREATEST(total_attempts + 1, 1),
+          avg_response_time = CASE 
+            WHEN ${typeof interaction.responseTime === 'number' && interaction.responseTime > 0 ? interaction.responseTime : 0} > 0 
+            THEN (avg_response_time * total_attempts + ${interaction.responseTime ?? 0}) / (total_attempts + 1)
+            ELSE avg_response_time
+          END,
+          engagement_score = CASE 
+            WHEN ${typeof interaction.engagementScore === 'number' && interaction.engagementScore > 0 ? interaction.engagementScore : 0} > 0 
+            THEN (engagement_score * total_attempts + ${interaction.engagementScore ?? 0}) / (total_attempts + 1)
+            ELSE engagement_score
+          END
+        WHERE id = ${itemId}
+      `
 
-      if (interaction.isCorrect) {
-        updates.correctAttempts = sql`${items.correctAttempts} + 1`
-      }
-
-      // Recalculate success rate
-      updates.successRate = sql`${items.correctAttempts}::float / GREATEST(${items.totalAttempts}, 1)`
-    }
-
-    if (interaction.responseTime) {
-      // Update average response time
-      updates.avgResponseTime = sql`(${items.avgResponseTime} * ${items.totalAttempts} + ${interaction.responseTime}) / (${items.totalAttempts} + 1)`
-    }
-
-    if (interaction.engagementScore) {
-      // Update engagement score
-      updates.engagementScore = sql`(${items.engagementScore} * ${items.totalAttempts} + ${interaction.engagementScore}) / (${items.totalAttempts} + 1)`
-    }
-
-    if (Object.keys(updates).length > 0) {
-      await db.update(items).set(updates).where(eq(items.id, itemId))
+      await db.execute(updateQuery)
     }
   }
 
@@ -596,9 +654,9 @@ export class ContentAnalyticsService {
         periodEnd,
         totalViews: interaction.eventType === 'view' ? 1 : 0,
         totalAttempts: interaction.eventType === 'attempt' ? 1 : 0,
-        successfulAttempts: interaction.isCorrect ? 1 : 0,
-        avgResponseTime: interaction.responseTime || 0,
-        engagementScore: interaction.engagementScore || 0.5,
+        successfulAttempts: interaction.isCorrect === true ? 1 : 0,
+        avgResponseTime: interaction.responseTime ?? 0,
+        engagementScore: interaction.engagementScore ?? 0.5,
       })
       .onConflictDoUpdate({
         target: [
@@ -610,7 +668,7 @@ export class ContentAnalyticsService {
         set: {
           totalViews: sql`${contentAnalytics.totalViews} + ${interaction.eventType === 'view' ? 1 : 0}`,
           totalAttempts: sql`${contentAnalytics.totalAttempts} + ${interaction.eventType === 'attempt' ? 1 : 0}`,
-          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${interaction.isCorrect ? 1 : 0}`,
+          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${interaction.isCorrect === true ? 1 : 0}`,
         },
       })
   }

@@ -38,7 +38,12 @@
     "glorot",
     "softmax",
     "Kolmogorov",
-    "Smirnov"
+    "Smirnov",
+    "prereq",
+    "ILIKE",
+    "aggs",
+    "Reindexing",
+    "Mbps"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "**/*.js.map", "**/*.d.ts.map", "**/*.json"]
 }

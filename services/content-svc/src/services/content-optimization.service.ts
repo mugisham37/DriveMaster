@@ -1,22 +1,25 @@
-import { eq, and, desc, asc, sql, gte, lte, count, avg } from 'drizzle-orm'
-import { db, items, concepts, categories, contentAnalytics, abTests } from '../db/connection.js'
-import { ContentAnalyticsService } from './content-analytics.service.js'
-import { ABTestingService } from './ab-testing.service.js'
+import { eq, and, sql, avg, gte } from 'drizzle-orm'
 
-export interface OptimizationSuggestion {
+import { db, items, concepts, contentAnalytics } from '../db/connection.js'
+import type { OptimizationSuggestion, ABTestRecommendation, DatabaseItem } from '../types/index.js'
+
+import { ContentAnalyticsService } from './content-analytics.service.js'
+import type { ContentEffectivenessMetrics } from './content-analytics.service.js'
+
+// Local interface definitions
+interface OptimizationReport {
   itemId: string
-  type: 'difficulty' | 'content' | 'format' | 'engagement' | 'accessibility'
-  priority: 'high' | 'medium' | 'low'
-  title: string
-  description: string
-  suggestedChanges: string[]
-  expectedImpact: {
+  currentPerformance: {
     successRate: number
     engagementScore: number
+    avgResponseTime: number
+    // cSpell:ignore dropoff
+    dropoffRate: number
     completionRate: number
   }
-  confidence: number
-  dataPoints: number
+  suggestions: OptimizationSuggestion[]
+  abTestRecommendations: ABTestRecommendation[]
+  benchmarkComparison: unknown
 }
 
 export interface ContentOptimizationReport {
@@ -25,7 +28,7 @@ export interface ContentOptimizationReport {
     successRate: number
     engagementScore: number
     avgResponseTime: number
-    dropoffRate: number
+    dropOffRate: number
     qualityScore: number
   }
   suggestions: OptimizationSuggestion[]
@@ -46,21 +49,19 @@ export interface AutoOptimizationRule {
   name: string
   condition: string
   action: 'flag_for_review' | 'auto_adjust_difficulty' | 'suggest_retirement' | 'promote_content'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
   isActive: boolean
 }
 
 export class ContentOptimizationService {
   private analyticsService: ContentAnalyticsService
-  private abTestingService: ABTestingService
 
   constructor() {
     this.analyticsService = new ContentAnalyticsService()
-    this.abTestingService = new ABTestingService()
   }
 
   // Generate comprehensive optimization report for content
-  async generateOptimizationReport(itemId: string): Promise<ContentOptimizationReport> {
+  async generateOptimizationReport(itemId: string): Promise<OptimizationReport> {
     const item = await db.query.items.findFirst({
       where: eq(items.id, itemId),
       with: {
@@ -97,8 +98,9 @@ export class ContentOptimizationService {
         successRate: currentPerformance.successRate,
         engagementScore: currentPerformance.engagementScore,
         avgResponseTime: currentPerformance.avgResponseTime,
-        dropoffRate: currentPerformance.dropoffRate,
-        qualityScore: currentPerformance.qualityScore,
+        // cSpell:ignore dropoff
+        dropoffRate: currentPerformance.dropOffRate,
+        completionRate: 1 - currentPerformance.dropOffRate,
       },
       suggestions,
       abTestRecommendations,
@@ -108,9 +110,10 @@ export class ContentOptimizationService {
 
   // Generate specific optimization suggestions
   async generateOptimizationSuggestions(
-    item: any,
-    performance: any,
+    item: DatabaseItem,
+    performance: ContentEffectivenessMetrics,
   ): Promise<OptimizationSuggestion[]> {
+    await Promise.resolve() // Placeholder for async operations
     const suggestions: OptimizationSuggestion[] = []
 
     // Difficulty optimization
@@ -170,6 +173,7 @@ export class ContentOptimizationService {
           'Add interactive elements (drag-and-drop, simulations)',
           'Include real-world scenarios and examples',
           'Use multimedia content (images, videos, animations)',
+          // cSpell:ignore Gamify
           'Gamify with progress indicators and rewards',
           'Add storytelling elements',
         ],
@@ -209,8 +213,9 @@ export class ContentOptimizationService {
       })
     }
 
+    // cSpell:ignore Dropoff
     // Dropoff optimization
-    if (performance.dropoffRate > 0.3) {
+    if (performance.dropOffRate > 0.3) {
       suggestions.push({
         itemId: item.id,
         type: 'format',
@@ -235,7 +240,8 @@ export class ContentOptimizationService {
     }
 
     // Accessibility optimization
-    if (item.metadata && !item.metadata.accessibility) {
+    const metadata = item.metadata as { accessibility?: unknown } | null | undefined
+    if (metadata !== null && metadata !== undefined && metadata.accessibility === undefined) {
       suggestions.push({
         itemId: item.id,
         type: 'accessibility',
@@ -263,46 +269,97 @@ export class ContentOptimizationService {
   }
 
   // Generate A/B test recommendations
-  async generateABTestRecommendations(item: any, performance: any) {
-    const recommendations = []
+  async generateABTestRecommendations(
+    item: DatabaseItem,
+    performance: ContentEffectivenessMetrics,
+  ): Promise<ABTestRecommendation[]> {
+    await Promise.resolve() // Placeholder for async operations
+    const recommendations: ABTestRecommendation[] = []
 
     // Test difficulty variations
     if (performance.successRate < 0.6 || performance.successRate > 0.85) {
       recommendations.push({
+        testName: 'Difficulty Level Optimization',
         hypothesis: 'Adjusting difficulty level will improve learning outcomes',
         variants: [
-          'Current version',
-          'Easier version with more hints',
-          'Harder version with additional complexity',
+          {
+            name: 'Current version',
+            description: 'Existing difficulty level',
+            changes: { difficulty: item.difficulty },
+          },
+          {
+            name: 'Easier version with more hints',
+            description: 'Reduced difficulty with additional guidance',
+            changes: { difficulty: (item.difficulty ?? 0.5) * 0.8, hints: 'additional' },
+          },
+          {
+            name: 'Harder version with additional complexity',
+            description: 'Increased difficulty for advanced learners',
+            changes: { difficulty: (item.difficulty ?? 0.5) * 1.2 },
+          },
         ],
-        expectedOutcome: 'Find optimal difficulty for 70-80% success rate',
+        expectedImpact: 0.15,
+        confidence: 0.8,
       })
     }
 
     // Test engagement formats
     if (performance.engagementScore < 0.6) {
       recommendations.push({
+        testName: 'Content Format Optimization',
         hypothesis: 'Interactive content format will increase user engagement',
         variants: [
-          'Current text-based format',
-          'Interactive simulation',
-          'Video-based explanation',
-          'Gamified version with points',
+          {
+            name: 'Current text-based format',
+            description: 'Existing text-only presentation',
+            changes: { format: 'text' },
+          },
+          {
+            name: 'Interactive simulation',
+            description: 'Hands-on interactive experience',
+            changes: { format: 'interactive', type: 'INTERACTIVE' },
+          },
+          {
+            name: 'Video-based explanation',
+            description: 'Visual learning with video content',
+            changes: { format: 'video', mediaType: 'video' },
+          },
+          {
+            // cSpell:ignore Gamified gamified
+            name: 'Gamified version with points',
+            description: 'Game-like experience with scoring',
+            changes: { format: 'gamified', points: (item.points ?? 1) * 2 },
+          },
         ],
-        expectedOutcome: 'Increase engagement score by 20-30%',
+        expectedImpact: 0.25,
+        confidence: 0.7,
       })
     }
 
     // Test content length
-    if (performance.avgResponseTime > 45000 || performance.dropoffRate > 0.25) {
+    if (performance.avgResponseTime > 45000 || performance.dropOffRate > 0.25) {
       recommendations.push({
+        testName: 'Content Length Optimization',
         hypothesis: 'Shorter content chunks will reduce abandonment',
         variants: [
-          'Current full-length version',
-          'Split into 2 shorter parts',
-          'Condensed version with key points only',
+          {
+            name: 'Current full-length version',
+            description: 'Existing complete content',
+            changes: { length: 'full' },
+          },
+          {
+            name: 'Split into 2 shorter parts',
+            description: 'Divided into digestible sections',
+            changes: { length: 'split', parts: 2 },
+          },
+          {
+            name: 'Condensed version with key points only',
+            description: 'Essential information only',
+            changes: { length: 'condensed', estimatedTime: (item.estimatedTime ?? 60) * 0.7 },
+          },
         ],
-        expectedOutcome: 'Reduce dropoff rate and response time',
+        expectedImpact: 0.2,
+        confidence: 0.75,
       })
     }
 
@@ -310,7 +367,10 @@ export class ContentOptimizationService {
   }
 
   // Get benchmark comparison data
-  async getBenchmarkComparison(item: any, performance: any) {
+  async getBenchmarkComparison(
+    item: DatabaseItem,
+    performance: ContentEffectivenessMetrics,
+  ): Promise<unknown> {
     // Get category average
     const categoryStats = await db
       .select({
@@ -323,7 +383,7 @@ export class ContentOptimizationService {
       .where(
         and(
           eq(contentAnalytics.entityType, 'item'),
-          eq(concepts.categoryId, item.concept.categoryId),
+          eq(concepts.categoryId, item.concept?.categoryId ?? ''),
           gte(contentAnalytics.periodStart, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
         ),
       )
@@ -356,16 +416,16 @@ export class ContentOptimizationService {
       .where(
         and(
           eq(contentAnalytics.entityType, 'item'),
-          eq(concepts.categoryId, item.concept.categoryId),
+          eq(concepts.categoryId, item.concept?.categoryId ?? ''),
           gte(contentAnalytics.periodStart, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
         ),
       )
       .groupBy(contentAnalytics.entityId)
 
-    const categoryAvg = categoryStats.length > 0 ? Number(categoryStats[0].avgSuccessRate) || 0 : 0
-    const conceptAvg = conceptStats.length > 0 ? Number(conceptStats[0].avgSuccessRate) || 0 : 0
+    const categoryAvg = categoryStats.length > 0 ? Number(categoryStats[0]?.avgSuccessRate ?? 0) : 0
+    const conceptAvg = conceptStats.length > 0 ? Number(conceptStats[0]?.avgSuccessRate ?? 0) : 0
     const topPerformerRate =
-      topPerformer.length > 0 ? Number(topPerformer[0].maxSuccessRate) || 0 : 0
+      topPerformer.length > 0 ? Number(topPerformer[0]?.maxSuccessRate ?? 0) : 0
 
     return {
       categoryAverage: categoryAvg,
@@ -385,10 +445,10 @@ export class ContentOptimizationService {
 
   // Execute specific optimization rule
   async executeOptimizationRule(rule: AutoOptimizationRule): Promise<void> {
-    const timeRange = {
-      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-      end: new Date(),
-    }
+    // const timeRange = {
+    //   start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+    //   end: new Date(),
+    // }
 
     switch (rule.action) {
       case 'flag_for_review':
@@ -407,7 +467,11 @@ export class ContentOptimizationService {
   }
 
   // Get content optimization insights
-  async getOptimizationInsights(categoryId?: string, conceptId?: string, timeRange = 30) {
+  async getOptimizationInsights(
+    categoryId?: string,
+    conceptId?: string,
+    timeRange = 30,
+  ): Promise<unknown> {
     const startDate = new Date(Date.now() - timeRange * 24 * 60 * 60 * 1000)
 
     // Get underperforming content
@@ -429,8 +493,13 @@ export class ContentOptimizationService {
       successStories,
       summary: {
         totalItemsAnalyzed: underperforming.length + opportunities.length + successStories.length,
-        highPriorityIssues: underperforming.filter((item) => item.priority === 'high').length,
-        potentialImpact: opportunities.reduce((sum, opp) => sum + opp.expectedImpact, 0),
+        highPriorityIssues: (underperforming as Array<{ priority?: string }>).filter(
+          (item) => item.priority === 'high',
+        ).length,
+        potentialImpact: (opportunities as Array<{ expectedImpact?: number }>).reduce(
+          (sum, opp) => sum + (opp.expectedImpact ?? 0),
+          0,
+        ),
       },
     }
   }
@@ -438,7 +507,7 @@ export class ContentOptimizationService {
   // Private helper methods
   private async getActiveOptimizationRules(): Promise<AutoOptimizationRule[]> {
     // In a real implementation, these would be stored in the database
-    return [
+    return await Promise.resolve([
       {
         id: 'low-success-rate',
         name: 'Flag Low Success Rate Content',
@@ -449,7 +518,9 @@ export class ContentOptimizationService {
       },
       {
         id: 'high-dropoff',
+        // cSpell:ignore Dropoff
         name: 'Flag High Dropoff Content',
+        // cSpell:ignore dropoff
         condition: 'dropoff_rate > 0.5 AND views >= 50',
         action: 'flag_for_review',
         parameters: { threshold: 0.5, minViews: 50 },
@@ -463,53 +534,61 @@ export class ContentOptimizationService {
         parameters: { successThreshold: 0.85, engagementThreshold: 0.8, minAttempts: 30 },
         isActive: true,
       },
-    ]
+    ])
   }
 
-  private async flagContentForReview(rule: AutoOptimizationRule): Promise<void> {
+  private async flagContentForReview(_rule: AutoOptimizationRule): Promise<void> {
     // Implementation would flag content in the database
-    console.log(`Flagging content for review based on rule: ${rule.name}`)
+    await Promise.resolve()
+    // TODO: Replace with proper logging system
+    // console.log(`Flagging content for review based on rule: ${rule.name}`)
   }
 
-  private async autoAdjustDifficulty(rule: AutoOptimizationRule): Promise<void> {
+  private async autoAdjustDifficulty(_rule: AutoOptimizationRule): Promise<void> {
     // Implementation would automatically adjust difficulty parameters
-    console.log(`Auto-adjusting difficulty based on rule: ${rule.name}`)
+    await Promise.resolve()
+    // TODO: Replace with proper logging system
+    // console.log(`Auto-adjusting difficulty based on rule: ${rule.name}`)
   }
 
-  private async suggestContentRetirement(rule: AutoOptimizationRule): Promise<void> {
+  private async suggestContentRetirement(_rule: AutoOptimizationRule): Promise<void> {
     // Implementation would suggest retiring poorly performing content
-    console.log(`Suggesting content retirement based on rule: ${rule.name}`)
+    await Promise.resolve()
+    // TODO: Replace with proper logging system
+    // console.log(`Suggesting content retirement based on rule: ${rule.name}`)
   }
 
-  private async promoteHighPerformingContent(rule: AutoOptimizationRule): Promise<void> {
+  private async promoteHighPerformingContent(_rule: AutoOptimizationRule): Promise<void> {
     // Implementation would promote high-performing content
-    console.log(`Promoting high-performing content based on rule: ${rule.name}`)
+    await Promise.resolve()
+    // TODO: Replace with proper logging system
+    // console.log(`Promoting high-performing content based on rule: ${rule.name}`)
   }
 
   private async getUnderperformingContent(
-    categoryId?: string,
-    conceptId?: string,
-    startDate?: Date,
-  ) {
+    _categoryId?: string,
+    _conceptId?: string,
+    _startDate?: Date,
+  ): Promise<unknown[]> {
     // Implementation would query for underperforming content
-    return []
+    return await Promise.resolve([])
   }
 
   private async getOptimizationOpportunities(
-    categoryId?: string,
-    conceptId?: string,
-    startDate?: Date,
-  ) {
+    _categoryId?: string,
+    _conceptId?: string,
+    _startDate?: Date,
+  ): Promise<unknown[]> {
     // Implementation would identify optimization opportunities
-    return []
+    return await Promise.resolve([])
   }
 
   private async getOptimizationSuccessStories(
-    categoryId?: string,
-    conceptId?: string,
-    startDate?: Date,
-  ) {
+    _categoryId?: string,
+    _conceptId?: string,
+    _startDate?: Date,
+  ): Promise<unknown[]> {
     // Implementation would find successful optimizations
-    return []
+    return await Promise.resolve([])
   }
 }

@@ -335,9 +335,7 @@
         "categories_key_unique": {
           "name": "categories_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       }
     },
@@ -444,12 +442,8 @@
           "name": "concept_prerequisites_concept_id_concepts_id_fk",
           "tableFrom": "concept_prerequisites",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "concept_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["concept_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -457,12 +451,8 @@
           "name": "concept_prerequisites_prerequisite_id_concepts_id_fk",
           "tableFrom": "concept_prerequisites",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "prerequisite_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["prerequisite_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -728,12 +718,8 @@
           "name": "concepts_category_id_categories_id_fk",
           "tableFrom": "concepts",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -743,9 +729,7 @@
         "concepts_key_unique": {
           "name": "concepts_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       }
     },
@@ -1075,12 +1059,8 @@
           "name": "item_media_assets_item_id_items_id_fk",
           "tableFrom": "item_media_assets",
           "tableTo": "items",
-          "columnsFrom": [
-            "item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["item_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1088,12 +1068,8 @@
           "name": "item_media_assets_media_asset_id_media_assets_id_fk",
           "tableFrom": "item_media_assets",
           "tableTo": "media_assets",
-          "columnsFrom": [
-            "media_asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1528,12 +1504,8 @@
           "name": "items_concept_id_concepts_id_fk",
           "tableFrom": "items",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "concept_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["concept_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1543,9 +1515,7 @@
         "items_slug_unique": {
           "name": "items_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       }
     },
@@ -1944,23 +1914,12 @@
     "public.content_status": {
       "name": "content_status",
       "schema": "public",
-      "values": [
-        "DRAFT",
-        "REVIEW",
-        "PUBLISHED",
-        "ARCHIVED",
-        "DEPRECATED"
-      ]
+      "values": ["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED", "DEPRECATED"]
     },
     "public.difficulty_level": {
       "name": "difficulty_level",
       "schema": "public",
-      "values": [
-        "BEGINNER",
-        "INTERMEDIATE",
-        "ADVANCED",
-        "EXPERT"
-      ]
+      "values": ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"]
     },
     "public.item_type": {
       "name": "item_type",
@@ -1978,13 +1937,7 @@
     "public.media_type": {
       "name": "media_type",
       "schema": "public",
-      "values": [
-        "IMAGE",
-        "VIDEO",
-        "AUDIO",
-        "ANIMATION",
-        "SIMULATION"
-      ]
+      "values": ["IMAGE", "VIDEO", "AUDIO", "ANIMATION", "SIMULATION"]
     }
   },
   "schemas": {},

@@ -1,3 +1,5 @@
+// cSpell:ignore cuid dropoff
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -42,28 +44,28 @@ enum DifficultyLevel {
 
 // Hierarchical content organization
 model Category {
-  id          String    @id @default(cuid())
-  key         String    @unique // "traffic_signs", "road_rules", etc.
+  id          String  @id @default(cuid())
+  key         String  @unique // "traffic_signs", "road_rules", etc.
   name        String
   description String?
   icon        String?
-  color       String?   // UI color code
-  order       Int       @default(0)
-  isActive    Boolean   @default(true)
-  
+  color       String? // UI color code
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
+
   // Hierarchy support
-  parentId    String?
-  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
-  
+  parentId String?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
   // Relations
-  concepts    Concept[]
-  
+  concepts Concept[]
+
   // Metadata
-  metadata    Json      @default("{}")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([key])
   @@index([parentId])
   @@index([order])
@@ -72,46 +74,46 @@ model Category {
 
 // Learning concepts within categories
 model Concept {
-  id            String     @id @default(cuid())
-  key           String     @unique // "stop_signs", "right_of_way", etc.
+  id            String   @id @default(cuid())
+  key           String   @unique // "stop_signs", "right_of_way", etc.
   name          String
   description   String?
-  learningGoals String[]   // Array of learning objectives
-  
+  learningGoals String[] // Array of learning objectives
+
   // Categorization
-  category      Category   @relation(fields: [categoryId], references: [id])
-  categoryId    String
-  
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
   // Difficulty and progression
-  difficulty    Float      @default(0.5) // 0-1 scale
-  estimatedTime Int?       // Minutes to master
-  order         Int        @default(0)
-  
+  difficulty    Float @default(0.5) // 0-1 scale
+  estimatedTime Int? // Minutes to master
+  order         Int   @default(0)
+
   // Prerequisites and dependencies
   prerequisites ConceptPrerequisite[] @relation("ConceptPrerequisites")
   dependents    ConceptPrerequisite[] @relation("ConceptDependents")
-  
+
   // Content status
-  status        ContentStatus @default(DRAFT)
-  isActive      Boolean    @default(true)
-  
+  status   ContentStatus @default(DRAFT)
+  isActive Boolean       @default(true)
+
   // Relations
-  items         Item[]
-  
+  items Item[]
+
   // Analytics and performance data
-  totalItems    Int        @default(0)
-  avgDifficulty Float      @default(0.5)
-  avgEngagement Float      @default(0.5)
-  successRate   Float      @default(0.5)
-  
+  totalItems    Int   @default(0)
+  avgDifficulty Float @default(0.5)
+  avgEngagement Float @default(0.5)
+  successRate   Float @default(0.5)
+
   // Metadata
-  metadata      Json       @default("{}")
-  tags          String[]   @default([])
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  createdBy     String?
-  updatedBy     String?
-  
+  metadata  Json     @default("{}")
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
   @@index([key])
   @@index([categoryId])
   @@index([difficulty])
@@ -122,14 +124,14 @@ model Concept {
 
 // Concept prerequisites and dependencies
 model ConceptPrerequisite {
-  id           String  @id @default(cuid())
-  concept      Concept @relation("ConceptPrerequisites", fields: [conceptId], references: [id], onDelete: Cascade)
-  conceptId    String
-  prerequisite Concept @relation("ConceptDependents", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  id             String  @id @default(cuid())
+  concept        Concept @relation("ConceptPrerequisites", fields: [conceptId], references: [id], onDelete: Cascade)
+  conceptId      String
+  prerequisite   Concept @relation("ConceptDependents", fields: [prerequisiteId], references: [id], onDelete: Cascade)
   prerequisiteId String
-  weight       Float   @default(1.0) // Strength of dependency
-  isRequired   Boolean @default(true)
-  
+  weight         Float   @default(1.0) // Strength of dependency
+  isRequired     Boolean @default(true)
+
   @@unique([conceptId, prerequisiteId])
   @@index([conceptId])
   @@index([prerequisiteId])
@@ -137,74 +139,74 @@ model ConceptPrerequisite {
 
 // Content items (questions, scenarios, etc.)
 model Item {
-  id             String         @id @default(cuid())
-  slug           String         @unique
-  
+  id   String @id @default(cuid())
+  slug String @unique
+
   // Content organization
-  concept        Concept        @relation(fields: [conceptId], references: [id])
-  conceptId      String
-  
+  concept   Concept @relation(fields: [conceptId], references: [id])
+  conceptId String
+
   // Basic content
-  title          String?
-  body           String
-  explanation    String?        // Explanation for correct answer
-  
+  title       String?
+  body        String
+  explanation String? // Explanation for correct answer
+
   // Item configuration
-  type           ItemType       @default(MULTIPLE_CHOICE)
-  difficulty     Float          @default(0.5) // 0-1 scale
+  type            ItemType        @default(MULTIPLE_CHOICE)
+  difficulty      Float           @default(0.5) // 0-1 scale
   difficultyLevel DifficultyLevel @default(INTERMEDIATE)
-  estimatedTime  Int?           // Seconds to complete
-  
+  estimatedTime   Int? // Seconds to complete
+
   // Answer configuration
-  options        Json           @default("{}")
-  correctAnswer  Json           // Flexible answer format
-  
+  options       Json @default("{}")
+  correctAnswer Json // Flexible answer format
+
   // Scoring and feedback
-  points         Int            @default(1)
-  hints          String[]       @default([])
-  feedback       Json           @default("{}") // Success/failure messages
-  
+  points   Int      @default(1)
+  hints    String[] @default([])
+  feedback Json     @default("{}") // Success/failure messages
+
   // IRT Parameters (updated by adaptive service)
-  discrimination Float          @default(1.0) // IRT 'a' parameter
-  difficultyIRT  Float          @default(0.0) // IRT 'b' parameter
-  guessing       Float          @default(0.2) // IRT 'c' parameter
-  
+  discrimination Float @default(1.0) // IRT 'a' parameter
+  difficultyIRT  Float @default(0.0) // IRT 'b' parameter
+  guessing       Float @default(0.2) // IRT 'c' parameter
+
   // Performance analytics
-  totalAttempts  Int            @default(0)
-  correctAttempts Int           @default(0)
-  successRate    Float          @default(0.0)
-  avgResponseTime Float         @default(0.0)
-  engagementScore Float         @default(0.5)
-  
+  totalAttempts   Int   @default(0)
+  correctAttempts Int   @default(0)
+  successRate     Float @default(0.0)
+  avgResponseTime Float @default(0.0)
+  engagementScore Float @default(0.5)
+
   // Content status and lifecycle
-  status         ContentStatus  @default(DRAFT)
-  isActive       Boolean        @default(true)
-  publishedAt    DateTime?
-  
+  status      ContentStatus @default(DRAFT)
+  isActive    Boolean       @default(true)
+  publishedAt DateTime?
+
   // Versioning
-  version        Int            @default(1)
-  parentItem     Item?          @relation("ItemVersions", fields: [parentItemId], references: [id])
-  parentItemId   String?
-  versions       Item[]         @relation("ItemVersions")
-  
+  version      Int     @default(1)
+  parentItem   Item?   @relation("ItemVersions", fields: [parentItemId], references: [id])
+  parentItemId String?
+  versions     Item[]  @relation("ItemVersions")
+
   // A/B Testing
-  abTestVariant  String?        // A, B, C, etc.
-  abTestWeight   Float          @default(1.0)
-  
+  abTestVariant String? // A, B, C, etc.
+  abTestWeight  Float   @default(1.0)
+
   // Media and assets
-  mediaAssets    MediaAsset[]
-  
+  mediaAssets MediaAsset[]
+
   // Metadata and tagging
-  tags           String[]       @default([])
-  keywords       String[]       @default([])
-  metadata       Json           @default("{}")
-  
+  tags     String[] @default([])
+  keywords String[] @default([])
+  metadata Json     @default("{}")
+
   // Audit trail
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  createdBy      String?
-  updatedBy      String?
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
   @@index([slug])
   @@index([conceptId])
   @@index([type])
@@ -219,40 +221,40 @@ model Item {
 
 // Media assets (images, videos, etc.)
 model MediaAsset {
-  id          String     @id @default(cuid())
-  filename    String
+  id           String @id @default(cuid())
+  filename     String
   originalName String
-  mimeType    String
-  size        Int        // Bytes
-  width       Int?
-  height      Int?
-  duration    Int?       // For audio/video in seconds
-  
+  mimeType     String
+  size         Int // Bytes
+  width        Int?
+  height       Int?
+  duration     Int? // For audio/video in seconds
+
   // Storage information
-  storageUrl  String
-  cdnUrl      String?
-  thumbnail   String?    // Thumbnail URL
-  
+  storageUrl String
+  cdnUrl     String?
+  thumbnail  String? // Thumbnail URL
+
   // Classification
-  type        MediaType
-  alt         String?    // Alt text for accessibility
-  caption     String?
-  
+  type    MediaType
+  alt     String? // Alt text for accessibility
+  caption String?
+
   // Usage tracking
-  items       Item[]     @relation()
-  usageCount  Int        @default(0)
-  
+  items      Item[] @relation()
+  usageCount Int    @default(0)
+
   // Metadata
-  metadata    Json       @default("{}")
-  tags        String[]   @default([])
-  
+  metadata Json     @default("{}")
+  tags     String[] @default([])
+
   // Status
-  isActive    Boolean    @default(true)
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  uploadedBy  String?
-  
+  isActive Boolean @default(true)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  uploadedBy String?
+
   @@index([type])
   @@index([mimeType])
   @@index([isActive])
@@ -261,34 +263,34 @@ model MediaAsset {
 
 // A/B Testing experiments
 model AbTest {
-  id            String     @id @default(cuid())
-  name          String
-  description   String?
-  
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
   // Test configuration
-  hypothesis    String     // What we're testing
-  variants      Json       // Variant configurations
-  trafficSplit  Json       // Traffic allocation
-  
+  hypothesis   String // What we're testing
+  variants     Json // Variant configurations
+  trafficSplit Json // Traffic allocation
+
   // Targeting
-  targetConcepts String[]  @default([])
-  targetUsers   String[]   @default([])
-  
+  targetConcepts String[] @default([])
+  targetUsers    String[] @default([])
+
   // Status and timing
-  status        String     @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED
-  startDate     DateTime?
-  endDate       DateTime?
-  
+  status    String    @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED
+  startDate DateTime?
+  endDate   DateTime?
+
   // Results
-  results       Json       @default("{}")
-  winner        String?    // Winning variant
-  confidence    Float?     // Statistical confidence
-  
+  results    Json    @default("{}")
+  winner     String? // Winning variant
+  confidence Float? // Statistical confidence
+
   // Metadata
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  createdBy     String?
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
   @@index([status])
   @@index([startDate])
   @@index([endDate])
@@ -296,38 +298,38 @@ model AbTest {
 
 // Content performance analytics
 model ContentAnalytics {
-  id              String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Reference
-  entityType      String   // "item", "concept", "category"
-  entityId        String
-  
+  entityType String // "item", "concept", "category"
+  entityId   String
+
   // Time period
-  period          String   // "daily", "weekly", "monthly"
-  periodStart     DateTime
-  periodEnd       DateTime
-  
+  period      String // "daily", "weekly", "monthly"
+  periodStart DateTime
+  periodEnd   DateTime
+
   // Performance metrics
-  totalViews      Int      @default(0)
-  uniqueUsers     Int      @default(0)
-  totalAttempts   Int      @default(0)
+  totalViews         Int   @default(0)
+  uniqueUsers        Int   @default(0)
+  totalAttempts      Int   @default(0)
   successfulAttempts Int   @default(0)
-  avgResponseTime Float    @default(0.0)
-  avgConfidence   Float    @default(0.0)
-  dropoffRate     Float    @default(0.0)
-  
+  avgResponseTime    Float @default(0.0)
+  avgConfidence      Float @default(0.0)
+  dropoffRate        Float @default(0.0)
+
   // Engagement metrics
-  engagementScore Float    @default(0.0)
-  timeSpent       Float    @default(0.0)
-  completionRate  Float    @default(0.0)
-  
+  engagementScore Float @default(0.0)
+  timeSpent       Float @default(0.0)
+  completionRate  Float @default(0.0)
+
   // Learning effectiveness
-  knowledgeGain   Float    @default(0.0)
-  retentionRate   Float    @default(0.0)
-  difficultyRating Float   @default(0.0)
-  
-  createdAt       DateTime @default(now())
-  
+  knowledgeGain    Float @default(0.0)
+  retentionRate    Float @default(0.0)
+  difficultyRating Float @default(0.0)
+
+  createdAt DateTime @default(now())
+
   @@unique([entityType, entityId, period, periodStart])
   @@index([entityType, entityId])
   @@index([period])
@@ -336,26 +338,26 @@ model ContentAnalytics {
 
 // Content search and discovery
 model SearchIndex {
-  id          String   @id @default(cuid())
-  entityType  String   // "item", "concept", "category"
-  entityId    String
-  
+  id         String @id @default(cuid())
+  entityType String // "item", "concept", "category"
+  entityId   String
+
   // Search content
-  title       String?
-  content     String
-  keywords    String[]
-  tags        String[]
-  
+  title    String?
+  content  String
+  keywords String[]
+  tags     String[]
+
   // Search boosting
-  boost       Float    @default(1.0)
-  quality     Float    @default(0.5)
-  popularity  Float    @default(0.5)
-  
+  boost      Float @default(1.0)
+  quality    Float @default(0.5)
+  popularity Float @default(0.5)
+
   // Status
-  isIndexed   Boolean  @default(false)
-  
-  updatedAt   DateTime @updatedAt
-  
+  isIndexed Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+
   @@unique([entityType, entityId])
   @@index([isIndexed])
   @@index([quality])

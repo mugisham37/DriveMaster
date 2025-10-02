@@ -1,4 +1,6 @@
-import { eq, and, desc, asc, sql, ilike, inArray, gte, lte, count } from 'drizzle-orm'
+import { eq, and, desc, asc, sql, inArray, gte, lte, count } from 'drizzle-orm'
+import slugify from 'slugify'
+
 import {
   db,
   categories,
@@ -9,7 +11,6 @@ import {
   contentAnalytics,
 } from '../db/connection.js'
 import type { CategoryMetadata, ConceptMetadata, ItemMetadata } from '../db/schema.js'
-import slugify from 'slugify'
 
 export interface CreateCategoryRequest {
   key: string
@@ -51,11 +52,11 @@ export interface CreateItemRequest {
   difficulty?: number
   difficultyLevel?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT'
   estimatedTime?: number
-  options?: any
-  correctAnswer?: any
+  options?: Record<string, unknown>
+  correctAnswer?: unknown
   points?: number
   hints?: string[]
-  feedback?: any
+  feedback?: Record<string, unknown>
   tags?: string[]
   keywords?: string[]
   metadata?: ItemMetadata
@@ -76,9 +77,31 @@ export interface SearchRequest {
   sortOrder?: 'asc' | 'desc'
 }
 
+export interface SearchHit {
+  id: string
+  type: string
+  source: {
+    title: string
+    content: string
+    keywords: string[]
+    tags: string[]
+    boost?: number | null
+    quality?: number | null
+    popularity?: number | null
+  }
+}
+
+export interface SearchResponse {
+  hits: SearchHit[]
+  total: number
+}
+
 export class ContentService {
   // Category Management
-  async createCategory(data: CreateCategoryRequest, createdBy?: string) {
+  async createCategory(
+    data: CreateCategoryRequest,
+    _createdBy?: string,
+  ): Promise<typeof categories.$inferSelect> {
     // Check if key already exists
     const existing = await db.select().from(categories).where(eq(categories.key, data.key)).limit(1)
     if (existing.length > 0) {
@@ -86,7 +109,7 @@ export class ContentService {
     }
 
     // Validate parent exists if provided
-    if (data.parentId) {
+    if (data.parentId != null && data.parentId.trim() !== '') {
       const parent = await db
         .select()
         .from(categories)
@@ -102,19 +125,23 @@ export class ContentService {
       .values({
         key: data.key,
         name: data.name,
-        description: data.description,
-        icon: data.icon,
-        color: data.color,
-        parentId: data.parentId,
-        order: data.order || 0,
-        metadata: data.metadata || {},
+        description: data.description ?? null,
+        icon: data.icon ?? null,
+        color: data.color ?? null,
+        parentId: data.parentId ?? null,
+        order: data.order ?? 0,
+        metadata: data.metadata ?? ({} as CategoryMetadata),
       })
       .returning()
+
+    if (!category) {
+      throw new Error('Failed to create category')
+    }
 
     // Index for search
     await this.indexContentForSearch('category', category.id, {
       title: category.name,
-      content: category.description || '',
+      content: category.description ?? '',
       keywords: [],
       tags: [],
     })
@@ -122,7 +149,9 @@ export class ContentService {
     return category
   }
 
-  async getCategories(includeInactive = false) {
+  async getCategories(
+    includeInactive = false,
+  ): Promise<Awaited<ReturnType<typeof db.query.categories.findMany>>> {
     const whereClause = includeInactive ? undefined : eq(categories.isActive, true)
 
     return await db.query.categories.findMany({
@@ -147,7 +176,9 @@ export class ContentService {
     })
   }
 
-  async getCategoryByKey(key: string) {
+  async getCategoryByKey(
+    key: string,
+  ): Promise<Awaited<ReturnType<typeof db.query.categories.findFirst>> | undefined> {
     return await db.query.categories.findFirst({
       where: eq(categories.key, key),
       with: {
@@ -165,7 +196,10 @@ export class ContentService {
   }
 
   // Concept Management
-  async createConcept(data: CreateConceptRequest, createdBy?: string) {
+  async createConcept(
+    data: CreateConceptRequest,
+    createdBy?: string,
+  ): Promise<typeof concepts.$inferSelect> {
     // Check if key already exists
     const existing = await db.select().from(concepts).where(eq(concepts.key, data.key)).limit(1)
     if (existing.length > 0) {
@@ -187,24 +221,28 @@ export class ContentService {
       .values({
         key: data.key,
         name: data.name,
-        description: data.description,
+        description: data.description ?? null,
         categoryId: data.categoryId,
-        learningGoals: data.learningGoals || [],
-        difficulty: data.difficulty || 0.5,
-        estimatedTime: data.estimatedTime,
-        order: data.order || 0,
-        tags: data.tags || [],
-        metadata: data.metadata || {},
-        createdBy,
+        learningGoals: data.learningGoals ?? [],
+        difficulty: data.difficulty ?? 0.5,
+        estimatedTime: data.estimatedTime ?? null,
+        order: data.order ?? 0,
+        tags: data.tags ?? [],
+        metadata: data.metadata ?? ({} as ConceptMetadata),
+        createdBy: createdBy ?? null,
       })
       .returning()
+
+    if (!concept) {
+      throw new Error('Failed to create concept')
+    }
 
     // Index for search
     await this.indexContentForSearch('concept', concept.id, {
       title: concept.name,
-      content: concept.description || '',
-      keywords: concept.learningGoals,
-      tags: concept.tags,
+      content: concept.description ?? '',
+      keywords: concept.learningGoals ?? [],
+      tags: concept.tags ?? [],
     })
 
     return concept
@@ -216,14 +254,14 @@ export class ContentService {
       includeInactive?: boolean
       difficulty?: { min: number; max: number }
     } = {},
-  ) {
-    let whereConditions = []
+  ): Promise<Awaited<ReturnType<typeof db.query.concepts.findMany>>> {
+    const whereConditions = []
 
-    if (!filters.includeInactive) {
+    if (filters.includeInactive !== true) {
       whereConditions.push(eq(concepts.isActive, true))
     }
 
-    if (filters.categoryId) {
+    if (filters.categoryId != null && filters.categoryId.trim() !== '') {
       whereConditions.push(eq(concepts.categoryId, filters.categoryId))
     }
 
@@ -262,7 +300,9 @@ export class ContentService {
     })
   }
 
-  async getConceptByKey(key: string) {
+  async getConceptByKey(
+    key: string,
+  ): Promise<Awaited<ReturnType<typeof db.query.concepts.findFirst>> | undefined> {
     return await db.query.concepts.findFirst({
       where: eq(concepts.key, key),
       with: {
@@ -287,12 +327,13 @@ export class ContentService {
     })
   }
 
+  // cSpell:ignore prereq
   async addConceptPrerequisite(
     conceptId: string,
     prerequisiteId: string,
     weight = 1.0,
     isRequired = true,
-  ) {
+  ): Promise<typeof conceptPrerequisites.$inferSelect> {
     // Validate both concepts exist
     const [concept, prerequisite] = await Promise.all([
       db.select().from(concepts).where(eq(concepts.id, conceptId)).limit(1),
@@ -318,6 +359,10 @@ export class ContentService {
         isRequired,
       })
       .returning()
+
+    if (!relation) {
+      throw new Error('Failed to create concept prerequisite')
+    }
 
     return relation
   }
@@ -347,7 +392,10 @@ export class ContentService {
   }
 
   // Item Management
-  async createItem(data: CreateItemRequest, createdBy?: string) {
+  async createItem(
+    data: CreateItemRequest,
+    createdBy?: string,
+  ): Promise<typeof items.$inferSelect> {
     // Validate concept exists
     const concept = await db.select().from(concepts).where(eq(concepts.id, data.conceptId)).limit(1)
     if (concept.length === 0) {
@@ -355,32 +403,36 @@ export class ContentService {
     }
 
     // Generate unique slug
-    const slug = await this.generateUniqueSlug(data.title || data.body.substring(0, 50))
+    const slug = await this.generateUniqueSlug(data.title ?? data.body.substring(0, 50))
 
     const [item] = await db
       .insert(items)
       .values({
         slug,
         conceptId: data.conceptId,
-        title: data.title,
+        title: data.title ?? null,
         body: data.body,
-        explanation: data.explanation,
-        type: data.type || 'MULTIPLE_CHOICE',
-        difficulty: data.difficulty || 0.5,
-        difficultyLevel: data.difficultyLevel || 'INTERMEDIATE',
-        estimatedTime: data.estimatedTime,
-        options: data.options || {},
-        correctAnswer: data.correctAnswer,
-        points: data.points || 1,
-        hints: data.hints || [],
-        feedback: data.feedback || {},
-        tags: data.tags || [],
-        keywords: data.keywords || [],
-        metadata: data.metadata || {},
-        abTestVariant: data.abTestVariant,
-        createdBy,
+        explanation: data.explanation ?? null,
+        type: data.type ?? 'MULTIPLE_CHOICE',
+        difficulty: data.difficulty ?? 0.5,
+        difficultyLevel: data.difficultyLevel ?? 'INTERMEDIATE',
+        estimatedTime: data.estimatedTime ?? null,
+        options: data.options ?? {},
+        correctAnswer: data.correctAnswer ?? null,
+        points: data.points ?? 1,
+        hints: data.hints ?? [],
+        feedback: data.feedback ?? {},
+        tags: data.tags ?? [],
+        keywords: data.keywords ?? [],
+        metadata: data.metadata ?? ({} as ItemMetadata),
+        abTestVariant: data.abTestVariant ?? null,
+        createdBy: createdBy ?? null,
       })
       .returning()
+
+    if (!item) {
+      throw new Error('Failed to create item')
+    }
 
     // Update concept statistics
     await db
@@ -393,10 +445,10 @@ export class ContentService {
 
     // Index for search
     await this.indexContentForSearch('item', item.id, {
-      title: item.title || '',
+      title: item.title ?? '',
       content: item.body,
-      keywords: item.keywords,
-      tags: item.tags,
+      keywords: item.keywords ?? [],
+      tags: item.tags ?? [],
     })
 
     return item
@@ -413,23 +465,45 @@ export class ContentService {
       offset?: number
       includeInactive?: boolean
     } = {},
-  ) {
-    let whereConditions = []
+  ): Promise<{
+    items: Awaited<ReturnType<typeof db.query.items.findMany>>
+    pagination: {
+      total: number
+      limit: number
+      offset: number
+      hasMore: boolean
+    }
+  }> {
+    const whereConditions = []
 
-    if (!filters.includeInactive) {
+    if (filters.includeInactive !== true) {
       whereConditions.push(eq(items.isActive, true))
     }
 
-    if (filters.status) {
-      whereConditions.push(eq(items.status, filters.status as any))
+    if (filters.status != null && filters.status.trim() !== '') {
+      const validStatuses = ['DRAFT', 'REVIEW', 'PUBLISHED', 'ARCHIVED', 'DEPRECATED'] as const
+      if (validStatuses.includes(filters.status as (typeof validStatuses)[number])) {
+        whereConditions.push(eq(items.status, filters.status as (typeof validStatuses)[number]))
+      }
     }
 
-    if (filters.conceptId) {
+    if (filters.conceptId != null && filters.conceptId.trim() !== '') {
       whereConditions.push(eq(items.conceptId, filters.conceptId))
     }
 
-    if (filters.itemType) {
-      whereConditions.push(eq(items.type, filters.itemType as any))
+    if (filters.itemType != null && filters.itemType.trim() !== '') {
+      const validTypes = [
+        'MULTIPLE_CHOICE',
+        'TRUE_FALSE',
+        'SCENARIO',
+        'FILL_BLANK',
+        'MATCHING',
+        'ORDERING',
+        'INTERACTIVE',
+      ] as const
+      if (validTypes.includes(filters.itemType as (typeof validTypes)[number])) {
+        whereConditions.push(eq(items.type, filters.itemType as (typeof validTypes)[number]))
+      }
     }
 
     if (filters.difficulty) {
@@ -442,7 +516,7 @@ export class ContentService {
     }
 
     // If filtering by category, need to join with concepts
-    if (filters.categoryId) {
+    if (filters.categoryId != null && filters.categoryId.trim() !== '') {
       whereConditions.push(eq(concepts.categoryId, filters.categoryId))
     }
 
@@ -480,8 +554,8 @@ export class ContentService {
         },
       },
       orderBy: [desc(items.createdAt)],
-      limit: filters.limit || 20,
-      offset: filters.offset || 0,
+      limit: filters.limit ?? 20,
+      offset: filters.offset ?? 0,
     })
 
     const [itemsResult, totalCount] = await Promise.all([
@@ -492,18 +566,24 @@ export class ContentService {
         .where(whereConditions.length > 0 ? and(...whereConditions) : undefined),
     ])
 
+    const totalCountValue = totalCount[0]?.count ?? 0
+    const limitValue = filters.limit ?? 20
+    const offsetValue = filters.offset ?? 0
+
     return {
       items: itemsResult,
       pagination: {
-        total: totalCount[0].count,
-        limit: filters.limit || 20,
-        offset: filters.offset || 0,
-        hasMore: totalCount[0].count > (filters.offset || 0) + (filters.limit || 20),
+        total: totalCountValue,
+        limit: limitValue,
+        offset: offsetValue,
+        hasMore: totalCountValue > offsetValue + limitValue,
       },
     }
   }
 
-  async getItemBySlug(slug: string) {
+  async getItemBySlug(
+    slug: string,
+  ): Promise<Awaited<ReturnType<typeof db.query.items.findFirst>> | undefined> {
     return await db.query.items.findFirst({
       where: eq(items.slug, slug),
       with: {
@@ -536,9 +616,9 @@ export class ContentService {
   }
 
   // Content Search
-  async searchContent(searchParams: SearchRequest) {
+  async searchContent(searchParams: SearchRequest): Promise<SearchResponse> {
     // Build search conditions
-    let whereConditions = []
+    const whereConditions = []
 
     // Always search active content
     whereConditions.push(eq(searchIndex.isIndexed, true))
@@ -548,7 +628,8 @@ export class ContentService {
     }
 
     // Text search using PostgreSQL full-text search
-    if (searchParams.query) {
+    if (searchParams.query.trim() !== '') {
+      // cSpell:ignore ILIKE
       whereConditions.push(
         sql`(
           ${searchIndex.title} ILIKE ${`%${searchParams.query}%`} OR
@@ -560,7 +641,7 @@ export class ContentService {
     }
 
     // Build sort order
-    let orderBy = []
+    const orderBy = []
     switch (searchParams.sortBy) {
       case 'relevance':
         orderBy.push(desc(searchIndex.boost), desc(searchIndex.quality))
@@ -584,8 +665,8 @@ export class ContentService {
       .from(searchIndex)
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(...orderBy)
-      .limit(searchParams.limit || 20)
-      .offset(searchParams.offset || 0)
+      .limit(searchParams.limit ?? 20)
+      .offset(searchParams.offset ?? 0)
 
     // Get total count
     const totalCount = await db
@@ -593,21 +674,23 @@ export class ContentService {
       .from(searchIndex)
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
 
+    const totalCountValue = totalCount[0]?.count ?? 0
+
     return {
       hits: results.map((hit) => ({
         id: hit.entityId,
         type: hit.entityType,
         source: {
-          title: hit.title,
+          title: hit.title ?? '',
           content: hit.content,
-          keywords: hit.keywords,
-          tags: hit.tags,
+          keywords: hit.keywords ?? [],
+          tags: hit.tags ?? [],
           boost: hit.boost,
           quality: hit.quality,
           popularity: hit.popularity,
         },
       })),
-      total: totalCount[0].count,
+      total: totalCountValue,
     }
   }
 
@@ -622,11 +705,17 @@ export class ContentService {
       responseTime?: number
       engagement?: number
     },
-  ) {
+  ): Promise<void> {
     const period = 'daily'
     const now = new Date()
     const periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const periodEnd = new Date(periodStart.getTime() + 24 * 60 * 60 * 1000)
+
+    const viewsValue = metrics.views ?? 0
+    const attemptsValue = metrics.attempts ?? 0
+    const successfulAttemptsValue = metrics.successfulAttempts ?? 0
+    const responseTimeValue = metrics.responseTime ?? 0
+    const engagementValue = metrics.engagement ?? 0
 
     // Upsert analytics record
     await db
@@ -637,11 +726,11 @@ export class ContentService {
         period,
         periodStart,
         periodEnd,
-        totalViews: metrics.views || 0,
-        totalAttempts: metrics.attempts || 0,
-        successfulAttempts: metrics.successfulAttempts || 0,
-        avgResponseTime: metrics.responseTime || 0,
-        engagementScore: metrics.engagement || 0,
+        totalViews: viewsValue,
+        totalAttempts: attemptsValue,
+        successfulAttempts: successfulAttemptsValue,
+        avgResponseTime: responseTimeValue,
+        engagementScore: engagementValue,
       })
       .onConflictDoUpdate({
         target: [
@@ -651,20 +740,27 @@ export class ContentService {
           contentAnalytics.periodStart,
         ],
         set: {
-          totalViews: sql`${contentAnalytics.totalViews} + ${metrics.views || 0}`,
-          totalAttempts: sql`${contentAnalytics.totalAttempts} + ${metrics.attempts || 0}`,
-          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${metrics.successfulAttempts || 0}`,
-          avgResponseTime: metrics.responseTime
-            ? sql`(${contentAnalytics.avgResponseTime} + ${metrics.responseTime}) / 2`
-            : contentAnalytics.avgResponseTime,
-          engagementScore: metrics.engagement
-            ? sql`(${contentAnalytics.engagementScore} + ${metrics.engagement}) / 2`
-            : contentAnalytics.engagementScore,
+          totalViews: sql`${contentAnalytics.totalViews} + ${viewsValue}`,
+          totalAttempts: sql`${contentAnalytics.totalAttempts} + ${attemptsValue}`,
+          successfulAttempts: sql`${contentAnalytics.successfulAttempts} + ${successfulAttemptsValue}`,
+          avgResponseTime:
+            responseTimeValue > 0
+              ? sql`(${contentAnalytics.avgResponseTime} + ${responseTimeValue}) / 2`
+              : sql`${contentAnalytics.avgResponseTime}`,
+          engagementScore:
+            engagementValue > 0
+              ? sql`(${contentAnalytics.engagementScore} + ${engagementValue}) / 2`
+              : sql`${contentAnalytics.engagementScore}`,
         },
       })
   }
 
-  async getContentAnalytics(entityType: string, entityId: string, period = 'daily', days = 30) {
+  async getContentAnalytics(
+    entityType: string,
+    entityId: string,
+    period = 'daily',
+    days = 30,
+  ): Promise<(typeof contentAnalytics.$inferSelect)[]> {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
     return await db
@@ -683,7 +779,7 @@ export class ContentService {
 
   // Utility Methods
   private async generateUniqueSlug(text: string): Promise<string> {
-    let baseSlug = slugify(text.toLowerCase(), {
+    const baseSlug = slugify(text.toLowerCase(), {
       replacement: '-',
       remove: /[*+~.()'";!:@]/g,
       strict: true,
@@ -692,6 +788,7 @@ export class ContentService {
     let slug = baseSlug
     let counter = 1
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const existing = await db.select().from(items).where(eq(items.slug, slug)).limit(1)
       if (existing.length === 0) {
@@ -716,7 +813,11 @@ export class ContentService {
       quality?: number
       popularity?: number
     },
-  ) {
+  ): Promise<void> {
+    const boostValue = data.boost ?? 1.0
+    const qualityValue = data.quality ?? 0.5
+    const popularityValue = data.popularity ?? 0.5
+
     await db
       .insert(searchIndex)
       .values({
@@ -726,9 +827,9 @@ export class ContentService {
         content: data.content,
         keywords: data.keywords,
         tags: data.tags,
-        boost: data.boost || 1.0,
-        quality: data.quality || 0.5,
-        popularity: data.popularity || 0.5,
+        boost: boostValue,
+        quality: qualityValue,
+        popularity: popularityValue,
         isIndexed: true,
       })
       .onConflictDoUpdate({
@@ -738,9 +839,9 @@ export class ContentService {
           content: data.content,
           keywords: data.keywords,
           tags: data.tags,
-          boost: data.boost || 1.0,
-          quality: data.quality || 0.5,
-          popularity: data.popularity || 0.5,
+          boost: boostValue,
+          quality: qualityValue,
+          popularity: popularityValue,
           isIndexed: true,
           updatedAt: new Date(),
         },

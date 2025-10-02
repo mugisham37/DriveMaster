@@ -1,22 +1,34 @@
-import { eq, and, sql, gte, lte } from 'drizzle-orm'
-import { db, abTests, items } from '../db/connection.js'
+import { eq, and, sql } from 'drizzle-orm'
+
+import { db, abTests } from '../db/connection.js'
+
+export interface ABTestVariant {
+  name: string
+  description?: string
+  trafficPercentage: number
+  changes: Record<string, unknown>
+}
 
 export interface CreateABTestRequest {
   name: string
   description?: string
   hypothesis: string
-  variants: {
-    [key: string]: {
-      name: string
-      description?: string
-      trafficPercentage: number
-      changes: any // What changes to apply
-    }
-  }
+  variants: Record<string, ABTestVariant>
   targetConcepts?: string[]
   targetUsers?: string[]
   startDate?: Date
   endDate?: Date
+}
+
+export interface ABTestResultData {
+  impressions: number
+  conversions: number
+  totalResponseTime: number
+  totalEngagement: number
+}
+
+export interface ABTestResults {
+  [variantKey: string]: ABTestResultData
 }
 
 export interface ABTestResult {
@@ -35,14 +47,17 @@ export interface ABTestAnalysis {
   testId: string
   status: string
   results: ABTestResult[]
-  winner?: string
-  confidence?: number
+  winner?: string | null
+  confidence?: number | null
   statisticalSignificance: boolean
   recommendations: string[]
 }
 
 export class ABTestingService {
-  async createTest(data: CreateABTestRequest, createdBy?: string) {
+  async createTest(
+    data: CreateABTestRequest,
+    createdBy?: string,
+  ): Promise<typeof abTests.$inferSelect> {
     // Validate traffic split adds up to 100%
     const totalTraffic = Object.values(data.variants).reduce(
       (sum, variant) => sum + variant.trafficPercentage,
@@ -57,22 +72,25 @@ export class ABTestingService {
       .insert(abTests)
       .values({
         name: data.name,
-        description: data.description,
+        description: data.description ?? null,
         hypothesis: data.hypothesis,
         variants: data.variants,
         trafficSplit: this.calculateTrafficSplit(data.variants),
-        targetConcepts: data.targetConcepts || [],
-        targetUsers: data.targetUsers || [],
-        startDate: data.startDate,
-        endDate: data.endDate,
-        createdBy,
+        targetConcepts: data.targetConcepts ?? [],
+        targetUsers: data.targetUsers ?? [],
+        startDate: data.startDate ?? null,
+        endDate: data.endDate ?? null,
+        createdBy: createdBy ?? null,
       })
       .returning()
 
+    if (!test) {
+      throw new Error('Failed to create test')
+    }
     return test
   }
 
-  async startTest(testId: string) {
+  async startTest(testId: string): Promise<typeof abTests.$inferSelect> {
     const [test] = await db
       .update(abTests)
       .set({
@@ -90,7 +108,7 @@ export class ABTestingService {
     return test
   }
 
-  async pauseTest(testId: string) {
+  async pauseTest(testId: string): Promise<typeof abTests.$inferSelect> {
     const [test] = await db
       .update(abTests)
       .set({
@@ -107,7 +125,7 @@ export class ABTestingService {
     return test
   }
 
-  async completeTest(testId: string, winner?: string) {
+  async completeTest(testId: string, winner?: string): Promise<typeof abTests.$inferSelect> {
     const analysis = await this.analyzeTest(testId)
 
     const [test] = await db
@@ -115,8 +133,8 @@ export class ABTestingService {
       .set({
         status: 'COMPLETED',
         endDate: new Date(),
-        winner: winner || analysis.winner,
-        confidence: analysis.confidence,
+        winner: winner ?? analysis.winner ?? null,
+        confidence: analysis.confidence ?? null,
         results: analysis.results,
         updatedAt: new Date(),
       })
@@ -135,16 +153,26 @@ export class ABTestingService {
       where: eq(abTests.id, testId),
     })
 
-    if (!test || test.status !== 'RUNNING') {
-      throw new Error('Test not found or not running')
+    if (!test) {
+      throw new Error('Test not found')
+    }
+
+    if (test.status !== 'RUNNING') {
+      throw new Error('Test is not running')
     }
 
     // Check if test is targeted
-    if (test.targetUsers.length > 0 && !test.targetUsers.includes(userId)) {
+    if (test.targetUsers && test.targetUsers.length > 0 && !test.targetUsers.includes(userId)) {
       return 'control' // Default to control for non-targeted users
     }
 
-    if (test.targetConcepts.length > 0 && conceptId && !test.targetConcepts.includes(conceptId)) {
+    if (
+      test.targetConcepts &&
+      test.targetConcepts.length > 0 &&
+      typeof conceptId === 'string' &&
+      conceptId.length > 0 &&
+      !test.targetConcepts.includes(conceptId)
+    ) {
       return 'control' // Default to control for non-targeted concepts
     }
 
@@ -153,7 +181,7 @@ export class ABTestingService {
     const percentage = hash % 100
 
     // Assign variant based on traffic split
-    const trafficSplit = test.trafficSplit as { [key: string]: number }
+    const trafficSplit = test.trafficSplit as Record<string, number>
     let cumulativePercentage = 0
 
     for (const [variant, allocation] of Object.entries(trafficSplit)) {
@@ -174,9 +202,9 @@ export class ABTestingService {
       isSuccess: boolean
       responseTime?: number
       engagementScore?: number
-      metadata?: any
+      metadata?: Record<string, unknown>
     },
-  ) {
+  ): Promise<void> {
     // This would typically be stored in a separate events table
     // For now, we'll update the test results directly
     const test = await db.query.abTests.findFirst({
@@ -188,7 +216,7 @@ export class ABTestingService {
     }
 
     // Update test results (simplified - in production, use proper event tracking)
-    const currentResults = (test.results as any) || {}
+    const currentResults = (test.results as ABTestResults) ?? {}
     if (!currentResults[variant]) {
       currentResults[variant] = {
         impressions: 0,
@@ -198,15 +226,18 @@ export class ABTestingService {
       }
     }
 
-    currentResults[variant].impressions += 1
-    if (outcome.isSuccess) {
-      currentResults[variant].conversions += 1
-    }
-    if (outcome.responseTime) {
-      currentResults[variant].totalResponseTime += outcome.responseTime
-    }
-    if (outcome.engagementScore) {
-      currentResults[variant].totalEngagement += outcome.engagementScore
+    const variantData = currentResults[variant]
+    if (variantData !== undefined) {
+      variantData.impressions += 1
+      if (outcome.isSuccess) {
+        variantData.conversions += 1
+      }
+      if (typeof outcome.responseTime === 'number' && outcome.responseTime > 0) {
+        variantData.totalResponseTime += outcome.responseTime
+      }
+      if (typeof outcome.engagementScore === 'number' && outcome.engagementScore > 0) {
+        variantData.totalEngagement += outcome.engagementScore
+      }
     }
 
     await db
@@ -227,14 +258,14 @@ export class ABTestingService {
       throw new Error('Test not found')
     }
 
-    const rawResults = (test.results as any) || {}
+    const rawResults = (test.results ?? {}) as ABTestResults
     const results: ABTestResult[] = []
 
     // Calculate metrics for each variant
     for (const [variant, data] of Object.entries(rawResults)) {
-      const variantData = data as any
-      const impressions = variantData.impressions || 0
-      const conversions = variantData.conversions || 0
+      const variantData = data
+      const impressions = variantData.impressions ?? 0
+      const conversions = variantData.conversions ?? 0
       const conversionRate = impressions > 0 ? conversions / impressions : 0
       const avgResponseTime = impressions > 0 ? variantData.totalResponseTime / impressions : 0
       const avgEngagement = impressions > 0 ? variantData.totalEngagement / impressions : 0
@@ -260,19 +291,19 @@ export class ABTestingService {
 
     return {
       testId,
-      status: test.status,
+      status: test.status ?? 'DRAFT',
       results,
-      winner,
-      confidence,
+      winner: winner ?? null,
+      confidence: confidence ?? null,
       statisticalSignificance: isSignificant,
       recommendations,
     }
   }
 
-  async getActiveTests(conceptId?: string) {
-    let whereConditions = [eq(abTests.status, 'RUNNING')]
+  async getActiveTests(conceptId?: string): Promise<(typeof abTests.$inferSelect)[]> {
+    const whereConditions = [eq(abTests.status, 'RUNNING')]
 
-    if (conceptId) {
+    if (typeof conceptId === 'string' && conceptId.length > 0) {
       whereConditions.push(
         sql`${abTests.targetConcepts}::jsonb ? ${conceptId} OR array_length(${abTests.targetConcepts}, 1) IS NULL`,
       )
@@ -284,16 +315,16 @@ export class ABTestingService {
     })
   }
 
-  async getTestResults(testId: string) {
+  async getTestResults(testId: string): Promise<ABTestAnalysis> {
     return await this.analyzeTest(testId)
   }
 
   // Private helper methods
-  private calculateTrafficSplit(variants: any): { [key: string]: number } {
-    const split: { [key: string]: number } = {}
+  private calculateTrafficSplit(variants: Record<string, ABTestVariant>): Record<string, number> {
+    const split: Record<string, number> = {}
 
     for (const [key, variant] of Object.entries(variants)) {
-      split[key] = (variant as any).trafficPercentage
+      split[key] = variant.trafficPercentage
     }
 
     return split
@@ -310,7 +341,7 @@ export class ABTestingService {
   }
 
   private calculateStatisticalSignificance(results: ABTestResult[]): {
-    winner?: string
+    winner?: string | null
     confidence?: number
     isSignificant: boolean
   } {
@@ -325,6 +356,10 @@ export class ABTestingService {
 
     const best = sortedResults[0]
     const second = sortedResults[1]
+
+    if (!best || !second) {
+      return { isSignificant: false }
+    }
 
     // Simple z-test for proportions (simplified)
     const n1 = best.metrics.impressions
@@ -345,7 +380,7 @@ export class ABTestingService {
     const confidence = this.zScoreToConfidence(zScore)
 
     return {
-      winner: isSignificant ? best.variant : undefined,
+      winner: isSignificant ? best.variant : null,
       confidence,
       isSignificant,
     }
@@ -362,15 +397,15 @@ export class ABTestingService {
 
   private generateRecommendations(
     results: ABTestResult[],
-    winner?: string,
+    winner?: string | null,
     isSignificant?: boolean,
   ): string[] {
     const recommendations: string[] = []
 
-    if (!isSignificant) {
+    if (isSignificant !== true) {
       recommendations.push('Test needs more data to reach statistical significance')
       recommendations.push('Consider running the test longer or increasing traffic allocation')
-    } else if (winner) {
+    } else if (typeof winner === 'string' && winner.length > 0) {
       recommendations.push(`Implement variant "${winner}" as it shows significant improvement`)
 
       const winnerResult = results.find((r) => r.variant === winner)
