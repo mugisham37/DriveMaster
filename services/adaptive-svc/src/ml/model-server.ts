@@ -1,9 +1,10 @@
-import * as tf from '@tensorflow/tfjs'
+import { createHash } from 'crypto'
 import { EventEmitter } from 'events'
 import { promises as fs } from 'fs'
 import { join } from 'path'
-import { createHash } from 'crypto'
 import { performance } from 'perf_hooks'
+
+import * as tf from '@tensorflow/tfjs'
 
 export interface ModelMetadata {
   id: string
@@ -37,8 +38,8 @@ export interface BatchInferenceRequest {
   id: string
   features: Record<string, number>
   timestamp: number
-  resolve: (result: any) => void
-  reject: (error: any) => void
+  resolve: (result: unknown) => void
+  reject: (error: unknown) => void
 }
 
 export interface ModelPerformanceStats {
@@ -79,8 +80,6 @@ export class ModelServer extends EventEmitter {
     config?: Partial<ModelServingConfig>,
   ): Promise<void> {
     try {
-      const startTime = performance.now()
-
       // Validate model file exists
       const fullPath = join(this.modelBasePath, modelPath)
       await fs.access(fullPath)
@@ -144,13 +143,12 @@ export class ModelServer extends EventEmitter {
         await this.warmupModel(metadata.id, servingConfig.warmupRequests)
       }
 
-      const loadTime = performance.now() - startTime
-      console.log(`Model ${metadata.id} loaded successfully in ${loadTime.toFixed(2)}ms`)
+      console.log(`Model ${metadata.id} loaded successfully`)
 
-      this.emit('modelLoaded', { modelId: metadata.id, loadTime })
+      this.emit('modelLoaded', { modelId: metadata.id })
     } catch (error) {
       console.error(`Failed to load model ${metadata.id}:`, error)
-      throw new Error(`Model loading failed: ${error.message}`)
+      throw new Error(`Model loading failed: ${(error as Error).message}`)
     }
   }
 
@@ -162,7 +160,12 @@ export class ModelServer extends EventEmitter {
     metadata: Omit<ModelMetadata, 'checksum'>,
   ): void {
     // Validate input shape
-    const inputShape = model.inputs[0].shape.slice(1) // Remove batch dimension
+    const firstInput = model.inputs?.[0]
+    if (!firstInput?.shape) {
+      throw new Error('Model has no valid input shape')
+    }
+
+    const inputShape = firstInput.shape.slice(1) // Remove batch dimension
     if (JSON.stringify(inputShape) !== JSON.stringify(metadata.inputShape)) {
       throw new Error(
         `Input shape mismatch. Expected: ${JSON.stringify(metadata.inputShape)}, Got: ${JSON.stringify(inputShape)}`,
@@ -170,7 +173,12 @@ export class ModelServer extends EventEmitter {
     }
 
     // Validate output shape
-    const outputShape = model.outputs[0].shape.slice(1) // Remove batch dimension
+    const firstOutput = model.outputs?.[0]
+    if (!firstOutput?.shape) {
+      throw new Error('Model has no valid output shape')
+    }
+
+    const outputShape = firstOutput.shape.slice(1) // Remove batch dimension
     if (JSON.stringify(outputShape) !== JSON.stringify(metadata.outputShape)) {
       throw new Error(
         `Output shape mismatch. Expected: ${JSON.stringify(metadata.outputShape)}, Got: ${JSON.stringify(outputShape)}`,
@@ -268,7 +276,11 @@ export class ModelServer extends EventEmitter {
       if (metadata.type === 'classification') {
         confidence = Math.max(...Array.from(predictionData))
       } else {
-        confidence = Math.min(1, Math.max(0, 1 - Math.abs(predictionData[0] - 0.5) * 2))
+        const firstPrediction = predictionData[0]
+        if (firstPrediction === undefined) {
+          throw new Error('No prediction data available')
+        }
+        confidence = Math.min(1, Math.max(0, 1 - Math.abs(firstPrediction - 0.5) * 2))
       }
 
       const latency = performance.now() - startTime
@@ -281,7 +293,8 @@ export class ModelServer extends EventEmitter {
       this.updatePerformanceStats(modelId, latency, true)
 
       return {
-        prediction: predictionData.length === 1 ? predictionData[0] : Array.from(predictionData),
+        prediction:
+          predictionData.length === 1 ? (predictionData[0] ?? 0) : Array.from(predictionData),
         confidence,
         latency,
         cached: false,
@@ -386,6 +399,8 @@ export class ModelServer extends EventEmitter {
       const outputSize = metadata.outputShape.reduce((a, b) => a * b, 1)
       for (let i = 0; i < batch.length; i++) {
         const request = batch[i]
+        if (!request) continue
+
         const startIdx = i * outputSize
         const endIdx = startIdx + outputSize
         const predictionSlice = Array.from(predictionsData.slice(startIdx, endIdx))
@@ -395,13 +410,17 @@ export class ModelServer extends EventEmitter {
         if (metadata.type === 'classification') {
           confidence = Math.max(...predictionSlice)
         } else {
-          confidence = Math.min(1, Math.max(0, 1 - Math.abs(predictionSlice[0] - 0.5) * 2))
+          const firstPrediction = predictionSlice[0]
+          if (firstPrediction === undefined) {
+            throw new Error('No prediction data available')
+          }
+          confidence = Math.min(1, Math.max(0, 1 - Math.abs(firstPrediction - 0.5) * 2))
         }
 
         const latency = performance.now() - request.timestamp
 
         request.resolve({
-          prediction: predictionSlice.length === 1 ? predictionSlice[0] : predictionSlice,
+          prediction: predictionSlice.length === 1 ? (predictionSlice[0] ?? 0) : predictionSlice,
           confidence,
           latency,
           cached: false,
@@ -416,11 +435,17 @@ export class ModelServer extends EventEmitter {
       predictions.dispose()
     } catch (error) {
       // Reject all requests in batch
-      batch.forEach((request) => request.reject(error))
+      batch.forEach((request) => {
+        if (request) {
+          request.reject(error)
+        }
+      })
 
       // Update performance stats for failures
       batch.forEach((request) => {
-        this.updatePerformanceStats(modelId, performance.now() - request.timestamp, false)
+        if (request) {
+          this.updatePerformanceStats(modelId, performance.now() - request.timestamp, false)
+        }
       })
     }
   }

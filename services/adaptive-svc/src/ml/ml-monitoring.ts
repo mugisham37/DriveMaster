@@ -1,7 +1,10 @@
 import { EventEmitter } from 'events'
+
+import { logger } from '../utils/logger'
+
 import { MLInferenceEngine, ModelPerformanceMetrics } from './inference-engine'
-import { VectorSearchEngine } from './vector-engine'
 import { ModelServer, ModelPerformanceStats } from './model-server'
+import { VectorSearchEngine } from './vector-engine'
 
 export interface MLAlert {
   id: string
@@ -9,7 +12,7 @@ export interface MLAlert {
   type: 'performance' | 'drift' | 'error' | 'availability'
   modelId: string
   message: string
-  details: Record<string, any>
+  details: Record<string, unknown>
   timestamp: Date
   resolved: boolean
   resolvedAt?: Date
@@ -75,20 +78,24 @@ export class MLMonitoringService extends EventEmitter {
    */
   startMonitoring(): void {
     if (this.monitoringInterval) {
-      console.warn('Monitoring already started')
+      logger.warn('Monitoring already started')
       return
     }
 
-    console.log('Starting ML monitoring service...')
+    logger.info('Starting ML monitoring service...')
 
     this.monitoringInterval = setInterval(() => {
-      this.collectAndAnalyzeMetrics()
+      void this.collectAndAnalyzeMetrics().catch((error) => {
+        logger.error('Failed to collect and analyze metrics:', error)
+      })
     }, this.monitoringIntervalMs)
 
     // Initial metrics collection
-    this.collectAndAnalyzeMetrics()
+    void this.collectAndAnalyzeMetrics().catch((error) => {
+      logger.error('Failed to collect initial metrics:', error)
+    })
 
-    console.log('ML monitoring service started')
+    logger.info('ML monitoring service started')
     this.emit('monitoringStarted')
   }
 
@@ -99,7 +106,7 @@ export class MLMonitoringService extends EventEmitter {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval)
       this.monitoringInterval = null
-      console.log('ML monitoring service stopped')
+      logger.info('ML monitoring service stopped')
       this.emit('monitoringStopped')
     }
   }
@@ -125,7 +132,7 @@ export class MLMonitoringService extends EventEmitter {
       const serverMetrics = this.modelServer.getAllStats()
 
       // Collect system metrics
-      const systemMetrics = await this.collectSystemMetrics(modelMetrics, serverMetrics)
+      const systemMetrics = this.collectSystemMetrics(modelMetrics, serverMetrics)
 
       // Collect vector search metrics
       const vectorMetrics = await this.collectVectorMetrics()
@@ -145,11 +152,11 @@ export class MLMonitoringService extends EventEmitter {
       }
 
       // Analyze metrics and trigger alerts
-      await this.analyzeMetrics(metrics)
+      this.analyzeMetrics(metrics)
 
       this.emit('metricsCollected', metrics)
     } catch (error) {
-      console.error('Failed to collect ML metrics:', error)
+      logger.error('Failed to collect ML metrics:', error)
       this.emit('metricsError', error)
     }
   }
@@ -157,10 +164,10 @@ export class MLMonitoringService extends EventEmitter {
   /**
    * Collect system-level metrics
    */
-  private async collectSystemMetrics(
+  private collectSystemMetrics(
     modelMetrics: Record<string, ModelPerformanceMetrics>,
     serverMetrics: Record<string, ModelPerformanceStats>,
-  ): Promise<MLMetrics['systemMetrics']> {
+  ): MLMetrics['systemMetrics'] {
     // Calculate aggregate metrics
     const totalInferences = Object.values(modelMetrics).reduce(
       (sum, m) => sum + m.totalInferences,
@@ -201,16 +208,19 @@ export class MLMonitoringService extends EventEmitter {
     try {
       const indexStats = await this.vectorEngine.getIndexStats()
 
+      // Type-safe access to index stats
+      const contentIndexStats = indexStats.contentIndex as { totalVectorCount?: number } | undefined
+      const userIndexStats = indexStats.userIndex as { totalVectorCount?: number } | undefined
+
       return {
-        totalQueries: indexStats.contentIndex?.totalVectorCount || 0,
+        totalQueries: contentIndexStats?.totalVectorCount ?? 0,
         avgQueryTime: 50, // Placeholder - would track actual query times
         cacheHitRate: 0.8, // Placeholder - would track actual cache hits
         indexSize:
-          (indexStats.contentIndex?.totalVectorCount || 0) +
-          (indexStats.userIndex?.totalVectorCount || 0),
+          (contentIndexStats?.totalVectorCount ?? 0) + (userIndexStats?.totalVectorCount ?? 0),
       }
     } catch (error) {
-      console.warn('Failed to collect vector metrics:', error)
+      logger.warn('Failed to collect vector metrics:', error)
       return {
         totalQueries: 0,
         avgQueryTime: 0,
@@ -223,7 +233,7 @@ export class MLMonitoringService extends EventEmitter {
   /**
    * Analyze metrics and trigger alerts
    */
-  private async analyzeMetrics(metrics: MLMetrics): Promise<void> {
+  private analyzeMetrics(metrics: MLMetrics): void {
     for (const [ruleId, rule] of this.alertRules) {
       if (!rule.enabled) continue
 
@@ -231,17 +241,17 @@ export class MLMonitoringService extends EventEmitter {
         const shouldAlert = rule.condition(metrics)
 
         if (shouldAlert) {
-          const lastAlertTime = this.lastAlertTime.get(ruleId) || 0
+          const lastAlertTime = this.lastAlertTime.get(ruleId) ?? 0
           const now = Date.now()
 
           // Check cooldown period
           if (now - lastAlertTime > rule.cooldownMs) {
-            await this.triggerAlert(rule, metrics)
+            this.triggerAlert(rule, metrics)
             this.lastAlertTime.set(ruleId, now)
           }
         }
       } catch (error) {
-        console.error(`Error evaluating alert rule ${ruleId}:`, error)
+        logger.error(`Error evaluating alert rule ${ruleId}:`, error)
       }
     }
   }
@@ -249,7 +259,7 @@ export class MLMonitoringService extends EventEmitter {
   /**
    * Trigger an alert
    */
-  private async triggerAlert(rule: AlertRule, metrics: MLMetrics): Promise<void> {
+  private triggerAlert(rule: AlertRule, metrics: MLMetrics): void {
     const alertId = `${rule.id}-${Date.now()}`
 
     const alert: MLAlert = {
@@ -268,7 +278,7 @@ export class MLMonitoringService extends EventEmitter {
 
     this.alerts.set(alertId, alert)
 
-    console.log(`ML Alert triggered: ${alert.severity.toUpperCase()} - ${alert.message}`)
+    logger.info(`ML Alert triggered: ${alert.severity.toUpperCase()} - ${alert.message}`)
     this.emit('alertTriggered', alert)
 
     // Auto-resolve info alerts after 5 minutes
@@ -285,7 +295,7 @@ export class MLMonitoringService extends EventEmitter {
   /**
    * Extract relevant metrics for alert details
    */
-  private extractRelevantMetrics(rule: AlertRule, metrics: MLMetrics): any {
+  private extractRelevantMetrics(rule: AlertRule, metrics: MLMetrics): unknown {
     switch (rule.type) {
       case 'performance':
         return {
@@ -398,7 +408,7 @@ export class MLMonitoringService extends EventEmitter {
       enabled: true,
     })
 
-    console.log(`Configured ${this.alertRules.size} default alert rules`)
+    logger.info(`Configured ${this.alertRules.size} default alert rules`)
   }
 
   /**
@@ -406,7 +416,7 @@ export class MLMonitoringService extends EventEmitter {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.set(rule.id, rule)
-    console.log(`Added alert rule: ${rule.name}`)
+    logger.info(`Added alert rule: ${rule.name}`)
     this.emit('alertRuleAdded', rule)
   }
 
@@ -415,7 +425,7 @@ export class MLMonitoringService extends EventEmitter {
    */
   removeAlertRule(ruleId: string): void {
     if (this.alertRules.delete(ruleId)) {
-      console.log(`Removed alert rule: ${ruleId}`)
+      logger.info(`Removed alert rule: ${ruleId}`)
       this.emit('alertRuleRemoved', ruleId)
     }
   }
@@ -427,7 +437,7 @@ export class MLMonitoringService extends EventEmitter {
     const rule = this.alertRules.get(ruleId)
     if (rule) {
       rule.enabled = enabled
-      console.log(`Alert rule ${ruleId} ${enabled ? 'enabled' : 'disabled'}`)
+      logger.info(`Alert rule ${ruleId} ${enabled ? 'enabled' : 'disabled'}`)
       this.emit('alertRuleToggled', { ruleId, enabled })
     }
   }
@@ -442,7 +452,7 @@ export class MLMonitoringService extends EventEmitter {
       alert.resolvedAt = new Date()
       alert.details.resolution = resolution
 
-      console.log(`Alert resolved: ${alertId} - ${resolution}`)
+      logger.info(`Alert resolved: ${alertId} - ${resolution}`)
       this.emit('alertResolved', alert)
     }
   }
@@ -472,14 +482,14 @@ export class MLMonitoringService extends EventEmitter {
    * Get current metrics
    */
   getCurrentMetrics(): MLMetrics | null {
-    return this.metricsHistory[this.metricsHistory.length - 1] || null
+    return this.metricsHistory[this.metricsHistory.length - 1] ?? null
   }
 
   /**
    * Get metrics history
    */
   getMetricsHistory(limit?: number): MLMetrics[] {
-    if (limit) {
+    if (limit != null) {
       return this.metricsHistory.slice(-limit)
     }
     return [...this.metricsHistory]
@@ -526,13 +536,13 @@ export class MLMonitoringService extends EventEmitter {
     }
 
     if (currentMetrics) {
-      if (currentMetrics.systemMetrics.errorRate > 0.05) {
+      if ((currentMetrics.systemMetrics.errorRate ?? 0) > 0.05) {
         recommendations.push('Investigate error rate increase')
       }
-      if (currentMetrics.systemMetrics.avgResponseTime > 500) {
+      if ((currentMetrics.systemMetrics.avgResponseTime ?? 0) > 500) {
         recommendations.push('Optimize model performance')
       }
-      if (currentMetrics.systemMetrics.memoryUsage > 800) {
+      if ((currentMetrics.systemMetrics.memoryUsage ?? 0) > 800) {
         recommendations.push('Monitor memory usage')
       }
     }
@@ -544,7 +554,7 @@ export class MLMonitoringService extends EventEmitter {
         activeAlerts: activeAlerts.length,
         criticalAlerts: criticalAlerts.length,
         warningAlerts: warningAlerts.length,
-        systemMetrics: currentMetrics?.systemMetrics || ({} as MLMetrics['systemMetrics']),
+        systemMetrics: currentMetrics?.systemMetrics ?? ({} as MLMetrics['systemMetrics']),
         recommendations,
       },
     }
@@ -567,7 +577,7 @@ export class MLMonitoringService extends EventEmitter {
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
     this.metricsHistory = this.metricsHistory.filter((m) => m.timestamp.getTime() > oneDayAgo)
 
-    console.log('ML monitoring cleanup completed')
+    logger.info('ML monitoring cleanup completed')
   }
 
   /**
@@ -576,7 +586,7 @@ export class MLMonitoringService extends EventEmitter {
   shutdown(): void {
     this.stopMonitoring()
     this.cleanup()
-    console.log('ML monitoring service shutdown complete')
+    logger.info('ML monitoring service shutdown complete')
     this.emit('shutdown')
   }
 }

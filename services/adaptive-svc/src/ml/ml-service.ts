@@ -1,6 +1,5 @@
 import { MLInferenceEngine, InferenceResult } from './inference-engine'
 import { VectorSearchEngine, RecommendationQuery, SimilarityResult } from './vector-engine'
-import { loadEnv } from '@drivemaster/shared-config'
 
 export interface MLServiceConfig {
   pineconeApiKey: string
@@ -15,7 +14,7 @@ export interface EnhancedRecommendation {
   score: number
   confidence: number
   reasoning: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   mlPredictions: {
     learningOutcome: number
     optimalDifficulty: number
@@ -40,13 +39,11 @@ export class MLService {
   private initialized = false
 
   constructor(config?: Partial<MLServiceConfig>) {
-    const env = loadEnv()
-
     this.config = {
-      pineconeApiKey: config?.pineconeApiKey || env.PINECONE_API_KEY || '',
+      pineconeApiKey: config?.pineconeApiKey || process.env.PINECONE_API_KEY || '',
       pineconeEnvironment:
-        config?.pineconeEnvironment || env.PINECONE_ENVIRONMENT || 'us-west1-gcp',
-      modelBasePath: config?.modelBasePath || env.ML_MODEL_PATH || './models',
+        config?.pineconeEnvironment || process.env.PINECONE_ENVIRONMENT || 'us-west1-gcp',
+      modelBasePath: config?.modelBasePath || process.env.ML_MODEL_PATH || './models',
       enableModelDrift: config?.enableModelDrift ?? true,
       enableABTesting: config?.enableABTesting ?? true,
     }
@@ -207,8 +204,8 @@ export class MLService {
   async getEnhancedRecommendations(
     userId: string,
     conceptKey: string,
-    knowledgeState: any,
-    contextualInfo: Record<string, any> = {},
+    knowledgeState: Record<string, unknown>,
+    contextualInfo: Record<string, unknown> = {},
     options: {
       maxItems?: number
       contentType?: string
@@ -225,9 +222,11 @@ export class MLService {
       const query: RecommendationQuery = {
         userId,
         conceptKey,
-        contentType: options.contentType,
-        targetDifficulty: options.targetDifficulty,
-        excludeIds: options.excludeIds,
+        ...(options.contentType && { contentType: options.contentType }),
+        ...(options.targetDifficulty !== undefined && {
+          targetDifficulty: options.targetDifficulty,
+        }),
+        ...(options.excludeIds && { excludeIds: options.excludeIds }),
         topK: (options.maxItems || 10) * 2, // Get more candidates for ML filtering
       }
 
@@ -241,8 +240,8 @@ export class MLService {
           // Get ML predictions for this item
           const itemContextualInfo = {
             ...contextualInfo,
-            itemDifficulty: item.metadata.difficulty,
-            itemType: item.metadata.contentType,
+            conceptDifficulty: item.metadata.difficulty,
+            // Map contentType to appropriate contextual info if needed
           }
 
           const [learningOutcome, optimalDifficulty] = await Promise.all([
@@ -320,9 +319,9 @@ export class MLService {
    */
   async getUserMLInsights(
     userId: string,
-    userProfile: any,
-    knowledgeStates: Record<string, any>,
-    recentActivity: any[],
+    userProfile: Record<string, unknown>,
+    knowledgeStates: Record<string, unknown>,
+    recentActivity: Record<string, unknown>[],
   ): Promise<MLInsights> {
     if (!this.initialized) {
       throw new Error('ML Service not initialized')
@@ -442,7 +441,7 @@ export class MLService {
     score += (1 - difficultyGap) * 0.3
 
     // Content type preference
-    const preferredType = contextualInfo.preferredContentType || 'question'
+    const preferredType = Boolean(contextualInfo.preferredContentType) || 'question'
     if (item.metadata.contentType === preferredType) {
       score += 0.2
     }
@@ -546,7 +545,7 @@ export class MLService {
    */
   private determineNextMilestone(
     conceptMasteries: { concept: string; mastery: number }[],
-    userProfile: any,
+    _userProfile: any,
   ): string {
     const weakestConcept = conceptMasteries[conceptMasteries.length - 1]
 

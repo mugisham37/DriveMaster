@@ -9,7 +9,8 @@
     "biserial",
     "Marsaglia",
     "Tsang",
-    "drivemaster"
+    "drivemaster",
+    "cooldown"
   ],
   "flagWords": [],
   "ignorePaths": ["node_modules/**", "dist/**", "coverage/**", "*.log"]

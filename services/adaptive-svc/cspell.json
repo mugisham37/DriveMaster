@@ -1,0 +1,26 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "tfjs",
+    "relu",
+    "glorot",
+    "Crossentropy",
+    "Kolmogorov",
+    "Smirnov",
+    "cooldown",
+    "tensorflow",
+    "pinecone",
+    "embeddings",
+    "vectorization",
+    "upsert",
+    "serverless",
+    "binaryCrossentropy",
+    "meanSquaredError",
+    "glorotUniform",
+    "tanh",
+    "sigmoid",
+    ""
+  ],
+  "ignorePaths": ["node_modules/**", "dist/**", "build/**", "*.log"]
+}

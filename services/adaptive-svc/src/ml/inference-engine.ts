@@ -1,6 +1,9 @@
-import * as tf from '@tensorflow/tfjs'
 import { createHash } from 'crypto'
 import { performance } from 'perf_hooks'
+
+import * as tf from '@tensorflow/tfjs'
+
+import { logger } from '../utils/logger'
 
 export interface MLModel {
   id: string
@@ -24,6 +27,51 @@ export interface FeatureVector {
   conceptKey: string
   features: Record<string, number>
   timestamp: Date
+}
+
+export interface KnowledgeState {
+  currentMastery?: number
+  learningVelocity?: number
+  totalInteractions?: number
+  correctAnswers?: number
+  pL0?: number
+  pT?: number
+  pG?: number
+  pS?: number
+  decayRate?: number
+  lastInteraction?: Date
+}
+
+export interface ContextualInfo {
+  fatigueLevel?: number
+  studyStreak?: number
+  sessionLength?: number
+  conceptDifficulty?: number
+  avgResponseTime?: number
+  avgConfidence?: number
+  recentEngagement?: number
+  completionRate?: number
+}
+
+export interface UserProfile {
+  createdAt?: Date
+  totalSessions?: number
+  avgSessionLength?: number
+  overallAccuracy?: number
+  avgMastery?: number
+  conceptsCompleted?: number
+  currentStreak?: number
+  maxStreak?: number
+  achievementsUnlocked?: number
+  preferredTimeOfDay?: number
+  avgResponseTime?: number
+  helpRequestFrequency?: number
+  friendsCount?: number
+  socialInteractions?: number
+}
+
+export interface RecentActivity {
+  createdAt: Date | string
 }
 
 export interface InferenceResult {
@@ -76,49 +124,57 @@ export class MLInferenceEngine {
   private featureCache: Map<string, FeatureVector> = new Map()
   private abTestConfig: Map<string, ABTestConfig> = new Map()
   private readonly maxCacheSize = 100
-  private readonly driftThreshold = 0.15
-  private readonly modelBasePath = process.env.ML_MODEL_PATH || './models'
+  private readonly modelBasePath = process.env.ML_MODEL_PATH ?? './models'
 
   constructor() {
     // Initialize TensorFlow.js backend
-    tf.ready().then(() => {
-      console.log('TensorFlow.js backend initialized:', tf.getBackend())
-      // Only initialize default models in non-test environment
-      if (process.env.NODE_ENV !== 'test') {
-        this.initializeDefaultModels()
-      }
-    })
+    void tf
+      .ready()
+      .then(() => {
+        logger.info('TensorFlow.js backend initialized:', tf.getBackend())
+        // Only initialize default models in non-test environment
+        if (process.env.NODE_ENV !== 'test') {
+          try {
+            this.initializeDefaultModels()
+          } catch (error) {
+            logger.error('Failed to initialize default models:', error)
+          }
+        }
+      })
+      .catch((error) => {
+        logger.error('Failed to initialize TensorFlow.js backend:', error)
+      })
   }
 
   /**
    * Initialize default ML models for the platform
    */
-  private async initializeDefaultModels(): Promise<void> {
+  private initializeDefaultModels(): void {
     try {
       // Initialize learning outcome predictor
-      await this.createDefaultModel('learning-outcome-predictor', 'classification', [15], [1])
+      this.createDefaultModel('learning-outcome-predictor', 'classification', [15], [1])
 
       // Initialize difficulty optimizer
-      await this.createDefaultModel('difficulty-optimizer', 'regression', [15], [1])
+      this.createDefaultModel('difficulty-optimizer', 'regression', [15], [1])
 
       // Initialize dropout predictor
-      await this.createDefaultModel('dropout-predictor', 'classification', [20], [1])
+      this.createDefaultModel('dropout-predictor', 'classification', [20], [1])
 
-      console.log('Default ML models initialized successfully')
+      logger.info('Default ML models initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize default models:', error)
+      logger.error('Failed to initialize default models:', error)
     }
   }
 
   /**
    * Create a default TensorFlow.js model for development/testing
    */
-  private async createDefaultModel(
+  private createDefaultModel(
     modelId: string,
     type: 'classification' | 'regression',
     inputShape: number[],
     outputShape: number[],
-  ): Promise<void> {
+  ): void {
     const model = tf.sequential({
       layers: [
         tf.layers.dense({
@@ -135,7 +191,7 @@ export class MLInferenceEngine {
         }),
         tf.layers.dropout({ rate: 0.2 }),
         tf.layers.dense({
-          units: outputShape[0],
+          units: outputShape[0] ?? 1,
           activation: type === 'classification' ? 'sigmoid' : 'linear',
         }),
       ],
@@ -243,7 +299,7 @@ export class MLInferenceEngine {
       }
 
       const loadTime = performance.now() - startTime
-      console.log(`Model ${modelConfig.id} loaded in ${loadTime.toFixed(2)}ms`)
+      logger.info(`Model ${modelConfig.id} loaded in ${loadTime.toFixed(2)}ms`)
 
       // Create ML model object
       const mlModel: MLModel = {
@@ -265,10 +321,10 @@ export class MLInferenceEngine {
         driftScore: 0,
       })
 
-      console.log(`Model ${modelConfig.id} successfully loaded and cached`)
+      logger.info(`Model ${modelConfig.id} successfully loaded and cached`)
     } catch (error) {
-      console.error(`Failed to load model ${modelConfig.id}:`, error)
-      throw new Error(`Model loading failed: ${error}`)
+      logger.error(`Failed to load model ${modelConfig.id}:`, error)
+      throw new Error(`Model loading failed: ${String(error)}`)
     }
   }
 
@@ -278,8 +334,8 @@ export class MLInferenceEngine {
   extractFeatures(
     userId: string,
     conceptKey: string,
-    knowledgeState: any,
-    contextualInfo: Record<string, any> = {},
+    knowledgeState: KnowledgeState,
+    contextualInfo: ContextualInfo = {},
   ): Record<string, number> {
     const now = new Date()
     const timeOfDay = now.getHours() + now.getMinutes() / 60
@@ -287,27 +343,27 @@ export class MLInferenceEngine {
     // Base features
     const features: Record<string, number> = {
       // Knowledge state features (normalized)
-      currentMastery: this.normalizeFeature(knowledgeState?.currentMastery || 0, 0, 1),
-      learningVelocity: this.normalizeFeature(knowledgeState?.learningVelocity || 1, 0.1, 3),
-      totalInteractions: this.logNormalize(knowledgeState?.totalInteractions || 1),
+      currentMastery: this.normalizeFeature(knowledgeState.currentMastery ?? 0, 0, 1),
+      learningVelocity: this.normalizeFeature(knowledgeState.learningVelocity ?? 1, 0.1, 3),
+      totalInteractions: this.logNormalize(knowledgeState.totalInteractions ?? 1),
       accuracyRate: this.normalizeFeature(
-        knowledgeState?.correctAnswers / Math.max(knowledgeState?.totalInteractions || 1, 1),
+        (knowledgeState.correctAnswers ?? 0) / Math.max(knowledgeState.totalInteractions ?? 1, 1),
         0,
         1,
       ),
 
       // BKT parameters
-      pL0: this.normalizeFeature(knowledgeState?.pL0 || 0.1, 0, 1),
-      pT: this.normalizeFeature(knowledgeState?.pT || 0.3, 0, 1),
-      pG: this.normalizeFeature(knowledgeState?.pG || 0.2, 0, 1),
-      pS: this.normalizeFeature(knowledgeState?.pS || 0.1, 0, 1),
-      decayRate: this.normalizeFeature(knowledgeState?.decayRate || 0.05, 0, 0.2),
+      pL0: this.normalizeFeature(knowledgeState.pL0 ?? 0.1, 0, 1),
+      pT: this.normalizeFeature(knowledgeState.pT ?? 0.3, 0, 1),
+      pG: this.normalizeFeature(knowledgeState.pG ?? 0.2, 0, 1),
+      pS: this.normalizeFeature(knowledgeState.pS ?? 0.1, 0, 1),
+      decayRate: this.normalizeFeature(knowledgeState.decayRate ?? 0.05, 0, 0.2),
 
       // Temporal features
       timeOfDay: timeOfDay / 24,
       dayOfWeek: now.getDay() / 7,
       hoursSinceLastInteraction: this.normalizeFeature(
-        knowledgeState?.lastInteraction
+        knowledgeState.lastInteraction
           ? (Date.now() - knowledgeState.lastInteraction.getTime()) / (1000 * 60 * 60)
           : 24,
         0,
@@ -315,35 +371,40 @@ export class MLInferenceEngine {
       ),
 
       // Contextual features
-      fatigueLevel: this.normalizeFeature(contextualInfo.fatigueLevel || 0.2, 0, 1),
-      studyStreak: this.logNormalize(contextualInfo.studyStreak || 1),
+      fatigueLevel: this.normalizeFeature(contextualInfo.fatigueLevel ?? 0.2, 0, 1),
+      studyStreak: this.logNormalize(contextualInfo.studyStreak ?? 1),
       sessionLength: this.normalizeFeature(
-        (contextualInfo.sessionLength || 30) / 60,
+        (contextualInfo.sessionLength ?? 30) / 60,
         0,
         4, // Max 4 hours
       ),
 
       // Concept difficulty
-      conceptDifficulty: this.normalizeFeature(contextualInfo.conceptDifficulty || 0.5, 0, 1),
+      conceptDifficulty: this.normalizeFeature(contextualInfo.conceptDifficulty ?? 0.5, 0, 1),
 
       // User behavior patterns
-      avgResponseTime: this.logNormalize(contextualInfo.avgResponseTime || 5000, 1000, 60000),
-      confidenceLevel: this.normalizeFeature(contextualInfo.avgConfidence || 3, 1, 5),
+      avgResponseTime: this.logNormalize(contextualInfo.avgResponseTime ?? 5000, 1000, 60000),
+      confidenceLevel: this.normalizeFeature(contextualInfo.avgConfidence ?? 3, 1, 5),
 
       // Engagement metrics
-      recentEngagement: this.normalizeFeature(contextualInfo.recentEngagement || 0.7, 0, 1),
-      completionRate: this.normalizeFeature(contextualInfo.completionRate || 0.8, 0, 1),
+      recentEngagement: this.normalizeFeature(contextualInfo.recentEngagement ?? 0.7, 0, 1),
+      completionRate: this.normalizeFeature(contextualInfo.completionRate ?? 0.8, 0, 1),
     }
 
     // Add derived features
-    features.masteryVelocityProduct = features.currentMastery * features.learningVelocity
-    features.timeEngagementProduct = features.timeOfDay * features.recentEngagement
-    features.streakAccuracyProduct = features.studyStreak * features.accuracyRate
-    features.fatigueSessionProduct = features.fatigueLevel * features.sessionLength
+    features.masteryVelocityProduct =
+      (features.currentMastery ?? 0) * (features.learningVelocity ?? 0)
+    features.timeEngagementProduct = (features.timeOfDay ?? 0) * (features.recentEngagement ?? 0)
+    features.streakAccuracyProduct = (features.studyStreak ?? 0) * (features.accuracyRate ?? 0)
+    features.fatigueSessionProduct = (features.fatigueLevel ?? 0) * (features.sessionLength ?? 0)
 
     // Add interaction features
-    features.masteryAccuracyDiff = Math.abs(features.currentMastery - features.accuracyRate)
-    features.confidenceAccuracyDiff = Math.abs(features.confidenceLevel - features.accuracyRate)
+    features.masteryAccuracyDiff = Math.abs(
+      (features.currentMastery ?? 0) - (features.accuracyRate ?? 0),
+    )
+    features.confidenceAccuracyDiff = Math.abs(
+      (features.confidenceLevel ?? 0) - (features.accuracyRate ?? 0),
+    )
 
     // Add temporal patterns
     features.isWeekend = now.getDay() === 0 || now.getDay() === 6 ? 1 : 0
@@ -375,7 +436,7 @@ export class MLInferenceEngine {
   analyzeFeatureImportance(
     modelId: string,
     features: Record<string, number>,
-    prediction: number | number[],
+    _prediction: number | number[],
   ): Record<string, number> {
     const model = this.models.get(modelId)
     if (!model) return {}
@@ -392,7 +453,7 @@ export class MLInferenceEngine {
       permutedFeatures[featureName] = 0.5 // Use median as baseline
 
       // This would require actual model prediction, simplified for now
-      const importanceScore = Math.abs(originalValue - 0.5) * Math.random() * 0.1
+      const importanceScore = Math.abs((originalValue ?? 0) - 0.5) * Math.random() * 0.1
       importance[featureName] = importanceScore
     }
 
@@ -417,7 +478,7 @@ export class MLInferenceEngine {
 
     try {
       // Convert features to tensor
-      const featureArray = model.metadata.features.map((feature) => features[feature] || 0)
+      const featureArray = model.metadata.features.map((feature) => features[feature] ?? 0)
       const inputTensor = tf.tensor2d([featureArray], [1, featureArray.length])
 
       // Perform inference
@@ -431,7 +492,11 @@ export class MLInferenceEngine {
         confidence = Math.max(...Array.from(predictionData))
       } else {
         // For regression, confidence is based on prediction certainty (simplified)
-        confidence = Math.min(1, Math.max(0, 1 - Math.abs(predictionData[0] - 0.5) * 2))
+        const firstPrediction = predictionData[0]
+        if (firstPrediction === undefined) {
+          throw new Error('No prediction data available')
+        }
+        confidence = Math.min(1, Math.max(0, 1 - Math.abs(firstPrediction - 0.5) * 2))
       }
 
       const inferenceTime = performance.now() - startTime
@@ -445,7 +510,8 @@ export class MLInferenceEngine {
 
       const result: InferenceResult = {
         modelId,
-        prediction: predictionData.length === 1 ? predictionData[0] : Array.from(predictionData),
+        prediction:
+          predictionData.length === 1 ? (predictionData[0] ?? 0) : Array.from(predictionData),
         confidence,
         features,
         inferenceTime,
@@ -453,7 +519,7 @@ export class MLInferenceEngine {
       }
 
       // Cache feature vector for drift detection
-      if (userId && conceptKey) {
+      if (userId != null && conceptKey != null) {
         const cacheKey = `${userId}:${conceptKey}`
         this.featureCache.set(cacheKey, {
           userId,
@@ -465,14 +531,16 @@ export class MLInferenceEngine {
         // Maintain cache size
         if (this.featureCache.size > this.maxCacheSize) {
           const oldestKey = Array.from(this.featureCache.keys())[0]
-          this.featureCache.delete(oldestKey)
+          if (oldestKey != null) {
+            this.featureCache.delete(oldestKey)
+          }
         }
       }
 
       return result
     } catch (error) {
-      console.error(`Inference failed for model ${modelId}:`, error)
-      throw new Error(`Inference failed: ${error}`)
+      logger.error(`Inference failed for model ${modelId}:`, error)
+      throw new Error(`Inference failed: ${String(error)}`)
     }
   }
 
@@ -482,8 +550,8 @@ export class MLInferenceEngine {
   async predictLearningOutcome(
     userId: string,
     conceptKey: string,
-    knowledgeState: any,
-    contextualInfo: Record<string, any> = {},
+    knowledgeState: KnowledgeState,
+    contextualInfo: ContextualInfo = {},
   ): Promise<InferenceResult> {
     const features = this.extractFeatures(userId, conceptKey, knowledgeState, contextualInfo)
     return this.predict('learning-outcome-predictor', features, userId, conceptKey)
@@ -495,8 +563,8 @@ export class MLInferenceEngine {
   async predictOptimalDifficulty(
     userId: string,
     conceptKey: string,
-    knowledgeState: any,
-    contextualInfo: Record<string, any> = {},
+    knowledgeState: KnowledgeState,
+    contextualInfo: ContextualInfo = {},
   ): Promise<InferenceResult> {
     const features = this.extractFeatures(userId, conceptKey, knowledgeState, contextualInfo)
     return this.predict('difficulty-optimizer', features, userId, conceptKey)
@@ -507,8 +575,8 @@ export class MLInferenceEngine {
    */
   async predictDropoutRisk(
     userId: string,
-    userProfile: any,
-    recentActivity: any[],
+    userProfile: UserProfile,
+    recentActivity: RecentActivity[],
   ): Promise<InferenceResult> {
     const features = this.extractDropoutFeatures(userId, userProfile, recentActivity)
     return this.predict('dropout-predictor', features, userId)
@@ -518,12 +586,11 @@ export class MLInferenceEngine {
    * Extract features for dropout prediction
    */
   private extractDropoutFeatures(
-    userId: string,
-    userProfile: any,
-    recentActivity: any[],
+    _userId: string,
+    userProfile: UserProfile,
+    recentActivity: RecentActivity[],
   ): Record<string, number> {
-    const now = new Date()
-    const daysSinceRegistration = userProfile?.createdAt
+    const daysSinceRegistration = userProfile.createdAt
       ? (Date.now() - userProfile.createdAt.getTime()) / (1000 * 60 * 60 * 24)
       : 1
 
@@ -537,8 +604,8 @@ export class MLInferenceEngine {
 
     return {
       daysSinceRegistration: Math.log(Math.max(daysSinceRegistration, 1)),
-      totalSessions: Math.log(Math.max(userProfile?.totalSessions || 1, 1)),
-      avgSessionLength: (userProfile?.avgSessionLength || 30) / 60, // Convert to hours
+      totalSessions: Math.log(Math.max(userProfile.totalSessions ?? 1, 1)),
+      avgSessionLength: (userProfile.avgSessionLength ?? 30) / 60, // Convert to hours
 
       // Recent activity
       sessionsLast7Days: last7Days.length,
@@ -546,31 +613,31 @@ export class MLInferenceEngine {
       activityTrend: last7Days.length / Math.max(last30Days.length / 4, 1), // Weekly vs monthly average
 
       // Performance metrics
-      overallAccuracy: userProfile?.overallAccuracy || 0.5,
-      avgMastery: userProfile?.avgMastery || 0.3,
-      conceptsCompleted: Math.log(Math.max(userProfile?.conceptsCompleted || 1, 1)),
+      overallAccuracy: userProfile.overallAccuracy ?? 0.5,
+      avgMastery: userProfile.avgMastery ?? 0.3,
+      conceptsCompleted: Math.log(Math.max(userProfile.conceptsCompleted ?? 1, 1)),
 
       // Engagement metrics
-      streakLength: Math.log(Math.max(userProfile?.currentStreak || 1, 1)),
-      maxStreak: Math.log(Math.max(userProfile?.maxStreak || 1, 1)),
-      achievementsUnlocked: Math.log(Math.max(userProfile?.achievementsUnlocked || 1, 1)),
+      streakLength: Math.log(Math.max(userProfile.currentStreak ?? 1, 1)),
+      maxStreak: Math.log(Math.max(userProfile.maxStreak ?? 1, 1)),
+      achievementsUnlocked: Math.log(Math.max(userProfile.achievementsUnlocked ?? 1, 1)),
 
       // Behavioral patterns
-      preferredTimeOfDay: (userProfile?.preferredTimeOfDay || 14) / 24,
-      avgResponseTime: Math.log(Math.max(userProfile?.avgResponseTime || 5000, 1000)) / 10,
-      helpRequestFrequency: userProfile?.helpRequestFrequency || 0.1,
+      preferredTimeOfDay: (userProfile.preferredTimeOfDay ?? 14) / 24,
+      avgResponseTime: Math.log(Math.max(userProfile.avgResponseTime ?? 5000, 1000)) / 10,
+      helpRequestFrequency: userProfile.helpRequestFrequency ?? 0.1,
 
       // Social features
-      friendsCount: Math.log(Math.max(userProfile?.friendsCount || 1, 1)),
-      socialInteractions: Math.log(Math.max(userProfile?.socialInteractions || 1, 1)),
+      friendsCount: Math.log(Math.max(userProfile.friendsCount ?? 1, 1)),
+      socialInteractions: Math.log(Math.max(userProfile.socialInteractions ?? 1, 1)),
     }
   }
 
   /**
    * Update model performance metrics
    */
-  private updatePerformanceMetrics(modelId: string, inferenceTime: number): void {
-    const metrics = this.performanceMetrics.get(modelId)
+  private updatePerformanceMetrics(_modelId: string, inferenceTime: number): void {
+    const metrics = this.performanceMetrics.get(_modelId)
     if (!metrics) return
 
     metrics.totalInferences++
@@ -579,21 +646,21 @@ export class MLInferenceEngine {
       metrics.totalInferences
     metrics.lastUsed = new Date()
 
-    this.performanceMetrics.set(modelId, metrics)
+    this.performanceMetrics.set(_modelId, metrics)
   }
 
   /**
    * Enhanced model drift detection with multiple methods
    */
-  async detectModelDrift(
+  detectModelDrift(
     modelId: string,
     recentFeatures: FeatureVector[],
-  ): Promise<{
+  ): {
     driftScore: number
     driftType: 'none' | 'mild' | 'moderate' | 'severe'
     affectedFeatures: string[]
     recommendation: string
-  }> {
+  } {
     if (recentFeatures.length < 30) {
       return {
         driftScore: 0,
@@ -619,7 +686,7 @@ export class MLInferenceEngine {
 
     // Calculate drift for each feature
     for (const featureName of featureNames) {
-      const values = recentFeatures.map((f) => f.features[featureName] || 0)
+      const values = recentFeatures.map((f) => f.features[featureName] ?? 0)
 
       // Statistical measures
       const mean = values.reduce((a, b) => a + b, 0) / values.length
@@ -639,8 +706,11 @@ export class MLInferenceEngine {
       let ksStat = 0
       for (let i = 0; i < sortedValues.length; i++) {
         const empiricalCDF = (i + 1) / sortedValues.length
-        const expectedCDF = this.normalCDF(sortedValues[i], expectedMean, expectedStdDev)
-        ksStat = Math.max(ksStat, Math.abs(empiricalCDF - expectedCDF))
+        const currentValue = sortedValues[i]
+        if (currentValue !== undefined) {
+          const expectedCDF = this.normalCDF(currentValue, expectedMean, expectedStdDev)
+          ksStat = Math.max(ksStat, Math.abs(empiricalCDF - expectedCDF))
+        }
       }
 
       const featureDrift = Math.max(meanDrift, varianceDrift, ksStat)
@@ -717,11 +787,11 @@ export class MLInferenceEngine {
   /**
    * Monitor model performance in real-time
    */
-  async monitorModelPerformance(modelId: string): Promise<{
+  monitorModelPerformance(modelId: string): {
     health: 'healthy' | 'warning' | 'critical'
     metrics: ModelPerformanceMetrics
     alerts: string[]
-  }> {
+  } {
     const metrics = this.performanceMetrics.get(modelId)
     if (!metrics) {
       return {
@@ -783,26 +853,27 @@ export class MLInferenceEngine {
    */
   configureABTest(config: ABTestConfig): void {
     this.abTestConfig.set(config.experimentId, config)
-    console.log(`A/B test configured: ${config.experimentId}`)
+    logger.info(`A/B test configured: ${config.experimentId}`)
   }
 
   /**
    * A/B test model variants with enhanced tracking
    */
-  async selectModelVariant(
+  selectModelVariant(
     baseModelId: string,
     userId: string,
     experimentId?: string,
-  ): Promise<{ modelId: string; isVariant: boolean; experimentId?: string }> {
+  ): { modelId: string; isVariant: boolean; experimentId?: string } {
     // Check if there's an active A/B test
-    const activeTest = experimentId
-      ? this.abTestConfig.get(experimentId)
-      : Array.from(this.abTestConfig.values()).find(
-          (test) =>
-            test.baseModelId === baseModelId &&
-            test.isActive &&
-            (!test.endDate || test.endDate > new Date()),
-        )
+    const activeTest =
+      experimentId != null
+        ? this.abTestConfig.get(experimentId)
+        : Array.from(this.abTestConfig.values()).find(
+            (test) =>
+              test.baseModelId === baseModelId &&
+              test.isActive &&
+              (!test.endDate || test.endDate > new Date()),
+          )
 
     if (!activeTest) {
       return { modelId: baseModelId, isVariant: false }
@@ -893,13 +964,13 @@ export class MLInferenceEngine {
    * Unload model from cache
    */
   unloadModel(modelId: string): void {
-    const model = this.models.get(modelId)
-    if (model) {
-      model.model.dispose()
+    const modelToUnload = this.models.get(modelId)
+    if (modelToUnload != null) {
+      modelToUnload.model.dispose()
       this.models.delete(modelId)
       this.modelCache.delete(modelId)
       this.performanceMetrics.delete(modelId)
-      console.log(`Model ${modelId} unloaded`)
+      logger.info(`Model ${modelId} unloaded`)
     }
   }
 
@@ -907,8 +978,8 @@ export class MLInferenceEngine {
    * Clean up all models and tensors
    */
   dispose(): void {
-    for (const [modelId, model] of this.models) {
-      if (model && model.model && typeof model.model.dispose === 'function') {
+    for (const [, model] of this.models) {
+      if (model?.model != null && typeof model.model.dispose === 'function') {
         model.model.dispose()
       }
     }
@@ -916,6 +987,6 @@ export class MLInferenceEngine {
     this.modelCache.clear()
     this.performanceMetrics.clear()
     this.featureCache.clear()
-    console.log('ML Inference Engine disposed')
+    logger.info('ML Inference Engine disposed')
   }
 }

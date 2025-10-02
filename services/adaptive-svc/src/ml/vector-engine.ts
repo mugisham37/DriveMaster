@@ -1,11 +1,12 @@
+import { createHash } from 'crypto'
+
 import { Pinecone } from '@pinecone-database/pinecone'
 import * as tf from '@tensorflow/tfjs'
-import { createHash } from 'crypto'
 
 export interface VectorEmbedding {
   id: string
   values: number[]
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface SimilarityResult {
@@ -57,10 +58,9 @@ export class VectorSearchEngine {
   private queryCache: Map<string, { result: any; timestamp: number }> = new Map()
   private readonly cacheTimeout = 5 * 60 * 1000 // 5 minutes
 
-  constructor(apiKey: string, environment: string = 'us-west1-gcp') {
+  constructor(apiKey: string, _environment: string = 'us-west1-gcp') {
     this.pinecone = new Pinecone({
       apiKey,
-      environment,
     })
   }
 
@@ -160,7 +160,10 @@ export class VectorSearchEngine {
 
       console.log('Indexes warmed up successfully')
     } catch (error) {
-      console.warn('Index warmup failed (this is normal for empty indexes):', error.message)
+      console.warn(
+        'Index warmup failed (this is normal for empty indexes):',
+        (error as Error).message,
+      )
     }
   }
 
@@ -460,10 +463,15 @@ export class VectorSearchEngine {
   private diversifyResults(results: SimilarityResult[], threshold: number): SimilarityResult[] {
     if (results.length <= 1) return results
 
-    const diversified: SimilarityResult[] = [results[0]] // Always include the top result
+    const firstResult = results[0]
+    if (!firstResult) return results
+
+    const diversified: SimilarityResult[] = [firstResult] // Always include the top result
 
     for (let i = 1; i < results.length; i++) {
       const candidate = results[i]
+      if (!candidate) continue
+
       let isDiverse = true
 
       // Check if candidate is too similar to already selected results
@@ -550,7 +558,10 @@ export class VectorSearchEngine {
       // Remove oldest 20% of entries
       const toRemove = Math.floor(entries.length * 0.2)
       for (let i = 0; i < toRemove; i++) {
-        this.queryCache.delete(entries[i][0])
+        const entry = entries[i]
+        if (entry) {
+          this.queryCache.delete(entry[0])
+        }
       }
     }
   }
@@ -736,7 +747,7 @@ export class VectorSearchEngine {
    */
   async getIndexStats(): Promise<{
     contentIndex: any
-    userIndex: any
+    userIndex: unknown
   }> {
     try {
       const [contentStats, userStats] = await Promise.all([
