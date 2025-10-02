@@ -200,7 +200,7 @@ export class MLInferenceEngine {
     // Compile the model
     model.compile({
       optimizer: tf.train.adam(0.001),
-      loss: type === 'classification' ? 'binaryCrossentropy' : 'meanSquaredError',
+      loss: type === 'classification' ? 'binaryCrossEntropy' : 'meanSquaredError',
       metrics: ['accuracy'],
     })
 

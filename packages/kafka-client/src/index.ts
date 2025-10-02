@@ -1,350 +1,335 @@
-import { Kafka, KafkaConfig, Producer, Consumer, Admin, EachMessagePayload } from 'kafkajs'
+import { Kafka, KafkaConfig, Producer, Consumer, EachMessagePayload } from 'kafkajs'
+
+export type { Kafka }
 
 export interface KafkaClientConfig extends KafkaConfig {
-  retryOptions?: {
-    retries?: number
-    initialRetryTime?: number
-    maxRetryTime?: number
-  }
+  brokers: string[]
+  clientId?: string
+  groupId?: string
 }
 
-export interface EventSchema {
-  type: string
-  version: string
-  schema: any
+export interface MessageHandler {
+  (payload: EachMessagePayload): Promise<void>
 }
 
-export interface DeadLetterQueueConfig {
+export interface ProducerMessage {
   topic: string
-  maxRetries: number
-  retryDelayMs: number
+  key?: string
+  value: string
+  partition?: number
+  headers?: Record<string, string>
 }
 
-export interface EventProcessorConfig {
-  groupId: string
-  topics: string[]
-  deadLetterQueue?: DeadLetterQueueConfig
-  batchSize?: number
-  sessionTimeout?: number
-  heartbeatInterval?: number
+/**
+ * Create a Kafka client instance
+ */
+export function createKafka(config: KafkaClientConfig): Kafka {
+  return new Kafka({
+    clientId: config.clientId ?? 'drivemaster-client',
+    brokers: config.brokers,
+    ...config,
+  })
 }
 
-export class KafkaEventProcessor {
+/**
+ * Kafka producer wrapper
+ */
+export class KafkaProducer {
   private kafka: Kafka
-  private producer: Producer | null = null
-  private consumer: Consumer | null = null
-  private admin: Admin | null = null
-  private schemas: Map<string, EventSchema> = new Map()
-  private messageHandlers: Map<string, (payload: EachMessagePayload) => Promise<void>> = new Map()
-  private dlqConfig: DeadLetterQueueConfig | undefined
+  private producer: Producer
+  private connected = false
 
-  constructor(config: KafkaClientConfig) {
-    this.kafka = new Kafka({
-      ...config,
-      retry: config.retryOptions || {
-        retries: 5,
-        initialRetryTime: 300,
-        maxRetryTime: 30000,
-      },
-    })
-  }
-
-  async initialize(): Promise<void> {
+  constructor(kafka: Kafka) {
+    this.kafka = kafka
     this.producer = this.kafka.producer({
       maxInFlightRequests: 1,
       idempotent: true,
       transactionTimeout: 30000,
     })
-
-    this.admin = this.kafka.admin()
-
-    await this.producer.connect()
-    await this.admin.connect()
   }
 
-  async createConsumer(config: EventProcessorConfig): Promise<void> {
-    this.consumer = this.kafka.consumer({
-      groupId: config.groupId,
-      sessionTimeout: config.sessionTimeout || 30000,
-      heartbeatInterval: config.heartbeatInterval || 3000,
-      maxBytesPerPartition: 1048576, // 1MB
-      retry: {
-        retries: 5,
-        initialRetryTime: 300,
-      },
-    })
-
-    this.dlqConfig = config.deadLetterQueue
-
-    await this.consumer.connect()
-    await this.consumer.subscribe({
-      topics: config.topics,
-      fromBeginning: false,
-    })
-  }
-
-  registerSchema(eventType: string, schema: EventSchema): void {
-    this.schemas.set(eventType, schema)
-  }
-
-  registerHandler(topic: string, handler: (payload: EachMessagePayload) => Promise<void>): void {
-    this.messageHandlers.set(topic, handler)
-  }
-
-  async startProcessing(): Promise<void> {
-    if (!this.consumer) {
-      throw new Error('Consumer not initialized. Call createConsumer first.')
+  /**
+   * Connect the producer
+   */
+  async connect(): Promise<void> {
+    if (!this.connected) {
+      await this.producer.connect()
+      this.connected = true
+      console.log('Kafka Producer connected')
     }
+  }
 
+  /**
+   * Disconnect the producer
+   */
+  async disconnect(): Promise<void> {
+    if (this.connected) {
+      await this.producer.disconnect()
+      this.connected = false
+      console.log('Kafka Producer disconnected')
+    }
+  }
+
+  /**
+   * Send a single message
+   */
+  async send(message: ProducerMessage): Promise<void> {
+    await this.ensureConnected()
+
+    await this.producer.send({
+      topic: message.topic,
+      messages: [
+        {
+          key: message.key,
+          value: message.value,
+          partition: message.partition,
+          headers: message.headers,
+        },
+      ],
+    })
+  }
+
+  /**
+   * Send multiple messages
+   */
+  async sendBatch(messages: ProducerMessage[]): Promise<void> {
+    await this.ensureConnected()
+
+    // Group messages by topic
+    const messagesByTopic = messages.reduce(
+      (acc, message) => {
+        if (!acc[message.topic]) {
+          acc[message.topic] = []
+        }
+        acc[message.topic]?.push({
+          key: message.key,
+          value: message.value,
+          partition: message.partition,
+          headers: message.headers,
+        })
+        return acc
+      },
+      {} as Record<
+        string,
+        Array<{
+          key?: string
+          value: string
+          partition?: number
+          headers?: Record<string, string>
+        }>
+      >,
+    )
+
+    // Send messages for each topic
+    for (const [topic, topicMessages] of Object.entries(messagesByTopic)) {
+      await this.producer.send({
+        topic,
+        messages: topicMessages,
+      })
+    }
+  }
+
+  /**
+   * Ensure producer is connected
+   */
+  private async ensureConnected(): Promise<void> {
+    if (!this.connected) {
+      await this.connect()
+    }
+  }
+
+  /**
+   * Get producer status
+   */
+  isConnected(): boolean {
+    return this.connected
+  }
+}
+
+/**
+ * Kafka consumer wrapper
+ */
+export class KafkaConsumer {
+  private kafka: Kafka
+  private consumer: Consumer
+  private connected = false
+  private running = false
+
+  constructor(kafka: Kafka, groupId: string) {
+    this.kafka = kafka
+    this.consumer = this.kafka.consumer({
+      groupId,
+      sessionTimeout: 30000,
+      heartbeatInterval: 3000,
+    })
+  }
+
+  /**
+   * Connect the consumer
+   */
+  async connect(): Promise<void> {
+    if (!this.connected) {
+      await this.consumer.connect()
+      this.connected = true
+      console.log('Kafka Consumer connected')
+    }
+  }
+
+  /**
+   * Disconnect the consumer
+   */
+  async disconnect(): Promise<void> {
+    if (this.running) {
+      await this.stop()
+    }
+    if (this.connected) {
+      await this.consumer.disconnect()
+      this.connected = false
+      console.log('Kafka Consumer disconnected')
+    }
+  }
+
+  /**
+   * Subscribe to topics
+   */
+  async subscribe(topics: string[]): Promise<void> {
+    await this.ensureConnected()
+
+    for (const topic of topics) {
+      await this.consumer.subscribe({ topic, fromBeginning: false })
+    }
+  }
+
+  /**
+   * Start consuming messages
+   */
+  async run(messageHandler: MessageHandler): Promise<void> {
+    await this.ensureConnected()
+
+    this.running = true
     await this.consumer.run({
-      partitionsConsumedConcurrently: 3,
       eachMessage: async (payload) => {
-        const { topic, message } = payload
-        let retryCount = 0
-        const maxRetries = this.dlqConfig?.maxRetries || 3
-
-        while (retryCount <= maxRetries) {
-          try {
-            // Validate message schema if registered
-            const messageValue = message.value?.toString()
-            if (messageValue) {
-              const event = JSON.parse(messageValue)
-              await this.validateEventSchema(event)
-            }
-
-            // Process message with registered handler
-            const handler = this.messageHandlers.get(topic)
-            if (handler) {
-              await handler(payload)
-            }
-
-            break // Success, exit retry loop
-          } catch (error) {
-            retryCount++
-            console.error(
-              `Error processing message (attempt ${retryCount}/${maxRetries + 1}):`,
-              error,
-            )
-
-            if (retryCount > maxRetries) {
-              // Send to dead letter queue
-              await this.sendToDeadLetterQueue(payload, error as Error)
-            } else {
-              // Wait before retry
-              await this.delay(this.dlqConfig?.retryDelayMs || 1000 * retryCount)
-            }
-          }
+        try {
+          await messageHandler(payload)
+        } catch (error) {
+          console.error('Error processing message:', error)
+          // In production, you might want to send to a dead letter queue
         }
       },
     })
   }
 
-  async publishEvent(topic: string, event: any, key?: string): Promise<void> {
-    if (!this.producer) {
-      throw new Error('Producer not initialized. Call initialize first.')
+  /**
+   * Stop consuming messages
+   */
+  async stop(): Promise<void> {
+    if (this.running) {
+      await this.consumer.stop()
+      this.running = false
+      console.log('Kafka Consumer stopped')
     }
-
-    // Validate event schema if registered
-    await this.validateEventSchema(event)
-
-    const message = {
-      key: key || event.id || event.eventId,
-      value: JSON.stringify(event),
-      timestamp: Date.now().toString(),
-      headers: {
-        'event-type': event.type || 'unknown',
-        'event-version': event.version || '1.0',
-        'correlation-id': event.correlationId || this.generateCorrelationId(),
-      },
-    }
-
-    await this.producer.send({
-      topic,
-      messages: [message],
-    })
   }
 
-  async publishBatch(topic: string, events: any[]): Promise<void> {
-    if (!this.producer) {
-      throw new Error('Producer not initialized. Call initialize first.')
+  /**
+   * Ensure consumer is connected
+   */
+  private async ensureConnected(): Promise<void> {
+    if (!this.connected) {
+      await this.connect()
     }
-
-    const messages = events.map((event) => ({
-      key: event.id || event.eventId || this.generateCorrelationId(),
-      value: JSON.stringify(event),
-      timestamp: Date.now().toString(),
-      headers: {
-        'event-type': event.type || 'unknown',
-        'event-version': event.version || '1.0',
-        'correlation-id': event.correlationId || this.generateCorrelationId(),
-      },
-    }))
-
-    await this.producer.send({
-      topic,
-      messages,
-    })
   }
 
-  async createTopics(
-    topics: Array<{ topic: string; numPartitions?: number; replicationFactor?: number }>,
-  ): Promise<void> {
-    if (!this.admin) {
-      throw new Error('Admin client not initialized. Call initialize first.')
+  /**
+   * Get consumer status
+   */
+  getStatus(): { connected: boolean; running: boolean } {
+    return {
+      connected: this.connected,
+      running: this.running,
     }
+  }
+}
 
-    await this.admin.createTopics({
-      topics: topics.map((t) => ({
-        topic: t.topic,
-        numPartitions: t.numPartitions || 3,
-        replicationFactor: t.replicationFactor || 1,
-        configEntries: [
-          { name: 'cleanup.policy', value: 'delete' },
-          { name: 'retention.ms', value: '604800000' }, // 7 days
-          { name: 'segment.ms', value: '86400000' }, // 1 day
-        ],
-      })),
-    })
+/**
+ * High-level Kafka client wrapper
+ */
+export class KafkaClient {
+  private kafka: Kafka
+  private producer: KafkaProducer
+  private consumers: Map<string, KafkaConsumer> = new Map()
+
+  constructor(config: KafkaClientConfig) {
+    this.kafka = createKafka(config)
+    this.producer = new KafkaProducer(this.kafka)
   }
 
-  async enableEventReplay(topic: string, fromTimestamp?: Date): Promise<void> {
-    if (!this.consumer || !this.admin) {
-      throw new Error('Consumer and Admin not initialized')
-    }
+  /**
+   * Get the producer instance
+   */
+  getProducer(): KafkaProducer {
+    return this.producer
+  }
 
-    const topicMetadata = await this.admin.fetchTopicMetadata({ topics: [topic] })
-    const topicInfo = topicMetadata.topics.find((t) => t.name === topic)
-
-    if (!topicInfo) {
-      throw new Error(`Topic ${topic} not found`)
-    }
-
-    const partitions = topicInfo.partitions
-
-    for (const partition of partitions) {
-      if (fromTimestamp) {
-        const offsets = await this.admin.fetchTopicOffsetsByTimestamp(
-          topic,
-          fromTimestamp.getTime(),
-        )
-        const partitionOffset = offsets[partition.partitionId]
-        await this.consumer.seek({
-          topic,
-          partition: partition.partitionId,
-          offset: partitionOffset?.offset || '0',
-        })
-      } else {
-        await this.consumer.seek({
-          topic,
-          partition: partition.partitionId,
-          offset: '0',
-        })
+  /**
+   * Create a consumer for a specific group
+   */
+  createConsumer(groupId: string): KafkaConsumer {
+    if (this.consumers.has(groupId)) {
+      const existingConsumer = this.consumers.get(groupId)
+      if (existingConsumer) {
+        return existingConsumer
       }
     }
+
+    const consumer = new KafkaConsumer(this.kafka, groupId)
+    this.consumers.set(groupId, consumer)
+    return consumer
   }
 
-  private async validateEventSchema(event: any): Promise<void> {
-    const eventType = event.type
-    if (!eventType) return
-
-    const schema = this.schemas.get(eventType)
-    if (!schema) return
-
-    // Basic validation - in production, use a proper schema validation library
-    if (schema.version !== event.version) {
-      throw new Error(`Schema version mismatch. Expected: ${schema.version}, Got: ${event.version}`)
-    }
+  /**
+   * Send a message using the internal producer
+   */
+  async send(message: ProducerMessage): Promise<void> {
+    await this.producer.send(message)
   }
 
-  private async sendToDeadLetterQueue(payload: EachMessagePayload, error: Error): Promise<void> {
-    if (!this.dlqConfig || !this.producer) return
-
-    const dlqMessage = {
-      key: payload.message.key?.toString() || 'unknown',
-      value: JSON.stringify({
-        originalTopic: payload.topic,
-        originalPartition: payload.partition,
-        originalOffset: payload.message.offset,
-        originalMessage: payload.message.value?.toString(),
-        error: error.message,
-        timestamp: new Date().toISOString(),
-        retryCount: this.dlqConfig.maxRetries,
-      }),
-      headers: {
-        ...payload.message.headers,
-        'dlq-reason': 'max-retries-exceeded',
-        'dlq-timestamp': Date.now().toString(),
-      },
-    }
-
-    await this.producer.send({
-      topic: this.dlqConfig.topic,
-      messages: [dlqMessage],
-    })
+  /**
+   * Send multiple messages using the internal producer
+   */
+  async sendBatch(messages: ProducerMessage[]): Promise<void> {
+    await this.producer.sendBatch(messages)
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
-
-  private generateCorrelationId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
-  }
-
+  /**
+   * Disconnect all producers and consumers
+   */
   async disconnect(): Promise<void> {
-    if (this.consumer) await this.consumer.disconnect()
-    if (this.producer) await this.producer.disconnect()
-    if (this.admin) await this.admin.disconnect()
-  }
-}
+    await this.producer.disconnect()
 
-// Event aggregation and windowing utilities
-export class EventAggregator {
-  private windows: Map<string, any[]> = new Map()
-  private windowSizes: Map<string, number> = new Map()
-  private windowCallbacks: Map<string, (events: any[]) => Promise<void>> = new Map()
-
-  createWindow(windowId: string, sizeMs: number, callback: (events: any[]) => Promise<void>): void {
-    this.windowSizes.set(windowId, sizeMs)
-    this.windowCallbacks.set(windowId, callback)
-    this.windows.set(windowId, [])
-
-    // Set up window processing interval
-    setInterval(async () => {
-      await this.processWindow(windowId)
-    }, sizeMs)
-  }
-
-  addEvent(windowId: string, event: any): void {
-    const windowEvents = this.windows.get(windowId) || []
-    windowEvents.push({
-      ...event,
-      windowTimestamp: Date.now(),
-    })
-    this.windows.set(windowId, windowEvents)
-  }
-
-  private async processWindow(windowId: string): Promise<void> {
-    const events = this.windows.get(windowId) || []
-    const windowSize = this.windowSizes.get(windowId) || 60000
-    const callback = this.windowCallbacks.get(windowId)
-
-    if (events.length === 0 || !callback) return
-
-    const cutoffTime = Date.now() - windowSize
-    const windowEvents = events.filter((e) => e.windowTimestamp >= cutoffTime)
-    const expiredEvents = events.filter((e) => e.windowTimestamp < cutoffTime)
-
-    // Process expired events
-    if (expiredEvents.length > 0) {
-      await callback(expiredEvents)
+    for (const consumer of this.consumers.values()) {
+      await consumer.disconnect()
     }
 
-    // Keep only current window events
-    this.windows.set(windowId, windowEvents)
+    this.consumers.clear()
+    console.log('Kafka Client disconnected')
   }
-}
 
-export function createKafka(config: KafkaConfig): Kafka {
-  return new Kafka(config)
+  /**
+   * Get client status
+   */
+  getStatus(): {
+    producer: boolean
+    consumers: Record<string, { connected: boolean; running: boolean }>
+  } {
+    const consumerStatus: Record<string, { connected: boolean; running: boolean }> = {}
+
+    for (const [groupId, consumer] of this.consumers.entries()) {
+      consumerStatus[groupId] = consumer.getStatus()
+    }
+
+    return {
+      producer: this.producer.isConnected(),
+      consumers: consumerStatus,
+    }
+  }
 }

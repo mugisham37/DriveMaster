@@ -12,7 +12,7 @@ export interface BanditArmStats {
   totalPulls: number
   totalRewards: number
   avgReward: number
-  lastPulled?: Date
+  lastPulled?: Date | null
 }
 
 export interface ContextualFeatures {

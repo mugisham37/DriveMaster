@@ -14,8 +14,8 @@ export interface EnhancedSRParams extends SM2Params {
 export interface ReviewResult {
   quality: number // 0-5 scale
   responseTime: number
-  confidence?: number
-  difficulty?: number
+  confidence?: number | undefined
+  difficulty?: number | undefined
 }
 
 import type { UserProfile } from '../types/spaced.types'

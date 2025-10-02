@@ -121,53 +121,49 @@ export interface SpacedRepetitionServiceInterface {
     conceptId: string,
     result: ReviewResult,
     context: ScheduleContext,
-  ): Promise<ReviewSchedule>
+  ): ReviewSchedule
 
   calculateNextReview(
     userId: string,
     conceptId: string,
     performance: HistoricalPerformance[],
-  ): Promise<OptimalReviewTime>
+  ): OptimalReviewTime
 
-  optimizeReviewTiming(userId: string, availability: AvailabilityPattern): Promise<OptimalSchedule>
+  optimizeReviewTiming(userId: string, availability: AvailabilityPattern): OptimalSchedule
 
   // Personalization
   calculatePersonalizedForgettingCurve(
     userId: string,
     conceptId: string,
     reviewHistory: ReviewResult[],
-  ): Promise<PersonalizedCurve>
+  ): PersonalizedCurve
 
   adjustForInterference(
     userId: string,
     conceptId: string,
     similarConcepts: string[],
     conceptMasteries: Map<string, number>,
-  ): Promise<number>
+  ): number
 
   // Schedule management
-  getDueReviews(
-    userId: string,
-    currentTime?: Date,
-    lookaheadHours?: number,
-  ): Promise<ReviewSchedule[]>
+  getDueReviews(userId: string, currentTime?: Date, lookaheadHours?: number): ReviewSchedule[]
 
   balanceReviewLoad(
     userId: string,
     scheduledReviews: ReviewSchedule[],
     maxDailyReviews?: number,
-  ): Promise<ReviewSchedule[]>
+  ): ReviewSchedule[]
 
   // Analytics and insights
-  predictRetention(userId: string, conceptId: string, daysFromNow: number): Promise<number>
+  predictRetention(userId: string, conceptId: string, daysFromNow: number): number
 
-  getReviewStatistics(userId: string, timeWindow?: number): Promise<ReviewStatistics>
+  getReviewStatistics(userId: string, timeWindow?: number): ReviewStatistics
 
   optimizeSessionLength(
     userId: string,
     currentFatigue: number,
     availableTime: number,
-  ): Promise<SessionOptimization>
+  ): SessionOptimization
 }
 
 export interface ReviewStatistics {

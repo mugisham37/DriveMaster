@@ -5,6 +5,7 @@
     "tfjs",
     "relu",
     "glorot",
+    "CrossEntropy",
     "Crossentropy",
     "Kolmogorov",
     "Smirnov",
@@ -15,12 +16,15 @@
     "vectorization",
     "upsert",
     "serverless",
+    "binaryCrossEntropy",
     "binaryCrossentropy",
+    "categoricalCrossEntropy",
+    "categoricalCrossentropy",
     "meanSquaredError",
     "glorotUniform",
     "tanh",
     "sigmoid",
-    ""
+    "softmax"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "build/**", "*.log"]
 }

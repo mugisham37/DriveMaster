@@ -34,7 +34,11 @@
     "tablename",
     "indexrelid",
     "psql",
-    "pkey"
+    "pkey",
+    "glorot",
+    "softmax",
+    "Kolmogorov",
+    "Smirnov"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "**/*.js.map", "**/*.d.ts.map", "**/*.json"]
 }

@@ -1,5 +1,10 @@
 import { MLInferenceEngine, InferenceResult } from './inference-engine'
-import { VectorSearchEngine, RecommendationQuery, SimilarityResult } from './vector-engine'
+import {
+  VectorSearchEngine,
+  RecommendationQuery,
+  SimilarityResult,
+  ContentType,
+} from './vector-engine'
 
 export interface MLServiceConfig {
   pineconeApiKey: string
@@ -49,10 +54,10 @@ export interface UserProfile {
   socialInteractions?: number
 }
 
-export interface RecentActivity {
+export interface RecentActivity extends Record<string, unknown> {
   createdAt: Date | string
-  masteryAfter?: number
-  masteryBefore?: number
+  masteryAfter?: number | null
+  masteryBefore?: number | null
 }
 
 export interface KnowledgeState {
@@ -261,11 +266,9 @@ export class MLService {
     const query: RecommendationQuery = {
       userId,
       conceptKey,
-      ...(options.contentType != null && { contentType: options.contentType }),
-      ...(options.targetDifficulty !== undefined && {
-        targetDifficulty: options.targetDifficulty,
-      }),
-      ...(options.excludeIds != null && { excludeIds: options.excludeIds }),
+      contentType: options.contentType as ContentType | undefined,
+      targetDifficulty: options.targetDifficulty,
+      excludeIds: options.excludeIds,
       topK: (options.maxItems ?? 10) * 2, // Get more candidates for ML filtering
     }
 
@@ -302,7 +305,10 @@ export class MLService {
           item.score,
           learningOutcome.prediction as number,
           engagementScore,
-          Math.abs((optimalDifficulty.prediction as number) - item.metadata.difficulty),
+          Math.abs(
+            (optimalDifficulty.prediction as number) -
+              (typeof item.metadata.difficulty === 'number' ? item.metadata.difficulty : 0.5),
+          ),
         )
 
         enhancedRecommendations.push({
@@ -534,7 +540,11 @@ export class MLService {
     }
 
     const difficultyMatch =
-      1 - Math.abs((optimalDifficulty.prediction as number) - item.metadata.difficulty)
+      1 -
+      Math.abs(
+        (optimalDifficulty.prediction as number) -
+          (typeof item.metadata.difficulty === 'number' ? item.metadata.difficulty : 0.5),
+      )
     if (difficultyMatch > 0.8) {
       reasons.push('optimal difficulty level')
     }

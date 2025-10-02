@@ -13,7 +13,6 @@ import type {
   SessionOptimization,
   EnhancedSRParams,
   SpacedRepetitionConfig,
-  ReviewBurdenAnalysis,
 } from '../types/spaced.types.js'
 
 export class SpacedRepetitionService implements SpacedRepetitionServiceInterface {
@@ -41,14 +40,13 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     }
   }
 
-  async updateReviewSchedule(
+  updateReviewSchedule(
     userId: string,
     conceptId: string,
     result: ReviewResult,
     context: ScheduleContext,
-  ): Promise<ReviewSchedule> {
+  ): ReviewSchedule {
     // Get or create user parameters for this concept
-    const userKey = `${userId}:${conceptId}`
     let params = this.getUserParams(userId, conceptId)
 
     if (!params) {
@@ -74,11 +72,11 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     const schedule: ReviewSchedule = {
       userId,
       conceptId,
-      itemId: context.itemId || conceptId,
+      itemId: context.itemId ?? conceptId,
       nextReviewTime: updated.nextReview,
       priority: this.calculatePriority(result.quality, updated.newParams.reviewBurden),
       estimatedDuration: this.estimateDuration(result.responseTime, result.difficulty),
-      difficulty: result.difficulty || 0.5,
+      difficulty: result.difficulty ?? 0.5,
       reviewType: this.determineReviewType(updated.newParams.repetitions, result.quality),
       params: updated.newParams,
       createdAt: new Date(),
@@ -91,11 +89,11 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     return schedule
   }
 
-  async calculateNextReview(
+  calculateNextReview(
     userId: string,
     conceptId: string,
     performance: HistoricalPerformance[],
-  ): Promise<OptimalReviewTime> {
+  ): OptimalReviewTime {
     const params = this.getUserParams(userId, conceptId)
     if (!params) {
       throw new Error(`No parameters found for user ${userId}, concept ${conceptId}`)
@@ -105,7 +103,8 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     const reviewHistory = performance.map((p) => ({
       quality: p.quality,
       responseTime: p.responseTime,
-      confidence: p.confidence,
+      confidence: p.confidence ?? 3, // Default confidence
+      difficulty: 0.5, // Default difficulty since HistoricalPerformance doesn't have this field
     }))
 
     const forgettingCurve = SpacedRepetition.calculatePersonalizedForgetting(
@@ -132,10 +131,7 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     return optimalTime
   }
 
-  async optimizeReviewTiming(
-    userId: string,
-    availability: AvailabilityPattern,
-  ): Promise<OptimalSchedule> {
+  optimizeReviewTiming(userId: string, availability: AvailabilityPattern): OptimalSchedule {
     const userSchedules = this.getUserSchedules(userId)
     const scheduledReviews = Array.from(userSchedules.values())
 
@@ -179,11 +175,11 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     }
   }
 
-  async calculatePersonalizedForgettingCurve(
+  calculatePersonalizedForgettingCurve(
     userId: string,
     conceptId: string,
     reviewHistory: ReviewResult[],
-  ): Promise<PersonalizedCurve> {
+  ): PersonalizedCurve {
     const forgettingRate = SpacedRepetition.calculatePersonalizedForgetting(
       userId,
       conceptId,
@@ -207,20 +203,20 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     }
   }
 
-  async adjustForInterference(
+  adjustForInterference(
     userId: string,
     conceptId: string,
     similarConcepts: string[],
     conceptMasteries: Map<string, number>,
-  ): Promise<number> {
+  ): number {
     return SpacedRepetition.calculateInterference(conceptId, similarConcepts, conceptMasteries)
   }
 
-  async getDueReviews(
+  getDueReviews(
     userId: string,
     currentTime: Date = new Date(),
     lookaheadHours: number = 24,
-  ): Promise<ReviewSchedule[]> {
+  ): ReviewSchedule[] {
     const userSchedules = this.getUserSchedules(userId)
     const scheduledReviews = new Map<string, { date: Date; params: EnhancedSRParams }>()
 
@@ -249,11 +245,11 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     return dueSchedules.sort((a, b) => b.priority - a.priority)
   }
 
-  async balanceReviewLoad(
+  balanceReviewLoad(
     userId: string,
     scheduledReviews: ReviewSchedule[],
     maxDailyReviews: number = this.config.maxDailyReviews,
-  ): Promise<ReviewSchedule[]> {
+  ): ReviewSchedule[] {
     const reviewMap = new Map<string, Date>()
     for (const schedule of scheduledReviews) {
       reviewMap.set(schedule.itemId, schedule.nextReviewTime)
@@ -263,12 +259,12 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
 
     return scheduledReviews.map((schedule) => ({
       ...schedule,
-      nextReviewTime: balancedMap.get(schedule.itemId) || schedule.nextReviewTime,
+      nextReviewTime: balancedMap.get(schedule.itemId) ?? schedule.nextReviewTime,
       updatedAt: new Date(),
     }))
   }
 
-  async predictRetention(userId: string, conceptId: string, daysFromNow: number): Promise<number> {
+  predictRetention(userId: string, conceptId: string, daysFromNow: number): number {
     const params = this.getUserParams(userId, conceptId)
     if (!params) {
       return 0.5 // Default retention probability
@@ -280,7 +276,7 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     return SpacedRepetition.predictRetention(params, daysFromNow, lastQuality)
   }
 
-  async getReviewStatistics(userId: string, timeWindow: number = 30): Promise<ReviewStatistics> {
+  getReviewStatistics(userId: string, timeWindow: number = 30): ReviewStatistics {
     const userSchedules = this.getUserSchedules(userId)
     const schedules = Array.from(userSchedules.values())
 
@@ -306,11 +302,11 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     }
   }
 
-  async optimizeSessionLength(
+  optimizeSessionLength(
     userId: string,
     currentFatigue: number,
     availableTime: number,
-  ): Promise<SessionOptimization> {
+  ): SessionOptimization {
     // Base session length on fatigue and available time
     const baseDuration = Math.min(availableTime, 30) // Max 30 minutes
     const fatigueAdjustment = 1 - currentFatigue * 0.5
@@ -347,18 +343,24 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
     if (!this.userParams.has(userId)) {
       this.userParams.set(userId, new Map())
     }
-    this.userParams.get(userId)!.set(conceptId, params)
+    const userParamsMap = this.userParams.get(userId)
+    if (userParamsMap) {
+      userParamsMap.set(conceptId, params)
+    }
   }
 
   private getUserSchedules(userId: string): Map<string, ReviewSchedule> {
-    return this.userSchedules.get(userId) || new Map()
+    return this.userSchedules.get(userId) ?? new Map<string, ReviewSchedule>()
   }
 
   private setUserSchedule(userId: string, conceptId: string, schedule: ReviewSchedule): void {
     if (!this.userSchedules.has(userId)) {
       this.userSchedules.set(userId, new Map())
     }
-    this.userSchedules.get(userId)!.set(conceptId, schedule)
+    const userSchedulesMap = this.userSchedules.get(userId)
+    if (userSchedulesMap) {
+      userSchedulesMap.set(conceptId, schedule)
+    }
   }
 
   private calculatePriority(quality: number, reviewBurden: number): number {
@@ -368,7 +370,7 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
 
   private estimateDuration(responseTime: number, difficulty?: number): number {
     const baseDuration = responseTime / 1000 / 60 // Convert to minutes
-    const difficultyMultiplier = difficulty ? 1 + difficulty * 0.5 : 1
+    const difficultyMultiplier = difficulty !== undefined ? 1 + difficulty * 0.5 : 1
     return Math.max(1, baseDuration * difficultyMultiplier)
   }
 
@@ -386,7 +388,7 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
 
     for (const schedule of schedules) {
       const hour = schedule.nextReviewTime.getHours()
-      hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1)
+      hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1)
     }
 
     // Return hours with above-average load
@@ -404,8 +406,8 @@ export class SpacedRepetitionService implements SpacedRepetitionServiceInterface
 
     for (const schedule of schedules) {
       const dateKey = schedule.nextReviewTime.toISOString().split('T')[0]
-      if (dateKey) {
-        dailyCounts.set(dateKey, (dailyCounts.get(dateKey) || 0) + 1)
+      if (dateKey !== undefined && dateKey.length > 0) {
+        dailyCounts.set(dateKey, (dailyCounts.get(dateKey) ?? 0) + 1)
       }
     }
 

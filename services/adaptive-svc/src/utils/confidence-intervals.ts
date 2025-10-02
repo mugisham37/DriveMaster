@@ -167,9 +167,15 @@ export function calculateAdaptiveConfidenceInterval(
   const totalWeight = weights.reduce((sum, w) => sum + w, 0)
 
   const weightedLower =
-    intervals.reduce((sum, interval, i) => sum + interval.lower * weights[i], 0) / totalWeight
+    intervals.reduce((sum, interval, i) => {
+      const weight = weights[i]
+      return weight != null ? sum + interval.lower * weight : sum
+    }, 0) / totalWeight
   const weightedUpper =
-    intervals.reduce((sum, interval, i) => sum + interval.upper * weights[i], 0) / totalWeight
+    intervals.reduce((sum, interval, i) => {
+      const weight = weights[i]
+      return weight != null ? sum + interval.upper * weight : sum
+    }, 0) / totalWeight
 
   return {
     lower: Math.max(0, weightedLower),
@@ -191,8 +197,9 @@ function getZScore(confidence: number): number {
   }
 
   const key = confidence.toFixed(3)
-  if (key in zScores) {
-    return zScores[key]
+  const zScore = zScores[key]
+  if (zScore != null) {
+    return zScore
   }
 
   // Approximation for other confidence levels
@@ -209,41 +216,74 @@ function approximateInverseNormal(p: number): number {
   }
 
   // Constants for the approximation
-  const a = [
+  const a: number[] = [
     0, -3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2,
     -3.066479806614716e1, 2.506628277459239,
   ]
-  const b = [
+  const b: number[] = [
     0, -5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1,
     -1.328068155288572e1,
   ]
-  const c = [
+  const c: number[] = [
     0, -7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734,
     4.374664141464968, 2.938163982698783,
   ]
-  const d = [0, 7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416]
+  const d: number[] = [
+    0, 7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416,
+  ]
 
   let x: number
 
   if (p < 0.02425) {
     // Lower tail
     const q = Math.sqrt(-2 * Math.log(p))
+    const c1 = c[1] ?? 0,
+      c2 = c[2] ?? 0,
+      c3 = c[3] ?? 0,
+      c4 = c[4] ?? 0,
+      c5 = c[5] ?? 0,
+      c6 = c[6] ?? 0
+    const d1 = d[1] ?? 0,
+      d2 = d[2] ?? 0,
+      d3 = d[3] ?? 0,
+      d4 = d[4] ?? 0
     x =
-      (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
-      ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1)
+      (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+      ((((d1 * q + d2) * q + d3) * q + d4) * q + 1)
   } else if (p > 0.97575) {
     // Upper tail
     const q = Math.sqrt(-2 * Math.log(1 - p))
+    const c1 = c[1] ?? 0,
+      c2 = c[2] ?? 0,
+      c3 = c[3] ?? 0,
+      c4 = c[4] ?? 0,
+      c5 = c[5] ?? 0,
+      c6 = c[6] ?? 0
+    const d1 = d[1] ?? 0,
+      d2 = d[2] ?? 0,
+      d3 = d[3] ?? 0,
+      d4 = d[4] ?? 0
     x =
-      -(((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
-      ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1)
+      -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+      ((((d1 * q + d2) * q + d3) * q + d4) * q + 1)
   } else {
     // Central region
     const q = p - 0.5
     const r = q * q
+    const a1 = a[1] ?? 0,
+      a2 = a[2] ?? 0,
+      a3 = a[3] ?? 0,
+      a4 = a[4] ?? 0,
+      a5 = a[5] ?? 0,
+      a6 = a[6] ?? 0
+    const b1 = b[1] ?? 0,
+      b2 = b[2] ?? 0,
+      b3 = b[3] ?? 0,
+      b4 = b[4] ?? 0,
+      b5 = b[5] ?? 0
     x =
-      ((((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q) /
-      (((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1)
+      ((((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q) /
+      (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1)
   }
 
   return x
@@ -274,7 +314,7 @@ export function calculateCredibleInterval(
  * Utility to determine if mastery is significantly different from a threshold
  */
 export function isMasterySignificant(
-  currentMastery: number,
+  _currentMastery: number,
   threshold: number,
   confidenceInterval: ConfidenceInterval,
 ): {

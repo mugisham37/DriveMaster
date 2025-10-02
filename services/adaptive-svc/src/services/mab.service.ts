@@ -16,9 +16,6 @@ import type {
   SessionOptimization,
   BanditPerformanceMetrics,
   MABConfig,
-  ThompsonSamplingResult,
-  ContextualBanditFeatures,
-  MABAnalytics,
 } from '../types/mab.types.js'
 
 export class MABService implements MABServiceInterface {
@@ -111,7 +108,7 @@ export class MABService implements MABServiceInterface {
         banditConfig.zpdMinSuccess,
         banditConfig.zpdMaxSuccess,
       ),
-      engagementReward: (selection.selectedArm.engagement || 0.5) * banditConfig.engagementWeight,
+      engagementReward: (selection.selectedArm.engagement ?? 0.5) * banditConfig.engagementWeight,
       progressionReward:
         MultiArmedBandit.calculateProgressionReward(
           selection.selectedArm.difficulty,
@@ -175,7 +172,7 @@ export class MABService implements MABServiceInterface {
   ): Promise<DynamicDifficultyAdjustment> {
     if (currentPerformance.length < this.config.minQuestionsForStats) {
       // Not enough data for adjustment
-      return this.createDefaultDifficultyAdjustment(userId)
+      return await this.createDefaultDifficultyAdjustment(userId)
     }
 
     const currentSuccessRate =
@@ -220,7 +217,7 @@ export class MABService implements MABServiceInterface {
    */
   async detectFatigue(userId: string, sessionData: LearningOutcome[]): Promise<FatigueDetection> {
     if (sessionData.length < 3) {
-      return this.createNoFatigueDetection(userId)
+      return await this.createNoFatigueDetection(userId)
     }
 
     // Analyze performance trends
@@ -315,15 +312,12 @@ export class MABService implements MABServiceInterface {
   /**
    * Get performance metrics for user or specific question
    */
-  async getPerformanceMetrics(
-    userId: string,
-    questionId?: string,
-  ): Promise<BanditPerformanceMetrics[]> {
+  getPerformanceMetrics(userId: string, questionId?: string): Promise<BanditPerformanceMetrics[]> {
     const userStats = this.getUserBanditStats(userId)
     const metrics: BanditPerformanceMetrics[] = []
 
     for (const [armId, stats] of userStats) {
-      if (questionId && armId !== questionId) continue
+      if (questionId != null && questionId.length > 0 && armId !== questionId) continue
 
       const recentPerformance = this.getRecentPerformance(userId, armId)
       const explorationRatio = this.calculateExplorationRatio(stats)
@@ -335,40 +329,41 @@ export class MABService implements MABServiceInterface {
         averageReward: stats.avgReward,
         successRate: stats.totalPulls > 0 ? stats.totalRewards / stats.totalPulls : 0,
         averageResponseTime: this.calculateAverageResponseTime(userId, armId),
-        lastPulled: stats.lastPulled || new Date(),
+        lastPulled: stats.lastPulled ?? new Date(),
         recentPerformance,
         explorationCount: Math.floor(stats.totalPulls * (1 - explorationRatio.exploitation)),
         exploitationCount: Math.floor(stats.totalPulls * explorationRatio.exploitation),
       })
     }
 
-    return metrics
+    return Promise.resolve(metrics)
   }
 
   /**
    * Get exploration vs exploitation ratio for user
    */
-  async getExplorationRatio(
-    userId: string,
-  ): Promise<{ exploration: number; exploitation: number }> {
+  getExplorationRatio(userId: string): Promise<{ exploration: number; exploitation: number }> {
     const userStats = this.getUserBanditStats(userId)
-    return MultiArmedBandit.getExplorationRatio(userStats)
+    return Promise.resolve(MultiArmedBandit.getExplorationRatio(userStats))
   }
 
   /**
    * Reset bandit statistics with optional decay
    */
-  async resetBanditStats(userId: string, decayFactor: number = 0.5): Promise<void> {
+  resetBanditStats(userId: string, decayFactor: number = 0.5): Promise<void> {
     const userStats = this.getUserBanditStats(userId)
     MultiArmedBandit.resetBanditStats(userStats, decayFactor)
+    return Promise.resolve()
   }
 
   /**
    * Detect concept drift in user performance
    */
-  async detectConceptDrift(userId: string): Promise<boolean> {
+  detectConceptDrift(userId: string): Promise<boolean> {
     const userStats = this.getUserBanditStats(userId)
-    return MultiArmedBandit.detectConceptDrift(userStats, this.config.performanceWindowSize)
+    return Promise.resolve(
+      MultiArmedBandit.detectConceptDrift(userStats, this.config.performanceWindowSize),
+    )
   }
 
   // Private helper methods
@@ -377,7 +372,11 @@ export class MABService implements MABServiceInterface {
     if (!this.userBanditStats.has(userId)) {
       this.userBanditStats.set(userId, new Map())
     }
-    return this.userBanditStats.get(userId)!
+    const stats = this.userBanditStats.get(userId)
+    if (!stats) {
+      throw new Error(`Failed to get bandit stats for user ${userId}`)
+    }
+    return stats
   }
 
   private calculateEngagementScore(question: Question): number {
@@ -393,10 +392,8 @@ export class MABService implements MABServiceInterface {
     return questions.reduce((sum, q) => sum + q.difficulty, 0) / questions.length
   }
 
-  private async getDifficultyAdjustment(
-    userId: string,
-  ): Promise<DynamicDifficultyAdjustment | null> {
-    return this.difficultyAdjustments.get(userId) || null
+  private getDifficultyAdjustment(userId: string): Promise<DynamicDifficultyAdjustment | null> {
+    return Promise.resolve(this.difficultyAdjustments.get(userId) ?? null)
   }
 
   private applyDifficultyFilter(
@@ -414,8 +411,13 @@ export class MABService implements MABServiceInterface {
   }
 
   private generateSelectionReason(
-    selection: { selectedArm: BanditArm; expectedReward: number; sampledValue: number },
-    factors: any,
+    _selection: { selectedArm: BanditArm; expectedReward: number; sampledValue: number },
+    factors: {
+      zpdReward: number
+      engagementReward: number
+      progressionReward: number
+      fatigueAdjustment: number
+    },
   ): string {
     const reasons: string[] = []
 
@@ -444,7 +446,7 @@ export class MABService implements MABServiceInterface {
     reward += timeBonus
 
     // Adjust reward based on confidence
-    if (outcome.confidence) {
+    if (outcome.confidence != null && outcome.confidence > 0) {
       const confidenceBonus = (outcome.confidence - 3) * 0.1 // Assuming 1-5 scale
       reward += confidenceBonus
     }
@@ -461,7 +463,10 @@ export class MABService implements MABServiceInterface {
     if (!this.userPerformanceHistory.has(userId)) {
       this.userPerformanceHistory.set(userId, [])
     }
-    const history = this.userPerformanceHistory.get(userId)!
+    const history = this.userPerformanceHistory.get(userId)
+    if (!history) {
+      throw new Error(`Failed to get performance history for user ${userId}`)
+    }
     history.push(outcome)
 
     // Keep only recent history
@@ -474,12 +479,19 @@ export class MABService implements MABServiceInterface {
     if (!this.userSessionData.has(userId)) {
       this.userSessionData.set(userId, new Map())
     }
-    const userSessions = this.userSessionData.get(userId)!
+    const userSessions = this.userSessionData.get(userId)
+    if (!userSessions) {
+      throw new Error(`Failed to get session data for user ${userId}`)
+    }
 
     if (!userSessions.has(sessionId)) {
       userSessions.set(sessionId, [])
     }
-    userSessions.get(sessionId)!.push(outcome)
+    const sessionData = userSessions.get(sessionId)
+    if (!sessionData) {
+      throw new Error(`Failed to get session data for session ${sessionId}`)
+    }
+    sessionData.push(outcome)
   }
 
   private async handleConceptDrift(userId: string): Promise<void> {
@@ -489,30 +501,30 @@ export class MABService implements MABServiceInterface {
 
   private async updateDifficultyAdjustment(
     userId: string,
-    outcome: LearningOutcome,
+    _outcome: LearningOutcome,
   ): Promise<void> {
-    const history = this.userPerformanceHistory.get(userId) || []
+    const history = this.userPerformanceHistory.get(userId) ?? []
     if (history.length >= this.config.minQuestionsForStats) {
       const recentPerformance = history.slice(-10).map((o) => (o.isCorrect ? 1 : 0))
       await this.adjustDifficulty(userId, recentPerformance)
     }
   }
 
-  private createDefaultDifficultyAdjustment(userId: string): DynamicDifficultyAdjustment {
-    return {
+  private createDefaultDifficultyAdjustment(userId: string): Promise<DynamicDifficultyAdjustment> {
+    return Promise.resolve({
       userId,
       currentSuccessRate: 0.75,
       targetSuccessRate: 0.75,
       difficultyAdjustment: 0,
       adjustmentReason: 'Insufficient data for adjustment',
       confidenceInterval: { lower: 0.5, upper: 1.0 },
-    }
+    })
   }
 
   private calculateWilsonConfidenceInterval(
     successes: number,
     trials: number,
-    confidence: number,
+    _confidence: number,
   ): { lower: number; upper: number } {
     if (trials === 0) return { lower: 0, upper: 1 }
 
@@ -529,8 +541,8 @@ export class MABService implements MABServiceInterface {
     }
   }
 
-  private createNoFatigueDetection(userId: string): FatigueDetection {
-    return {
+  private createNoFatigueDetection(userId: string): Promise<FatigueDetection> {
+    return Promise.resolve({
       userId,
       currentFatigueLevel: 0,
       fatigueIndicators: {
@@ -541,7 +553,7 @@ export class MABService implements MABServiceInterface {
       },
       recommendedAction: 'continue',
       estimatedRecoveryTime: 0,
-    }
+    })
   }
 
   private calculateResponseTimeIncrease(
@@ -575,10 +587,10 @@ export class MABService implements MABServiceInterface {
     if (recentWithConfidence.length === 0 || earlierWithConfidence.length === 0) return 0
 
     const recentAvg =
-      recentWithConfidence.reduce((sum, o) => sum + (o.confidence || 0), 0) /
+      recentWithConfidence.reduce((sum, o) => sum + (o.confidence ?? 0), 0) /
       recentWithConfidence.length
     const earlierAvg =
-      earlierWithConfidence.reduce((sum, o) => sum + (o.confidence || 0), 0) /
+      earlierWithConfidence.reduce((sum, o) => sum + (o.confidence ?? 0), 0) /
       earlierWithConfidence.length
 
     return Math.max(0, earlierAvg - recentAvg)
@@ -650,8 +662,10 @@ export class MABService implements MABServiceInterface {
     // Find optimal point (before significant decline)
     let optimalTime = 30 // Default 30 minutes
     for (let i = 1; i < performanceByTime.length; i++) {
-      if (performanceByTime[i].accuracy < performanceByTime[i - 1].accuracy - 0.1) {
-        optimalTime = performanceByTime[i - 1].time
+      const current = performanceByTime[i]
+      const previous = performanceByTime[i - 1]
+      if (current && previous && current.accuracy < previous.accuracy - 0.1) {
+        optimalTime = previous.time
         break
       }
     }
@@ -660,7 +674,7 @@ export class MABService implements MABServiceInterface {
   }
 
   private getRecentPerformance(userId: string, armId: string): number[] {
-    const history = this.userPerformanceHistory.get(userId) || []
+    const history = this.userPerformanceHistory.get(userId) ?? []
     return history
       .filter((outcome) => outcome.questionId === armId)
       .slice(-10)
@@ -683,7 +697,7 @@ export class MABService implements MABServiceInterface {
   }
 
   private calculateAverageResponseTime(userId: string, armId: string): number {
-    const history = this.userPerformanceHistory.get(userId) || []
+    const history = this.userPerformanceHistory.get(userId) ?? []
     const armHistory = history.filter((outcome) => outcome.questionId === armId)
 
     if (armHistory.length === 0) return 0

@@ -1,19 +1,21 @@
+import { EventEmitter } from 'events'
+
 import { Pinecone } from '@pinecone-database/pinecone'
 import * as tf from '@tensorflow/tfjs'
-import { EventEmitter } from 'events'
-import { logger } from '@drivemaster/shared-config'
+
+import { logger } from '../utils/logger'
 
 export interface VectorEmbedding {
   id: string
   values: number[]
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface SimilaritySearchRequest {
   vector?: number[]
   text?: string
   topK?: number
-  filter?: Record<string, any>
+  filter?: Record<string, unknown>
   includeMetadata?: boolean
   includeValues?: boolean
 }
@@ -21,8 +23,39 @@ export interface SimilaritySearchRequest {
 export interface SimilaritySearchResult {
   id: string
   score: number
-  values?: number[]
-  metadata?: Record<string, any>
+  values?: number[] | undefined
+  metadata?: Record<string, unknown> | undefined
+}
+
+export interface PineconeQueryRequest {
+  vector: number[]
+  topK: number
+  includeMetadata: boolean
+  includeValues: boolean
+  filter?: Record<string, unknown>
+}
+
+export interface PineconeQueryResponse {
+  matches: Array<{
+    id: string
+    score: number
+    values?: number[]
+    metadata?: Record<string, unknown>
+  }>
+}
+
+export interface PineconeIndex {
+  upsert: (vectors: VectorEmbedding[]) => Promise<void>
+  query: (request: PineconeQueryRequest) => Promise<PineconeQueryResponse>
+  describeIndexStats: () => Promise<{
+    totalVectorCount?: number
+    dimension?: number
+    indexFullness?: number
+  }>
+}
+
+export interface PineconeIndexList {
+  indexes?: Array<{ name: string }>
 }
 
 export interface ContentRecommendation {
@@ -34,7 +67,7 @@ export interface ContentRecommendation {
   reasoning: string
   metadata: {
     topic: string
-    subtopic?: string
+    subtopic?: string | undefined
     estimatedTime: number
     prerequisites: string[]
   }
@@ -49,15 +82,17 @@ export interface UserProfile {
 }
 
 export class VectorSearchService extends EventEmitter {
-  private pinecone: Pinecone
-  private index: any
+  private pinecone: Pinecone | null = null
+  private index: PineconeIndex | null = null
   private textEncoder: tf.LayersModel | null = null
   private readonly indexName = 'drivemaster-content'
   private readonly dimension = 384 // Using sentence-transformers dimension
 
   constructor() {
     super()
-    this.initializePinecone()
+    void this.initializePinecone().catch((error) => {
+      logger.error('Failed to initialize Pinecone during construction:', error)
+    })
   }
 
   /**
@@ -65,28 +100,35 @@ export class VectorSearchService extends EventEmitter {
    */
   private async initializePinecone(): Promise<void> {
     try {
+      const apiKey = process.env.PINECONE_API_KEY
+      if ((apiKey?.length ?? 0) === 0) {
+        throw new Error('PINECONE_API_KEY environment variable is required')
+      }
+
       this.pinecone = new Pinecone({
-        apiKey: process.env.PINECONE_API_KEY || '',
+        apiKey: apiKey as string,
       })
 
       // Check if index exists, create if not
       const indexList = await this.pinecone.listIndexes()
-      const indexExists = indexList.indexes?.some((idx) => idx.name === this.indexName)
+      const indexExists = Boolean(indexList.indexes?.some((idx) => idx.name === this.indexName))
 
       if (!indexExists) {
         await this.createIndex()
       }
 
-      this.index = this.pinecone.index(this.indexName)
+      this.index = this.pinecone.index(this.indexName) as PineconeIndex
 
       // Initialize text encoder model
-      await this.initializeTextEncoder()
+      this.initializeTextEncoder()
 
       logger.info('Pinecone vector search service initialized successfully')
       this.emit('initialized')
     } catch (error) {
       logger.error('Failed to initialize Pinecone:', error)
-      throw new Error(`Pinecone initialization failed: ${error.message}`)
+      throw new Error(
+        `Pinecone initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -95,6 +137,10 @@ export class VectorSearchService extends EventEmitter {
    */
   private async createIndex(): Promise<void> {
     try {
+      if (!this.pinecone) {
+        throw new Error('Pinecone client not initialized')
+      }
+
       await this.pinecone.createIndex({
         name: this.indexName,
         dimension: this.dimension,
@@ -117,7 +163,7 @@ export class VectorSearchService extends EventEmitter {
   /**
    * Initialize text encoder for generating embeddings
    */
-  private async initializeTextEncoder(): Promise<void> {
+  private initializeTextEncoder(): void {
     try {
       // Create a simple text encoder using TensorFlow.js
       // In production, you would load a pre-trained sentence transformer model
@@ -161,7 +207,9 @@ export class VectorSearchService extends EventEmitter {
       return Array.from(embeddingData)
     } catch (error) {
       logger.error('Failed to generate embedding:', error)
-      throw new Error(`Embedding generation failed: ${error.message}`)
+      throw new Error(
+        `Embedding generation failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -202,7 +250,7 @@ export class VectorSearchService extends EventEmitter {
     content: {
       id: string
       text: string
-      metadata: Record<string, any>
+      metadata: Record<string, unknown>
     }[],
   ): Promise<void> {
     try {
@@ -222,13 +270,18 @@ export class VectorSearchService extends EventEmitter {
       }
 
       // Batch upsert to Pinecone
+      if (!this.index) {
+        throw new Error('Pinecone index not initialized')
+      }
       await this.index.upsert(vectors)
 
       logger.info(`Indexed ${vectors.length} content items to Pinecone`)
       this.emit('contentIndexed', { count: vectors.length })
     } catch (error) {
       logger.error('Failed to index content:', error)
-      throw new Error(`Content indexing failed: ${error.message}`)
+      throw new Error(
+        `Content indexing failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -237,21 +290,25 @@ export class VectorSearchService extends EventEmitter {
    */
   async similaritySearch(request: SimilaritySearchRequest): Promise<SimilaritySearchResult[]> {
     try {
+      if (!this.index) {
+        throw new Error('Pinecone index not initialized')
+      }
+
       let queryVector: number[]
 
       if (request.vector) {
         queryVector = request.vector
-      } else if (request.text) {
-        queryVector = await this.generateEmbedding(request.text)
+      } else if ((request.text?.length ?? 0) > 0) {
+        queryVector = await this.generateEmbedding(request.text as string)
       } else {
         throw new Error('Either vector or text must be provided')
       }
 
-      const queryRequest: any = {
+      const queryRequest: PineconeQueryRequest = {
         vector: queryVector,
-        topK: request.topK || 10,
+        topK: request.topK ?? 10,
         includeMetadata: request.includeMetadata !== false,
-        includeValues: request.includeValues || false,
+        includeValues: request.includeValues ?? false,
       }
 
       if (request.filter) {
@@ -260,15 +317,17 @@ export class VectorSearchService extends EventEmitter {
 
       const response = await this.index.query(queryRequest)
 
-      return response.matches.map((match: any) => ({
+      return response.matches.map((match) => ({
         id: match.id,
         score: match.score,
-        values: match.values,
-        metadata: match.metadata,
+        values: match.values ?? undefined,
+        metadata: match.metadata ?? undefined,
       }))
     } catch (error) {
       logger.error('Similarity search failed:', error)
-      throw new Error(`Similarity search failed: ${error.message}`)
+      throw new Error(
+        `Similarity search failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -290,15 +349,18 @@ export class VectorSearchService extends EventEmitter {
       const queryVector = this.createPersonalizedQueryVector(userProfile, context)
 
       // Build filter based on context
-      const filter: Record<string, any> = {}
-      if (context.currentTopic) {
-        filter.topic = context.currentTopic
+      const filter: Record<string, unknown> = {}
+      if ((context.currentTopic?.length ?? 0) > 0) {
+        filter.topic = context.currentTopic as string
       }
-      if (context.difficulty) {
-        filter.difficulty = { $gte: context.difficulty - 0.5, $lte: context.difficulty + 0.5 }
+      if ((context.difficulty ?? 0) > 0) {
+        filter.difficulty = {
+          $gte: (context.difficulty as number) - 0.5,
+          $lte: (context.difficulty as number) + 0.5,
+        }
       }
-      if (context.timeAvailable) {
-        filter.estimated_time = { $lte: context.timeAvailable }
+      if ((context.timeAvailable ?? 0) > 0) {
+        filter.estimated_time = { $lte: context.timeAvailable as number }
       }
 
       // Perform similarity search
@@ -311,20 +373,31 @@ export class VectorSearchService extends EventEmitter {
 
       // Convert to content recommendations with reasoning
       const recommendations: ContentRecommendation[] = searchResults.map((result) => {
-        const metadata = result.metadata || {}
+        const metadata = result.metadata ?? {}
+
+        const title =
+          (this.getMetadataValue(metadata, 'title', 'string') as string) ?? 'Untitled Content'
+        const type = (this.getMetadataValue(metadata, 'type', 'string') as string) ?? 'question'
+        const difficulty = (this.getMetadataValue(metadata, 'difficulty', 'number') as number) ?? 1
+        const topic = (this.getMetadataValue(metadata, 'topic', 'string') as string) ?? 'general'
+        const subtopic = this.getMetadataValue(metadata, 'subtopic', 'string') as string | undefined
+        const estimatedTime =
+          (this.getMetadataValue(metadata, 'estimated_time', 'number') as number) ?? 5
+        const prerequisites =
+          (this.getMetadataValue(metadata, 'prerequisites', 'array') as string[]) ?? []
 
         return {
           contentId: result.id,
-          title: metadata.title || 'Untitled Content',
-          type: metadata.type || 'question',
-          difficulty: metadata.difficulty || 1,
+          title,
+          type: type as 'question' | 'explanation' | 'practice' | 'video',
+          difficulty,
           relevanceScore: result.score,
           reasoning: this.generateRecommendationReasoning(result, userProfile, context),
           metadata: {
-            topic: metadata.topic || 'general',
-            subtopic: metadata.subtopic,
-            estimatedTime: metadata.estimated_time || 5,
-            prerequisites: metadata.prerequisites || [],
+            topic,
+            subtopic,
+            estimatedTime,
+            prerequisites,
           },
         }
       })
@@ -341,43 +414,82 @@ export class VectorSearchService extends EventEmitter {
       return sortedRecommendations.slice(0, 10) // Return top 10
     } catch (error) {
       logger.error('Failed to generate content recommendations:', error)
-      throw new Error(`Content recommendation failed: ${error.message}`)
+      throw new Error(
+        `Content recommendation failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  /**
+   * Safely extract metadata values with type checking
+   */
+  private getMetadataValue(
+    metadata: Record<string, unknown>,
+    key: string,
+    expectedType: 'string' | 'number' | 'array',
+  ): unknown {
+    const value = metadata[key]
+
+    switch (expectedType) {
+      case 'string':
+        return typeof value === 'string' ? value : undefined
+      case 'number':
+        return typeof value === 'number' ? value : undefined
+      case 'array':
+        return Array.isArray(value) ? value : undefined
+      default:
+        return value
     }
   }
 
   /**
    * Create personalized query vector
    */
-  private createPersonalizedQueryVector(userProfile: UserProfile, context: any): number[] {
+  private createPersonalizedQueryVector(
+    userProfile: UserProfile,
+    _context: {
+      currentTopic?: string
+      difficulty?: number
+      sessionGoals?: string[]
+      timeAvailable?: number
+    },
+  ): number[] {
     // Combine user knowledge vector with learning preferences
     const queryVector = new Array(this.dimension).fill(0)
 
     // Weight knowledge vector (60%)
-    for (let i = 0; i < Math.min(userProfile.knowledgeVector.length, this.dimension * 0.6); i++) {
-      queryVector[i] = userProfile.knowledgeVector[i] * 0.6
+    const knowledgeVectorLength = userProfile.knowledgeVector?.length ?? 0
+    const maxKnowledgeElements = Math.min(knowledgeVectorLength, Math.floor(this.dimension * 0.6))
+    for (let i = 0; i < maxKnowledgeElements; i++) {
+      const value = userProfile.knowledgeVector?.[i]
+      if (value !== undefined) {
+        queryVector[i] = value * 0.6
+      }
     }
 
     // Weight learning preferences (25%)
     const prefOffset = Math.floor(this.dimension * 0.6)
-    for (
-      let i = 0;
-      i < Math.min(userProfile.learningPreferences.length, this.dimension * 0.25);
-      i++
-    ) {
-      queryVector[prefOffset + i] = userProfile.learningPreferences[i] * 0.25
+    const learningPreferencesLength = userProfile.learningPreferences?.length ?? 0
+    const maxPrefElements = Math.min(learningPreferencesLength, Math.floor(this.dimension * 0.25))
+    for (let i = 0; i < maxPrefElements; i++) {
+      const value = userProfile.learningPreferences?.[i]
+      if (value !== undefined) {
+        queryVector[prefOffset + i] = value * 0.25
+      }
     }
 
     // Weight performance history (15%)
     const perfOffset = Math.floor(this.dimension * 0.85)
-    for (
-      let i = 0;
-      i < Math.min(userProfile.performanceHistory.length, this.dimension * 0.15);
-      i++
-    ) {
-      queryVector[perfOffset + i] = userProfile.performanceHistory[i] * 0.15
+    const performanceHistoryLength = userProfile.performanceHistory?.length ?? 0
+    const maxPerfElements = Math.min(performanceHistoryLength, Math.floor(this.dimension * 0.15))
+    for (let i = 0; i < maxPerfElements; i++) {
+      const value = userProfile.performanceHistory?.[i]
+      if (value !== undefined) {
+        queryVector[perfOffset + i] = value * 0.15
+      }
     }
 
-    return queryVector
+    return queryVector as number[]
   }
 
   /**
@@ -386,7 +498,12 @@ export class VectorSearchService extends EventEmitter {
   private generateRecommendationReasoning(
     result: SimilaritySearchResult,
     userProfile: UserProfile,
-    context: any,
+    context: {
+      currentTopic?: string
+      difficulty?: number
+      sessionGoals?: string[]
+      timeAvailable?: number
+    },
   ): string {
     const reasons = []
 
@@ -394,15 +511,21 @@ export class VectorSearchService extends EventEmitter {
       reasons.push('highly relevant to your learning profile')
     }
 
-    if (result.metadata?.difficulty) {
+    const difficultyValue = this.getMetadataValue(result.metadata ?? {}, 'difficulty', 'number')
+    if (typeof difficultyValue === 'number' && userProfile.knowledgeVector.length > 0) {
       const userLevel =
         userProfile.knowledgeVector.reduce((a, b) => a + b, 0) / userProfile.knowledgeVector.length
-      if (Math.abs(result.metadata.difficulty - userLevel) < 0.3) {
+      if (Math.abs(difficultyValue - userLevel) < 0.3) {
         reasons.push('matches your current skill level')
       }
     }
 
-    if (context.currentTopic && result.metadata?.topic === context.currentTopic) {
+    const topicValue = this.getMetadataValue(result.metadata ?? {}, 'topic', 'string')
+    if (
+      (context.currentTopic?.length ?? 0) > 0 &&
+      typeof topicValue === 'string' &&
+      topicValue === context.currentTopic
+    ) {
       reasons.push('directly related to your current topic')
     }
 
@@ -419,7 +542,7 @@ export class VectorSearchService extends EventEmitter {
   private applyRecommendationLogic(
     recommendations: ContentRecommendation[],
     userProfile: UserProfile,
-    context: any,
+    _context: unknown,
   ): ContentRecommendation[] {
     return recommendations
       .sort((a, b) => {
@@ -449,7 +572,7 @@ export class VectorSearchService extends EventEmitter {
   /**
    * Update user profile vector based on interactions
    */
-  async updateUserProfile(
+  updateUserProfile(
     userId: string,
     interactions: {
       contentId: string
@@ -457,7 +580,7 @@ export class VectorSearchService extends EventEmitter {
       performance?: number
       timeSpent?: number
     }[],
-  ): Promise<void> {
+  ): void {
     try {
       // This would typically update the user profile in your database
       // and potentially re-index user preferences
@@ -479,12 +602,16 @@ export class VectorSearchService extends EventEmitter {
     indexFullness: number
   }> {
     try {
+      if (!this.index) {
+        throw new Error('Pinecone index not initialized')
+      }
+
       const stats = await this.index.describeIndexStats()
 
       return {
-        totalVectors: stats.totalVectorCount || 0,
-        dimension: stats.dimension || this.dimension,
-        indexFullness: stats.indexFullness || 0,
+        totalVectors: stats.totalVectorCount ?? 0,
+        dimension: stats.dimension ?? this.dimension,
+        indexFullness: stats.indexFullness ?? 0,
       }
     } catch (error) {
       logger.error('Failed to get index stats:', error)

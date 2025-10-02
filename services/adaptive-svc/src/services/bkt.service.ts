@@ -3,7 +3,6 @@ import {
   type EnhancedBKTParams,
   type BKTUpdateContext,
 } from '../algorithms/bkt.js'
-import { calculateAdaptiveConfidenceInterval } from '../utils/confidence-intervals.js'
 import type {
   BKTServiceInterface,
   KnowledgeState,
@@ -15,8 +14,8 @@ import type {
   LearningProgress,
   ConceptMastery,
   BKTConfig,
-  LearningContext,
 } from '../types/bkt.types.js'
+import { calculateAdaptiveConfidenceInterval } from '../utils/confidence-intervals.js'
 
 export class BKTService implements BKTServiceInterface {
   private config: BKTConfig
@@ -58,12 +57,11 @@ export class BKTService implements BKTServiceInterface {
     // Create update context
     const updateContext: BKTUpdateContext = {
       correct: response.isCorrect,
-      responseTime: response.responseTime,
-      confidence: response.confidence,
-      attempts: response.attempts,
-      timeSinceLastInteraction: currentState.lastUpdated
-        ? Date.now() - currentState.lastUpdated.getTime()
-        : undefined,
+      ...(response.responseTime != null && { responseTime: response.responseTime }),
+      ...(response.confidence != null && { confidence: response.confidence }),
+      ...(response.attempts != null && { attempts: response.attempts }),
+      timeSinceLastInteraction: Date.now() - currentState.lastUpdated.getTime(),
+      itemDifficulty: 0.5, // Default difficulty, could be retrieved from item metadata
     }
 
     // Apply concept dependencies if they exist
@@ -125,7 +123,7 @@ export class BKTService implements BKTServiceInterface {
 
     // Apply temporal decay if enabled
     let currentMastery = state.masteryProbability
-    if (this.config.temporalDecayEnabled && state.lastUpdated) {
+    if (this.config.temporalDecayEnabled) {
       const timeSinceUpdate = Date.now() - state.lastUpdated.getTime()
       currentMastery = BayesianKnowledgeTracing.applyTemporalDecay(
         state.masteryProbability,
@@ -137,7 +135,9 @@ export class BKTService implements BKTServiceInterface {
     // Calculate confidence interval based on evidence history
     const confidence = this.calculateConfidenceInterval(state.evidenceHistory, currentMastery)
     const evidence =
-      state.evidenceHistory.length > 0 ? state.evidenceHistory[state.evidenceHistory.length - 1] : 0
+      state.evidenceHistory.length > 0
+        ? (state.evidenceHistory[state.evidenceHistory.length - 1] ?? 0)
+        : 0
 
     return {
       probability: currentMastery,
@@ -168,22 +168,23 @@ export class BKTService implements BKTServiceInterface {
   /**
    * Get concept dependencies
    */
-  async getConceptDependencies(conceptId: string): Promise<ConceptDependency[]> {
+  getConceptDependencies(conceptId: string): Promise<ConceptDependency[]> {
     const conceptGraph = this.conceptGraphs.get(conceptId)
-    return conceptGraph?.prerequisites || []
+    return Promise.resolve(conceptGraph?.prerequisites ?? [])
   }
 
   /**
    * Update concept graph
    */
-  async updateConceptGraph(conceptGraph: ConceptGraph): Promise<void> {
+  updateConceptGraph(conceptGraph: ConceptGraph): Promise<void> {
     this.conceptGraphs.set(conceptGraph.conceptId, conceptGraph)
+    return Promise.resolve()
   }
 
   /**
    * Get user's cognitive profile
    */
-  async getCognitiveProfile(userId: string): Promise<CognitiveProfile> {
+  getCognitiveProfile(userId: string): Promise<CognitiveProfile> {
     let profile = this.cognitiveProfiles.get(userId)
 
     if (!profile) {
@@ -203,7 +204,7 @@ export class BKTService implements BKTServiceInterface {
       this.cognitiveProfiles.set(userId, profile)
     }
 
-    return profile
+    return Promise.resolve(profile)
   }
 
   /**
@@ -293,9 +294,8 @@ export class BKTService implements BKTServiceInterface {
     conceptId: string,
   ): Promise<KnowledgeState> {
     const cognitiveProfile = await this.getCognitiveProfile(userId)
-    const conceptGraph = this.conceptGraphs.get(conceptId)
 
-    const params = BayesianKnowledgeTracing.estimateInitialParams(conceptId, { cognitiveProfile })
+    const params = BayesianKnowledgeTracing.estimateInitialParams(conceptId, cognitiveProfile)
 
     const state: KnowledgeState = {
       userId,
@@ -351,7 +351,7 @@ export class BKTService implements BKTServiceInterface {
     }
   }
 
-  private async adaptParameters(state: KnowledgeState, profile: CognitiveProfile): Promise<void> {
+  private adaptParameters(state: KnowledgeState, profile: CognitiveProfile): Promise<void> {
     // Adapt learning velocity based on recent performance
     if (state.evidenceHistory.length >= 5) {
       const recentEvidence = state.evidenceHistory.slice(-5)
@@ -367,9 +367,10 @@ export class BKTService implements BKTServiceInterface {
 
     // Adapt decay rate based on user's forgetting curve
     state.decayRate = profile.forgettingCurveRate
+    return Promise.resolve()
   }
 
-  private async createConceptMastery(state: KnowledgeState): Promise<ConceptMastery> {
+  private createConceptMastery(state: KnowledgeState): Promise<ConceptMastery> {
     const conceptGraph = this.conceptGraphs.get(state.conceptId)
 
     let status: ConceptMastery['status'] = 'not_started'
@@ -379,20 +380,22 @@ export class BKTService implements BKTServiceInterface {
       status = state.masteryProbability > 0.5 ? 'reviewing' : 'learning'
     }
 
-    return {
+    const result: ConceptMastery = {
       conceptId: state.conceptId,
-      conceptName: conceptGraph?.name || state.conceptId,
+      conceptName: conceptGraph?.name ?? state.conceptId,
       masteryLevel: state.masteryProbability,
       confidence:
         state.evidenceHistory.length > 0
-          ? state.evidenceHistory[state.evidenceHistory.length - 1]
+          ? (state.evidenceHistory[state.evidenceHistory.length - 1] ?? 0)
           : 0,
       lastPracticed: state.lastUpdated,
       practiceCount: state.updateCount,
       averageResponseTime: 0, // Would be calculated from response data
-      difficulty: conceptGraph?.difficulty || 0.5,
+      difficulty: conceptGraph?.difficulty ?? 0.5,
       status,
     }
+
+    return Promise.resolve(result)
   }
 
   private createEmptyProgress(userId: string): LearningProgress {

@@ -16,11 +16,11 @@ export interface EnhancedBKTParams extends BKTParams {
 
 export interface BKTUpdateContext {
   correct: boolean
-  responseTime?: number
-  confidence?: number
-  timeSinceLastInteraction?: number
+  responseTime?: number | undefined
+  confidence?: number | undefined
+  timeSinceLastInteraction?: number | undefined
   attempts?: number
-  itemDifficulty?: number
+  itemDifficulty?: number | undefined
 }
 
 export interface ConceptDependency {
@@ -254,7 +254,9 @@ export function bktUpdate(params: BKTParams, correct: boolean, prior?: number): 
     responseTimeWeight: 0.1,
   }
 
-  const context: BKTUpdateContext = { correct }
+  const context: BKTUpdateContext = {
+    correct,
+  }
   const currentMastery = prior ?? params.pL0
 
   const result = BayesianKnowledgeTracing.updateKnowledgeState(

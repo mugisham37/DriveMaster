@@ -1,6 +1,8 @@
-import * as tf from '@tensorflow/tfjs'
 import { EventEmitter } from 'events'
-import { logger } from '@drivemaster/shared-config'
+
+import * as tf from '@tensorflow/tfjs'
+
+import { logger } from '../utils/logger.js'
 
 export interface MLModel {
   id: string
@@ -50,7 +52,7 @@ export class MLInferenceService extends EventEmitter {
 
   constructor() {
     super()
-    this.initializeDefaultModels()
+    void this.initializeDefaultModels()
   }
 
   /**
@@ -68,13 +70,16 @@ export class MLInferenceService extends EventEmitter {
 
       const mlModel: MLModel = {
         id: modelId,
-        name: metadata.features?.join('_') || modelId,
+        name:
+          metadata.features != null && metadata.features.length > 0
+            ? metadata.features.join('_')
+            : modelId,
         version: '1.0.0',
         model,
         metadata: {
-          inputShape: metadata.inputShape || [1],
-          outputShape: metadata.outputShape || [1],
-          features: metadata.features || [],
+          inputShape: metadata.inputShape ?? [1],
+          outputShape: metadata.outputShape ?? [1],
+          features: metadata.features ?? [],
           createdAt: new Date(),
           ...metadata,
         },
@@ -88,7 +93,7 @@ export class MLInferenceService extends EventEmitter {
         modelId,
         totalInferences: 0,
         averageInferenceTime: 0,
-        accuracyScore: metadata.accuracy || 0,
+        accuracyScore: metadata.accuracy != null && metadata.accuracy > 0 ? metadata.accuracy : 0,
         lastUpdated: new Date(),
         errorRate: 0,
       })
@@ -96,8 +101,9 @@ export class MLInferenceService extends EventEmitter {
       this.emit('modelLoaded', { modelId, metadata: mlModel.metadata })
       logger.info(`Successfully loaded ML model: ${modelId}`)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to load ML model ${modelId}:`, error)
-      throw new Error(`Model loading failed: ${error.message}`)
+      throw new Error(`Model loading failed: ${errorMessage}`)
     }
   }
 
@@ -125,20 +131,23 @@ export class MLInferenceService extends EventEmitter {
       const inputTensor = tf.tensor2d([engineeredFeatures], [1, engineeredFeatures.length])
 
       // Perform inference
-      const prediction = model.predict(inputTensor) as tf.Tensor
-      const predictionData = await prediction.data()
+      const predictionTensor = model.predict(inputTensor) as tf.Tensor
+      const predictionData = await predictionTensor.data()
 
       // Calculate confidence score
       const confidence = this.calculateConfidence(predictionData)
 
       // Clean up tensors
       inputTensor.dispose()
-      prediction.dispose()
+      predictionTensor.dispose()
 
       const inferenceTime = Date.now() - startTime
 
+      const prediction =
+        predictionData.length === 1 ? (predictionData[0] ?? 0) : Array.from(predictionData)
+
       const result: InferenceResult = {
-        prediction: predictionData.length === 1 ? predictionData[0] : Array.from(predictionData),
+        prediction,
         confidence,
         modelId: request.modelId,
         modelVersion: mlModel.version,
@@ -153,11 +162,10 @@ export class MLInferenceService extends EventEmitter {
 
       return result
     } catch (error) {
-      const inferenceTime = Date.now() - startTime
       this.updateErrorMetrics(request.modelId)
-
+      const errorMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Inference failed for model ${request.modelId}:`, error)
-      throw new Error(`Inference failed: ${error.message}`)
+      throw new Error(`Inference failed: ${errorMessage}`)
     }
   }
 
@@ -171,7 +179,8 @@ export class MLInferenceService extends EventEmitter {
     const engineered: number[] = []
 
     for (const feature of expectedFeatures) {
-      let value = rawFeatures[feature] || 0
+      const rawValue = rawFeatures[feature]
+      let value = rawValue != null && rawValue > 0 ? rawValue : 0
 
       // Apply feature transformations based on feature name
       switch (feature) {
@@ -212,7 +221,9 @@ export class MLInferenceService extends EventEmitter {
   private calculateConfidence(prediction: Float32Array | Int32Array | Uint8Array): number {
     if (prediction.length === 1) {
       // Binary classification - distance from 0.5
-      return Math.abs(prediction[0] - 0.5) * 2
+      const firstValue = prediction[0]
+      if (firstValue == null) return 0
+      return Math.abs(firstValue - 0.5) * 2
     } else {
       // Multi-class - max probability
       return Math.max(...Array.from(prediction))
@@ -222,13 +233,13 @@ export class MLInferenceService extends EventEmitter {
   /**
    * Update performance metrics for model monitoring
    */
-  private updatePerformanceMetrics(modelId: string, inferenceTime: number): void {
+  private updatePerformanceMetrics(modelId: string, _inferenceTime: number): void {
     const metrics = this.performanceMetrics.get(modelId)
     if (!metrics) return
 
     metrics.totalInferences++
     metrics.averageInferenceTime =
-      (metrics.averageInferenceTime * (metrics.totalInferences - 1) + inferenceTime) /
+      (metrics.averageInferenceTime * (metrics.totalInferences - 1) + _inferenceTime) /
       metrics.totalInferences
     metrics.lastUpdated = new Date()
 
@@ -260,7 +271,7 @@ export class MLInferenceService extends EventEmitter {
    * Get model performance metrics
    */
   getModelMetrics(modelId: string): ModelPerformanceMetrics | null {
-    return this.performanceMetrics.get(modelId) || null
+    return this.performanceMetrics.get(modelId) ?? null
   }
 
   /**
@@ -302,7 +313,7 @@ export class MLInferenceService extends EventEmitter {
   /**
    * Create default knowledge state prediction model
    */
-  private async createDefaultKnowledgeStateModel(): Promise<void> {
+  private createDefaultKnowledgeStateModel(): Promise<void> {
     const model = tf.sequential({
       layers: [
         tf.layers.dense({ inputShape: [5], units: 16, activation: 'relu' }),
@@ -314,7 +325,7 @@ export class MLInferenceService extends EventEmitter {
 
     model.compile({
       optimizer: 'adam',
-      loss: 'binaryCrossentropy',
+      loss: 'binaryCrossEntropy',
       metrics: ['accuracy'],
     })
 
@@ -349,12 +360,14 @@ export class MLInferenceService extends EventEmitter {
       lastUpdated: new Date(),
       errorRate: 0,
     })
+
+    return Promise.resolve()
   }
 
   /**
    * Create default difficulty adjustment model
    */
-  private async createDefaultDifficultyModel(): Promise<void> {
+  private createDefaultDifficultyModel(): Promise<void> {
     const model = tf.sequential({
       layers: [
         tf.layers.dense({ inputShape: [4], units: 12, activation: 'relu' }),
@@ -365,7 +378,7 @@ export class MLInferenceService extends EventEmitter {
 
     model.compile({
       optimizer: 'adam',
-      loss: 'categoricalCrossentropy',
+      loss: 'categoricalCrossEntropy',
       metrics: ['accuracy'],
     })
 
@@ -399,6 +412,8 @@ export class MLInferenceService extends EventEmitter {
       lastUpdated: new Date(),
       errorRate: 0,
     })
+
+    return Promise.resolve()
   }
 
   /**

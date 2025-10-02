@@ -43,11 +43,11 @@ export type ContentType = 'question' | 'explanation' | 'example' | 'practice'
 
 export interface RecommendationQuery {
   userId: string
-  conceptKey?: string
-  contentType?: ContentType
-  targetDifficulty?: number
-  excludeIds?: string[]
-  topK?: number
+  conceptKey: string | undefined
+  contentType: ContentType | undefined
+  targetDifficulty: number | undefined
+  excludeIds: string[] | undefined
+  topK: number | undefined
 }
 
 // Pinecone-specific interfaces
