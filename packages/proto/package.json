@@ -1,0 +1,22 @@
+{
+  "name": "@adaptive-learning/proto",
+  "version": "1.0.0",
+  "description": "Protocol Buffer definitions for the adaptive learning platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run build:proto && npm run build:ts",
+    "build:proto": "buf generate",
+    "build:ts": "tsc",
+    "clean": "rm -rf dist generated",
+    "lint": "buf lint"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.9.0",
+    "@grpc/proto-loader": "^0.7.0",
+    "google-protobuf": "^3.21.0"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.15.0",
+    "typescript": "^5.3.0"
+  }
+}
