@@ -94,7 +94,7 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Create authentication middleware and guards
     - _Requirements: 7.1, 7.2_
 
-  - [ ] 5.2 Implement OAuth 2.0/OIDC integration
+  - [x] 5.2 Implement OAuth 2.0/OIDC integration
 
     - Configure Auth0 or Keycloak integration
     - Implement Google, Apple, and social login strategies

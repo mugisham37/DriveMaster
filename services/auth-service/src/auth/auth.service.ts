@@ -16,6 +16,12 @@ import { PasswordService } from './services/password.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleProfile } from './strategies/google.strategy';
+import { AppleProfile } from './strategies/apple.strategy';
+import { FacebookProfile } from './strategies/facebook.strategy';
+import { GitHubProfile } from './strategies/github.strategy';
+import { MicrosoftProfile } from './strategies/microsoft.strategy';
+import { BaseOAuthProfile, OAuthProvider as OAuthProviderType } from './interfaces/oauth-profile.interface';
+import { AccountLinkingService } from './services/account-linking.service';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +36,7 @@ export class AuthService {
         private readonly oauthProviderRepository: Repository<OAuthProvider>,
         private readonly tokenService: TokenService,
         private readonly passwordService: PasswordService,
+        private readonly accountLinkingService: AccountLinkingService,
         private readonly configService: ConfigService,
     ) {
         this.maxFailedAttempts = this.configService.get<number>('MAX_FAILED_ATTEMPTS', 5);
@@ -137,11 +144,11 @@ export class AuthService {
     }
 
     /**
-     * Handle OAuth login/registration
+     * Handle OAuth login/registration for any provider
      */
     async handleOAuthLogin(
-        provider: string,
-        profile: GoogleProfile,
+        provider: OAuthProviderType,
+        profile: BaseOAuthProfile,
         accessToken: string,
         refreshToken?: string,
     ): Promise<TokenPair> {
@@ -158,48 +165,53 @@ export class AuthService {
             user = oauthProvider.user;
 
             // Update tokens
-            oauthProvider.accessTokenHash = await this.hashToken(accessToken);
-            if (refreshToken) {
-                oauthProvider.refreshTokenHash = await this.hashToken(refreshToken);
-            }
-            await this.oauthProviderRepository.save(oauthProvider);
+            await this.accountLinkingService.updateProviderTokens(
+                user.id,
+                provider,
+                accessToken,
+                refreshToken,
+            );
         } else {
             // Check if user exists with same email
-            user = await this.userRepository.findOne({ where: { email: profile.email } });
+            user = await this.userRepository.findOne({
+                where: { email: profile.email, isActive: true }
+            });
 
             if (user) {
                 // Link OAuth provider to existing user
-                oauthProvider = this.oauthProviderRepository.create({
+                await this.accountLinkingService.linkAccount({
                     userId: user.id,
                     provider,
-                    providerUserId: profile.id,
-                    accessTokenHash: await this.hashToken(accessToken),
-                    refreshTokenHash: refreshToken ? await this.hashToken(refreshToken) : null,
+                    profile,
+                    accessToken,
+                    refreshToken,
                 });
-                await this.oauthProviderRepository.save(oauthProvider);
             } else {
                 // Create new user
                 user = this.userRepository.create({
                     email: profile.email,
                     emailVerified: profile.verified,
-                    countryCode: 'US', // Default, can be updated later
+                    countryCode: this.inferCountryFromProvider(provider), // Smart default
                     hashedPassword: null, // OAuth-only user
                 });
                 const savedUser = await this.userRepository.save(user);
 
-                // Create OAuth provider record
-                oauthProvider = this.oauthProviderRepository.create({
+                // Link OAuth provider to new user
+                await this.accountLinkingService.linkAccount({
                     userId: savedUser.id,
                     provider,
-                    providerUserId: profile.id,
-                    accessTokenHash: await this.hashToken(accessToken),
-                    refreshTokenHash: refreshToken ? await this.hashToken(refreshToken) : null,
+                    profile,
+                    accessToken,
+                    refreshToken,
                 });
-                await this.oauthProviderRepository.save(oauthProvider);
 
                 user = savedUser;
             }
         }
+
+        // Update last active timestamp
+        user.lastActiveAt = new Date();
+        await this.userRepository.save(user);
 
         this.logger.log(`OAuth login: ${profile.email} via ${provider}`);
 
@@ -209,6 +221,42 @@ export class AuthService {
             user.countryCode,
             user.mfaEnabled,
         );
+    }
+
+    /**
+     * Link an OAuth provider to an existing authenticated user
+     */
+    async linkOAuthProvider(
+        userId: string,
+        provider: OAuthProviderType,
+        profile: BaseOAuthProfile,
+        accessToken: string,
+        refreshToken?: string,
+    ): Promise<void> {
+        await this.accountLinkingService.linkAccount({
+            userId,
+            provider,
+            profile,
+            accessToken,
+            refreshToken,
+        });
+
+        this.logger.log(`Linked ${provider} to user ${userId}`);
+    }
+
+    /**
+     * Unlink an OAuth provider from a user
+     */
+    async unlinkOAuthProvider(userId: string, provider: OAuthProviderType): Promise<void> {
+        await this.accountLinkingService.unlinkAccount({ userId, provider });
+        this.logger.log(`Unlinked ${provider} from user ${userId}`);
+    }
+
+    /**
+     * Get linked OAuth providers for a user
+     */
+    async getLinkedProviders(userId: string): Promise<OAuthProviderType[]> {
+        return this.accountLinkingService.getLinkedProviders(userId);
     }
 
     /**
@@ -241,9 +289,18 @@ export class AuthService {
     }
 
     /**
-     * Hash OAuth tokens for secure storage
+     * Infer country code from OAuth provider (smart defaults)
      */
-    private async hashToken(token: string): Promise<string> {
-        return this.passwordService.hashPassword(token);
+    private inferCountryFromProvider(provider: OAuthProviderType): string {
+        // This could be enhanced with IP geolocation or user preference detection
+        const providerDefaults: Record<OAuthProviderType, string> = {
+            google: 'US',
+            apple: 'US',
+            facebook: 'US',
+            github: 'US',
+            microsoft: 'US',
+        };
+
+        return providerDefaults[provider] || 'US';
     }
 }

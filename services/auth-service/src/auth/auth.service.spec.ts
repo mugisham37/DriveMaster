@@ -1,48 +1,49 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
-
 import { AuthService } from './auth.service';
-import { TokenService } from './services/token.service';
-import { PasswordService } from './services/password.service';
 import { User } from './entities/user.entity';
 import { OAuthProvider } from './entities/oauth-provider.entity';
+import { TokenService } from './services/token.service';
+import { PasswordService } from './services/password.service';
+import { AccountLinkingService } from './services/account-linking.service';
 
-describe('AuthService', () => {
+describe('AuthService - OAuth Integration', () => {
     let service: AuthService;
-    let userRepository: Repository<User>;
-    let oauthProviderRepository: Repository<OAuthProvider>;
-
-    const mockUserRepository = {
-        findOne: jest.fn(),
-        create: jest.fn(),
-        save: jest.fn(),
-    };
-
-    const mockOAuthProviderRepository = {
-        findOne: jest.fn(),
-        create: jest.fn(),
-        save: jest.fn(),
-    };
-
-    const mockTokenService = {
-        generateTokenPair: jest.fn(),
-        refreshTokens: jest.fn(),
-        revokeAllUserTokens: jest.fn(),
-    };
-
-    const mockPasswordService = {
-        validatePasswordStrength: jest.fn(),
-        hashPassword: jest.fn(),
-        verifyPassword: jest.fn(),
-    };
-
-    const mockConfigService = {
-        get: jest.fn(),
-    };
+    let mockUserRepository: any;
+    let mockOAuthProviderRepository: any;
+    let mockTokenService: any;
+    let mockPasswordService: any;
+    let mockAccountLinkingService: any;
 
     beforeEach(async () => {
+        mockUserRepository = {
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+        };
+
+        mockOAuthProviderRepository = {
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+        };
+
+        mockTokenService = {
+            generateTokenPair: jest.fn(),
+        };
+
+        mockPasswordService = {
+            hashPassword: jest.fn(),
+        };
+
+        mockAccountLinkingService = {
+            linkAccount: jest.fn(),
+            updateProviderTokens: jest.fn(),
+            getLinkedProviders: jest.fn(),
+            unlinkAccount: jest.fn(),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
@@ -63,83 +64,181 @@ describe('AuthService', () => {
                     useValue: mockPasswordService,
                 },
                 {
+                    provide: AccountLinkingService,
+                    useValue: mockAccountLinkingService,
+                },
+                {
                     provide: ConfigService,
-                    useValue: mockConfigService,
+                    useValue: {
+                        get: jest.fn((key: string, defaultValue?: any) => {
+                            const config = {
+                                MAX_FAILED_ATTEMPTS: 5,
+                                LOCKOUT_DURATION_MINUTES: 30,
+                            };
+                            return config[key] || defaultValue;
+                        }),
+                    },
                 },
             ],
         }).compile();
 
         service = module.get<AuthService>(AuthService);
-        userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-        oauthProviderRepository = module.get<Repository<OAuthProvider>>(
-            getRepositoryToken(OAuthProvider),
-        );
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
 
-    describe('register', () => {
-        it('should register a new user successfully', async () => {
-            const registerDto = {
+    describe('handleOAuthLogin', () => {
+        it('should handle new user OAuth registration', async () => {
+            const profile = {
+                id: 'google123',
                 email: 'test@example.com',
-                password: 'StrongPassword123!',
-                countryCode: 'US',
+                firstName: 'John',
+                lastName: 'Doe',
+                verified: true,
             };
 
             const mockUser = {
-                id: '123',
-                email: registerDto.email,
-                countryCode: registerDto.countryCode,
+                id: 'user123',
+                email: 'test@example.com',
+                countryCode: 'US',
                 mfaEnabled: false,
             };
 
             const mockTokens = {
-                accessToken: 'access-token',
-                refreshToken: 'refresh-token',
-                expiresIn: 900,
+                accessToken: 'access_token',
+                refreshToken: 'refresh_token',
             };
 
+            mockOAuthProviderRepository.findOne.mockResolvedValue(null);
             mockUserRepository.findOne.mockResolvedValue(null);
-            mockPasswordService.validatePasswordStrength.mockReturnValue({
-                isValid: true,
-                errors: [],
-            });
-            mockPasswordService.hashPassword.mockResolvedValue('hashed-password');
             mockUserRepository.create.mockReturnValue(mockUser);
             mockUserRepository.save.mockResolvedValue(mockUser);
             mockTokenService.generateTokenPair.mockResolvedValue(mockTokens);
 
-            const result = await service.register(registerDto);
+            const result = await service.handleOAuthLogin(
+                'google',
+                profile,
+                'access_token',
+                'refresh_token',
+            );
 
             expect(result).toEqual(mockTokens);
-            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
-                where: { email: registerDto.email },
+            expect(mockUserRepository.create).toHaveBeenCalledWith({
+                email: profile.email,
+                emailVerified: profile.verified,
+                countryCode: 'US',
+                hashedPassword: null,
             });
-            expect(mockPasswordService.validatePasswordStrength).toHaveBeenCalledWith(
-                registerDto.password,
-            );
-            expect(mockPasswordService.hashPassword).toHaveBeenCalledWith(registerDto.password);
-            expect(mockUserRepository.save).toHaveBeenCalled();
-            expect(mockTokenService.generateTokenPair).toHaveBeenCalledWith(
-                mockUser.id,
-                mockUser.email,
-                mockUser.countryCode,
-                mockUser.mfaEnabled,
-            );
+            expect(mockAccountLinkingService.linkAccount).toHaveBeenCalled();
         });
 
-        it('should throw ConflictException if user already exists', async () => {
-            const registerDto = {
+        it('should handle existing user OAuth login', async () => {
+            const profile = {
+                id: 'google123',
                 email: 'test@example.com',
-                password: 'StrongPassword123!',
-                countryCode: 'US',
+                firstName: 'John',
+                lastName: 'Doe',
+                verified: true,
             };
 
-            mockUserRepository.findOne.mockResolvedValue({ id: '123' });
+            const mockUser = {
+                id: 'user123',
+                email: 'test@example.com',
+                countryCode: 'US',
+                mfaEnabled: false,
+                lastActiveAt: new Date(),
+            };
 
-            await expect(service.register(registerDto)).rejects.toThrow('User with this email already exists');
+            const mockOAuthProvider = {
+                userId: 'user123',
+                provider: 'google',
+                providerUserId: 'google123',
+                user: mockUser,
+            };
+
+            const mockTokens = {
+                accessToken: 'access_token',
+                refreshToken: 'refresh_token',
+            };
+
+            mockOAuthProviderRepository.findOne.mockResolvedValue(mockOAuthProvider);
+            mockUserRepository.save.mockResolvedValue(mockUser);
+            mockTokenService.generateTokenPair.mockResolvedValue(mockTokens);
+
+            const result = await service.handleOAuthLogin(
+                'google',
+                profile,
+                'access_token',
+                'refresh_token',
+            );
+
+            expect(result).toEqual(mockTokens);
+            expect(mockAccountLinkingService.updateProviderTokens).toHaveBeenCalledWith(
+                'user123',
+                'google',
+                'access_token',
+                'refresh_token',
+            );
+        });
+    });
+
+    describe('linkOAuthProvider', () => {
+        it('should link OAuth provider to existing user', async () => {
+            const userId = 'user123';
+            const provider = 'facebook';
+            const profile = {
+                id: 'facebook123',
+                email: 'test@example.com',
+                firstName: 'John',
+                lastName: 'Doe',
+                verified: true,
+            };
+
+            await service.linkOAuthProvider(
+                userId,
+                provider,
+                profile,
+                'access_token',
+                'refresh_token',
+            );
+
+            expect(mockAccountLinkingService.linkAccount).toHaveBeenCalledWith({
+                userId,
+                provider,
+                profile,
+                accessToken: 'access_token',
+                refreshToken: 'refresh_token',
+            });
+        });
+    });
+
+    describe('unlinkOAuthProvider', () => {
+        it('should unlink OAuth provider from user', async () => {
+            const userId = 'user123';
+            const provider = 'github';
+
+            await service.unlinkOAuthProvider(userId, provider);
+
+            expect(mockAccountLinkingService.unlinkAccount).toHaveBeenCalledWith({
+                userId,
+                provider,
+            });
+        });
+    });
+
+    describe('getLinkedProviders', () => {
+        it('should return linked providers for user', async () => {
+            const userId = 'user123';
+            const providers = ['google', 'facebook'];
+
+            mockAccountLinkingService.getLinkedProviders.mockResolvedValue(providers);
+
+            const result = await service.getLinkedProviders(userId);
+
+            expect(result).toEqual(providers);
+            expect(mockAccountLinkingService.getLinkedProviders).toHaveBeenCalledWith(userId);
         });
     });
 });
