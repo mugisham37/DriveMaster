@@ -26,7 +26,6 @@ func NewRedisClient(redisURL string, db int) (*RedisClient, error) {
 	opt.PoolSize = 20
 	opt.MinIdleConns = 5
 	opt.MaxRetries = 3
-	opt.RetryDelay = time.Millisecond * 100
 
 	client := redis.NewClient(opt)
 
