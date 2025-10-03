@@ -1,6 +1,0 @@
-{
-  "version": "0.2",
-  "language": "en",
-  "words": ["setex", "sadd", "smembers", "drivemaster", "checkperiod", "ioredis", "pako"],
-  "ignorePaths": ["node_modules/**", "dist/**", "*.log"]
-}
