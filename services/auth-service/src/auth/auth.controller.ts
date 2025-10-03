@@ -41,8 +41,11 @@ export class AuthController {
 
     @Public()
     @Post('register')
-    async register(@Body() registerDto: RegisterDto) {
-        const tokens = await this.authService.register(registerDto);
+    async register(@Body() registerDto: RegisterDto, @Req() req: Request) {
+        const ipAddress = this.getClientIP(req);
+        const userAgent = req.get('User-Agent') || 'unknown';
+
+        const tokens = await this.authService.register(registerDto, ipAddress, userAgent);
         return {
             message: 'Registration successful',
             ...tokens,
@@ -52,8 +55,11 @@ export class AuthController {
     @Public()
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    async login(@Body() loginDto: LoginDto) {
-        const tokens = await this.authService.login(loginDto);
+    async login(@Body() loginDto: LoginDto, @Req() req: Request) {
+        const ipAddress = this.getClientIP(req);
+        const userAgent = req.get('User-Agent') || 'unknown';
+
+        const tokens = await this.authService.login(loginDto, ipAddress, userAgent);
         return {
             message: 'Login successful',
             ...tokens,
@@ -80,8 +86,11 @@ export class AuthController {
 
     @Post('logout')
     @HttpCode(HttpStatus.OK)
-    async logout(@CurrentUser() user: User) {
-        await this.authService.logout(user.id);
+    async logout(@CurrentUser() user: User, @Req() req: Request) {
+        const ipAddress = this.getClientIP(req);
+        const userAgent = req.get('User-Agent') || 'unknown';
+
+        await this.authService.logout(user.id, ipAddress, userAgent);
         return {
             message: 'Logout successful',
         };
@@ -221,11 +230,15 @@ export class AuthController {
     ): Promise<void> {
         try {
             const { profile, accessToken, refreshToken } = req.user as any;
+            const ipAddress = this.getClientIP(req);
+            const userAgent = req.get('User-Agent') || 'unknown';
 
             const tokens = await this.authService.handleOAuthLogin(
                 provider,
                 profile,
                 accessToken,
+                ipAddress,
+                userAgent,
                 refreshToken,
             );
 
@@ -276,5 +289,20 @@ export class AuthController {
             service: 'auth-service',
             oauthProviders: this.oauthService.getEnabledProviders(),
         };
+    }
+
+    /**
+     * Get client IP address, considering proxies
+     */
+    private getClientIP(req: Request): string {
+        const forwarded = req.get('X-Forwarded-For');
+        const realIP = req.get('X-Real-IP');
+        const cfConnectingIP = req.get('CF-Connecting-IP'); // Cloudflare
+
+        if (cfConnectingIP) return cfConnectingIP;
+        if (realIP) return realIP;
+        if (forwarded) return forwarded.split(',')[0].trim();
+
+        return req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
     }
 }

@@ -121,6 +121,8 @@ describe('AuthService - OAuth Integration', () => {
                 'google',
                 profile,
                 'access_token',
+                '127.0.0.1',
+                'test-user-agent',
                 'refresh_token',
             );
 
@@ -171,6 +173,8 @@ describe('AuthService - OAuth Integration', () => {
                 'google',
                 profile,
                 'access_token',
+                '127.0.0.1',
+                'test-user-agent',
                 'refresh_token',
             );
 

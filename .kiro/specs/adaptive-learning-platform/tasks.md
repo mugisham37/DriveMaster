@@ -105,14 +105,13 @@ This implementation plan breaks down the adaptive learning platform into discret
 
   - [x] 5.3 Add multi-factor authentication support
 
-
     - Implement TOTP-based MFA with QR code generation
     - Create MFA setup and verification endpoints
     - Add backup codes generation and validation
     - Implement MFA requirement enforcement for sensitive operations
     - _Requirements: 7.1, 7.2_
 
-  - [ ] 5.4 Implement security policies and account protection
+  - [x] 5.4 Implement security policies and account protection
 
     - Add account lockout after failed login attempts
     - Implement password strength validation and hashing with argon2
