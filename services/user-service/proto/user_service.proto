@@ -1,0 +1,265 @@
+syntax = "proto3";
+
+package user_service;
+
+option go_package = "user-service/proto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// User Service Definition
+service UserService {
+  // User management
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (GetUserPreferencesResponse);
+  rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
+
+  // Progress tracking
+  rpc GetMastery(GetMasteryRequest) returns (GetMasteryResponse);
+  rpc UpdateMastery(UpdateMasteryRequest) returns (UpdateMasteryResponse);
+  rpc GetProgressSummary(GetProgressSummaryRequest) returns (GetProgressSummaryResponse);
+
+  // Scheduler state
+  rpc GetSchedulerState(GetSchedulerStateRequest) returns (GetSchedulerStateResponse);
+  rpc UpdateSchedulerState(UpdateSchedulerStateRequest) returns (UpdateSchedulerStateResponse);
+  rpc InitializeSchedulerState(InitializeSchedulerStateRequest) returns (InitializeSchedulerStateResponse);
+
+  // Activity tracking
+  rpc RecordActivity(RecordActivityRequest) returns (RecordActivityResponse);
+  rpc GetActivitySummary(GetActivitySummaryRequest) returns (GetActivitySummaryResponse);
+
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// User Messages
+message User {
+  string id = 1;
+  string email = 2;
+  bool email_verified = 3;
+  string country_code = 4;
+  string timezone = 5;
+  string language = 6;
+  google.protobuf.Struct preferences = 7;
+  string user_role = 8;
+  bool mfa_enabled = 9;
+  bool gdpr_consent = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  google.protobuf.Timestamp last_active_at = 13;
+  bool is_active = 14;
+}
+
+message UserPreferences {
+  string user_id = 1;
+  google.protobuf.Struct preferences = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+// Progress Messages
+message SkillMastery {
+  string user_id = 1;
+  string topic = 2;
+  double mastery = 3;
+  double confidence = 4;
+  google.protobuf.Timestamp last_practiced = 5;
+  int32 practice_count = 6;
+  int32 correct_streak = 7;
+  int32 longest_streak = 8;
+  int64 total_time_ms = 9;
+}
+
+message ProgressSummary {
+  string user_id = 1;
+  repeated SkillMastery masteries = 2;
+  int32 total_attempts = 3;
+  int32 total_correct = 4;
+  double overall_accuracy = 5;
+  int64 total_study_time_ms = 6;
+  int32 consecutive_days = 7;
+  int32 topics_practiced = 8;
+  google.protobuf.Timestamp last_session = 9;
+}
+
+// Scheduler State Messages
+message SM2State {
+  double easiness_factor = 1;
+  int32 interval = 2;
+  int32 repetition = 3;
+  google.protobuf.Timestamp next_due = 4;
+  google.protobuf.Timestamp last_reviewed = 5;
+}
+
+message BKTState {
+  double prob_knowledge = 1;
+  double prob_guess = 2;
+  double prob_slip = 3;
+  double prob_learn = 4;
+}
+
+message IRTAbility {
+  double theta = 1;
+  double confidence_lower = 2;
+  double confidence_upper = 3;
+  int32 attempts_count = 4;
+}
+
+message SchedulerState {
+  string user_id = 1;
+  map<string, IRTAbility> ability_vector = 2;
+  map<string, SM2State> sm2_states = 3;
+  map<string, BKTState> bkt_states = 4;
+  google.protobuf.Struct bandit_state = 5;
+  string current_session_id = 6;
+  google.protobuf.Timestamp last_session_end = 7;
+  int32 consecutive_days = 8;
+  int64 total_study_time_ms = 9;
+  int32 version = 10;
+  google.protobuf.Timestamp last_updated = 11;
+}
+
+// Activity Messages
+message UserActivity {
+  string user_id = 1;
+  string activity_type = 2;
+  google.protobuf.Struct metadata = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  string session_id = 5;
+  string device_type = 6;
+  string app_version = 7;
+}
+
+message ActivitySummary {
+  string user_id = 1;
+  int32 sessions_today = 2;
+  int32 sessions_this_week = 3;
+  int64 time_today_ms = 4;
+  int64 time_this_week_ms = 5;
+  repeated string active_topics = 6;
+  google.protobuf.Timestamp last_activity = 7;
+}
+
+// Request/Response Messages
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  optional string timezone = 2;
+  optional string language = 3;
+  optional google.protobuf.Struct preferences = 4;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message GetUserPreferencesRequest {
+  string user_id = 1;
+}
+
+message GetUserPreferencesResponse {
+  UserPreferences preferences = 1;
+}
+
+message UpdatePreferencesRequest {
+  string user_id = 1;
+  google.protobuf.Struct preferences = 2;
+}
+
+message UpdatePreferencesResponse {
+  UserPreferences preferences = 1;
+}
+
+message DeactivateUserRequest {
+  string user_id = 1;
+  string reason = 2;
+}
+
+message DeactivateUserResponse {
+  bool success = 1;
+}
+
+message GetMasteryRequest {
+  string user_id = 1;
+  repeated string topics = 2;
+}
+
+message GetMasteryResponse {
+  map<string, double> masteries = 1;
+}
+
+message UpdateMasteryRequest {
+  string user_id = 1;
+  string topic = 2;
+  double mastery = 3;
+  optional double confidence = 4;
+}
+
+message UpdateMasteryResponse {
+  SkillMastery mastery = 1;
+}
+
+message GetProgressSummaryRequest {
+  string user_id = 1;
+}
+
+message GetProgressSummaryResponse {
+  ProgressSummary summary = 1;
+}
+
+message GetSchedulerStateRequest {
+  string user_id = 1;
+}
+
+message GetSchedulerStateResponse {
+  SchedulerState state = 1;
+}
+
+message UpdateSchedulerStateRequest {
+  string user_id = 1;
+  SchedulerState state = 2;
+}
+
+message UpdateSchedulerStateResponse {
+  SchedulerState state = 1;
+}
+
+message InitializeSchedulerStateRequest {
+  string user_id = 1;
+  map<string, double> initial_abilities = 2;
+}
+
+message InitializeSchedulerStateResponse {
+  SchedulerState state = 1;
+}
+
+message RecordActivityRequest {
+  UserActivity activity = 1;
+}
+
+message RecordActivityResponse {
+  bool success = 1;
+}
+
+message GetActivitySummaryRequest {
+  string user_id = 1;
+}
+
+message GetActivitySummaryResponse {
+  ActivitySummary summary = 1;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}

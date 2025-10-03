@@ -3,15 +3,16 @@ module user-service
 go 1.21
 
 require (
-	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/google/uuid v1.3.0
-	github.com/lib/pq v1.10.9
-	github.com/segmentio/kafka-go v0.4.42
-	google.golang.org/grpc v1.56.2
-	google.golang.org/protobuf v1.31.0
-	gorm.io/driver/postgres v1.5.2
-	gorm.io/gorm v1.25.2
+	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.5.1
+	github.com/segmentio/kafka-go v0.4.47
+	github.com/sirupsen/logrus v1.9.3
+	github.com/prometheus/client_golang v1.17.0
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/joho/godotenv v1.5.1
 )
 
 require (
