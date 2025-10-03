@@ -1,0 +1,363 @@
+syntax = "proto3";
+
+package adaptive_learning.events;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adaptive-learning/shared/proto/events";
+
+// NotificationEvent represents notification lifecycle events
+message NotificationEvent {
+  // Event metadata
+  string event_id = 1;
+  string notification_id = 2;
+  string user_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+
+  // Notification details
+  NotificationDetails notification = 5;
+  
+  // Event type and status
+  NotificationEventType event_type = 6;
+  NotificationStatus status = 7;
+  
+  // Delivery information
+  DeliveryInfo delivery = 8;
+  
+  // User interaction
+  UserInteraction interaction = 9;
+  
+  // Context and targeting
+  NotificationContext context = 10;
+  
+  // Performance metrics
+  NotificationMetrics metrics = 11;
+  
+  // Additional metadata
+  map<string, string> metadata = 12;
+}
+
+enum NotificationEventType {
+  NOTIFICATION_EVENT_TYPE_UNSPECIFIED = 0;
+  CREATED = 1;
+  SCHEDULED = 2;
+  SENT = 3;
+  DELIVERED = 4;
+  OPENED = 5;
+  CLICKED = 6;
+  DISMISSED = 7;
+  FAILED = 8;
+  EXPIRED = 9;
+  CANCELLED = 10;
+}
+
+enum NotificationStatus {
+  NOTIFICATION_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  SCHEDULED = 2;
+  SENDING = 3;
+  SENT = 4;
+  DELIVERED = 5;
+  FAILED = 6;
+  EXPIRED = 7;
+  CANCELLED = 8;
+}
+
+message NotificationDetails {
+  NotificationType type = 1;
+  NotificationChannel channel = 2;
+  NotificationPriority priority = 3;
+  
+  // Content
+  string title = 4;
+  string body = 5;
+  string image_url = 6;
+  string icon_url = 7;
+  
+  // Action
+  string action_url = 8;
+  repeated NotificationAction actions = 9;
+  
+  // Personalization
+  PersonalizationData personalization = 10;
+  
+  // Scheduling
+  SchedulingInfo scheduling = 11;
+  
+  // Targeting
+  TargetingCriteria targeting = 12;
+}
+
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  REMINDER = 1;
+  ACHIEVEMENT = 2;
+  PROGRESS_UPDATE = 3;
+  SOCIAL = 4;
+  SYSTEM = 5;
+  MARKETING = 6;
+  EDUCATIONAL = 7;
+  MOTIVATIONAL = 8;
+  WARNING = 9;
+  ERROR = 10;
+}
+
+enum NotificationChannel {
+  NOTIFICATION_CHANNEL_UNSPECIFIED = 0;
+  PUSH = 1;
+  EMAIL = 2;
+  SMS = 3;
+  IN_APP = 4;
+  WEB_PUSH = 5;
+  SLACK = 6;
+  WEBHOOK = 7;
+}
+
+enum NotificationPriority {
+  NOTIFICATION_PRIORITY_UNSPECIFIED = 0;
+  LOW = 1;
+  NORMAL = 2;
+  HIGH = 3;
+  URGENT = 4;
+}
+
+message NotificationAction {
+  string action_id = 1;
+  string title = 2;
+  string url = 3;
+  ActionType type = 4;
+  bool requires_authentication = 5;
+}
+
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  OPEN_APP = 1;
+  OPEN_URL = 2;
+  DISMISS = 3;
+  SNOOZE = 4;
+  REPLY = 5;
+  SHARE = 6;
+  CUSTOM = 7;
+}
+
+message PersonalizationData {
+  string user_name = 1;
+  string user_level = 2;
+  float progress_percentage = 3;
+  int32 streak_count = 4;
+  string next_milestone = 5;
+  repeated string topics_of_interest = 6;
+  string preferred_study_time = 7;
+  string timezone = 8;
+  string locale = 9;
+  map<string, string> custom_fields = 10;
+}
+
+message SchedulingInfo {
+  google.protobuf.Timestamp scheduled_time = 1;
+  google.protobuf.Timestamp expiry_time = 2;
+  SchedulingStrategy strategy = 3;
+  repeated TimeWindow allowed_windows = 4;
+  bool respect_quiet_hours = 5;
+  bool respect_timezone = 6;
+  int32 max_retry_attempts = 7;
+  int64 retry_interval_ms = 8;
+}
+
+enum SchedulingStrategy {
+  SCHEDULING_STRATEGY_UNSPECIFIED = 0;
+  IMMEDIATE = 1;
+  DELAYED = 2;
+  OPTIMAL_TIME = 3;
+  USER_PREFERENCE = 4;
+  SPACED_REPETITION = 5;
+  ADAPTIVE = 6;
+}
+
+message TimeWindow {
+  string day_of_week = 1; // monday, tuesday, etc.
+  string start_time = 2; // HH:MM format
+  string end_time = 3; // HH:MM format
+  string timezone = 4;
+}
+
+message TargetingCriteria {
+  // User segments
+  repeated string user_segments = 1;
+  repeated string user_tags = 2;
+  
+  // Behavioral criteria
+  BehavioralCriteria behavioral = 3;
+  
+  // Geographic criteria
+  GeographicCriteria geographic = 4;
+  
+  // Device criteria
+  DeviceCriteria device = 5;
+  
+  // Engagement criteria
+  EngagementCriteria engagement = 6;
+}
+
+message BehavioralCriteria {
+  int32 min_sessions = 1;
+  int32 max_sessions = 2;
+  int32 days_since_last_activity = 3;
+  float min_accuracy = 4;
+  float max_accuracy = 5;
+  repeated string completed_topics = 6;
+  repeated string struggling_topics = 7;
+  bool has_active_streak = 8;
+  int32 min_streak_length = 9;
+}
+
+message GeographicCriteria {
+  repeated string countries = 1;
+  repeated string regions = 2;
+  repeated string cities = 3;
+  repeated string timezones = 4;
+  repeated string languages = 5;
+}
+
+message DeviceCriteria {
+  repeated string platforms = 1; // ios, android, web
+  repeated string device_types = 2; // mobile, tablet, desktop
+  repeated string app_versions = 3;
+  repeated string os_versions = 4;
+}
+
+message EngagementCriteria {
+  float min_engagement_score = 1;
+  float max_engagement_score = 2;
+  bool recently_active = 3;
+  bool at_risk_of_churn = 4;
+  bool high_value_user = 5;
+}
+
+message DeliveryInfo {
+  google.protobuf.Timestamp sent_time = 1;
+  google.protobuf.Timestamp delivered_time = 2;
+  string delivery_provider = 3; // fcm, apns, sendgrid, etc.
+  string provider_message_id = 4;
+  DeliveryStatus delivery_status = 5;
+  string failure_reason = 6;
+  int32 retry_count = 7;
+  repeated DeliveryAttempt delivery_attempts = 8;
+}
+
+enum DeliveryStatus {
+  DELIVERY_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  SENT = 2;
+  DELIVERED = 3;
+  FAILED = 4;
+  BOUNCED = 5;
+  BLOCKED = 6;
+  EXPIRED = 7;
+}
+
+message DeliveryAttempt {
+  google.protobuf.Timestamp attempt_time = 1;
+  DeliveryStatus status = 2;
+  string error_code = 3;
+  string error_message = 4;
+  int64 response_time_ms = 5;
+}
+
+message UserInteraction {
+  google.protobuf.Timestamp interaction_time = 1;
+  InteractionType interaction_type = 2;
+  string action_taken = 3;
+  string clicked_url = 4;
+  int64 time_to_interaction_ms = 5; // Time from delivery to interaction
+  string device_type = 6;
+  string platform = 7;
+  bool led_to_app_open = 8;
+  bool led_to_engagement = 9;
+  map<string, string> interaction_data = 10;
+}
+
+enum InteractionType {
+  INTERACTION_TYPE_UNSPECIFIED = 0;
+  OPENED = 1;
+  CLICKED = 2;
+  DISMISSED = 3;
+  SNOOZED = 4;
+  REPLIED = 5;
+  SHARED = 6;
+  IGNORED = 7;
+}
+
+message NotificationContext {
+  // Campaign information
+  string campaign_id = 1;
+  string campaign_name = 2;
+  string campaign_type = 3;
+  
+  // Trigger information
+  TriggerInfo trigger = 4;
+  
+  // A/B testing
+  ABTestInfo ab_test = 5;
+  
+  // User context at time of notification
+  UserContextSnapshot user_context = 6;
+}
+
+message TriggerInfo {
+  TriggerType trigger_type = 1;
+  string trigger_event = 2;
+  google.protobuf.Timestamp trigger_time = 3;
+  map<string, string> trigger_data = 4;
+}
+
+enum TriggerType {
+  TRIGGER_TYPE_UNSPECIFIED = 0;
+  SCHEDULED = 1;
+  EVENT_BASED = 2;
+  BEHAVIORAL = 3;
+  API_TRIGGERED = 4;
+  MANUAL = 5;
+}
+
+message ABTestInfo {
+  string experiment_id = 1;
+  string experiment_name = 2;
+  string variant_id = 3;
+  string variant_name = 4;
+  float traffic_allocation = 5;
+}
+
+message UserContextSnapshot {
+  int32 total_sessions = 1;
+  int32 days_active = 2;
+  float current_streak = 3;
+  float overall_progress = 4;
+  google.protobuf.Timestamp last_activity = 5;
+  string current_level = 6;
+  repeated string active_topics = 7;
+  float engagement_score = 8;
+}
+
+message NotificationMetrics {
+  // Timing metrics
+  int64 creation_to_send_ms = 1;
+  int64 send_to_delivery_ms = 2;
+  int64 delivery_to_interaction_ms = 3;
+  
+  // Performance metrics
+  bool was_delivered = 4;
+  bool was_opened = 5;
+  bool was_clicked = 6;
+  bool led_to_conversion = 7;
+  
+  // Quality metrics
+  float relevance_score = 8; // 0-1 scale
+  float personalization_score = 9; // 0-1 scale
+  float timing_score = 10; // 0-1 scale
+  
+  // Business metrics
+  float estimated_value = 11;
+  string conversion_event = 12;
+  float conversion_value = 13;
+}

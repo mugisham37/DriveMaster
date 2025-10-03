@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package adaptive_learning.events;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adaptive-learning/shared/proto/events";
+
+// SessionEvent represents a complete learning session
+message SessionEvent {
+  // Event metadata
+  string event_id = 1;
+  string session_id = 2;
+  string user_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+
+  // Session timing
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+  int64 total_duration_ms = 7;
+  int64 active_duration_ms = 8; // Excluding pauses
+  int64 pause_duration_ms = 9;
+
+  // Session performance
+  int32 items_attempted = 10;
+  int32 items_correct = 11;
+  int32 items_incorrect = 12;
+  int32 items_skipped = 13;
+  float accuracy_rate = 14;
+  int64 average_response_time_ms = 15;
+  int32 total_hints_used = 16;
+
+  // Session configuration
+  SessionType session_type = 17;
+  SessionMode session_mode = 18;
+  bool is_timed = 19;
+  int64 time_limit_ms = 20;
+  bool was_completed = 21;
+  SessionEndReason end_reason = 22;
+
+  // Content and topics
+  repeated string topics_practiced = 23;
+  repeated string jurisdictions = 24;
+  float average_difficulty = 25;
+  float difficulty_variance = 26;
+  DifficultyDistribution difficulty_distribution = 27;
+
+  // Learning progress
+  SessionProgress progress = 28;
+  repeated TopicProgress topic_progress = 29;
+  MasteryChanges mastery_changes = 30;
+
+  // Device and context
+  DeviceContext device_context = 31;
+  repeated SessionInterruption interruptions = 32;
+
+  // Engagement metrics
+  EngagementMetrics engagement = 33;
+
+  // Additional metadata
+  map<string, string> metadata = 34;
+}
+
+enum SessionType {
+  SESSION_TYPE_UNSPECIFIED = 0;
+  PRACTICE = 1;
+  REVIEW = 2;
+  MOCK_TEST = 3;
+  PLACEMENT = 4;
+  ADAPTIVE_PRACTICE = 5;
+  FOCUSED_PRACTICE = 6;
+  MIXED_REVIEW = 7;
+}
+
+enum SessionMode {
+  SESSION_MODE_UNSPECIFIED = 0;
+  NORMAL = 1;
+  TIMED = 2;
+  UNTIMED = 3;
+  EXAM_MODE = 4;
+  LEARNING_MODE = 5;
+}
+
+enum SessionEndReason {
+  SESSION_END_REASON_UNSPECIFIED = 0;
+  COMPLETED = 1;
+  TIME_EXPIRED = 2;
+  USER_QUIT = 3;
+  SYSTEM_ERROR = 4;
+  NETWORK_ISSUE = 5;
+  DEVICE_INTERRUPTION = 6;
+}
+
+message DifficultyDistribution {
+  int32 very_easy_count = 1; // 0.0-0.2
+  int32 easy_count = 2; // 0.2-0.4
+  int32 medium_count = 3; // 0.4-0.6
+  int32 hard_count = 4; // 0.6-0.8
+  int32 very_hard_count = 5; // 0.8-1.0
+}
+
+message SessionProgress {
+  float initial_mastery_average = 1;
+  float final_mastery_average = 2;
+  float mastery_improvement = 3;
+  int32 skills_improved = 4;
+  int32 skills_mastered = 5;
+  int32 new_skills_introduced = 6;
+}
+
+message TopicProgress {
+  string topic = 1;
+  int32 attempts = 2;
+  int32 correct = 3;
+  float accuracy = 4;
+  float mastery_before = 5;
+  float mastery_after = 6;
+  float mastery_change = 7;
+  int64 time_spent_ms = 8;
+}
+
+message MasteryChanges {
+  repeated MasteryChange changes = 1;
+  float total_improvement = 2;
+  int32 topics_improved = 3;
+  int32 topics_declined = 4;
+}
+
+message MasteryChange {
+  string topic = 1;
+  float before = 2;
+  float after = 3;
+  float change = 4;
+  int32 attempts = 5;
+}
+
+message DeviceContext {
+  string device_type = 1;
+  string platform = 2;
+  string app_version = 3;
+  string os_version = 4;
+  string timezone = 5;
+  string locale = 6;
+  bool was_offline = 7;
+  int32 battery_level_start = 8;
+  int32 battery_level_end = 9;
+}
+
+message SessionInterruption {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+  int64 duration_ms = 3;
+  InterruptionType type = 4;
+  string reason = 5;
+}
+
+enum InterruptionType {
+  INTERRUPTION_TYPE_UNSPECIFIED = 0;
+  PHONE_CALL = 1;
+  APP_BACKGROUND = 2;
+  NETWORK_LOSS = 3;
+  DEVICE_LOCK = 4;
+  LOW_BATTERY = 5;
+  USER_PAUSE = 6;
+  SYSTEM_NOTIFICATION = 7;
+}
+
+message EngagementMetrics {
+  int32 screen_touches = 1;
+  int32 scroll_events = 2;
+  int32 navigation_events = 3;
+  int64 time_to_first_interaction_ms = 4;
+  float interaction_rate = 5; // interactions per minute
+  int32 help_requests = 6;
+  int32 explanation_views = 7;
+  bool used_accessibility_features = 8;
+  repeated string features_used = 9;
+}

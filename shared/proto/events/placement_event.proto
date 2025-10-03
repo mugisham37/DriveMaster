@@ -1,0 +1,290 @@
+syntax = "proto3";
+
+package adaptive_learning.events;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adaptive-learning/shared/proto/events";
+
+// PlacementEvent represents a placement test session and results
+message PlacementEvent {
+  // Event metadata
+  string event_id = 1;
+  string placement_id = 2;
+  string user_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+
+  // Placement test configuration
+  PlacementConfig config = 5;
+  
+  // Test execution
+  PlacementExecution execution = 6;
+  
+  // Results and analysis
+  PlacementResults results = 7;
+  
+  // Algorithm details
+  PlacementAlgorithm algorithm = 8;
+  
+  // Device and context
+  DeviceContext device_context = 9;
+  
+  // Additional metadata
+  map<string, string> metadata = 10;
+}
+
+message PlacementConfig {
+  string jurisdiction = 1;
+  repeated string target_topics = 2;
+  int32 min_items = 3;
+  int32 max_items = 4;
+  float target_accuracy = 5; // Target accuracy for stopping criterion
+  float confidence_threshold = 6; // Confidence level for ability estimate
+  int64 max_duration_ms = 7;
+  bool adaptive_stopping = 8;
+  PlacementStrategy strategy = 9;
+}
+
+enum PlacementStrategy {
+  PLACEMENT_STRATEGY_UNSPECIFIED = 0;
+  FIXED_LENGTH = 1; // Fixed number of items
+  ADAPTIVE_IRT = 2; // IRT-based adaptive testing
+  CONFIDENCE_BASED = 3; // Stop when confidence threshold reached
+  HYBRID = 4; // Combination of strategies
+}
+
+message PlacementExecution {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+  int64 total_duration_ms = 3;
+  int32 items_administered = 4;
+  bool was_completed = 5;
+  PlacementEndReason end_reason = 6;
+  repeated PlacementItem items = 7;
+  repeated PlacementResponse responses = 8;
+}
+
+enum PlacementEndReason {
+  PLACEMENT_END_REASON_UNSPECIFIED = 0;
+  COMPLETED_NORMALLY = 1;
+  CONFIDENCE_REACHED = 2;
+  MAX_ITEMS_REACHED = 3;
+  TIME_EXPIRED = 4;
+  USER_QUIT = 5;
+  SYSTEM_ERROR = 6;
+}
+
+message PlacementItem {
+  string item_id = 1;
+  int32 sequence_number = 2;
+  float difficulty = 3; // IRT difficulty parameter
+  float discrimination = 4; // IRT discrimination parameter
+  float guessing = 5; // IRT guessing parameter
+  repeated string topics = 6;
+  google.protobuf.Timestamp presented_at = 7;
+  int64 time_limit_ms = 8;
+}
+
+message PlacementResponse {
+  string item_id = 1;
+  int32 sequence_number = 2;
+  bool correct = 3;
+  int64 response_time_ms = 4;
+  float confidence_level = 5; // User's confidence in their answer
+  google.protobuf.Timestamp responded_at = 6;
+  
+  // Response details
+  oneof response_data {
+    string selected_option = 7;
+    bool boolean_response = 8;
+    string text_response = 9;
+    double numeric_response = 10;
+  }
+  
+  // Behavioral data
+  int32 hesitation_count = 11; // Number of answer changes
+  int64 time_to_first_selection_ms = 12;
+  bool used_hints = 13;
+}
+
+message PlacementResults {
+  // Overall results
+  PlacementOutcome outcome = 1;
+  float overall_accuracy = 2;
+  int64 average_response_time_ms = 3;
+  
+  // Ability estimates
+  repeated TopicAbility topic_abilities = 4;
+  float composite_ability = 5;
+  float ability_confidence = 6;
+  
+  // Performance analysis
+  PerformanceAnalysis performance = 7;
+  
+  // Recommendations
+  PlacementRecommendations recommendations = 8;
+  
+  // Statistical measures
+  PlacementStatistics statistics = 9;
+}
+
+enum PlacementOutcome {
+  PLACEMENT_OUTCOME_UNSPECIFIED = 0;
+  BEGINNER = 1;
+  NOVICE = 2;
+  INTERMEDIATE = 3;
+  ADVANCED = 4;
+  EXPERT = 5;
+  INSUFFICIENT_DATA = 6;
+}
+
+message TopicAbility {
+  string topic = 1;
+  float theta = 2; // IRT ability parameter
+  float standard_error = 3;
+  float confidence_interval_lower = 4;
+  float confidence_interval_upper = 5;
+  int32 items_answered = 6;
+  float accuracy = 7;
+  AbilityLevel level = 8;
+}
+
+enum AbilityLevel {
+  ABILITY_LEVEL_UNSPECIFIED = 0;
+  VERY_LOW = 1;
+  LOW = 2;
+  BELOW_AVERAGE = 3;
+  AVERAGE = 4;
+  ABOVE_AVERAGE = 5;
+  HIGH = 6;
+  VERY_HIGH = 7;
+}
+
+message PerformanceAnalysis {
+  // Response patterns
+  bool consistent_performance = 1;
+  float performance_variance = 2;
+  bool showed_learning = 3;
+  bool showed_fatigue = 4;
+  
+  // Time patterns
+  bool consistent_timing = 5;
+  float timing_variance = 6;
+  bool rushed_responses = 7;
+  bool overly_cautious = 8;
+  
+  // Difficulty patterns
+  float optimal_difficulty_range_min = 9;
+  float optimal_difficulty_range_max = 10;
+  bool struggled_with_hard_items = 11;
+  bool excelled_at_easy_items = 12;
+}
+
+message PlacementRecommendations {
+  // Learning path
+  string recommended_starting_level = 1;
+  repeated string priority_topics = 2;
+  repeated string mastered_topics = 3;
+  repeated string challenging_topics = 4;
+  
+  // Study recommendations
+  int32 recommended_daily_items = 5;
+  int32 recommended_session_length_minutes = 6;
+  float recommended_difficulty_range_min = 7;
+  float recommended_difficulty_range_max = 8;
+  
+  // Focus areas
+  repeated FocusArea focus_areas = 9;
+}
+
+message FocusArea {
+  string topic = 1;
+  float priority_score = 2; // 0-1, higher means more important
+  string reason = 3;
+  int32 estimated_study_hours = 4;
+}
+
+message PlacementStatistics {
+  // Item statistics
+  float item_difficulty_mean = 1;
+  float item_difficulty_std = 2;
+  float item_discrimination_mean = 3;
+  float item_discrimination_std = 4;
+  
+  // Response statistics
+  float response_time_mean_ms = 5;
+  float response_time_std_ms = 6;
+  float response_time_median_ms = 7;
+  
+  // Accuracy by difficulty
+  repeated DifficultyAccuracy accuracy_by_difficulty = 8;
+  
+  // Confidence calibration
+  float confidence_accuracy_correlation = 9;
+  bool well_calibrated = 10;
+}
+
+message DifficultyAccuracy {
+  float difficulty_range_min = 1;
+  float difficulty_range_max = 2;
+  int32 item_count = 3;
+  float accuracy = 4;
+  float average_response_time_ms = 5;
+}
+
+message PlacementAlgorithm {
+  string algorithm_version = 1;
+  AlgorithmType algorithm_type = 2;
+  repeated AlgorithmStep steps = 3;
+  AlgorithmParameters parameters = 4;
+  AlgorithmPerformance performance = 5;
+}
+
+enum AlgorithmType {
+  ALGORITHM_TYPE_UNSPECIFIED = 0;
+  FIXED_FORM = 1;
+  COMPUTER_ADAPTIVE_TEST = 2;
+  MULTISTAGE_ADAPTIVE = 3;
+  BAYESIAN_ADAPTIVE = 4;
+}
+
+message AlgorithmStep {
+  int32 step_number = 1;
+  string item_id = 2;
+  float ability_estimate_before = 3;
+  float ability_estimate_after = 4;
+  float standard_error_before = 5;
+  float standard_error_after = 6;
+  string selection_reason = 7;
+  float information_value = 8;
+}
+
+message AlgorithmParameters {
+  float initial_ability_estimate = 1;
+  float initial_standard_error = 2;
+  float minimum_standard_error = 3;
+  float maximum_information_weight = 4;
+  float content_balancing_weight = 5;
+  bool use_item_exposure_control = 6;
+  float max_item_exposure_rate = 7;
+}
+
+message AlgorithmPerformance {
+  float final_standard_error = 1;
+  float measurement_precision = 2;
+  int32 items_to_convergence = 3;
+  float content_coverage = 4;
+  float item_utilization_efficiency = 5;
+  bool achieved_target_precision = 6;
+}
+
+message DeviceContext {
+  string device_type = 1;
+  string platform = 2;
+  string app_version = 3;
+  string os_version = 4;
+  string timezone = 5;
+  string locale = 6;
+  bool stable_connection = 7;
+  int32 screen_size_category = 8; // 1=small, 2=medium, 3=large
+}

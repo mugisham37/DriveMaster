@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package adaptive_learning.events;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/adaptive-learning/shared/proto/events";
+
+// AttemptEvent represents a user's attempt at answering a question
+message AttemptEvent {
+  // Event metadata
+  string event_id = 1;
+  string user_id = 2;
+  string item_id = 3;
+  string session_id = 4;
+  string client_attempt_id = 5; // For idempotency
+  google.protobuf.Timestamp timestamp = 6;
+
+  // Response data
+  AttemptResponse response = 7;
+  bool correct = 8;
+  int32 quality = 9; // 0-5 scale for SM-2 algorithm
+  int32 confidence = 10; // 1-5 user confidence level
+  int64 time_taken_ms = 11;
+  int32 hints_used = 12;
+
+  // Context information
+  DeviceContext device_context = 13;
+  SessionContext session_context = 14;
+
+  // Algorithm state snapshots (for ML training and debugging)
+  AlgorithmStates state_before = 15;
+  AlgorithmStates state_after = 16;
+
+  // Additional metadata
+  map<string, string> metadata = 17;
+}
+
+// User's response to the question
+message AttemptResponse {
+  oneof response_type {
+    MultipleChoiceResponse multiple_choice = 1;
+    TrueFalseResponse true_false = 2;
+    TextResponse text = 3;
+    NumericResponse numeric = 4;
+  }
+}
+
+message MultipleChoiceResponse {
+  repeated string selected_options = 1;
+  int64 selection_time_ms = 2;
+}
+
+message TrueFalseResponse {
+  bool selected = 1;
+  int64 selection_time_ms = 2;
+}
+
+message TextResponse {
+  string text = 1;
+  int64 typing_time_ms = 2;
+}
+
+message NumericResponse {
+  double value = 1;
+  int64 input_time_ms = 2;
+}
+
+// Device and client context
+message DeviceContext {
+  string device_type = 1; // mobile, tablet, desktop
+  string platform = 2; // ios, android, web
+  string app_version = 3;
+  string os_version = 4;
+  string user_agent = 5;
+  string ip_address = 6;
+  string timezone = 7;
+  string locale = 8;
+  NetworkInfo network_info = 9;
+}
+
+message NetworkInfo {
+  string connection_type = 1; // wifi, cellular, ethernet
+  string carrier = 2;
+  bool is_offline = 3;
+  int32 signal_strength = 4; // 0-100
+}
+
+// Session context
+message SessionContext {
+  string session_type = 1; // practice, review, mock_test, placement
+  int32 items_attempted_in_session = 2;
+  int32 correct_in_session = 3;
+  int64 session_duration_ms = 4;
+  repeated string topics_in_session = 5;
+  float average_difficulty_in_session = 6;
+  bool is_timed_session = 7;
+  int64 remaining_time_ms = 8;
+}
+
+// Algorithm state snapshots
+message AlgorithmStates {
+  SM2State sm2_state = 1;
+  map<string, BKTState> bkt_states = 2; // topic -> BKT state
+  map<string, IRTAbility> irt_abilities = 3; // topic -> IRT ability
+  BanditState bandit_state = 4;
+}
+
+// SM-2 Spaced Repetition state
+message SM2State {
+  float easiness_factor = 1;
+  int32 interval = 2;
+  int32 repetition = 3;
+  google.protobuf.Timestamp next_due = 4;
+  google.protobuf.Timestamp last_reviewed = 5;
+  int32 consecutive_correct = 6;
+}
+
+// Bayesian Knowledge Tracing state
+message BKTState {
+  float prob_knowledge = 1; // P(L)
+  float prob_guess = 2; // P(G)
+  float prob_slip = 3; // P(S)
+  float prob_learn = 4; // P(T)
+  int32 attempts_count = 5;
+  int32 correct_count = 6;
+  google.protobuf.Timestamp last_updated = 7;
+}
+
+// Item Response Theory ability
+message IRTAbility {
+  float theta = 1; // Ability parameter
+  float confidence_interval_lower = 2;
+  float confidence_interval_upper = 3;
+  int32 attempts_count = 4;
+  google.protobuf.Timestamp last_updated = 5;
+}
+
+// Contextual bandit state
+message BanditState {
+  map<string, float> strategy_weights = 1; // strategy -> weight
+  map<string, int32> strategy_counts = 2; // strategy -> attempt count
+  map<string, float> strategy_rewards = 3; // strategy -> cumulative reward
+  float exploration_rate = 4;
+  google.protobuf.Timestamp last_updated = 5;
+}

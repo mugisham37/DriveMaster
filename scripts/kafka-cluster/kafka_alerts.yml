@@ -1,0 +1,102 @@
+groups:
+  - name: kafka_alerts
+    rules:
+      # Kafka Broker Down
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka-jmx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka broker is down"
+          description: "Kafka broker {{ $labels.instance }} has been down for more than 1 minute."
+
+      # High Consumer Lag
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumer_lag_sum > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High consumer lag detected"
+          description: "Consumer group {{ $labels.consumergroup }} has lag of {{ $value }} messages on topic {{ $labels.topic }}."
+
+      # Kafka Disk Usage High
+      - alert: KafkaDiskUsageHigh
+        expr: (kafka_log_size / kafka_log_size_limit) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka disk usage is high"
+          description: "Kafka broker {{ $labels.instance }} disk usage is {{ $value | humanizePercentage }}."
+
+      # Under Replicated Partitions
+      - alert: KafkaUnderReplicatedPartitions
+        expr: kafka_server_replicamanager_underreplicatedpartitions > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka has under-replicated partitions"
+          description: "Kafka broker {{ $labels.instance }} has {{ $value }} under-replicated partitions."
+
+      # Offline Partitions
+      - alert: KafkaOfflinePartitions
+        expr: kafka_controller_kafkacontroller_offlinepartitionscount > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka has offline partitions"
+          description: "Kafka cluster has {{ $value }} offline partitions."
+
+      # High Request Rate
+      - alert: KafkaHighRequestRate
+        expr: rate(kafka_network_requestmetrics_requests_total[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka request rate"
+          description: "Kafka broker {{ $labels.instance }} is receiving {{ $value }} requests per second."
+
+      # Schema Registry Down
+      - alert: SchemaRegistryDown
+        expr: up{job="schema-registry"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Schema Registry is down"
+          description: "Schema Registry has been down for more than 1 minute."
+
+      # Zookeeper Down
+      - alert: ZookeeperDown
+        expr: up{job="zookeeper-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Zookeeper is down"
+          description: "Zookeeper has been down for more than 1 minute."
+
+      # High Memory Usage
+      - alert: KafkaHighMemoryUsage
+        expr: kafka_server_brokertopicmetrics_bytesintopic_rate > 100000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka memory usage"
+          description: "Kafka broker {{ $labels.instance }} memory usage is high with {{ $value }} bytes/sec."
+
+      # Failed Authentication
+      - alert: KafkaAuthenticationFailures
+        expr: increase(kafka_server_socket_server_metrics_failed_authentication_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka authentication failures detected"
+          description: "{{ $value }} authentication failures detected in the last 5 minutes on {{ $labels.instance }}."

@@ -1,4 +1,4 @@
-.PHONY: help install dev test clean build docker-build docker-up docker-down redis-cluster-up redis-cluster-down redis-cluster-init redis-backup redis-restore
+.PHONY: help install dev test clean build docker-build docker-up docker-down redis-cluster-up redis-cluster-down redis-cluster-init redis-backup redis-restore kafka-up kafka-down kafka-topics kafka-admin proto-gen schema-registry-setup dev-setup health-check monitoring-up
 
 # Default target
 help:
@@ -16,6 +16,15 @@ help:
 	@echo "  redis-cluster-init- Initialize Redis cluster"
 	@echo "  redis-backup      - Create Redis cluster backup"
 	@echo "  redis-restore     - Restore Redis cluster from backup"
+	@echo "  kafka-up          - Start Kafka cluster with monitoring"
+	@echo "  kafka-down        - Stop Kafka cluster"
+	@echo "  kafka-topics      - Create Kafka topics"
+	@echo "  kafka-admin       - Run Kafka admin commands"
+	@echo "  proto-gen         - Generate Protocol Buffer code"
+	@echo "  schema-registry-setup - Register schemas in Schema Registry"
+	@echo "  dev-setup         - Set up complete development environment"
+	@echo "  health-check      - Check health of all infrastructure"
+	@echo "  monitoring-up     - Start monitoring stack"
 
 # Install dependencies for all services
 install:
@@ -132,3 +141,64 @@ redis-restore:
 	@echo "Available backups:"
 	cd scripts/redis-cluster && bash backup-recovery.sh list
 	@echo "Use: cd scripts/redis-cluster && bash backup-recovery.sh restore <node-name> <backup-name>"
+# Kafk
+a Infrastructure
+kafka-up:
+	@echo "Starting Kafka cluster..."
+	cd scripts/kafka-cluster && docker-compose -f docker-compose.kafka-cluster.yml up -d
+	@echo "Waiting for Kafka to be ready..."
+	sleep 30
+	@echo "Creating topics..."
+	cd scripts/kafka-cluster && bash create-topics.sh
+	@echo "Kafka cluster is ready!"
+
+kafka-down:
+	cd scripts/kafka-cluster && docker-compose -f docker-compose.kafka-cluster.yml down
+
+kafka-topics:
+	cd scripts/kafka-cluster && bash create-topics.sh
+
+kafka-admin:
+	cd scripts/kafka-cluster && bash kafka-admin.sh $(CMD)
+
+# Protocol Buffers
+proto-gen:
+	@echo "Generating Protocol Buffer code..."
+	cd shared/proto && bash generate.sh
+	@echo "Protocol Buffer code generation completed!"
+
+schema-registry-setup:
+	@echo "Setting up Schema Registry..."
+	cd shared/proto && bash schema-registry.sh check
+	cd shared/proto && bash schema-registry.sh register-all
+	@echo "Schema Registry setup completed!"
+
+# Development Environment
+dev-setup:
+	@echo "Setting up complete development environment..."
+	make kafka-up
+	make proto-gen
+	make schema-registry-setup
+	make install
+	@echo "Development environment ready!"
+
+# Infrastructure Health Checks
+health-check:
+	@echo "Checking infrastructure health..."
+	@echo "=== PostgreSQL ==="
+	docker-compose exec postgres pg_isready -U postgres || echo "PostgreSQL not ready"
+	@echo "=== Redis ==="
+	docker-compose exec redis redis-cli ping || echo "Redis not ready"
+	@echo "=== Kafka ==="
+	cd scripts/kafka-cluster && bash kafka-admin.sh health || echo "Kafka not ready"
+	@echo "=== Schema Registry ==="
+	cd shared/proto && bash schema-registry.sh check || echo "Schema Registry not ready"
+
+# Monitoring
+monitoring-up:
+	cd scripts/kafka-cluster && docker-compose -f kafka-monitoring.yml up -d
+	@echo "Monitoring stack started:"
+	@echo "  - Prometheus: http://localhost:9090"
+	@echo "  - Grafana: http://localhost:3000 (admin/admin)"
+	@echo "  - Kafka UI: http://localhost:8080"
+	@echo "  - AlertManager: http://localhost:9093"

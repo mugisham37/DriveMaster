@@ -1,0 +1,284 @@
+syntax = "proto3";
+
+package adaptive_learning.events;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/adaptive-learning/shared/proto/events";
+
+// UserActivityEvent represents various user interactions and behaviors
+message UserActivityEvent {
+  // Event metadata
+  string event_id = 1;
+  string user_id = 2;
+  string session_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+
+  // Activity details
+  ActivityType activity_type = 5;
+  ActivityCategory category = 6;
+  string activity_name = 7;
+  string description = 8;
+
+  // Context
+  ActivityContext context = 9;
+  DeviceContext device_context = 10;
+
+  // Activity-specific data
+  oneof activity_data {
+    NavigationActivity navigation = 11;
+    ContentInteraction content_interaction = 12;
+    LearningActivity learning = 13;
+    SocialActivity social = 14;
+    SystemActivity system = 15;
+    EngagementActivity engagement = 16;
+    PerformanceActivity performance = 17;
+  }
+
+  // Behavioral metrics
+  BehavioralMetrics behavioral_metrics = 18;
+
+  // Additional metadata
+  map<string, string> metadata = 19;
+}
+
+enum ActivityType {
+  ACTIVITY_TYPE_UNSPECIFIED = 0;
+  NAVIGATION = 1;
+  CONTENT_INTERACTION = 2;
+  LEARNING = 3;
+  SOCIAL = 4;
+  SYSTEM = 5;
+  ENGAGEMENT = 6;
+  PERFORMANCE = 7;
+}
+
+enum ActivityCategory {
+  ACTIVITY_CATEGORY_UNSPECIFIED = 0;
+  USER_INITIATED = 1;
+  SYSTEM_TRIGGERED = 2;
+  AUTOMATIC = 3;
+  SCHEDULED = 4;
+}
+
+message ActivityContext {
+  string current_screen = 1;
+  string previous_screen = 2;
+  string feature_area = 3;
+  string user_journey_stage = 4;
+  bool is_first_time = 5;
+  int32 session_activity_count = 6;
+  int64 time_since_last_activity_ms = 7;
+}
+
+message DeviceContext {
+  string device_type = 1;
+  string platform = 2;
+  string app_version = 3;
+  string os_version = 4;
+  string timezone = 5;
+  string locale = 6;
+  bool is_offline = 7;
+  int32 battery_level = 8;
+  string network_type = 9;
+}
+
+// Navigation activities
+message NavigationActivity {
+  NavigationType navigation_type = 1;
+  string source_screen = 2;
+  string destination_screen = 3;
+  string navigation_method = 4; // tap, swipe, back_button, deep_link
+  int64 time_on_previous_screen_ms = 5;
+  bool was_back_navigation = 6;
+  string deep_link_source = 7;
+}
+
+enum NavigationType {
+  NAVIGATION_TYPE_UNSPECIFIED = 0;
+  SCREEN_CHANGE = 1;
+  TAB_SWITCH = 2;
+  MODAL_OPEN = 3;
+  MODAL_CLOSE = 4;
+  DEEP_LINK = 5;
+  EXTERNAL_LINK = 6;
+}
+
+// Content interaction activities
+message ContentInteraction {
+  ContentInteractionType interaction_type = 1;
+  string content_id = 2;
+  string content_type = 3; // question, explanation, video, image
+  string interaction_target = 4; // button, link, media_player
+  int64 interaction_duration_ms = 5;
+  float scroll_percentage = 6;
+  bool completed_interaction = 7;
+  repeated string tags = 8;
+}
+
+enum ContentInteractionType {
+  CONTENT_INTERACTION_TYPE_UNSPECIFIED = 0;
+  VIEW = 1;
+  CLICK = 2;
+  SCROLL = 3;
+  ZOOM = 4;
+  SHARE = 5;
+  BOOKMARK = 6;
+  RATE = 7;
+  COMMENT = 8;
+}
+
+// Learning activities
+message LearningActivity {
+  LearningActivityType learning_type = 1;
+  string topic = 2;
+  string skill = 3;
+  float difficulty_level = 4;
+  int64 study_duration_ms = 5;
+  bool was_successful = 6;
+  float progress_made = 7;
+  repeated string learning_objectives = 8;
+  string learning_mode = 9; // practice, review, test, exploration
+}
+
+enum LearningActivityType {
+  LEARNING_ACTIVITY_TYPE_UNSPECIFIED = 0;
+  STUDY_START = 1;
+  STUDY_END = 2;
+  CONCEPT_LEARNED = 3;
+  SKILL_PRACTICED = 4;
+  MASTERY_ACHIEVED = 5;
+  DIFFICULTY_ADJUSTED = 6;
+  HELP_REQUESTED = 7;
+  EXPLANATION_VIEWED = 8;
+}
+
+// Social activities
+message SocialActivity {
+  SocialActivityType social_type = 1;
+  string target_user_id = 2;
+  string group_id = 3;
+  string content_shared = 4;
+  string message = 5;
+  bool is_public = 6;
+  repeated string participants = 7;
+}
+
+enum SocialActivityType {
+  SOCIAL_ACTIVITY_TYPE_UNSPECIFIED = 0;
+  SHARE_ACHIEVEMENT = 1;
+  INVITE_FRIEND = 2;
+  JOIN_GROUP = 3;
+  LEAVE_GROUP = 4;
+  POST_MESSAGE = 5;
+  LIKE_CONTENT = 6;
+  COMMENT_ON_CONTENT = 7;
+  FOLLOW_USER = 8;
+}
+
+// System activities
+message SystemActivity {
+  SystemActivityType system_type = 1;
+  string component = 2;
+  string action = 3;
+  bool was_successful = 4;
+  string error_code = 5;
+  string error_message = 6;
+  int64 processing_time_ms = 7;
+  map<string, string> system_state = 8;
+}
+
+enum SystemActivityType {
+  SYSTEM_ACTIVITY_TYPE_UNSPECIFIED = 0;
+  LOGIN = 1;
+  LOGOUT = 2;
+  SYNC_START = 3;
+  SYNC_COMPLETE = 4;
+  CACHE_UPDATE = 5;
+  BACKGROUND_TASK = 6;
+  NOTIFICATION_RECEIVED = 7;
+  ERROR_OCCURRED = 8;
+}
+
+// Engagement activities
+message EngagementActivity {
+  EngagementActivityType engagement_type = 1;
+  float engagement_score = 2; // 0-1 scale
+  int64 active_time_ms = 3;
+  int64 idle_time_ms = 4;
+  int32 interaction_count = 5;
+  float attention_score = 6; // 0-1 scale
+  bool deep_engagement = 7;
+  repeated string engagement_indicators = 8;
+}
+
+enum EngagementActivityType {
+  ENGAGEMENT_ACTIVITY_TYPE_UNSPECIFIED = 0;
+  SESSION_START = 1;
+  SESSION_END = 2;
+  HIGH_ENGAGEMENT_DETECTED = 3;
+  LOW_ENGAGEMENT_DETECTED = 4;
+  ATTENTION_GAINED = 5;
+  ATTENTION_LOST = 6;
+  FLOW_STATE_ENTERED = 7;
+  FLOW_STATE_EXITED = 8;
+}
+
+// Performance activities
+message PerformanceActivity {
+  PerformanceActivityType performance_type = 1;
+  string metric_name = 2;
+  float metric_value = 3;
+  float baseline_value = 4;
+  float improvement = 5;
+  string performance_category = 6; // speed, accuracy, consistency
+  bool is_personal_best = 7;
+  repeated string contributing_factors = 8;
+}
+
+enum PerformanceActivityType {
+  PERFORMANCE_ACTIVITY_TYPE_UNSPECIFIED = 0;
+  MILESTONE_REACHED = 1;
+  GOAL_ACHIEVED = 2;
+  STREAK_STARTED = 3;
+  STREAK_BROKEN = 4;
+  PERSONAL_RECORD = 5;
+  PERFORMANCE_DECLINE = 6;
+  IMPROVEMENT_DETECTED = 7;
+  CONSISTENCY_ACHIEVED = 8;
+}
+
+// Behavioral metrics
+message BehavioralMetrics {
+  // Timing patterns
+  int64 time_to_action_ms = 1;
+  int64 dwell_time_ms = 2;
+  int64 hesitation_time_ms = 3;
+  
+  // Interaction patterns
+  int32 click_count = 4;
+  int32 scroll_count = 5;
+  int32 swipe_count = 6;
+  float interaction_velocity = 7; // interactions per second
+  
+  // Attention patterns
+  bool focused_attention = 8;
+  int32 attention_switches = 9;
+  float attention_duration_ms = 10;
+  
+  // Error patterns
+  int32 error_count = 11;
+  int32 correction_count = 12;
+  bool error_recovery = 13;
+  
+  // Efficiency patterns
+  float task_completion_rate = 14;
+  float efficiency_score = 15; // 0-1 scale
+  bool optimal_path_taken = 16;
+  
+  // Emotional indicators
+  float frustration_score = 17; // 0-1 scale, inferred from behavior
+  float confidence_score = 18; // 0-1 scale, inferred from behavior
+  float satisfaction_score = 19; // 0-1 scale, inferred from behavior
+}
