@@ -103,7 +103,8 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Implement account linking for multiple OAuth providers
     - _Requirements: 7.1, 7.2_
 
-  - [ ] 5.3 Add multi-factor authentication support
+  - [x] 5.3 Add multi-factor authentication support
+
 
     - Implement TOTP-based MFA with QR code generation
     - Create MFA setup and verification endpoints
