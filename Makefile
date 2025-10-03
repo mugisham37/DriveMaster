@@ -1,16 +1,21 @@
-.PHONY: help install dev test clean build docker-build docker-up docker-down
+.PHONY: help install dev test clean build docker-build docker-up docker-down redis-cluster-up redis-cluster-down redis-cluster-init redis-backup redis-restore
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  install      - Install all dependencies"
-	@echo "  dev          - Start all services in development mode"
-	@echo "  test         - Run all tests"
-	@echo "  clean        - Clean all build artifacts"
-	@echo "  build        - Build all services"
-	@echo "  docker-build - Build all Docker images"
-	@echo "  docker-up    - Start all services with Docker Compose"
-	@echo "  docker-down  - Stop all Docker services"
+	@echo "  install           - Install all dependencies"
+	@echo "  dev               - Start all services in development mode"
+	@echo "  test              - Run all tests"
+	@echo "  clean             - Clean all build artifacts"
+	@echo "  build             - Build all services"
+	@echo "  docker-build      - Build all Docker images"
+	@echo "  docker-up         - Start all services with Docker Compose"
+	@echo "  docker-down       - Stop all Docker services"
+	@echo "  redis-cluster-up  - Start Redis cluster for production"
+	@echo "  redis-cluster-down- Stop Redis cluster"
+	@echo "  redis-cluster-init- Initialize Redis cluster"
+	@echo "  redis-backup      - Create Redis cluster backup"
+	@echo "  redis-restore     - Restore Redis cluster from backup"
 
 # Install dependencies for all services
 install:
@@ -99,3 +104,31 @@ docker-up:
 # Stop all Docker services
 docker-down:
 	docker-compose down
+
+# Redis Cluster Management
+redis-cluster-up:
+	@echo "Starting Redis cluster..."
+	cd scripts/redis-cluster && docker-compose -f docker-compose.redis-cluster.yml up -d
+	@echo "Waiting for cluster initialization..."
+	sleep 30
+	@echo "Redis cluster started. Nodes available on ports 7001-7006"
+
+redis-cluster-down:
+	@echo "Stopping Redis cluster..."
+	cd scripts/redis-cluster && docker-compose -f docker-compose.redis-cluster.yml down
+	@echo "Redis cluster stopped"
+
+redis-cluster-init:
+	@echo "Initializing Redis cluster..."
+	cd scripts/redis-cluster && bash setup-cluster.sh
+	@echo "Redis cluster initialization complete"
+
+redis-backup:
+	@echo "Creating Redis cluster backup..."
+	cd scripts/redis-cluster && bash backup-recovery.sh backup
+	@echo "Backup completed"
+
+redis-restore:
+	@echo "Available backups:"
+	cd scripts/redis-cluster && bash backup-recovery.sh list
+	@echo "Use: cd scripts/redis-cluster && bash backup-recovery.sh restore <node-name> <backup-name>"

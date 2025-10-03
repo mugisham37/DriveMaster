@@ -1,0 +1,46 @@
+# Prometheus configuration for Redis cluster monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "redis_alerts.yml"
+
+scrape_configs:
+  # Redis Exporter
+  - job_name: 'redis-cluster'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    params:
+      target: ['redis://redis-node-1:7000', 'redis://redis-node-2:7000', 'redis://redis-node-3:7000']
+
+  # Individual Redis nodes
+  - job_name: 'redis-nodes'
+    static_configs:
+      - targets: 
+        - 'redis-node-1:7000'
+        - 'redis-node-2:7000'
+        - 'redis-node-3:7000'
+        - 'redis-node-4:7000'
+        - 'redis-node-5:7000'
+        - 'redis-node-6:7000'
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # Redis Sentinel
+  - job_name: 'redis-sentinel'
+    static_configs:
+      - targets:
+        - 'redis-sentinel-1:26379'
+        - 'redis-sentinel-2:26379'
+        - 'redis-sentinel-3:26379'
+    scrape_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

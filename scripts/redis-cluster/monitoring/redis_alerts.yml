@@ -1,0 +1,126 @@
+# Redis Cluster Alerting Rules
+
+groups:
+  - name: redis_cluster_alerts
+    rules:
+      # Redis instance down
+      - alert: RedisInstanceDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 1 minute."
+
+      # High memory usage
+      - alert: RedisHighMemoryUsage
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} high memory usage"
+          description: "Redis instance {{ $labels.instance }} memory usage is above 90% (current: {{ $value }}%)"
+
+      # High CPU usage
+      - alert: RedisHighCPUUsage
+        expr: rate(redis_cpu_sys_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} high CPU usage"
+          description: "Redis instance {{ $labels.instance }} CPU usage is above 80% (current: {{ $value }}%)"
+
+      # Cluster state not OK
+      - alert: RedisClusterStateNotOK
+        expr: redis_cluster_state != 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis cluster state is not OK"
+          description: "Redis cluster on {{ $labels.instance }} is not in OK state"
+
+      # High number of rejected connections
+      - alert: RedisRejectedConnections
+        expr: increase(redis_rejected_connections_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} rejecting connections"
+          description: "Redis instance {{ $labels.instance }} has rejected {{ $value }} connections in the last 5 minutes"
+
+      # Slow queries
+      - alert: RedisSlowQueries
+        expr: increase(redis_slowlog_length[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} has slow queries"
+          description: "Redis instance {{ $labels.instance }} has {{ $value }} slow queries in the last 5 minutes"
+
+      # Replication lag
+      - alert: RedisReplicationLag
+        expr: redis_master_repl_offset - redis_replica_repl_offset > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis replication lag on {{ $labels.instance }}"
+          description: "Redis replica {{ $labels.instance }} is lagging behind master by {{ $value }} bytes"
+
+      # Too many connected clients
+      - alert: RedisTooManyConnections
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} has too many connections"
+          description: "Redis instance {{ $labels.instance }} has {{ $value }} connected clients (threshold: 100)"
+
+      # Keyspace hit ratio too low
+      - alert: RedisLowHitRatio
+        expr: (redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)) * 100 < 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} low hit ratio"
+          description: "Redis instance {{ $labels.instance }} keyspace hit ratio is {{ $value }}% (threshold: 80%)"
+
+      # Sentinel master down
+      - alert: RedisSentinelMasterDown
+        expr: redis_sentinel_masters{master_status!="ok"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis Sentinel reports master {{ $labels.master_name }} is down"
+          description: "Redis Sentinel on {{ $labels.instance }} reports that master {{ $labels.master_name }} is not OK"
+
+  - name: redis_cluster_capacity
+    rules:
+      # Predict memory exhaustion
+      - alert: RedisMemoryExhaustionPredicted
+        expr: predict_linear(redis_memory_used_bytes[1h], 4*3600) > redis_memory_max_bytes
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} memory exhaustion predicted"
+          description: "Redis instance {{ $labels.instance }} is predicted to run out of memory in 4 hours based on current trend"
+
+      # High eviction rate
+      - alert: RedisHighEvictionRate
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} high eviction rate"
+          description: "Redis instance {{ $labels.instance }} is evicting {{ $value }} keys per second"
