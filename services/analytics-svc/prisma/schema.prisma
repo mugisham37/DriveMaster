@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserBehaviorProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  avgAccuracy           Float
+  avgResponseTime       Float
+  avgConfidence         Float
+  sessionFrequency      Float
+  avgSessionDuration    Float
+  preferredDifficulty   String
+  learningStyle         String
+  motivationLevel       Float
+  dropoutRisk          Float
+  engagementScore      Float
+  lastUpdated          DateTime @default(now()) @updatedAt
+  createdAt            DateTime @default(now())
+
+  @@map("user_behavior_profiles")
+}
+
+model LearningEventStream {
+  id              String   @id @default(cuid())
+  userId          String
+  eventType       String
+  eventData       Json
+  timestamp       DateTime @default(now())
+  sessionId       String?
+  contentId       String?
+  accuracy        Float?
+  responseTime    Float?
+  confidence      Float?
+  difficulty      String?
+  createdAt       DateTime @default(now())
+
+  @@map("learning_event_streams")
+}
+
+model KnowledgeState {
+  id              String   @id @default(cuid())
+  userId          String
+  conceptId       String
+  masteryLevel    Float
+  confidence      Float
+  lastPracticed   DateTime
+  practiceCount   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, conceptId])
+  @@map("knowledge_states")
+}
+
+model MetricAggregation {
+  id          String   @id @default(cuid())
+  metricType  String
+  timeframe   String
+  aggregateData Json
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@unique([metricType, timeframe, timestamp])
+  @@map("metric_aggregations")
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  alertType   String
+  severity    String
+  message     String
+  data        Json?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@map("alerts")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reportType  String
+  title       String
+  data        Json
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@map("reports")
+}

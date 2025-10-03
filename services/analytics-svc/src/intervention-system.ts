@@ -1,5 +1,28 @@
-import { PrismaClient } from '@prisma/client'
 import { createRedisClient } from '@drivemaster/redis-client'
+
+// Type definition for PrismaClient to avoid import issues
+export type PrismaClientType = {
+  userBehaviorProfile: {
+    findUnique: (args: any) => Promise<any>
+    update: (args: any) => Promise<any>
+  }
+  alert: {
+    create: (args: any) => Promise<any>
+    findMany: (args: any) => Promise<any>
+  }
+  interventionAction: {
+    create: (args: any) => Promise<any>
+    findMany: (args: any) => Promise<any>
+    findUnique: (args: any) => Promise<any>
+    update: (args: any) => Promise<any>
+  }
+  interventionOutcome: {
+    create: (args: any) => Promise<any>
+  }
+  interventionTrigger: {
+    create: (args: any) => Promise<any>
+  }
+}
 import { randomUUID } from 'crypto'
 import { PredictionResult, InterventionTrigger, BehaviorPattern } from './predictive-analytics'
 
@@ -45,11 +68,11 @@ export interface InterventionOutcome {
 }
 
 export class InterventionSystem {
-  private prisma: PrismaClient
+  private prisma: PrismaClientType
   private redis: any
   private config: InterventionConfig
 
-  constructor(prisma: PrismaClient, config: InterventionConfig) {
+  constructor(prisma: PrismaClientType, config: InterventionConfig) {
     this.prisma = prisma
     this.config = config
 

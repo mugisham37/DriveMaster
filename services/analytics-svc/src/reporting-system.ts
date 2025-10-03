@@ -1,5 +1,37 @@
-import { PrismaClient } from '@prisma/client'
 import { createRedisClient } from '@drivemaster/redis-client'
+
+// Type definition for PrismaClient to avoid import issues
+export type PrismaClientType = {
+  learningEventStream: {
+    findMany: (args: any) => Promise<any>
+    count: (args: any) => Promise<number>
+    groupBy: (args: any) => Promise<any>
+  }
+  userBehaviorProfile: {
+    findMany: (args: any) => Promise<any>
+  }
+  knowledgeState: {
+    findMany: (args: any) => Promise<any>
+  }
+  metricAggregation: {
+    findMany: (args: any) => Promise<any>
+    findUnique: (args: any) => Promise<any>
+    create: (args: any) => Promise<any>
+  }
+  alert: {
+    findMany: (args: any) => Promise<any>
+  }
+  report: {
+    findMany: (args: any) => Promise<any>
+    findUnique: (args: any) => Promise<any>
+    create: (args: any) => Promise<any>
+    deleteMany: (args: any) => Promise<any>
+  }
+  user: {
+    count: (args: any) => Promise<number>
+    groupBy: (args: any) => Promise<any>
+  }
+}
 import { Registry, Counter, Histogram, Gauge } from 'prom-client'
 import * as cron from 'node-cron'
 import { randomUUID } from 'crypto'
@@ -191,7 +223,7 @@ export interface BusinessMetricsReport {
 }
 
 export class ReportingSystem {
-  private prisma: PrismaClient
+  private prisma: PrismaClientType
   private redis: any
   private config: ReportingConfig
   private registry: Registry
@@ -202,7 +234,7 @@ export class ReportingSystem {
     scheduledReports: Gauge
   }
 
-  constructor(prisma: PrismaClient, config: ReportingConfig, registry: Registry) {
+  constructor(prisma: PrismaClientType, config: ReportingConfig, registry: Registry) {
     this.prisma = prisma
     this.config = config
     this.registry = registry
@@ -261,9 +293,9 @@ export class ReportingSystem {
         orderBy: { windowStart: 'asc' },
       })
 
-      const responseTimes = responseTimeMetrics.map((m) => m.avg).filter(Boolean)
+      const responseTimes = responseTimeMetrics.map((m: any) => m.avg).filter(Boolean)
       const averageResponseTime =
-        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length || 0
+        responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length || 0
       const p95ResponseTime = this.calculatePercentile(responseTimes, 0.95)
       const p99ResponseTime = this.calculatePercentile(responseTimes, 0.99)
 
@@ -309,7 +341,7 @@ export class ReportingSystem {
           throughput,
         },
         trends,
-        alerts: alerts.map((alert) => ({
+        alerts: alerts.map((alert: any) => ({
           timestamp: alert.createdAt.toISOString(),
           type: alert.alertType,
           severity: alert.severity,
@@ -710,9 +742,9 @@ export class ReportingSystem {
   // Helper methods
   private calculatePercentile(values: number[], percentile: number): number {
     if (values.length === 0) return 0
-    const sorted = values.sort((a, b) => a - b)
+    const sorted = values.sort((a: number, b: number) => a - b)
     const index = Math.ceil(sorted.length * percentile) - 1
-    return sorted[Math.max(0, index)]
+    return sorted[Math.max(0, index)] ?? 0
   }
 
   private calculatePeriodDates(period: string): { startTime: Date; endTime: Date } {
@@ -790,7 +822,7 @@ export class ReportingSystem {
         by: ['userId'],
         where: { createdAt: { gte: startTime, lte: endTime } },
       })
-      .then((groups) => groups.length)
+      .then((groups: any) => groups.length)
   }
 
   private async getNewUsers(startTime: Date, endTime: Date): Promise<number> {

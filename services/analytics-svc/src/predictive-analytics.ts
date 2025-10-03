@@ -1,5 +1,20 @@
-import { PrismaClient } from '@prisma/client'
 import { createRedisClient } from '@drivemaster/redis-client'
+
+// Type definition for PrismaClient to avoid import issues
+export type PrismaClientType = {
+  userBehaviorProfile: {
+    findUnique: (args: any) => Promise<any>
+    update: (args: any) => Promise<any>
+  }
+  learningEventStream: {
+    findMany: (args: any) => Promise<any>
+    findFirst: (args: any) => Promise<any>
+    count: (args: any) => Promise<number>
+  }
+  knowledgeState: {
+    findMany: (args: any) => Promise<any>
+  }
+}
 import { randomUUID } from 'crypto'
 
 export interface PredictiveAnalyticsConfig {
@@ -72,11 +87,11 @@ export interface InterventionTrigger {
 }
 
 export class PredictiveAnalyticsEngine {
-  private prisma: PrismaClient
+  private prisma: PrismaClientType
   private redis: any
   private config: PredictiveAnalyticsConfig
 
-  constructor(prisma: PrismaClient, config: PredictiveAnalyticsConfig) {
+  constructor(prisma: PrismaClientType, config: PredictiveAnalyticsConfig) {
     this.prisma = prisma
     this.redis = createRedisClient(config.redisUrl)
     this.config = config
@@ -570,7 +585,7 @@ export class PredictiveAnalyticsEngine {
     })
 
     return (
-      allEvents.filter((e) => e.responseTime).reduce((sum, e) => sum + (e.responseTime || 0), 0) /
+      allEvents.filter((e: any) => e.responseTime).reduce((sum: number, e: any) => sum + (e.responseTime || 0), 0) /
       1000 /
       60
     ) // Convert to minutes

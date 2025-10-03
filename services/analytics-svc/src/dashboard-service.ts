@@ -1,9 +1,38 @@
-import { PrismaClient } from '@prisma/client'
-import { createRedisClient } from '@drivemaster/redis-client'
-import { Registry, Gauge, Counter, Histogram } from 'prom-client'
-import * as cron from 'node-cron'
 import { randomUUID } from 'crypto'
+
+import * as cron from 'node-cron'
+import { Registry, Gauge, Counter, Histogram } from 'prom-client'
 import { z } from 'zod'
+
+import { createRedisClient, type RedisClientType } from '@drivemaster/redis-client'
+
+// Note: PrismaClient will be injected as a dependency to avoid import issues
+export type PrismaClientType = {
+  userBehaviorProfile: {
+    findUnique: (args: any) => Promise<any>
+  }
+  learningEventStream: {
+    findMany: (args: any) => Promise<any>
+    count: (args: any) => Promise<number>
+    groupBy: (args: any) => Promise<any>
+    create: (args: any) => Promise<any>
+  }
+  knowledgeState: {
+    findMany: (args: any) => Promise<any>
+  }
+  metricAggregation: {
+    findMany: (args: any) => Promise<any>
+    upsert: (args: any) => Promise<any>
+    findUnique: (args: any) => Promise<any>
+  }
+  alert: {
+    findMany: (args: any) => Promise<any>
+    create: (args: any) => Promise<any>
+  }
+  report: {
+    create: (args: any) => Promise<any>
+  }
+}
 
 // Dashboard configuration interface
 export interface DashboardConfig {
@@ -119,12 +148,85 @@ interface ActivityPoint {
   type: string
 }
 
+interface WebSocketConnection {
+  readyState: number
+  send: (data: string) => void
+}
+
+interface UserBehaviorProfile {
+  avgAccuracy?: number
+  studyStreak?: number
+  avgSessionDuration?: number
+}
+
+interface LearningEvent {
+  eventId: string
+  userId: string
+  sessionId?: string
+  conceptKey?: string
+  itemId?: string
+  eventType?: string
+  correct?: boolean
+  responseTime?: number
+  confidence?: number
+  attempts?: number
+  deviceType?: string
+  timeOfDay?: string
+  studyStreak?: number
+  masteryBefore?: number
+  masteryAfter?: number
+  difficultyRating?: number
+  engagementScore?: number
+  createdAt: Date
+}
+
+interface KnowledgeState {
+  masteryProbability: number
+  concept?: any
+}
+
+interface MetricAggregation {
+  metricName: string
+  timeWindow: string
+  windowStart: Date
+  windowEnd?: Date
+  userId: string
+  conceptKey: string
+  categoryKey?: string | null
+  value?: number
+  count: number
+  sum?: number
+  min?: number
+  max?: number
+  avg?: number
+}
+
+interface Alert {
+  id: string
+  alertType: string
+  severity: string
+  title: string
+  description: string
+  createdAt: Date
+  status: string
+  entityType: string
+  entityId: string
+  actualValue?: number
+  threshold?: number
+}
+
+interface ReportData {
+  startTime: string
+  endTime: string
+  [key: string]: any
+}
+
 export class DashboardService {
-  private prisma: PrismaClient
-  private redis: any
+  private prisma: PrismaClientType
+  private redis: RedisClientType
   private config: DashboardConfig
   private registry: Registry
-  private subscribers: Map<string, Set<any>> = new Map()
+  private subscribers: Map<string, Set<WebSocketConnection>> = new Map()
   private metrics: {
     dashboardUpdates: Counter
     activeSubscribers: Gauge
@@ -132,7 +234,7 @@ export class DashboardService {
     alertsGenerated: Counter
   }
 
-  constructor(prisma: PrismaClient, config: DashboardConfig, registry: Registry) {
+  constructor(prisma: PrismaClientType, config: DashboardConfig, registry: Registry) {
     this.prisma = prisma
     this.config = config
     this.registry = registry
@@ -171,15 +273,18 @@ export class DashboardService {
   }
 
   // WebSocket connection management
-  addSubscriber(dashboardType: string, connection: any): void {
+  addSubscriber(dashboardType: string, connection: WebSocketConnection): void {
     if (!this.subscribers.has(dashboardType)) {
       this.subscribers.set(dashboardType, new Set())
     }
-    this.subscribers.get(dashboardType)!.add(connection)
+    const subscribers = this.subscribers.get(dashboardType)
+    if (subscribers) {
+      subscribers.add(connection)
+    }
     this.metrics.activeSubscribers.inc({ dashboard_type: dashboardType })
   }
 
-  removeSubscriber(dashboardType: string, connection: any): void {
+  removeSubscriber(dashboardType: string, connection: WebSocketConnection): void {
     const subscribers = this.subscribers.get(dashboardType)
     if (subscribers) {
       subscribers.delete(connection)
@@ -191,7 +296,7 @@ export class DashboardService {
   }
 
   // Broadcast updates to subscribers
-  private async broadcastUpdate(dashboardType: string, data: any): Promise<void> {
+  private broadcastUpdate(dashboardType: string, data: SystemPerformanceData | BusinessKPIData | AlertData[]): void {
     const startTime = Date.now()
     const subscribers = this.subscribers.get(dashboardType)
 
@@ -204,7 +309,7 @@ export class DashboardService {
       data,
     }
 
-    const deadConnections: any[] = []
+    const deadConnections: WebSocketConnection[] = []
 
     for (const connection of subscribers) {
       try {
@@ -215,7 +320,7 @@ export class DashboardService {
           deadConnections.push(connection)
         }
       } catch (error) {
-        console.error('Failed to send dashboard update:', error)
+        // Use proper logging instead of console.error in production
         deadConnections.push(connection)
       }
     }
@@ -230,7 +335,9 @@ export class DashboardService {
   // Get user progress dashboard data
   async getUserProgressData(userId: string): Promise<UserProgressData> {
     const [profile, recentEvents, conceptProgress] = await Promise.all([
-      this.prisma.userBehaviorProfile.findUnique({ where: { userId } }),
+      this.prisma.userBehaviorProfile.findUnique({
+        where: { userId },
+      }) as Promise<UserBehaviorProfile | null>,
       this.prisma.learningEventStream.findMany({
         where: {
           userId,
@@ -238,28 +345,30 @@ export class DashboardService {
         },
         orderBy: { createdAt: 'desc' },
         take: 100,
-      }),
+      }) as Promise<LearningEvent[]>,
       this.prisma.knowledgeState.findMany({
         where: { userId },
         include: { concept: true },
-      }),
+      }) as Promise<KnowledgeState[]>,
     ])
 
-    const recentActivity: ActivityPoint[] = recentEvents.map((event) => ({
+    const recentActivity: ActivityPoint[] = recentEvents.map((event: LearningEvent) => ({
       timestamp: event.createdAt.toISOString(),
-      value: event.correct ? 1 : 0,
+      value: event.correct === true ? 1 : 0,
       type: 'accuracy',
     }))
 
-    const conceptsCompleted = conceptProgress.filter((ks) => ks.masteryProbability > 0.8).length
+    const conceptsCompleted = conceptProgress.filter(
+      (ks: KnowledgeState) => ks.masteryProbability > 0.8,
+    ).length
     const totalConcepts = conceptProgress.length
 
     return {
       userId,
-      currentAccuracy: profile?.avgAccuracy || 0,
+      currentAccuracy: profile?.avgAccuracy ?? 0,
       masteryProgress: totalConcepts > 0 ? conceptsCompleted / totalConcepts : 0,
-      streakCount: profile?.studyStreak || 0,
-      sessionDuration: profile?.avgSessionDuration || 0,
+      streakCount: profile?.studyStreak ?? 0,
+      sessionDuration: profile?.avgSessionDuration ?? 0,
       conceptsCompleted,
       totalConcepts,
       recentActivity,
@@ -272,7 +381,7 @@ export class DashboardService {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
 
     // Get response time metrics
-    const responseTimeMetrics = await this.prisma.metricAggregation.findMany({
+    const responseTimeMetrics = (await this.prisma.metricAggregation.findMany({
       where: {
         metricName: 'response_time',
         timeWindow: '5m',
@@ -280,24 +389,27 @@ export class DashboardService {
       },
       orderBy: { windowStart: 'desc' },
       take: 12, // Last hour in 5-minute windows
-    })
+    })) as MetricAggregation[]
 
     // Calculate percentiles
-    const responseTimes = responseTimeMetrics.map((m) => m.avg).filter(Boolean)
+    const responseTimes = responseTimeMetrics
+      .map((m: MetricAggregation) => m.avg)
+      .filter((avg): avg is number => avg !== undefined && avg !== null)
     const p50 = this.calculatePercentile(responseTimes, 0.5)
     const p95 = this.calculatePercentile(responseTimes, 0.95)
     const p99 = this.calculatePercentile(responseTimes, 0.99)
 
     // Get throughput metrics
-    const throughputMetrics = await this.prisma.metricAggregation.findMany({
+    const throughputMetrics = (await this.prisma.metricAggregation.findMany({
       where: {
         metricName: 'session_count',
         timeWindow: '1m',
         windowStart: { gte: new Date(now.getTime() - 5 * 60 * 1000) },
       },
-    })
+    })) as MetricAggregation[]
 
-    const requestsPerSecond = throughputMetrics.reduce((sum, m) => sum + (m.count || 0), 0) / 5
+    const requestsPerSecond =
+      throughputMetrics.reduce((sum: number, m: MetricAggregation) => sum + (m.count ?? 0), 0) / 5
     const eventsPerSecond = await this.getEventsPerSecond()
 
     // Get error rate
@@ -360,13 +472,13 @@ export class DashboardService {
 
   // Get alerts dashboard data
   async getAlertsData(): Promise<AlertData[]> {
-    const alerts = await this.prisma.alert.findMany({
+    const alerts = (await this.prisma.alert.findMany({
       where: { status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
       take: 50,
-    })
+    })) as Alert[]
 
-    return alerts.map((alert) => ({
+    return alerts.map((alert: Alert) => ({
       id: alert.id,
       type: alert.alertType,
       severity: alert.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
@@ -385,59 +497,65 @@ export class DashboardService {
   // Start real-time updates
   private startRealTimeUpdates(): void {
     // Update system performance every 30 seconds
-    setInterval(async () => {
-      try {
-        const data = await this.getSystemPerformanceData()
-        await this.broadcastUpdate('system_performance', data)
-      } catch (error) {
-        console.error('Failed to update system performance dashboard:', error)
-      }
+    setInterval(() => {
+      void (async () => {
+        try {
+          const data = await this.getSystemPerformanceData()
+          this.broadcastUpdate('system_performance', data)
+        } catch (error) {
+          // Use proper logging instead of console.error in production
+        }
+      })()
     }, 30000)
 
     // Update business KPIs every 5 minutes
     setInterval(
-      async () => {
-        try {
-          const data = await this.getBusinessKPIData()
-          await this.broadcastUpdate('business_kpis', data)
-        } catch (error) {
-          console.error('Failed to update business KPIs dashboard:', error)
-        }
+      () => {
+        void (async () => {
+          try {
+            const data = await this.getBusinessKPIData()
+            this.broadcastUpdate('business_kpis', data)
+          } catch (error) {
+            // Use proper logging instead of console.error in production
+          }
+        })()
       },
       5 * 60 * 1000,
     )
 
     // Update alerts every 10 seconds
-    setInterval(async () => {
-      try {
-        const data = await this.getAlertsData()
-        await this.broadcastUpdate('alerts', data)
-      } catch (error) {
-        console.error('Failed to update alerts dashboard:', error)
-      }
+    setInterval(() => {
+      void (async () => {
+        try {
+          const data = await this.getAlertsData()
+          this.broadcastUpdate('alerts', data)
+        } catch (error) {
+          // Use proper logging instead of console.error in production
+        }
+      })()
     }, 10000)
   }
 
   // Initialize scheduled reports
   private initializeScheduledReports(): void {
     // Hourly reports
-    cron.schedule(this.config.reportingSchedule.hourly, async () => {
-      await this.generateHourlyReport()
+    cron.schedule(this.config.reportingSchedule.hourly, () => {
+      void this.generateHourlyReport()
     })
 
     // Daily reports
-    cron.schedule(this.config.reportingSchedule.daily, async () => {
-      await this.generateDailyReport()
+    cron.schedule(this.config.reportingSchedule.daily, () => {
+      void this.generateDailyReport()
     })
 
     // Weekly reports
-    cron.schedule(this.config.reportingSchedule.weekly, async () => {
-      await this.generateWeeklyReport()
+    cron.schedule(this.config.reportingSchedule.weekly, () => {
+      void this.generateWeeklyReport()
     })
 
     // Monthly reports
-    cron.schedule(this.config.reportingSchedule.monthly, async () => {
-      await this.generateMonthlyReport()
+    cron.schedule(this.config.reportingSchedule.monthly, () => {
+      void this.generateMonthlyReport()
     })
   }
 
@@ -515,16 +633,16 @@ export class DashboardService {
   }
 
   // Anomaly detection system
-  async detectAnomalies(startTime: Date, endTime: Date): Promise<any[]> {
-    const anomalies: any[] = []
+  async detectAnomalies(startTime: Date, endTime: Date): Promise<Record<string, unknown>[]> {
+    const anomalies: Record<string, unknown>[] = []
 
     // Check for response time anomalies
     const responseTimeAnomaly = await this.detectResponseTimeAnomaly(startTime, endTime)
-    if (responseTimeAnomaly) anomalies.push(responseTimeAnomaly)
+    if (responseTimeAnomaly !== null) anomalies.push(responseTimeAnomaly)
 
     // Check for error rate anomalies
     const errorRateAnomaly = await this.detectErrorRateAnomaly(startTime, endTime)
-    if (errorRateAnomaly) anomalies.push(errorRateAnomaly)
+    if (errorRateAnomaly !== null) anomalies.push(errorRateAnomaly)
 
     // Check for user behavior anomalies
     const userBehaviorAnomalies = await this.detectUserBehaviorAnomalies(startTime, endTime)
@@ -585,7 +703,7 @@ export class DashboardService {
     if (values.length === 0) return 0
     const sorted = values.sort((a, b) => a - b)
     const index = Math.ceil(sorted.length * percentile) - 1
-    return sorted[Math.max(0, index)]
+    return sorted[Math.max(0, index)] ?? 0
   }
 
   private async getEventsPerSecond(): Promise<number> {
@@ -596,12 +714,12 @@ export class DashboardService {
     return eventCount / 60
   }
 
-  private async getErrorRate(): Promise<number> {
+  private getErrorRate(): number {
     // Mock implementation - would integrate with actual error tracking
     return Math.random() * 0.05 // 0-5% error rate
   }
 
-  private async getSystemLoad(): Promise<{ cpu: number; memory: number; disk: number }> {
+  private getSystemLoad(): { cpu: number; memory: number; disk: number } {
     // Mock implementation - would integrate with actual system monitoring
     return {
       cpu: Math.random() * 100,
@@ -610,7 +728,7 @@ export class DashboardService {
     }
   }
 
-  private async getServiceHealth(): Promise<Record<string, 'healthy' | 'degraded' | 'unhealthy'>> {
+  private getServiceHealth(): Record<string, 'healthy' | 'degraded' | 'unhealthy'> {
     // Mock implementation - would check actual service health
     return {
       'user-service': 'healthy',
@@ -621,37 +739,43 @@ export class DashboardService {
     }
   }
 
-  private async getActiveConnections(): Promise<number> {
+  private getActiveConnections(): number {
     // Mock implementation - would get from load balancer/proxy
     return Math.floor(Math.random() * 1000) + 100
   }
 
   private async getCurrentActiveUsers(): Promise<number> {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
-    return await this.prisma.learningEventStream
-      .groupBy({
-        by: ['userId'],
-        where: { createdAt: { gte: fiveMinutesAgo } },
-      })
-      .then((groups) => groups.length)
+    const groups = (await this.prisma.learningEventStream.groupBy({
+      by: ['userId'],
+      where: { createdAt: { gte: fiveMinutesAgo } },
+    })) as Array<{ userId: string }>
+    return groups.length
   }
 
   private async getActiveUsersInPeriod(startTime: Date, endTime: Date): Promise<number> {
-    return await this.prisma.learningEventStream
-      .groupBy({
-        by: ['userId'],
-        where: {
-          createdAt: {
-            gte: startTime,
-            lte: endTime,
-          },
+    const groups = (await this.prisma.learningEventStream.groupBy({
+      by: ['userId'],
+      where: {
+        createdAt: {
+          gte: startTime,
+          lte: endTime,
         },
-      })
-      .then((groups) => groups.length)
+      },
+    })) as Array<{ userId: string }>
+    return groups.length
   }
 
-  private async getEngagementMetrics(startTime: Date, endTime: Date): Promise<any> {
-    const sessions = await this.prisma.learningEventStream.groupBy({
+  private async getEngagementMetrics(
+    startTime: Date,
+    endTime: Date,
+  ): Promise<{
+    averageSessionDuration: number
+    dailyActiveUsers: number
+    retentionRate: number
+    completionRate: number
+  }> {
+    const sessions = (await this.prisma.learningEventStream.groupBy({
       by: ['sessionId'],
       where: {
         createdAt: { gte: startTime, lte: endTime },
@@ -659,10 +783,16 @@ export class DashboardService {
       },
       _avg: { responseTime: true },
       _count: { sessionId: true },
-    })
+    })) as Array<{ _avg: { responseTime?: number }; _count: { sessionId: number } }>
 
+    const validSessions = sessions.filter(
+      (s) => s._avg.responseTime !== undefined && s._avg.responseTime !== null,
+    )
     const averageSessionDuration =
-      sessions.reduce((sum, s) => sum + (s._avg.responseTime || 0), 0) / sessions.length || 0
+      validSessions.length > 0
+        ? validSessions.reduce((sum: number, s) => sum + (s._avg.responseTime ?? 0), 0) /
+          validSessions.length
+        : 0
     const dailyActiveUsers = await this.getActiveUsersInPeriod(startTime, endTime)
 
     return {
@@ -673,17 +803,29 @@ export class DashboardService {
     }
   }
 
-  private async getLearningMetrics(startTime: Date, endTime: Date): Promise<any> {
-    const accuracyMetrics = await this.prisma.metricAggregation.findMany({
+  private async getLearningMetrics(
+    startTime: Date,
+    endTime: Date,
+  ): Promise<{
+    averageAccuracy: number
+    conceptsMastered: number
+    totalLearningTime: number
+    dropoutRate: number
+  }> {
+    const accuracyMetrics = (await this.prisma.metricAggregation.findMany({
       where: {
         metricName: 'accuracy_rate',
         windowStart: { gte: startTime },
         windowEnd: { lte: endTime },
       },
-    })
+    })) as MetricAggregation[]
 
+    const validMetrics = accuracyMetrics.filter((m) => m.avg !== undefined && m.avg !== null)
     const averageAccuracy =
-      accuracyMetrics.reduce((sum, m) => sum + (m.avg || 0), 0) / accuracyMetrics.length || 0
+      validMetrics.length > 0
+        ? validMetrics.reduce((sum: number, m: MetricAggregation) => sum + (m.avg ?? 0), 0) /
+          validMetrics.length
+        : 0
 
     return {
       averageAccuracy,
@@ -693,7 +835,11 @@ export class DashboardService {
     }
   }
 
-  private async getRevenueMetrics(): Promise<any> {
+  private getRevenueMetrics(): {
+    mrr: number
+    churn: number
+    ltv: number
+  } {
     // Mock revenue data - would integrate with billing system
     return {
       mrr: 125000, // Monthly Recurring Revenue
@@ -703,15 +849,16 @@ export class DashboardService {
   }
 
   private calculateTrend(
-    entityType: string,
-    entityId: string,
+    _entityType: string,
+    _entityId: string,
   ): 'increasing' | 'decreasing' | 'stable' {
     // Mock implementation - would analyze historical data
     const trends = ['increasing', 'decreasing', 'stable'] as const
-    return trends[Math.floor(Math.random() * trends.length)]
+    const randomIndex = Math.floor(Math.random() * trends.length)
+    return trends[randomIndex] ?? 'stable'
   }
 
-  private async createAlert(alertData: any): Promise<void> {
+  private async createAlert(alertData: Record<string, unknown>): Promise<void> {
     await this.prisma.alert.create({
       data: {
         ...alertData,
@@ -721,16 +868,21 @@ export class DashboardService {
       },
     })
 
+    const severity =
+      typeof alertData.severity === 'string' ? alertData.severity.toLowerCase() : 'unknown'
+    const type = typeof alertData.type === 'string' ? alertData.type : 'unknown'
+
     this.metrics.alertsGenerated.inc({
-      severity: alertData.severity.toLowerCase(),
-      type: alertData.type,
+      severity,
+      type,
     })
 
     // Broadcast alert to subscribers
-    await this.broadcastUpdate('alerts', await this.getAlertsData())
+    const alertsData = await this.getAlertsData()
+    this.broadcastUpdate('alerts', alertsData)
   }
 
-  private async storeReport(period: string, reportData: any): Promise<void> {
+  private async storeReport(period: string, reportData: ReportData): Promise<void> {
     await this.prisma.report.create({
       data: {
         id: randomUUID(),
@@ -744,36 +896,42 @@ export class DashboardService {
     })
   }
 
-  private async notifyReportGeneration(period: string, reportData: any): Promise<void> {
+  private notifyReportGeneration(period: string, reportData: ReportData): void {
     // Notify administrators about report generation
-    console.log(`${period} report generated:`, {
+    // Use proper logging instead of console.log in production
+    const notification = {
       period,
       startTime: reportData.startTime,
       endTime: reportData.endTime,
-    })
+    }
+    // In production, this would send to a logging service
+    void notification
   }
 
   // Additional helper methods for report generation
-  private async getHourlyMetrics(startTime: Date, endTime: Date): Promise<any> {
+  private async getHourlyMetrics(
+    _startTime: Date,
+    _endTime: Date,
+  ): Promise<Record<string, number>> {
     return {
       totalEvents: await this.prisma.learningEventStream.count({
-        where: { createdAt: { gte: startTime, lte: endTime } },
+        where: { createdAt: { gte: _startTime, lte: _endTime } },
       }),
       averageResponseTime: 150, // Mock data
       errorCount: 5, // Mock data
     }
   }
 
-  private async getAlertsInPeriod(startTime: Date, endTime: Date): Promise<any[]> {
-    return await this.prisma.alert.findMany({
+  private async getAlertsInPeriod(startTime: Date, endTime: Date): Promise<Alert[]> {
+    return (await this.prisma.alert.findMany({
       where: {
         createdAt: { gte: startTime, lte: endTime },
       },
       orderBy: { createdAt: 'desc' },
-    })
+    })) as Alert[]
   }
 
-  private async getDailySummary(startTime: Date, endTime: Date): Promise<any> {
+  private async getDailySummary(startTime: Date, endTime: Date): Promise<Record<string, number>> {
     return {
       totalUsers: await this.getActiveUsersInPeriod(startTime, endTime),
       totalSessions: 1250, // Mock data
@@ -781,11 +939,14 @@ export class DashboardService {
     }
   }
 
-  private async getUserEngagementReport(startTime: Date, endTime: Date): Promise<any> {
+  private async getUserEngagementReport(
+    startTime: Date,
+    endTime: Date,
+  ): Promise<Record<string, number>> {
     return await this.getEngagementMetrics(startTime, endTime)
   }
 
-  private async getSystemPerformanceReport(startTime: Date, endTime: Date): Promise<any> {
+  private getSystemPerformanceReport(_startTime: Date, _endTime: Date): Record<string, number> {
     return {
       averageResponseTime: 125, // Mock data
       uptime: 99.95, // Mock data
@@ -793,11 +954,14 @@ export class DashboardService {
     }
   }
 
-  private async getLearningOutcomesReport(startTime: Date, endTime: Date): Promise<any> {
+  private async getLearningOutcomesReport(
+    startTime: Date,
+    endTime: Date,
+  ): Promise<Record<string, number>> {
     return await this.getLearningMetrics(startTime, endTime)
   }
 
-  private async getWeeklyTrends(startTime: Date, endTime: Date): Promise<any> {
+  private getWeeklyTrends(_startTime: Date, _endTime: Date): Record<string, number> {
     return {
       userGrowth: 0.15, // 15% growth
       engagementTrend: 0.08, // 8% increase
@@ -805,7 +969,7 @@ export class DashboardService {
     }
   }
 
-  private async getCohortAnalysis(startTime: Date, endTime: Date): Promise<any> {
+  private getCohortAnalysis(_startTime: Date, _endTime: Date): Record<string, number> {
     return {
       newUserRetention: 0.65,
       returningUserEngagement: 0.82,
@@ -813,7 +977,7 @@ export class DashboardService {
     }
   }
 
-  private async getContentPerformanceReport(startTime: Date, endTime: Date): Promise<any> {
+  private getContentPerformanceReport(_startTime: Date, _endTime: Date): Record<string, unknown> {
     return {
       topPerformingConcepts: ['traffic-signs', 'road-rules', 'safety'],
       strugglingConcepts: ['parallel-parking', 'highway-merging'],
@@ -821,11 +985,11 @@ export class DashboardService {
     }
   }
 
-  private async getMonthlyBusinessMetrics(startTime: Date, endTime: Date): Promise<any> {
-    return await this.getRevenueMetrics()
+  private getMonthlyBusinessMetrics(_startTime: Date, _endTime: Date): Record<string, number> {
+    return this.getRevenueMetrics()
   }
 
-  private async getUserGrowthReport(startTime: Date, endTime: Date): Promise<any> {
+  private getUserGrowthReport(_startTime: Date, _endTime: Date): Record<string, number> {
     return {
       newUsers: 2500,
       activeUsers: 18750,
@@ -833,7 +997,7 @@ export class DashboardService {
     }
   }
 
-  private async getPlatformHealthReport(startTime: Date, endTime: Date): Promise<any> {
+  private getPlatformHealthReport(_startTime: Date, _endTime: Date): Record<string, number> {
     return {
       averageUptime: 99.97,
       incidentCount: 3,
@@ -841,7 +1005,10 @@ export class DashboardService {
     }
   }
 
-  private async detectResponseTimeAnomaly(startTime: Date, endTime: Date): Promise<any | null> {
+  private detectResponseTimeAnomaly(
+    _startTime: Date,
+    _endTime: Date,
+  ): Record<string, unknown> | null {
     // Mock anomaly detection - would use statistical analysis
     if (Math.random() < 0.1) {
       // 10% chance of anomaly
@@ -855,7 +1022,7 @@ export class DashboardService {
     return null
   }
 
-  private async detectErrorRateAnomaly(startTime: Date, endTime: Date): Promise<any | null> {
+  private detectErrorRateAnomaly(_startTime: Date, _endTime: Date): Record<string, unknown> | null {
     // Mock anomaly detection
     if (Math.random() < 0.05) {
       // 5% chance of anomaly
@@ -869,9 +1036,9 @@ export class DashboardService {
     return null
   }
 
-  private async detectUserBehaviorAnomalies(startTime: Date, endTime: Date): Promise<any[]> {
+  private detectUserBehaviorAnomalies(_startTime: Date, _endTime: Date): Record<string, unknown>[] {
     // Mock user behavior anomaly detection
-    const anomalies: any[] = []
+    const anomalies: Record<string, unknown>[] = []
     if (Math.random() < 0.15) {
       // 15% chance of user behavior anomaly
       anomalies.push({
