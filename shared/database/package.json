@@ -1,0 +1,44 @@
+{
+  "name": "@adaptive-learning/database",
+  "version": "1.0.0",
+  "description": "Shared database schema and utilities for Adaptive Learning Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "generate": "drizzle-kit generate:pg",
+    "migrate": "tsx src/cli.ts migration run",
+    "studio": "drizzle-kit studio",
+    "seed": "tsx src/cli.ts seed run",
+    "cli": "tsx src/cli.ts",
+    "test-connection": "tsx src/cli.ts connection test",
+    "validate-schema": "tsx src/cli.ts schema validate",
+    "test-migrations": "node test-migrations.js",
+    "validate-migrations": "tsx src/validate-migrations.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.29.0",
+    "postgres": "^3.4.3",
+    "uuid": "^9.0.1",
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.7",
+    "drizzle-kit": "^0.20.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  },
+  "bin": {
+    "db-cli": "dist/cli.js"
+  },
+  "keywords": [
+    "database",
+    "drizzle",
+    "postgresql",
+    "adaptive-learning"
+  ],
+  "author": "Adaptive Learning Platform Team",
+  "license": "MIT"
+}
