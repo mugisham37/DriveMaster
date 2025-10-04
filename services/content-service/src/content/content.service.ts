@@ -3,18 +3,30 @@ import {
     NotFoundException,
     ConflictException,
     BadRequestException,
+    ForbiddenException,
     Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, In, DataSource } from 'typeorm';
 import { Item, ItemStatus } from './entities/item.entity';
 import { MediaAsset, MediaType } from './entities/media-asset.entity';
+import { WorkflowHistory, WorkflowAction } from './entities/workflow-history.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { QueryItemsDto } from './dto/query-items.dto';
 import { UploadMediaDto } from './dto/upload-media.dto';
+import {
+    SubmitForReviewDto,
+    ReviewItemDto,
+    AssignReviewerDto,
+    PublishItemDto,
+    WorkflowHistoryEntry,
+    BulkWorkflowDto,
+    BulkWorkflowResult,
+} from './dto/workflow.dto';
 import { S3Service } from '../services/s3.service';
 import { ValidationService } from '../services/validation.service';
+import { NotificationService } from '../services/notification.service';
 
 export interface PaginatedResult<T> {
     items: T[];
@@ -37,9 +49,12 @@ export class ContentService {
         private readonly itemRepository: Repository<Item>,
         @InjectRepository(MediaAsset)
         private readonly mediaRepository: Repository<MediaAsset>,
+        @InjectRepository(WorkflowHistory)
+        private readonly workflowHistoryRepository: Repository<WorkflowHistory>,
         private readonly dataSource: DataSource,
         private readonly s3Service: S3Service,
         private readonly validationService: ValidationService,
+        private readonly notificationService: NotificationService,
     ) { }
 
     async createItem(createItemDto: CreateItemDto, createdBy: string): Promise<Item> {
@@ -491,5 +506,481 @@ export class ContentService {
         ];
 
         return contentFields.some(field => updateDto[field] !== undefined);
+    }
+
+    // Workflow Management Methods
+
+    async submitForReview(
+        itemId: string,
+        submitDto: SubmitForReviewDto,
+        submittedBy: string,
+    ): Promise<Item> {
+        const item = await this.getItem(itemId);
+
+        // Validate current status
+        if (item.status !== ItemStatus.DRAFT) {
+            throw new BadRequestException(
+                `Item must be in draft status to submit for review. Current status: ${item.status}`
+            );
+        }
+
+        // Validate item is complete enough for review
+        this.validateItemForReview(item);
+
+        const previousStatus = item.status;
+
+        // Update item status
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            status: ItemStatus.UNDER_REVIEW,
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.SUBMITTED_FOR_REVIEW,
+            submittedBy,
+            previousStatus,
+            ItemStatus.UNDER_REVIEW,
+            submitDto.message,
+        );
+
+        // Send notifications
+        await this.notificationService.notifyStatusChange(
+            updatedItem,
+            WorkflowAction.SUBMITTED_FOR_REVIEW,
+            previousStatus,
+            submittedBy,
+            submitDto.message,
+        );
+
+        this.logger.log(`Item ${itemId} submitted for review by ${submittedBy}`);
+        return updatedItem;
+    }
+
+    async assignReviewer(
+        itemId: string,
+        assignDto: AssignReviewerDto,
+        assignedBy: string,
+    ): Promise<Item> {
+        const item = await this.getItem(itemId);
+
+        // Validate current status
+        if (item.status !== ItemStatus.UNDER_REVIEW) {
+            throw new BadRequestException(
+                `Item must be under review to assign reviewer. Current status: ${item.status}`
+            );
+        }
+
+        // Update reviewer assignment
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            reviewedBy: assignDto.reviewerId,
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.ASSIGNED_REVIEWER,
+            assignedBy,
+            item.status,
+            item.status,
+            assignDto.message,
+            { reviewerId: assignDto.reviewerId },
+        );
+
+        // Send notification to assigned reviewer
+        await this.notificationService.notifyReviewAssignment(
+            updatedItem,
+            assignDto.reviewerId,
+            assignedBy,
+            assignDto.message,
+        );
+
+        this.logger.log(`Reviewer ${assignDto.reviewerId} assigned to item ${itemId} by ${assignedBy}`);
+        return updatedItem;
+    }
+
+    async reviewItem(
+        itemId: string,
+        reviewDto: ReviewItemDto,
+        reviewedBy: string,
+    ): Promise<Item> {
+        const item = await this.getItem(itemId);
+
+        // Validate current status
+        if (item.status !== ItemStatus.UNDER_REVIEW) {
+            throw new BadRequestException(
+                `Item must be under review to complete review. Current status: ${item.status}`
+            );
+        }
+
+        // Validate reviewer authorization (if assigned)
+        if (item.reviewedBy && item.reviewedBy !== reviewedBy) {
+            throw new ForbiddenException(
+                `Only the assigned reviewer can review this item. Assigned to: ${item.reviewedBy}`
+            );
+        }
+
+        const previousStatus = item.status;
+        const newStatus = reviewDto.decision;
+
+        // Update item based on review decision
+        const updateData: Partial<Item> = {
+            status: newStatus,
+            reviewedBy: reviewedBy,
+            updatedAt: new Date(),
+        };
+
+        if (newStatus === ItemStatus.APPROVED) {
+            updateData.approvedBy = reviewedBy;
+        } else {
+            // If rejected, reset approval
+            updateData.approvedBy = null;
+        }
+
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            ...updateData,
+        });
+
+        // Record workflow history
+        const action = newStatus === ItemStatus.APPROVED ? WorkflowAction.APPROVED : WorkflowAction.REJECTED;
+        await this.recordWorkflowAction(
+            itemId,
+            action,
+            reviewedBy,
+            previousStatus,
+            newStatus,
+            reviewDto.comments,
+            { suggestedChanges: reviewDto.suggestedChanges },
+        );
+
+        // Send notifications
+        await this.notificationService.notifyStatusChange(
+            updatedItem,
+            action,
+            previousStatus,
+            reviewedBy,
+            reviewDto.comments,
+        );
+
+        this.logger.log(`Item ${itemId} ${action} by ${reviewedBy}`);
+        return updatedItem;
+    }
+
+    async publishItem(
+        itemId: string,
+        publishDto: PublishItemDto,
+        publishedBy: string,
+    ): Promise<Item> {
+        const item = await this.getItem(itemId);
+
+        // Validate current status
+        if (item.status !== ItemStatus.APPROVED) {
+            throw new BadRequestException(
+                `Item must be approved to publish. Current status: ${item.status}`
+            );
+        }
+
+        const previousStatus = item.status;
+        const publishedAt = publishDto.scheduledAt ? new Date(publishDto.scheduledAt) : new Date();
+
+        // Update item status
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            status: ItemStatus.PUBLISHED,
+            publishedAt,
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.PUBLISHED,
+            publishedBy,
+            previousStatus,
+            ItemStatus.PUBLISHED,
+            publishDto.notes,
+            { scheduledAt: publishedAt.toISOString() },
+        );
+
+        // Send notifications
+        await this.notificationService.notifyStatusChange(
+            updatedItem,
+            WorkflowAction.PUBLISHED,
+            previousStatus,
+            publishedBy,
+            publishDto.notes,
+        );
+
+        this.logger.log(`Item ${itemId} published by ${publishedBy} at ${publishedAt}`);
+        return updatedItem;
+    }
+
+    async archiveItem(itemId: string, archivedBy: string, reason?: string): Promise<Item> {
+        const item = await this.getItem(itemId);
+
+        const previousStatus = item.status;
+
+        // Update item status
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            status: ItemStatus.ARCHIVED,
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.ARCHIVED,
+            archivedBy,
+            previousStatus,
+            ItemStatus.ARCHIVED,
+            reason,
+        );
+
+        // Send notifications
+        await this.notificationService.notifyStatusChange(
+            updatedItem,
+            WorkflowAction.ARCHIVED,
+            previousStatus,
+            archivedBy,
+            reason,
+        );
+
+        this.logger.log(`Item ${itemId} archived by ${archivedBy}`);
+        return updatedItem;
+    }
+
+    async restoreItem(itemId: string, restoredBy: string, reason?: string): Promise<Item> {
+        const item = await this.getItem(itemId, true); // Include inactive items
+
+        if (item.status !== ItemStatus.ARCHIVED) {
+            throw new BadRequestException(
+                `Only archived items can be restored. Current status: ${item.status}`
+            );
+        }
+
+        const previousStatus = item.status;
+
+        // Restore to draft status for re-review
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            status: ItemStatus.DRAFT,
+            reviewedBy: null,
+            approvedBy: null,
+            publishedAt: null,
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.RESTORED,
+            restoredBy,
+            previousStatus,
+            ItemStatus.DRAFT,
+            reason,
+        );
+
+        // Send notifications
+        await this.notificationService.notifyStatusChange(
+            updatedItem,
+            WorkflowAction.RESTORED,
+            previousStatus,
+            restoredBy,
+            reason,
+        );
+
+        this.logger.log(`Item ${itemId} restored by ${restoredBy}`);
+        return updatedItem;
+    }
+
+    async getWorkflowHistory(itemId: string): Promise<WorkflowHistoryEntry[]> {
+        const history = await this.workflowHistoryRepository.find({
+            where: { itemId },
+            order: { createdAt: 'DESC' },
+        });
+
+        return history.map(entry => ({
+            action: entry.action,
+            performedBy: entry.performedBy,
+            timestamp: entry.createdAt,
+            previousStatus: entry.previousStatus,
+            newStatus: entry.newStatus,
+            comments: entry.comments,
+            metadata: entry.metadata,
+        }));
+    }
+
+    async bulkWorkflowOperation(
+        bulkDto: BulkWorkflowDto,
+        performedBy: string,
+    ): Promise<BulkWorkflowResult> {
+        const result: BulkWorkflowResult = {
+            successful: [],
+            failed: [],
+            totalProcessed: bulkDto.itemIds.length,
+            successCount: 0,
+            failureCount: 0,
+        };
+
+        for (const itemId of bulkDto.itemIds) {
+            try {
+                switch (bulkDto.action) {
+                    case 'submit_for_review':
+                        await this.submitForReview(itemId, { message: bulkDto.comments }, performedBy);
+                        break;
+                    case 'approve':
+                        await this.reviewItem(
+                            itemId,
+                            {
+                                decision: ItemStatus.APPROVED,
+                                comments: bulkDto.comments || 'Bulk approval',
+                            },
+                            performedBy,
+                        );
+                        break;
+                    case 'reject':
+                        await this.reviewItem(
+                            itemId,
+                            {
+                                decision: ItemStatus.DRAFT,
+                                comments: bulkDto.comments || 'Bulk rejection',
+                            },
+                            performedBy,
+                        );
+                        break;
+                    case 'publish':
+                        await this.publishItem(itemId, { notes: bulkDto.comments }, performedBy);
+                        break;
+                    case 'archive':
+                        await this.archiveItem(itemId, performedBy, bulkDto.comments);
+                        break;
+                    default:
+                        throw new BadRequestException(`Unsupported bulk action: ${bulkDto.action}`);
+                }
+
+                result.successful.push(itemId);
+                result.successCount++;
+            } catch (error) {
+                result.failed.push({
+                    itemId,
+                    error: error.message,
+                });
+                result.failureCount++;
+                this.logger.error(`Bulk operation failed for item ${itemId}: ${error.message}`);
+            }
+        }
+
+        this.logger.log(
+            `Bulk ${bulkDto.action} completed: ${result.successCount} successful, ${result.failureCount} failed`
+        );
+
+        return result;
+    }
+
+    async rollbackToVersion(itemId: string, targetVersion: number, performedBy: string): Promise<Item> {
+        // In a full implementation, this would restore from a versions table
+        // For now, we'll implement a basic rollback that resets to draft
+        const item = await this.getItem(itemId);
+
+        if (targetVersion >= item.version) {
+            throw new BadRequestException(
+                `Target version ${targetVersion} must be less than current version ${item.version}`
+            );
+        }
+
+        const previousStatus = item.status;
+
+        // Reset to draft for re-review after rollback
+        const updatedItem = await this.itemRepository.save({
+            ...item,
+            status: ItemStatus.DRAFT,
+            reviewedBy: null,
+            approvedBy: null,
+            publishedAt: null,
+            version: item.version + 1, // Increment version for the rollback
+            updatedAt: new Date(),
+        });
+
+        // Record workflow history
+        await this.recordWorkflowAction(
+            itemId,
+            WorkflowAction.UPDATED,
+            performedBy,
+            previousStatus,
+            ItemStatus.DRAFT,
+            `Rolled back to version ${targetVersion}`,
+            { targetVersion, rollback: true },
+        );
+
+        this.logger.log(`Item ${itemId} rolled back to version ${targetVersion} by ${performedBy}`);
+        return updatedItem;
+    }
+
+    private async recordWorkflowAction(
+        itemId: string,
+        action: WorkflowAction,
+        performedBy: string,
+        previousStatus: ItemStatus,
+        newStatus: ItemStatus,
+        comments?: string,
+        metadata?: Record<string, any>,
+    ): Promise<void> {
+        const workflowEntry = this.workflowHistoryRepository.create({
+            itemId,
+            action,
+            performedBy,
+            previousStatus,
+            newStatus,
+            comments,
+            metadata,
+        });
+
+        await this.workflowHistoryRepository.save(workflowEntry);
+    }
+
+    private validateItemForReview(item: Item): void {
+        const errors: string[] = [];
+
+        // Check required content
+        if (!item.content?.text?.trim()) {
+            errors.push('Item must have question text');
+        }
+
+        if (!item.choices || item.choices.length < 2) {
+            errors.push('Item must have at least 2 choices');
+        }
+
+        if (!item.correct?.choiceIds?.length) {
+            errors.push('Item must have correct answer(s) specified');
+        }
+
+        if (!item.topics || item.topics.length === 0) {
+            errors.push('Item must have at least one topic assigned');
+        }
+
+        if (!item.jurisdictions || item.jurisdictions.length === 0) {
+            errors.push('Item must have at least one jurisdiction assigned');
+        }
+
+        // Validate choice references
+        if (item.choices && item.correct?.choiceIds) {
+            const choiceIds = item.choices.map(c => c.id);
+            const invalidRefs = item.correct.choiceIds.filter(id => !choiceIds.includes(id));
+            if (invalidRefs.length > 0) {
+                errors.push(`Invalid choice references: ${invalidRefs.join(', ')}`);
+            }
+        }
+
+        if (errors.length > 0) {
+            throw new BadRequestException(
+                `Item is not ready for review: ${errors.join('; ')}`
+            );
+        }
     }
 }
