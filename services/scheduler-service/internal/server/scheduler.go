@@ -23,17 +23,18 @@ import (
 type SchedulerService struct {
 	pb.UnimplementedSchedulerServiceServer
 
-	config       *config.Config
-	logger       *logger.Logger
-	metrics      *metrics.Metrics
-	db           *database.DB
-	cache        *cache.RedisClient
-	sm2Algorithm *algorithms.SM2Algorithm
-	sm2Manager   *state.SM2StateManager
-	bktAlgorithm *algorithms.BKTAlgorithm
-	bktManager   *state.BKTStateManager
-	irtAlgorithm *algorithms.IRTAlgorithm
-	irtManager   *state.IRTManager
+	config         *config.Config
+	logger         *logger.Logger
+	metrics        *metrics.Metrics
+	db             *database.DB
+	cache          *cache.RedisClient
+	sm2Algorithm   *algorithms.SM2Algorithm
+	sm2Manager     *state.SM2StateManager
+	bktAlgorithm   *algorithms.BKTAlgorithm
+	bktManager     *state.BKTStateManager
+	irtAlgorithm   *algorithms.IRTAlgorithm
+	irtManager     *state.IRTManager
+	unifiedScoring *algorithms.UnifiedScoringAlgorithm
 }
 
 // NewSchedulerService creates a new scheduler service instance
@@ -62,18 +63,22 @@ func NewSchedulerService(
 	// Initialize IRT state manager
 	irtManager := state.NewIRTManager(db.DB, cache)
 
+	// Initialize unified scoring algorithm
+	unifiedScoring := algorithms.NewUnifiedScoringAlgorithm(log)
+
 	return &SchedulerService{
-		config:       cfg,
-		logger:       log,
-		metrics:      metrics,
-		db:           db,
-		cache:        cache,
-		sm2Algorithm: sm2Algorithm,
-		sm2Manager:   sm2Manager,
-		bktAlgorithm: bktAlgorithm,
-		bktManager:   bktManager,
-		irtAlgorithm: irtAlgorithm,
-		irtManager:   irtManager,
+		config:         cfg,
+		logger:         log,
+		metrics:        metrics,
+		db:             db,
+		cache:          cache,
+		sm2Algorithm:   sm2Algorithm,
+		sm2Manager:     sm2Manager,
+		bktAlgorithm:   bktAlgorithm,
+		bktManager:     bktManager,
+		irtAlgorithm:   irtAlgorithm,
+		irtManager:     irtManager,
+		unifiedScoring: unifiedScoring,
 	}
 }
 
@@ -563,7 +568,7 @@ func (s *SchedulerService) Health(ctx context.Context, req *pb.HealthRequest) (*
 
 // Helper methods for SM-2 integration
 
-// selectItemsWithUnifiedScoring selects items based on SM-2 urgency, BKT mastery gaps, IRT difficulty matching, and session constraints
+// selectItemsWithUnifiedScoring selects items using the unified scoring algorithm
 func (s *SchedulerService) selectItemsWithUnifiedScoring(
 	ctx context.Context,
 	req *pb.NextItemsRequest,
@@ -574,21 +579,57 @@ func (s *SchedulerService) selectItemsWithUnifiedScoring(
 ) []*pb.RecommendedItem {
 	var items []*pb.RecommendedItem
 
-	// Create a map for quick lookup of due items
-	dueItemsMap := make(map[string]bool)
-	for _, itemID := range dueItems {
-		dueItemsMap[itemID] = true
+	// Create session context
+	sessionTypeStr := "practice" // Default
+	switch req.SessionType {
+	case pb.SessionType_PRACTICE:
+		sessionTypeStr = "practice"
+	case pb.SessionType_REVIEW:
+		sessionTypeStr = "review"
+	case pb.SessionType_MOCK_TEST:
+		sessionTypeStr = "mock_test"
+	case pb.SessionType_PLACEMENT:
+		sessionTypeStr = "placement"
 	}
 
-	// Sort items by urgency score (highest first)
-	type itemScore struct {
-		itemID string
-		score  float64
-		isDue  bool
+	sessionContext := &algorithms.SessionContext{
+		SessionID:         req.SessionId,
+		SessionType:       sessionTypeStr,
+		ElapsedTime:       0,          // TODO: Calculate from session start time
+		ItemsCompleted:    0,          // TODO: Get from session state
+		CorrectCount:      0,          // TODO: Get from session state
+		TopicsPracticed:   []string{}, // TODO: Get from session state
+		RecentItems:       req.ExcludeItems,
+		AverageDifficulty: 0.5, // TODO: Calculate from session
+		TargetItemCount:   int(req.Count),
+		TimeRemaining:     45 * time.Minute, // TODO: Get from session constraints
 	}
 
-	var scoredItems []itemScore
-	for itemID, score := range urgencyScores {
+	// Get user's BKT states
+	userBKTStates, err := s.bktManager.GetUserStates(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get user BKT states")
+		userBKTStates = make(map[string]*algorithms.BKTState)
+	}
+
+	// Get user's IRT states - we'll need to get them per topic as needed
+	// For now, create an empty map and populate as needed
+	userIRTStates := make(map[string]*algorithms.IRTState)
+
+	// Determine scoring strategy (could be from A/B testing or user preference)
+	strategy := "balanced" // Default strategy
+	// TODO: Add strategy field to NextItemsRequest proto if needed
+
+	// Score all candidate items
+	type scoredItem struct {
+		itemID   string
+		result   *algorithms.ScoringResult
+		sm2State *algorithms.SM2State
+	}
+
+	var scoredItems []scoredItem
+
+	for itemID := range urgencyScores {
 		// Skip excluded items
 		excluded := false
 		for _, excludeID := range req.ExcludeItems {
@@ -601,63 +642,61 @@ func (s *SchedulerService) selectItemsWithUnifiedScoring(
 			continue
 		}
 
-		scoredItems = append(scoredItems, itemScore{
-			itemID: itemID,
-			score:  score,
-			isDue:  dueItemsMap[itemID],
+		// Create item candidate
+		candidate := &algorithms.ItemCandidate{
+			ItemID:         itemID,
+			Topics:         s.getItemTopicsFromID(itemID), // TODO: Get from item metadata
+			Difficulty:     0.5,                           // TODO: Get from item metadata
+			Discrimination: 1.0,                           // TODO: Get from item metadata
+			Guessing:       0.0,                           // TODO: Get from item metadata
+			EstimatedTime:  60 * time.Second,              // TODO: Get from item metadata
+			AttemptCount:   0,                             // TODO: Get from user attempt history
+			Metadata:       make(map[string]interface{}),
+		}
+
+		// Get SM-2 state
+		sm2State, err := s.sm2Manager.GetState(ctx, req.UserId, itemID)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("item_id", itemID).Debug("Failed to get SM-2 state, using default")
+			sm2State = s.sm2Algorithm.InitializeState()
+		}
+
+		// Compute unified score
+		result, err := s.unifiedScoring.ComputeUnifiedScore(
+			ctx,
+			candidate,
+			sm2State,
+			userBKTStates,
+			userIRTStates,
+			sessionContext,
+			strategy,
+		)
+
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("item_id", itemID).Error("Failed to compute unified score")
+			continue
+		}
+
+		// Skip items that violate constraints
+		if result.UnifiedScore == 0.0 {
+			s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+				"item_id": itemID,
+				"reason":  result.Reason,
+			}).Debug("Item skipped due to constraint violation")
+			continue
+		}
+
+		scoredItems = append(scoredItems, scoredItem{
+			itemID:   itemID,
+			result:   result,
+			sm2State: sm2State,
 		})
 	}
 
-	// Calculate unified scores incorporating BKT mastery gaps and IRT difficulty matching
-	for i := range scoredItems {
-		// TODO: Get item topics from item metadata
-		// For now, assume each item maps to a topic with the same name
-		itemTopic := scoredItems[i].itemID // Placeholder - should be actual topic mapping
-
-		masteryGap := 0.5 // Default gap if topic not found
-		if gap, exists := masteryGaps[itemTopic]; exists {
-			masteryGap = gap
-		}
-
-		// Get IRT difficulty match score
-		// TODO: Get item parameters from item metadata - for now using default values
-		itemParams := &algorithms.ItemParameters{
-			Difficulty:     0.0, // Should come from item calibration
-			Discrimination: 1.0, // Should come from item calibration
-			Guessing:       0.0, // Should come from item calibration
-		}
-
-		difficultyMatch := 0.5 // Default match if IRT state not available
-		if irtScore, err := s.irtManager.GetDifficultyMatch(ctx, req.UserId, itemTopic, itemParams); err == nil {
-			difficultyMatch = irtScore
-		} else {
-			s.logger.WithContext(ctx).WithError(err).WithField("topic", itemTopic).Debug("Failed to get IRT difficulty match")
-		}
-
-		// Unified scoring: SM-2 urgency (30%) + BKT mastery gap (40%) + IRT difficulty match (30%)
-		unifiedScore := 0.3*scoredItems[i].score + 0.4*masteryGap + 0.3*difficultyMatch
-		scoredItems[i].score = unifiedScore
-
-		s.logger.WithContext(ctx).WithFields(map[string]interface{}{
-			"item_id":          scoredItems[i].itemID,
-			"topic":            itemTopic,
-			"sm2_urgency":      scoredItems[i].score,
-			"mastery_gap":      masteryGap,
-			"difficulty_match": difficultyMatch,
-			"unified_score":    unifiedScore,
-		}).Debug("Calculated unified item score")
-	}
-
-	// Sort by priority: due items first, then by combined score
+	// Sort items by unified score (highest first)
 	for i := 0; i < len(scoredItems)-1; i++ {
 		for j := i + 1; j < len(scoredItems); j++ {
-			// Prioritize due items
-			if scoredItems[i].isDue != scoredItems[j].isDue {
-				if scoredItems[j].isDue {
-					scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
-				}
-			} else if scoredItems[j].score > scoredItems[i].score {
-				// Within same due status, sort by combined score
+			if scoredItems[j].result.UnifiedScore > scoredItems[i].result.UnifiedScore {
 				scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
 			}
 		}
@@ -672,29 +711,30 @@ func (s *SchedulerService) selectItemsWithUnifiedScoring(
 	for i := 0; i < count; i++ {
 		item := scoredItems[i]
 
-		// Get SM-2 state for additional information
-		state, err := s.sm2Manager.GetState(ctx, req.UserId, item.itemID)
-		if err != nil {
-			s.logger.WithContext(ctx).WithError(err).WithField("item_id", item.itemID).Warn("Failed to get SM-2 state for item")
-			continue
-		}
-
 		// Calculate predicted correctness based on retention probability
-		predictedCorrectness := s.sm2Algorithm.GetRetentionProbability(state, currentTime)
-
-		// Generate reason for recommendation
-		reason := s.generateRecommendationReason(state, item.isDue, currentTime)
+		predictedCorrectness := s.sm2Algorithm.GetRetentionProbability(item.sm2State, currentTime)
 
 		recommendedItem := &pb.RecommendedItem{
 			ItemId:               item.itemID,
-			Score:                item.score,
-			Reason:               reason,
-			Topics:               []string{}, // TODO: Get from item metadata
-			Difficulty:           0.5,        // TODO: Get from item metadata
+			Score:                item.result.UnifiedScore,
+			Reason:               item.result.Reason,
+			Topics:               s.getItemTopicsFromID(item.itemID), // TODO: Get from item metadata
+			Difficulty:           0.5,                                // TODO: Get from item metadata
 			PredictedCorrectness: predictedCorrectness,
 		}
 
 		items = append(items, recommendedItem)
+
+		s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"item_id":       item.itemID,
+			"unified_score": item.result.UnifiedScore,
+			"urgency":       item.result.ComponentScores.UrgencyScore,
+			"mastery_gap":   item.result.ComponentScores.MasteryGapScore,
+			"difficulty":    item.result.ComponentScores.DifficultyScore,
+			"exploration":   item.result.ComponentScores.ExplorationScore,
+			"strategy":      item.result.Strategy,
+			"reason":        item.result.Reason,
+		}).Debug("Item selected with unified scoring")
 	}
 
 	return items
@@ -860,9 +900,309 @@ func (s *SchedulerService) getItemParameters(ctx context.Context, itemID string)
 	}, nil
 }
 
+// Helper method to get item topics from item ID (placeholder implementation)
+func (s *SchedulerService) getItemTopicsFromID(itemID string) []string {
+	// TODO: Implement actual item topic retrieval from database/cache
+	// This is a placeholder implementation that maps item ID to topics
+
+	// For now, derive topic from item ID pattern or use default
+	if len(itemID) > 0 {
+		// Simple mapping based on item ID prefix or pattern
+		switch {
+		case itemID[:1] == "t": // traffic signs
+			return []string{"traffic_signs"}
+		case itemID[:1] == "r": // road rules
+			return []string{"road_rules"}
+		case itemID[:1] == "s": // safety
+			return []string{"safety"}
+		case itemID[:1] == "p": // parking
+			return []string{"parking"}
+		default:
+			return []string{"general"}
+		}
+	}
+
+	return []string{"general"}
+}
+
 // Helper method to get item topics (placeholder implementation)
 func (s *SchedulerService) getItemTopics(ctx context.Context, itemID string) ([]string, error) {
 	// TODO: Implement actual item topic retrieval from database/cache
 	// This is a placeholder implementation
 	return []string{"general"}, nil
+}
+
+// Unified Scoring Algorithm Management Methods
+
+// GetScoringStrategy retrieves a scoring strategy by name
+func (s *SchedulerService) GetScoringStrategy(strategyName string) (algorithms.ScoringStrategy, bool) {
+	return s.unifiedScoring.GetScoringStrategy(strategyName)
+}
+
+// AddScoringStrategy adds a new scoring strategy for A/B testing
+func (s *SchedulerService) AddScoringStrategy(strategy algorithms.ScoringStrategy) error {
+	err := s.unifiedScoring.AddScoringStrategy(strategy)
+	if err != nil {
+		s.logger.WithFields(map[string]interface{}{
+			"strategy_name": strategy.Name,
+			"error":         err.Error(),
+		}).Error("Failed to add scoring strategy")
+		return err
+	}
+
+	s.logger.WithFields(map[string]interface{}{
+		"strategy_name": strategy.Name,
+		"description":   strategy.Description,
+	}).Info("Added new scoring strategy")
+
+	return nil
+}
+
+// UpdateScoringWeights updates the weights for the unified scoring algorithm
+func (s *SchedulerService) UpdateScoringWeights(weights algorithms.ScoringWeights) error {
+	err := s.unifiedScoring.UpdateWeights(weights)
+	if err != nil {
+		s.logger.WithFields(map[string]interface{}{
+			"weights": weights,
+			"error":   err.Error(),
+		}).Error("Failed to update scoring weights")
+		return err
+	}
+
+	s.logger.WithFields(map[string]interface{}{
+		"urgency":     weights.Urgency,
+		"mastery":     weights.Mastery,
+		"difficulty":  weights.Difficulty,
+		"exploration": weights.Exploration,
+	}).Info("Updated unified scoring weights")
+
+	return nil
+}
+
+// GetUnifiedScoringAnalytics returns analytics data for the unified scoring algorithm
+func (s *SchedulerService) GetUnifiedScoringAnalytics() map[string]interface{} {
+	analytics := s.unifiedScoring.GetAnalytics()
+
+	s.logger.WithFields(map[string]interface{}{
+		"strategies_count": len(s.unifiedScoring.ScoringStrategies),
+		"ab_testing":       s.unifiedScoring.ABTestingEnabled,
+	}).Debug("Retrieved unified scoring analytics")
+
+	return analytics
+}
+
+// ValidateUnifiedScoringConfiguration validates the current unified scoring configuration
+func (s *SchedulerService) ValidateUnifiedScoringConfiguration() error {
+	err := s.unifiedScoring.ValidateConfiguration()
+	if err != nil {
+		s.logger.WithError(err).Error("Unified scoring configuration validation failed")
+		return err
+	}
+
+	s.logger.Info("Unified scoring configuration is valid")
+	return nil
+}
+
+// ComputeItemScore computes the unified score for a specific item and user
+func (s *SchedulerService) ComputeItemScore(
+	ctx context.Context,
+	userID, itemID, strategy string,
+) (*algorithms.ScoringResult, error) {
+	// Create item candidate
+	candidate := &algorithms.ItemCandidate{
+		ItemID:         itemID,
+		Topics:         s.getItemTopicsFromID(itemID),
+		Difficulty:     0.5,              // TODO: Get from item metadata
+		Discrimination: 1.0,              // TODO: Get from item metadata
+		Guessing:       0.0,              // TODO: Get from item metadata
+		EstimatedTime:  60 * time.Second, // TODO: Get from item metadata
+		AttemptCount:   0,                // TODO: Get from user attempt history
+		Metadata:       make(map[string]interface{}),
+	}
+
+	// Get SM-2 state
+	sm2State, err := s.sm2Manager.GetState(ctx, userID, itemID)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Debug("Failed to get SM-2 state, using default")
+		sm2State = s.sm2Algorithm.InitializeState()
+	}
+
+	// Get user's BKT states
+	userBKTStates, err := s.bktManager.GetUserStates(ctx, userID)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get user BKT states")
+		userBKTStates = make(map[string]*algorithms.BKTState)
+	}
+
+	// Get user's IRT states - we'll need to get them per topic as needed
+	// For now, create an empty map and populate as needed
+	userIRTStates := make(map[string]*algorithms.IRTState)
+
+	// Create minimal session context
+	sessionContext := &algorithms.SessionContext{
+		SessionID:         "scoring_" + userID,
+		SessionType:       "practice",
+		ElapsedTime:       0,
+		ItemsCompleted:    0,
+		CorrectCount:      0,
+		TopicsPracticed:   []string{},
+		RecentItems:       []string{},
+		AverageDifficulty: 0.5,
+		TargetItemCount:   1,
+		TimeRemaining:     45 * time.Minute,
+	}
+
+	// Compute unified score
+	result, err := s.unifiedScoring.ComputeUnifiedScore(
+		ctx,
+		candidate,
+		sm2State,
+		userBKTStates,
+		userIRTStates,
+		sessionContext,
+		strategy,
+	)
+
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).WithFields(map[string]interface{}{
+			"user_id":  userID,
+			"item_id":  itemID,
+			"strategy": strategy,
+		}).Error("Failed to compute unified score")
+		return nil, err
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":       userID,
+		"item_id":       itemID,
+		"strategy":      strategy,
+		"unified_score": result.UnifiedScore,
+	}).Debug("Computed unified score for item")
+
+	return result, nil
+}
+
+// GetOptimalScoringStrategy determines the best scoring strategy for a user based on their learning patterns
+func (s *SchedulerService) GetOptimalScoringStrategy(ctx context.Context, userID string) (string, error) {
+	// TODO: Implement strategy selection logic based on user performance and preferences
+	// This could use contextual bandit algorithms or simple heuristics
+
+	// Get user's learning statistics
+	userBKTStates, err := s.bktManager.GetUserStates(ctx, userID)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Debug("Failed to get BKT states for strategy selection")
+		return "balanced", nil // Default strategy
+	}
+
+	// Simple heuristic: choose strategy based on overall mastery level
+	totalMastery := 0.0
+	masteryCount := 0
+	for _, state := range userBKTStates {
+		totalMastery += state.ProbKnowledge
+		masteryCount++
+	}
+
+	if masteryCount == 0 {
+		return "balanced", nil
+	}
+
+	averageMastery := totalMastery / float64(masteryCount)
+
+	// Strategy selection based on mastery level
+	var strategy string
+	switch {
+	case averageMastery < 0.3:
+		strategy = "mastery_focused" // Focus on building knowledge
+	case averageMastery < 0.6:
+		strategy = "balanced" // Balanced approach
+	case averageMastery < 0.8:
+		strategy = "adaptive_challenge" // Focus on optimal challenge
+	default:
+		strategy = "urgency_focused" // Focus on spaced repetition
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":           userID,
+		"average_mastery":   averageMastery,
+		"selected_strategy": strategy,
+	}).Debug("Selected optimal scoring strategy")
+
+	return strategy, nil
+}
+
+// TrackScoringPerformance tracks the performance of different scoring strategies
+func (s *SchedulerService) TrackScoringPerformance(
+	ctx context.Context,
+	userID, strategy string,
+	sessionResults map[string]interface{},
+) error {
+	// TODO: Implement performance tracking for A/B testing
+	// This would store results in a database for later analysis
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":         userID,
+		"strategy":        strategy,
+		"session_results": sessionResults,
+	}).Info("Tracked scoring strategy performance")
+
+	// Update metrics if available
+	if s.metrics != nil {
+		// Track strategy usage
+		// s.metrics.ScoringStrategyUsage.WithLabelValues(strategy).Inc()
+
+		// Track performance metrics
+		if accuracy, ok := sessionResults["accuracy"].(float64); ok {
+			// s.metrics.ScoringStrategyAccuracy.WithLabelValues(strategy).Observe(accuracy)
+			_ = accuracy // Placeholder to avoid unused variable error
+		}
+	}
+
+	return nil
+}
+
+// GetSessionConstraints returns the current session constraints for the unified scoring algorithm
+func (s *SchedulerService) GetSessionConstraints() map[string]interface{} {
+	return map[string]interface{}{
+		"max_session_time":       s.unifiedScoring.MaxSessionTime.Minutes(),
+		"min_topic_interleaving": s.unifiedScoring.MinTopicInterleaving,
+		"max_consecutive_topic":  s.unifiedScoring.MaxConsecutiveTopic,
+		"difficulty_variance":    s.unifiedScoring.DifficultyVariance,
+		"recent_items_window":    s.unifiedScoring.RecentItemsWindow,
+	}
+}
+
+// UpdateSessionConstraints updates the session constraints for the unified scoring algorithm
+func (s *SchedulerService) UpdateSessionConstraints(constraints map[string]interface{}) error {
+	if maxTime, ok := constraints["max_session_time"].(float64); ok {
+		s.unifiedScoring.MaxSessionTime = time.Duration(maxTime) * time.Minute
+	}
+
+	if minInterleaving, ok := constraints["min_topic_interleaving"].(int); ok {
+		s.unifiedScoring.MinTopicInterleaving = minInterleaving
+	}
+
+	if maxConsecutive, ok := constraints["max_consecutive_topic"].(int); ok {
+		s.unifiedScoring.MaxConsecutiveTopic = maxConsecutive
+	}
+
+	if diffVariance, ok := constraints["difficulty_variance"].(float64); ok {
+		s.unifiedScoring.DifficultyVariance = diffVariance
+	}
+
+	if recentWindow, ok := constraints["recent_items_window"].(int); ok {
+		s.unifiedScoring.RecentItemsWindow = recentWindow
+	}
+
+	// Validate updated configuration
+	err := s.unifiedScoring.ValidateConfiguration()
+	if err != nil {
+		s.logger.WithError(err).Error("Invalid session constraints update")
+		return err
+	}
+
+	s.logger.WithFields(map[string]interface{}{
+		"constraints": constraints,
+	}).Info("Updated session constraints")
+
+	return nil
 }

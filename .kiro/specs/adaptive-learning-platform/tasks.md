@@ -281,9 +281,10 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Implement IRT-based item recommendation scoring
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 8.5 Build unified scoring algorithm
+  - [x] 8.5 Build unified scoring algorithm
 
     - Implement multi-component scoring function
+
     - Create configurable weight system for score components
     - Add session constraint enforcement (time, interleaving, variety)
     - Implement exploration vs exploitation balancing
