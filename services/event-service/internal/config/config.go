@@ -10,6 +10,8 @@ import (
 type Config struct {
 	Server         ServerConfig
 	Kafka          KafkaConfig
+	Redis          RedisConfig
+	EventProcessor EventProcessorConfig
 	RateLimit      RateLimitConfig
 	CircuitBreaker CircuitBreakerConfig
 	Logging        LoggingConfig
@@ -59,6 +61,26 @@ type Counts struct {
 	ConsecutiveFailures  uint32
 }
 
+type RedisConfig struct {
+	Address         string
+	Password        string
+	PoolSize        int
+	MinIdleConns    int
+	MaxRetries      int
+	DialTimeout     time.Duration
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	EnrichmentDB    int
+	AggregationDB   int
+	DeduplicationDB int
+}
+
+type EventProcessorConfig struct {
+	Workers    int
+	BufferSize int
+	Enabled    bool
+}
+
 type LoggingConfig struct {
 	Level  string
 	Format string
@@ -98,6 +120,24 @@ func LoadConfig() *Config {
 			MaxRequests: getIntEnv("CIRCUIT_BREAKER_MAX_REQUESTS", 5),
 			Interval:    getDurationEnv("CIRCUIT_BREAKER_INTERVAL", 60*time.Second),
 		},
+		Redis: RedisConfig{
+			Address:         getEnv("REDIS_ADDRESS", "localhost:6379"),
+			Password:        getEnv("REDIS_PASSWORD", ""),
+			PoolSize:        getIntEnv("REDIS_POOL_SIZE", 10),
+			MinIdleConns:    getIntEnv("REDIS_MIN_IDLE_CONNS", 2),
+			MaxRetries:      getIntEnv("REDIS_MAX_RETRIES", 3),
+			DialTimeout:     getDurationEnv("REDIS_DIAL_TIMEOUT", 5*time.Second),
+			ReadTimeout:     getDurationEnv("REDIS_READ_TIMEOUT", 3*time.Second),
+			WriteTimeout:    getDurationEnv("REDIS_WRITE_TIMEOUT", 3*time.Second),
+			EnrichmentDB:    getIntEnv("REDIS_ENRICHMENT_DB", 1),
+			AggregationDB:   getIntEnv("REDIS_AGGREGATION_DB", 2),
+			DeduplicationDB: getIntEnv("REDIS_DEDUPLICATION_DB", 3),
+		},
+		EventProcessor: EventProcessorConfig{
+			Workers:    getIntEnv("EVENT_PROCESSOR_WORKERS", 4),
+			BufferSize: getIntEnv("EVENT_PROCESSOR_BUFFER_SIZE", 1000),
+			Enabled:    getBoolEnv("EVENT_PROCESSOR_ENABLED", true),
+		},
 		Logging: LoggingConfig{
 			Level:  getEnv("LOG_LEVEL", "info"),
 			Format: getEnv("LOG_FORMAT", "json"),
@@ -126,6 +166,15 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 	if value := os.Getenv(key); value != "" {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
+		}
+	}
+	return defaultValue
+}
+
+func getBoolEnv(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
 		}
 	}
 	return defaultValue

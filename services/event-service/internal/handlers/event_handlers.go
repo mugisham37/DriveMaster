@@ -11,6 +11,7 @@ import (
 
 	"event-service/internal/config"
 	"event-service/internal/models"
+	"event-service/internal/processor"
 	"event-service/internal/validation"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ type EventHandler struct {
 	config    *config.Config
 	validator *validation.EventValidator
 	publisher EventPublisher
+	processor *processor.EventProcessor
 	metrics   *ServiceMetrics
 	mu        sync.RWMutex
 }
@@ -48,10 +50,16 @@ type ServiceMetrics struct {
 
 // NewEventHandler creates a new event handler
 func NewEventHandler(cfg *config.Config, publisher EventPublisher) *EventHandler {
+	var eventProcessor *processor.EventProcessor
+	if cfg.EventProcessor.Enabled {
+		eventProcessor = processor.NewEventProcessor(cfg)
+	}
+
 	return &EventHandler{
 		config:    cfg,
 		validator: validation.NewEventValidator(),
 		publisher: publisher,
+		processor: eventProcessor,
 		metrics: &ServiceMetrics{
 			StartTime: time.Now(),
 		},
@@ -114,6 +122,20 @@ func (h *EventHandler) HandleAttemptEvent(c *gin.Context) {
 			"details": err.Error(),
 		})
 		return
+	}
+
+	// Process event if processor is enabled
+	if h.processor != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		processedEvent, err := h.processor.ProcessEventSync(ctx, attemptEvent, models.EventTypeAttempt)
+		if err != nil {
+			log.Printf("Event processing failed: %v", err)
+			// Continue with original event if processing fails
+		} else {
+			log.Printf("Event processed successfully with %d enrichments", len(processedEvent.EnrichedData))
+		}
 	}
 
 	// Publish to Kafka
@@ -189,6 +211,20 @@ func (h *EventHandler) HandleSessionEvent(c *gin.Context) {
 		return
 	}
 
+	// Process event if processor is enabled
+	if h.processor != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		processedEvent, err := h.processor.ProcessEventSync(ctx, sessionEvent, models.EventTypeSession)
+		if err != nil {
+			log.Printf("Event processing failed: %v", err)
+			// Continue with original event if processing fails
+		} else {
+			log.Printf("Event processed successfully with %d enrichments", len(processedEvent.EnrichedData))
+		}
+	}
+
 	// Publish to Kafka
 	ctx, cancel := context.WithTimeout(context.Background(), h.config.Kafka.ProducerTimeout)
 	defer cancel()
@@ -260,6 +296,20 @@ func (h *EventHandler) HandlePlacementEvent(c *gin.Context) {
 			"details": err.Error(),
 		})
 		return
+	}
+
+	// Process event if processor is enabled
+	if h.processor != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		processedEvent, err := h.processor.ProcessEventSync(ctx, placementEvent, models.EventTypePlacement)
+		if err != nil {
+			log.Printf("Event processing failed: %v", err)
+			// Continue with original event if processing fails
+		} else {
+			log.Printf("Event processed successfully with %d enrichments", len(processedEvent.EnrichedData))
+		}
 	}
 
 	// Publish to Kafka
@@ -511,7 +561,17 @@ func (h *EventHandler) GetMetrics(c *gin.Context) {
 		Timestamp:           time.Now().UTC(),
 	}
 
-	c.JSON(http.StatusOK, metrics)
+	// Add processor metrics if available
+	response := map[string]interface{}{
+		"service_metrics": metrics,
+	}
+
+	if h.processor != nil {
+		processorMetrics := h.processor.GetMetrics()
+		response["processor_metrics"] = processorMetrics
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // Helper methods for recording metrics

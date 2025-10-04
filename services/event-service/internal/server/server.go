@@ -105,6 +105,13 @@ func (s *Server) Start() error {
 	router.GET("/metrics/publisher/health", s.metricsHandler.GetHealthStatus)
 	router.GET("/metrics/prometheus", s.metricsHandler.GetPrometheusMetrics)
 
+	// Event processor endpoints
+	router.GET("/metrics/processor", s.handler.GetProcessorMetrics)
+	router.GET("/processor/status", s.handler.GetProcessorStatus)
+	router.GET("/processor/enrichment", s.handler.GetEnrichmentStats)
+	router.GET("/processor/filters", s.handler.GetFilterStats)
+	router.GET("/processor/aggregation", s.handler.GetAggregationData)
+
 	// Event ingestion endpoints with backpressure protection
 	v1 := router.Group("/api/v1")
 	v1.Use(s.backpressureMiddleware())
