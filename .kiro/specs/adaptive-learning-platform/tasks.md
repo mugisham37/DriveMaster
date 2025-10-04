@@ -272,7 +272,7 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Create BKT visualization and reporting data
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 8.4 Implement Item Response Theory (IRT) integration
+  - [x] 8.4 Implement Item Response Theory (IRT) integration
 
     - Create IRT ability estimation with Bayesian updating
     - Implement difficulty matching and optimal challenge calculation

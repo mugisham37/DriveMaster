@@ -32,6 +32,8 @@ type SchedulerService struct {
 	sm2Manager   *state.SM2StateManager
 	bktAlgorithm *algorithms.BKTAlgorithm
 	bktManager   *state.BKTStateManager
+	irtAlgorithm *algorithms.IRTAlgorithm
+	irtManager   *state.IRTManager
 }
 
 // NewSchedulerService creates a new scheduler service instance
@@ -54,6 +56,12 @@ func NewSchedulerService(
 	// Initialize BKT state manager
 	bktManager := state.NewBKTStateManager(bktAlgorithm, db, cache, log)
 
+	// Initialize IRT algorithm
+	irtAlgorithm := algorithms.NewIRTAlgorithm()
+
+	// Initialize IRT state manager
+	irtManager := state.NewIRTManager(db.DB, cache)
+
 	return &SchedulerService{
 		config:       cfg,
 		logger:       log,
@@ -64,6 +72,8 @@ func NewSchedulerService(
 		sm2Manager:   sm2Manager,
 		bktAlgorithm: bktAlgorithm,
 		bktManager:   bktManager,
+		irtAlgorithm: irtAlgorithm,
+		irtManager:   irtManager,
 	}
 }
 
@@ -114,8 +124,8 @@ func (s *SchedulerService) GetNextItems(ctx context.Context, req *pb.NextItemsRe
 		return nil, status.Error(codes.Internal, "failed to get mastery gaps")
 	}
 
-	// Select items based on SM-2 urgency, BKT mastery gaps, and session constraints
-	selectedItems := s.selectItemsWithBKT(ctx, req, urgencyScores, dueItems, masteryGaps, currentTime)
+	// Select items based on unified scoring (SM-2 urgency, BKT mastery gaps, IRT difficulty matching)
+	selectedItems := s.selectItemsWithUnifiedScoring(ctx, req, urgencyScores, dueItems, masteryGaps, currentTime)
 
 	// Create session context
 	sessionContext := &pb.SessionContext{
@@ -220,10 +230,18 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 		return nil, status.Error(codes.Internal, "failed to update SM-2 state")
 	}
 
-	// Update BKT states for all topics associated with this item
+	// Update BKT and IRT states for all topics associated with this item
 	// TODO: Get item topics from item metadata - for now using placeholder topics
 	itemTopics := []string{"general"} // This should come from item metadata
 	masteryChanges := make(map[string]float64)
+	abilityChanges := make(map[string]float64)
+
+	// TODO: Get item parameters from item metadata - for now using default values
+	itemParams := &algorithms.ItemParameters{
+		Difficulty:     0.0, // Should come from item calibration
+		Discrimination: 1.0, // Should come from item calibration
+		Guessing:       0.0, // Should come from item calibration
+	}
 
 	for _, topic := range itemTopics {
 		// Get current BKT state before update
@@ -243,14 +261,39 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 		// Calculate mastery change
 		masteryChange := newBKTState.ProbKnowledge - currentBKTState.ProbKnowledge
 		masteryChanges[topic] = masteryChange
+
+		// Get current IRT state before update
+		currentIRTState, err := s.irtManager.GetState(ctx, req.UserId, topic)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("topic", topic).Warn("Failed to get IRT state for topic")
+			continue
+		}
+
+		// Update IRT state based on correctness
+		newIRTState, err := s.irtManager.UpdateState(ctx, req.UserId, topic, itemParams, req.Correct)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("topic", topic).Error("Failed to update IRT state")
+			continue
+		}
+
+		// Calculate ability change
+		abilityChange := newIRTState.Theta - currentIRTState.Theta
+		abilityChanges[topic] = abilityChange
+
+		s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"topic":          topic,
+			"old_theta":      currentIRTState.Theta,
+			"new_theta":      newIRTState.Theta,
+			"theta_change":   abilityChange,
+			"confidence":     newIRTState.Confidence,
+			"mastery_change": masteryChange,
+		}).Debug("Updated IRT and BKT states for topic")
 	}
 
 	// Create state update response
 	stateUpdate := &pb.UserStateUpdate{
 		MasteryChanges: masteryChanges,
-		AbilityChanges: map[string]float64{
-			// TODO: Implement ability changes based on IRT
-		},
+		AbilityChanges: abilityChanges,
 		Sm2Update: &pb.SM2StateUpdate{
 			EasinessFactor: newSM2State.EasinessFactor,
 			Interval:       int32(newSM2State.Interval),
@@ -520,8 +563,8 @@ func (s *SchedulerService) Health(ctx context.Context, req *pb.HealthRequest) (*
 
 // Helper methods for SM-2 integration
 
-// selectItemsWithBKT selects items based on SM-2 urgency, BKT mastery gaps, and session constraints
-func (s *SchedulerService) selectItemsWithBKT(
+// selectItemsWithUnifiedScoring selects items based on SM-2 urgency, BKT mastery gaps, IRT difficulty matching, and session constraints
+func (s *SchedulerService) selectItemsWithUnifiedScoring(
 	ctx context.Context,
 	req *pb.NextItemsRequest,
 	urgencyScores map[string]float64,
@@ -565,7 +608,7 @@ func (s *SchedulerService) selectItemsWithBKT(
 		})
 	}
 
-	// Calculate combined scores incorporating BKT mastery gaps
+	// Calculate unified scores incorporating BKT mastery gaps and IRT difficulty matching
 	for i := range scoredItems {
 		// TODO: Get item topics from item metadata
 		// For now, assume each item maps to a topic with the same name
@@ -576,9 +619,33 @@ func (s *SchedulerService) selectItemsWithBKT(
 			masteryGap = gap
 		}
 
-		// Combine SM-2 urgency (40%) and BKT mastery gap (60%)
-		combinedScore := 0.4*scoredItems[i].score + 0.6*masteryGap
-		scoredItems[i].score = combinedScore
+		// Get IRT difficulty match score
+		// TODO: Get item parameters from item metadata - for now using default values
+		itemParams := &algorithms.ItemParameters{
+			Difficulty:     0.0, // Should come from item calibration
+			Discrimination: 1.0, // Should come from item calibration
+			Guessing:       0.0, // Should come from item calibration
+		}
+
+		difficultyMatch := 0.5 // Default match if IRT state not available
+		if irtScore, err := s.irtManager.GetDifficultyMatch(ctx, req.UserId, itemTopic, itemParams); err == nil {
+			difficultyMatch = irtScore
+		} else {
+			s.logger.WithContext(ctx).WithError(err).WithField("topic", itemTopic).Debug("Failed to get IRT difficulty match")
+		}
+
+		// Unified scoring: SM-2 urgency (30%) + BKT mastery gap (40%) + IRT difficulty match (30%)
+		unifiedScore := 0.3*scoredItems[i].score + 0.4*masteryGap + 0.3*difficultyMatch
+		scoredItems[i].score = unifiedScore
+
+		s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"item_id":          scoredItems[i].itemID,
+			"topic":            itemTopic,
+			"sm2_urgency":      scoredItems[i].score,
+			"mastery_gap":      masteryGap,
+			"difficulty_match": difficultyMatch,
+			"unified_score":    unifiedScore,
+		}).Debug("Calculated unified item score")
 	}
 
 	// Sort by priority: due items first, then by combined score
@@ -682,4 +749,120 @@ func (s *SchedulerService) trackSM2Metrics(oldState, newState *algorithms.SM2Sta
 		"quality":         quality,
 		"repetition":      newState.Repetition,
 	}).Debug("SM-2 metrics tracked")
+}
+
+// IRT-specific methods
+
+// GetAbilityEstimate retrieves IRT ability estimate for a user and topic
+func (s *SchedulerService) GetAbilityEstimate(ctx context.Context, userID, topic string) (float64, float64, error) {
+	state, err := s.irtManager.GetState(ctx, userID, topic)
+	if err != nil {
+		return 0.0, 0.0, fmt.Errorf("failed to get IRT state: %w", err)
+	}
+
+	return state.Theta, state.Confidence, nil
+}
+
+// GetOptimalDifficulty calculates optimal difficulty for a user's current ability in a topic
+func (s *SchedulerService) GetOptimalDifficulty(ctx context.Context, userID, topic string, discrimination float64) (float64, error) {
+	return s.irtManager.GetOptimalDifficulty(ctx, userID, topic, discrimination)
+}
+
+// GetAbilityConfidenceInterval calculates confidence interval for user's ability
+func (s *SchedulerService) GetAbilityConfidenceInterval(ctx context.Context, userID, topic string, confidenceLevel float64) (float64, float64, error) {
+	return s.irtManager.GetConfidenceInterval(ctx, userID, topic, confidenceLevel)
+}
+
+// InitializeAbilityFromPlacement initializes IRT state from placement test results
+func (s *SchedulerService) InitializeAbilityFromPlacement(ctx context.Context, userID, topic string, responses []bool, itemParams []*algorithms.ItemParameters) error {
+	_, err := s.irtManager.InitializeFromPlacement(ctx, userID, topic, responses, itemParams)
+	if err != nil {
+		return fmt.Errorf("failed to initialize ability from placement: %w", err)
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":        userID,
+		"topic":          topic,
+		"response_count": len(responses),
+	}).Info("Initialized IRT ability from placement test")
+
+	return nil
+}
+
+// ApplyTimeDecayToAbilities applies time-based decay to all user's IRT states
+func (s *SchedulerService) ApplyTimeDecayToAbilities(ctx context.Context, userID string) error {
+	err := s.irtManager.ApplyTimeDecay(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to apply time decay to abilities: %w", err)
+	}
+
+	s.logger.WithContext(ctx).WithField("user_id", userID).Debug("Applied time decay to IRT abilities")
+	return nil
+}
+
+// GetIRTAnalytics returns analytics data for user's IRT state in a topic
+func (s *SchedulerService) GetIRTAnalytics(ctx context.Context, userID, topic string) (map[string]interface{}, error) {
+	analytics, err := s.irtManager.GetAnalytics(ctx, userID, topic)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get IRT analytics: %w", err)
+	}
+
+	return analytics, nil
+}
+
+// CalibrateItemDifficulty calibrates item parameters from response data
+func (s *SchedulerService) CalibrateItemDifficulty(responses []bool, abilities []float64) *algorithms.ItemParameters {
+	return s.irtManager.CalibrateItemParameters(responses, abilities)
+}
+
+// GetRecommendationScoreWithIRT calculates IRT-based recommendation score for an item
+func (s *SchedulerService) GetRecommendationScoreWithIRT(ctx context.Context, userID, topic string, itemParams *algorithms.ItemParameters) (float64, error) {
+	return s.irtManager.GetRecommendationScore(ctx, userID, topic, itemParams)
+}
+
+// trackIRTMetrics updates metrics related to IRT algorithm performance
+func (s *SchedulerService) trackIRTMetrics(oldState, newState *algorithms.IRTState, correct bool) {
+	if s.metrics == nil {
+		return
+	}
+
+	// Track IRT updates
+	if s.metrics.IRTUpdates != nil {
+		s.metrics.IRTUpdates.Inc()
+	}
+
+	// Track ability changes
+	abilityChange := newState.Theta - oldState.Theta
+	confidenceChange := newState.Confidence - oldState.Confidence
+
+	s.logger.WithFields(map[string]interface{}{
+		"old_theta":         oldState.Theta,
+		"new_theta":         newState.Theta,
+		"ability_change":    abilityChange,
+		"old_confidence":    oldState.Confidence,
+		"new_confidence":    newState.Confidence,
+		"confidence_change": confidenceChange,
+		"correct":           correct,
+		"attempts_count":    newState.AttemptsCount,
+	}).Debug("IRT metrics tracked")
+}
+
+// Helper method to get item parameters (placeholder implementation)
+func (s *SchedulerService) getItemParameters(ctx context.Context, itemID string) (*algorithms.ItemParameters, error) {
+	// TODO: Implement actual item parameter retrieval from database/cache
+	// This is a placeholder implementation with default values
+	return &algorithms.ItemParameters{
+		Difficulty:     0.0, // Should be calibrated from historical data
+		Discrimination: 1.0, // Should be calibrated from historical data
+		Guessing:       0.0, // Should be calibrated from historical data (0.25 for 4-option multiple choice)
+		AttemptsCount:  0,   // Should come from item statistics
+		CorrectCount:   0,   // Should come from item statistics
+	}, nil
+}
+
+// Helper method to get item topics (placeholder implementation)
+func (s *SchedulerService) getItemTopics(ctx context.Context, itemID string) ([]string, error) {
+	// TODO: Implement actual item topic retrieval from database/cache
+	// This is a placeholder implementation
+	return []string{"general"}, nil
 }
