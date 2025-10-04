@@ -41,6 +41,16 @@ service SchedulerService {
   // Get available session strategies
   rpc GetAvailableStrategies(GetAvailableStrategiesRequest) returns (GetAvailableStrategiesResponse);
   
+  // Onboarding methods
+  rpc InitializeOnboarding(InitializeOnboardingRequest) returns (InitializeOnboardingResponse);
+  rpc UpdateOnboardingPreferences(UpdateOnboardingPreferencesRequest) returns (UpdateOnboardingPreferencesResponse);
+  rpc StartPlacementTest(StartPlacementTestRequest) returns (StartPlacementTestResponse);
+  rpc CompletePlacementTest(CompletePlacementTestRequest) returns (CompletePlacementTestResponse);
+  rpc SkipPlacementTest(SkipPlacementTestRequest) returns (SkipPlacementTestResponse);
+  rpc CompleteOnboarding(CompleteOnboardingRequest) returns (CompleteOnboardingResponse);
+  rpc GetOnboardingState(GetOnboardingStateRequest) returns (GetOnboardingStateResponse);
+  rpc GetLearningPath(GetLearningPathRequest) returns (GetLearningPathResponse);
+  
   // Health check
   rpc Health(HealthRequest) returns (HealthResponse);
 }
@@ -349,4 +359,194 @@ message GetAvailableStrategiesRequest {}
 
 message GetAvailableStrategiesResponse {
   repeated SessionStrategy strategies = 1;
+}
+
+// Onboarding messages
+message InitializeOnboardingRequest {
+  string user_id = 1;
+  string country_code = 2;
+}
+
+message InitializeOnboardingResponse {
+  bool success = 1;
+  string message = 2;
+  OnboardingState onboarding_state = 3;
+}
+
+message UpdateOnboardingPreferencesRequest {
+  string user_id = 1;
+  UserPreferences preferences = 2;
+}
+
+message UpdateOnboardingPreferencesResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message StartPlacementTestRequest {
+  string user_id = 1;
+}
+
+message StartPlacementTestResponse {
+  bool success = 1;
+  string message = 2;
+  PlacementTestState placement_test = 3;
+}
+
+message CompletePlacementTestRequest {
+  string user_id = 1;
+  string session_id = 2;
+  PlacementTestResults results = 3;
+}
+
+message CompletePlacementTestResponse {
+  bool success = 1;
+  string message = 2;
+  LearningPath learning_path = 3;
+}
+
+message SkipPlacementTestRequest {
+  string user_id = 1;
+}
+
+message SkipPlacementTestResponse {
+  bool success = 1;
+  string message = 2;
+  LearningPath learning_path = 3;
+}
+
+message CompleteOnboardingRequest {
+  string user_id = 1;
+  int32 satisfaction = 2;
+  string feedback = 3;
+}
+
+message CompleteOnboardingResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetOnboardingStateRequest {
+  string user_id = 1;
+}
+
+message GetOnboardingStateResponse {
+  OnboardingState onboarding_state = 1;
+}
+
+message GetLearningPathRequest {
+  string user_id = 1;
+}
+
+message GetLearningPathResponse {
+  LearningPath learning_path = 1;
+}
+
+// Onboarding data structures
+message OnboardingState {
+  string user_id = 1;
+  string country_code = 2;
+  string stage = 3;
+  OnboardingProgress progress = 4;
+  UserPreferences preferences = 5;
+  PlacementTestState placement_test = 6;
+  LearningPath learning_path = 7;
+  OnboardingAnalytics analytics = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+  google.protobuf.Timestamp completed_at = 11;
+}
+
+message OnboardingProgress {
+  string current_stage = 1;
+  repeated string completed_stages = 2;
+  int32 total_stages = 3;
+  double percent_complete = 4;
+  int32 estimated_time_remaining_minutes = 5;
+}
+
+message UserPreferences {
+  string study_goal = 1;
+  int32 available_time_minutes = 2;
+  string preferred_difficulty = 3;
+  repeated string focus_areas = 4;
+  string learning_style = 5;
+  repeated string notification_times = 6;
+  map<string, bool> weekly_schedule = 7;
+}
+
+message PlacementTestState {
+  string session_id = 1;
+  string status = 2;
+  int32 items_completed = 3;
+  int32 total_items = 4;
+  double current_ability = 5;
+  double confidence = 6;
+  map<string, double> topic_abilities = 7;
+  PlacementTestResults results = 8;
+  google.protobuf.Timestamp started_at = 9;
+  google.protobuf.Timestamp completed_at = 10;
+}
+
+message PlacementTestResults {
+  string user_id = 1;
+  string session_id = 2;
+  map<string, double> topic_abilities = 3;
+  map<string, double> topic_confidence = 4;
+  double overall_ability = 5;
+  double overall_confidence = 6;
+  int32 items_administered = 7;
+  int32 correct_responses = 8;
+  int32 total_time_ms = 9;
+  double final_se = 10;
+  string recommended_level = 11;
+  repeated string strength_areas = 12;
+  repeated string weakness_areas = 13;
+  string stopping_reason = 14;
+}
+
+message LearningPath {
+  string path_id = 1;
+  string recommended_level = 2;
+  repeated TopicRecommendation focus_topics = 3;
+  StudyPlan study_plan = 4;
+  repeated LearningMilestone milestones = 5;
+  int32 estimated_duration_days = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message TopicRecommendation {
+  string topic = 1;
+  string priority = 2;
+  string reason = 3;
+  double difficulty = 4;
+  int32 estimated_time_hours = 5;
+}
+
+message StudyPlan {
+  int32 daily_minutes = 1;
+  map<string, int32> weekly_schedule = 2;
+  repeated string session_types = 3;
+  int32 review_frequency_days = 4;
+  int32 test_frequency_days = 5;
+}
+
+message LearningMilestone {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  double target_accuracy = 4;
+  repeated string required_topics = 5;
+  google.protobuf.Timestamp estimated_date = 6;
+  bool is_completed = 7;
+  google.protobuf.Timestamp completed_at = 8;
+}
+
+message OnboardingAnalytics {
+  map<string, int32> time_spent_seconds = 1;
+  map<string, int32> interaction_count = 2;
+  repeated string dropoff_points = 3;
+  double completion_rate = 4;
+  int32 user_satisfaction = 5;
+  string feedback_comments = 6;
 }

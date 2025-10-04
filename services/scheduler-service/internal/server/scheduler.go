@@ -15,6 +15,7 @@ import (
 	"scheduler-service/internal/database"
 	"scheduler-service/internal/logger"
 	"scheduler-service/internal/metrics"
+	"scheduler-service/internal/onboarding"
 	"scheduler-service/internal/state"
 	pb "scheduler-service/proto"
 )
@@ -23,18 +24,19 @@ import (
 type SchedulerService struct {
 	pb.UnimplementedSchedulerServiceServer
 
-	config         *config.Config
-	logger         *logger.Logger
-	metrics        *metrics.Metrics
-	db             *database.DB
-	cache          *cache.RedisClient
-	sm2Algorithm   *algorithms.SM2Algorithm
-	sm2Manager     *state.SM2StateManager
-	bktAlgorithm   *algorithms.BKTAlgorithm
-	bktManager     *state.BKTStateManager
-	irtAlgorithm   *algorithms.IRTAlgorithm
-	irtManager     *state.IRTManager
-	unifiedScoring *algorithms.UnifiedScoringAlgorithm
+	config            *config.Config
+	logger            *logger.Logger
+	metrics           *metrics.Metrics
+	db                *database.DB
+	cache             *cache.RedisClient
+	sm2Algorithm      *algorithms.SM2Algorithm
+	sm2Manager        *state.SM2StateManager
+	bktAlgorithm      *algorithms.BKTAlgorithm
+	bktManager        *state.BKTStateManager
+	irtAlgorithm      *algorithms.IRTAlgorithm
+	irtManager        *state.IRTManager
+	unifiedScoring    *algorithms.UnifiedScoringAlgorithm
+	onboardingService *onboarding.OnboardingService
 }
 
 // NewSchedulerService creates a new scheduler service instance
@@ -66,19 +68,28 @@ func NewSchedulerService(
 	// Initialize unified scoring algorithm
 	unifiedScoring := algorithms.NewUnifiedScoringAlgorithm(log)
 
+	// Initialize placement test algorithm
+	placementAlgorithm := algorithms.NewPlacementTestAlgorithm(irtAlgorithm, log)
+
+	// Initialize onboarding service
+	onboardingService := onboarding.NewOnboardingService(
+		log, db, cache, placementAlgorithm, sm2Manager, bktManager, irtManager,
+	)
+
 	return &SchedulerService{
-		config:         cfg,
-		logger:         log,
-		metrics:        metrics,
-		db:             db,
-		cache:          cache,
-		sm2Algorithm:   sm2Algorithm,
-		sm2Manager:     sm2Manager,
-		bktAlgorithm:   bktAlgorithm,
-		bktManager:     bktManager,
-		irtAlgorithm:   irtAlgorithm,
-		irtManager:     irtManager,
-		unifiedScoring: unifiedScoring,
+		config:            cfg,
+		logger:            log,
+		metrics:           metrics,
+		db:                db,
+		cache:             cache,
+		sm2Algorithm:      sm2Algorithm,
+		sm2Manager:        sm2Manager,
+		bktAlgorithm:      bktAlgorithm,
+		bktManager:        bktManager,
+		irtAlgorithm:      irtAlgorithm,
+		irtManager:        irtManager,
+		unifiedScoring:    unifiedScoring,
+		onboardingService: onboardingService,
 	}
 }
 
@@ -1808,3 +1819,455 @@ func (s *SchedulerService) retrievePlacementState(ctx context.Context, sessionID
 //
 // For now, the placement test algorithm is implemented and can be used
 // through the existing GetPlacementItems method and custom processing logic.
+
+// Onboarding Methods
+
+// InitializeOnboarding initializes the onboarding process for a new user
+func (s *SchedulerService) InitializeOnboarding(ctx context.Context, req *pb.InitializeOnboardingRequest) (*pb.InitializeOnboardingResponse, error) {
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":      req.UserId,
+		"country_code": req.CountryCode,
+	}).Info("Initializing user onboarding")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.CountryCode == "" {
+		return nil, status.Error(codes.InvalidArgument, "country_code is required")
+	}
+
+	// Initialize onboarding
+	onboardingState, err := s.onboardingService.InitializeOnboarding(ctx, req.UserId, req.CountryCode)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to initialize onboarding")
+		return nil, status.Error(codes.Internal, "failed to initialize onboarding")
+	}
+
+	// Convert to protobuf format
+	pbState := s.convertOnboardingStateToProto(onboardingState)
+
+	return &pb.InitializeOnboardingResponse{
+		Success:         true,
+		Message:         "Onboarding initialized successfully",
+		OnboardingState: pbState,
+	}, nil
+}
+
+// UpdateOnboardingPreferences updates user preferences during onboarding
+func (s *SchedulerService) UpdateOnboardingPreferences(ctx context.Context, req *pb.UpdateOnboardingPreferencesRequest) (*pb.UpdateOnboardingPreferencesResponse, error) {
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Updating onboarding preferences")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.Preferences == nil {
+		return nil, status.Error(codes.InvalidArgument, "preferences are required")
+	}
+
+	// Convert protobuf preferences to internal format
+	preferences := s.convertPreferencesFromProto(req.Preferences)
+
+	// Update preferences
+	err := s.onboardingService.UpdatePreferences(ctx, req.UserId, preferences)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to update preferences")
+		return nil, status.Error(codes.Internal, "failed to update preferences")
+	}
+
+	return &pb.UpdateOnboardingPreferencesResponse{
+		Success: true,
+		Message: "Preferences updated successfully",
+	}, nil
+}
+
+// StartPlacementTest initiates the placement test for the user
+func (s *SchedulerService) StartPlacementTest(ctx context.Context, req *pb.StartPlacementTestRequest) (*pb.StartPlacementTestResponse, error) {
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Starting placement test")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Start placement test
+	placementTest, err := s.onboardingService.StartPlacementTest(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to start placement test")
+		return nil, status.Error(codes.Internal, "failed to start placement test")
+	}
+
+	// Convert to protobuf format
+	pbPlacementTest := s.convertPlacementTestStateToProto(placementTest)
+
+	return &pb.StartPlacementTestResponse{
+		Success:       true,
+		Message:       "Placement test started successfully",
+		PlacementTest: pbPlacementTest,
+	}, nil
+}
+
+// CompletePlacementTest completes the placement test and generates learning path
+func (s *SchedulerService) CompletePlacementTest(ctx context.Context, req *pb.CompletePlacementTestRequest) (*pb.CompletePlacementTestResponse, error) {
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":    req.UserId,
+		"session_id": req.SessionId,
+	}).Info("Completing placement test")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.SessionId == "" {
+		return nil, status.Error(codes.InvalidArgument, "session_id is required")
+	}
+	if req.Results == nil {
+		return nil, status.Error(codes.InvalidArgument, "placement results are required")
+	}
+
+	// Convert protobuf results to internal format
+	results := s.convertPlacementResultsFromProto(req.Results)
+
+	// Complete placement test
+	err := s.onboardingService.CompletePlacementTest(ctx, req.UserId, results)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to complete placement test")
+		return nil, status.Error(codes.Internal, "failed to complete placement test")
+	}
+
+	// Get the generated learning path
+	learningPath, err := s.onboardingService.GetLearningPath(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get learning path")
+		return nil, status.Error(codes.Internal, "failed to get learning path")
+	}
+
+	// Convert to protobuf format
+	pbLearningPath := s.convertLearningPathToProto(learningPath)
+
+	return &pb.CompletePlacementTestResponse{
+		Success:      true,
+		Message:      "Placement test completed and learning path generated",
+		LearningPath: pbLearningPath,
+	}, nil
+}
+
+// SkipPlacementTest allows users to skip the placement test
+func (s *SchedulerService) SkipPlacementTest(ctx context.Context, req *pb.SkipPlacementTestRequest) (*pb.SkipPlacementTestResponse, error) {
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Skipping placement test")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Skip placement test
+	err := s.onboardingService.SkipPlacementTest(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to skip placement test")
+		return nil, status.Error(codes.Internal, "failed to skip placement test")
+	}
+
+	// Get the generated learning path
+	learningPath, err := s.onboardingService.GetLearningPath(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get learning path")
+		return nil, status.Error(codes.Internal, "failed to get learning path")
+	}
+
+	// Convert to protobuf format
+	pbLearningPath := s.convertLearningPathToProto(learningPath)
+
+	return &pb.SkipPlacementTestResponse{
+		Success:      true,
+		Message:      "Placement test skipped and default learning path generated",
+		LearningPath: pbLearningPath,
+	}, nil
+}
+
+// CompleteOnboarding finalizes the onboarding process
+func (s *SchedulerService) CompleteOnboarding(ctx context.Context, req *pb.CompleteOnboardingRequest) (*pb.CompleteOnboardingResponse, error) {
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":     req.UserId,
+		"satisfaction": req.Satisfaction,
+	}).Info("Completing onboarding")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.Satisfaction < 1 || req.Satisfaction > 5 {
+		return nil, status.Error(codes.InvalidArgument, "satisfaction must be between 1 and 5")
+	}
+
+	// Complete onboarding
+	err := s.onboardingService.CompleteOnboarding(ctx, req.UserId, int(req.Satisfaction), req.Feedback)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to complete onboarding")
+		return nil, status.Error(codes.Internal, "failed to complete onboarding")
+	}
+
+	return &pb.CompleteOnboardingResponse{
+		Success: true,
+		Message: "Onboarding completed successfully",
+	}, nil
+}
+
+// GetOnboardingState retrieves the current onboarding state for a user
+func (s *SchedulerService) GetOnboardingState(ctx context.Context, req *pb.GetOnboardingStateRequest) (*pb.GetOnboardingStateResponse, error) {
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Getting onboarding state")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Get onboarding state
+	onboardingState, err := s.onboardingService.GetOnboardingState(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get onboarding state")
+		return nil, status.Error(codes.NotFound, "onboarding state not found")
+	}
+
+	// Convert to protobuf format
+	pbState := s.convertOnboardingStateToProto(onboardingState)
+
+	return &pb.GetOnboardingStateResponse{
+		OnboardingState: pbState,
+	}, nil
+}
+
+// GetLearningPath retrieves the learning path for a user
+func (s *SchedulerService) GetLearningPath(ctx context.Context, req *pb.GetLearningPathRequest) (*pb.GetLearningPathResponse, error) {
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Getting learning path")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Get learning path
+	learningPath, err := s.onboardingService.GetLearningPath(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get learning path")
+		return nil, status.Error(codes.NotFound, "learning path not found")
+	}
+
+	// Convert to protobuf format
+	pbLearningPath := s.convertLearningPathToProto(learningPath)
+
+	return &pb.GetLearningPathResponse{
+		LearningPath: pbLearningPath,
+	}, nil
+}
+
+// Helper methods for protobuf conversion
+
+// convertOnboardingStateToProto converts internal onboarding state to protobuf format
+func (s *SchedulerService) convertOnboardingStateToProto(state *onboarding.OnboardingState) *pb.OnboardingState {
+	pbState := &pb.OnboardingState{
+		UserId:      state.UserID,
+		CountryCode: state.CountryCode,
+		Stage:       string(state.Stage),
+		Progress: &pb.OnboardingProgress{
+			CurrentStage:               string(state.Progress.CurrentStage),
+			CompletedStages:            s.convertOnboardingStages(state.Progress.CompletedStages),
+			TotalStages:                int32(state.Progress.TotalStages),
+			PercentComplete:            state.Progress.PercentComplete,
+			EstimatedTimeRemainingMinutes: int32(state.Progress.EstimatedTimeRemaining),
+		},
+		Preferences: &pb.UserPreferences{
+			StudyGoal:            state.Preferences.StudyGoal,
+			AvailableTimeMinutes: int32(state.Preferences.AvailableTime),
+			PreferredDifficulty:  state.Preferences.PreferredDifficulty,
+			FocusAreas:           state.Preferences.FocusAreas,
+			LearningStyle:        state.Preferences.LearningStyle,
+			NotificationTimes:    state.Preferences.NotificationTimes,
+			WeeklySchedule:       state.Preferences.WeeklySchedule,
+		},
+		Analytics: &pb.OnboardingAnalytics{
+			TimeSpentSeconds:   s.convertTimeSpentMap(state.Analytics.TimeSpent),
+			InteractionCount:   s.convertInteractionCountMap(state.Analytics.InteractionCount),
+			DropoffPoints:      state.Analytics.DropoffPoints,
+			CompletionRate:     state.Analytics.CompletionRate,
+			UserSatisfaction:   int32(state.Analytics.UserSatisfaction),
+			FeedbackComments:   state.Analytics.FeedbackComments,
+		},
+		CreatedAt: timestamppb.New(state.CreatedAt),
+		UpdatedAt: timestamppb.New(state.UpdatedAt),
+	}
+
+	if state.CompletedAt != nil {
+		pbState.CompletedAt = timestamppb.New(*state.CompletedAt)
+	}
+
+	if state.PlacementTest != nil {
+		pbState.PlacementTest = s.convertPlacementTestStateToProto(state.PlacementTest)
+	}
+
+	if state.LearningPath != nil {
+		pbState.LearningPath = s.convertLearningPathToProto(state.LearningPath)
+	}
+
+	return pbState
+}
+
+// convertPlacementTestStateToProto converts placement test state to protobuf format
+func (s *SchedulerService) convertPlacementTestStateToProto(state *onboarding.PlacementTestState) *pb.PlacementTestState {
+	pbState := &pb.PlacementTestState{
+		SessionId:      state.SessionID,
+		Status:         string(state.Status),
+		ItemsCompleted: int32(state.ItemsCompleted),
+		TotalItems:     int32(state.TotalItems),
+		CurrentAbility: state.CurrentAbility,
+		Confidence:     state.Confidence,
+		TopicAbilities: state.TopicAbilities,
+		StartedAt:      timestamppb.New(state.StartedAt),
+	}
+
+	if state.CompletedAt != nil {
+		pbState.CompletedAt = timestamppb.New(*state.CompletedAt)
+	}
+
+	if state.Results != nil {
+		pbState.Results = s.convertPlacementResultsToProto(state.Results)
+	}
+
+	return pbState
+}
+
+// convertLearningPathToProto converts learning path to protobuf format
+func (s *SchedulerService) convertLearningPathToProto(path *onboarding.LearningPath) *pb.LearningPath {
+	var focusTopics []*pb.TopicRecommendation
+	for _, topic := range path.FocusTopics {
+		focusTopics = append(focusTopics, &pb.TopicRecommendation{
+			Topic:              topic.Topic,
+			Priority:           topic.Priority,
+			Reason:             topic.Reason,
+			Difficulty:         topic.Difficulty,
+			EstimatedTimeHours: int32(topic.EstimatedTime),
+		})
+	}
+
+	var milestones []*pb.LearningMilestone
+	for _, milestone := range path.Milestones {
+		pbMilestone := &pb.LearningMilestone{
+			Id:             milestone.ID,
+			Title:          milestone.Title,
+			Description:    milestone.Description,
+			TargetAccuracy: milestone.TargetAccuracy,
+			RequiredTopics: milestone.RequiredTopics,
+			EstimatedDate:  timestamppb.New(milestone.EstimatedDate),
+			IsCompleted:    milestone.IsCompleted,
+		}
+		if milestone.CompletedAt != nil {
+			pbMilestone.CompletedAt = timestamppb.New(*milestone.CompletedAt)
+		}
+		milestones = append(milestones, pbMilestone)
+	}
+
+	return &pb.LearningPath{
+		PathId:           path.PathID,
+		RecommendedLevel: path.RecommendedLevel,
+		FocusTopics:      focusTopics,
+		StudyPlan: &pb.StudyPlan{
+			DailyMinutes:        int32(path.StudyPlan.DailyMinutes),
+			WeeklySchedule:      s.convertWeeklyScheduleToInt32(path.StudyPlan.WeeklySchedule),
+			SessionTypes:        path.StudyPlan.SessionTypes,
+			ReviewFrequencyDays: int32(path.StudyPlan.ReviewFrequency),
+			TestFrequencyDays:   int32(path.StudyPlan.TestFrequency),
+		},
+		Milestones:           milestones,
+		EstimatedDurationDays: int32(path.EstimatedDuration),
+		CreatedAt:            timestamppb.New(path.CreatedAt),
+	}
+}
+
+// convertPreferencesFromProto converts protobuf preferences to internal format
+func (s *SchedulerService) convertPreferencesFromProto(prefs *pb.UserPreferences) onboarding.UserPreferences {
+	return onboarding.UserPreferences{
+		StudyGoal:           prefs.StudyGoal,
+		AvailableTime:       int(prefs.AvailableTimeMinutes),
+		PreferredDifficulty: prefs.PreferredDifficulty,
+		FocusAreas:          prefs.FocusAreas,
+		LearningStyle:       prefs.LearningStyle,
+		NotificationTimes:   prefs.NotificationTimes,
+		WeeklySchedule:      prefs.WeeklySchedule,
+	}
+}
+
+// convertPlacementResultsFromProto converts protobuf placement results to internal format
+func (s *SchedulerService) convertPlacementResultsFromProto(results *pb.PlacementTestResults) *algorithms.PlacementResult {
+	return &algorithms.PlacementResult{
+		UserID:               results.UserId,
+		SessionID:            results.SessionId,
+		TopicAbilities:       results.TopicAbilities,
+		TopicConfidence:      results.TopicConfidence,
+		OverallAbility:       results.OverallAbility,
+		OverallConfidence:    results.OverallConfidence,
+		ItemsAdministered:    int(results.ItemsAdministered),
+		CorrectResponses:     int(results.CorrectResponses),
+		TotalTime:            int(results.TotalTimeMs),
+		FinalSE:              results.FinalSe,
+		RecommendedLevel:     results.RecommendedLevel,
+		StrengthAreas:        results.StrengthAreas,
+		WeaknessAreas:        results.WeaknessAreas,
+		StoppingReason:       results.StoppingReason,
+		CompletedAt:          time.Now(),
+	}
+}
+
+// convertPlacementResultsToProto converts internal placement results to protobuf format
+func (s *SchedulerService) convertPlacementResultsToProto(results *algorithms.PlacementResult) *pb.PlacementTestResults {
+	return &pb.PlacementTestResults{
+		UserId:            results.UserID,
+		SessionId:         results.SessionID,
+		TopicAbilities:    results.TopicAbilities,
+		TopicConfidence:   results.TopicConfidence,
+		OverallAbility:    results.OverallAbility,
+		OverallConfidence: results.OverallConfidence,
+		ItemsAdministered: int32(results.ItemsAdministered),
+		CorrectResponses:  int32(results.CorrectResponses),
+		TotalTimeMs:       int32(results.TotalTime),
+		FinalSe:           results.FinalSE,
+		RecommendedLevel:  results.RecommendedLevel,
+		StrengthAreas:     results.StrengthAreas,
+		WeaknessAreas:     results.WeaknessAreas,
+		StoppingReason:    results.StoppingReason,
+	}
+}
+
+// Helper conversion methods
+
+func (s *SchedulerService) convertOnboardingStages(stages []onboarding.OnboardingStage) []string {
+	var result []string
+	for _, stage := range stages {
+		result = append(result, string(stage))
+	}
+	return result
+}
+
+func (s *SchedulerService) convertTimeSpentMap(timeSpent map[onboarding.OnboardingStage]int) map[string]int32 {
+	result := make(map[string]int32)
+	for stage, time := range timeSpent {
+		result[string(stage)] = int32(time)
+	}
+	return result
+}
+
+func (s *SchedulerService) convertInteractionCountMap(interactions map[onboarding.OnboardingStage]int) map[string]int32 {
+	result := make(map[string]int32)
+	for stage, count := range interactions {
+		result[string(stage)] = int32(count)
+	}
+	return result
+}
+
+func (s *SchedulerService) convertWeeklyScheduleToInt32(schedule map[string]int) map[string]int32 {
+	result := make(map[string]int32)
+	for day, minutes := range schedule {
+		result[day] = int32(minutes)
+	}
+	return result
+}
