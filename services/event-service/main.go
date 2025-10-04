@@ -1,34 +1,46 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/gin-gonic/gin"
+	"event-service/internal/config"
+	"event-service/internal/server"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8083"
+	// Load configuration
+	cfg := config.LoadConfig()
+
+	// Create and start server
+	srv := server.NewServer(cfg)
+
+	// Start server in a goroutine
+	go func() {
+		if err := srv.Start(); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Received shutdown signal...")
+
+	// Create a context with timeout for graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Attempt graceful shutdown
+	if err := srv.Stop(ctx); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	} else {
+		log.Println("Server shutdown complete")
 	}
-
-	r := gin.Default()
-	
-	// Health check endpoint
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":    "ok",
-			"service":   "event-service",
-			"timestamp": gin.H{},
-		})
-	})
-
-	// TODO: Add event ingestion endpoints
-	// r.POST("/events/attempt", handleAttemptEvent)
-	// r.POST("/events/session", handleSessionEvent)
-	// r.POST("/events/batch", handleBatchEvents)
-
-	log.Printf("Event service listening on port %s", port)
-	r.Run(":" + port)
 }
