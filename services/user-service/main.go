@@ -13,6 +13,7 @@ import (
 	"user-service/internal/cache"
 	"user-service/internal/config"
 	"user-service/internal/database"
+	"user-service/internal/events"
 	"user-service/internal/handlers"
 	"user-service/internal/logger"
 	"user-service/internal/metrics"
@@ -56,24 +57,25 @@ func main() {
 	defer redisClient.Close()
 
 	// Initialize event publisher
-	eventPublisher := events.NewKafkaEventPublisher(cfg)
-	defer eventPublisher.Close()
+	eventPublisher := events.NewNoOpEventPublisher() // Use NoOp for now
 
 	// Initialize repository
 	userRepo := repository.NewUserRepository(db.Pool)
+	progressRepo := repository.NewProgressRepository(db.Pool)
 
-	// Initialize service
+	// Initialize services
 	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher)
+	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log)
 
 	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService, progressService)
 
 	// Create gRPC server with interceptors
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc.ChainUnaryInterceptor(
+		grpc.ChainUnaryInterceptor(
 			logger.UnaryServerInterceptor(),
 			metrics.UnaryServerInterceptor(),
-		)),
+		),
 	)
 
 	// Register services
@@ -124,6 +126,9 @@ func main() {
 
 	// Stop gRPC server
 	grpcServer.GracefulStop()
+
+	// Use context for any cleanup if needed
+	_ = ctx
 
 	log.Info("User Service stopped")
 }

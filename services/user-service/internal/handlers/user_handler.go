@@ -20,12 +20,14 @@ import (
 
 type UserHandler struct {
 	pb.UnimplementedUserServiceServer
-	userService service.UserService
+	userService     service.UserService
+	progressService service.ProgressService
 }
 
-func NewUserHandler(userService service.UserService) *UserHandler {
+func NewUserHandler(userService service.UserService, progressService service.ProgressService) *UserHandler {
 	return &UserHandler{
-		userService: userService,
+		userService:     userService,
+		progressService: progressService,
 	}
 }
 
