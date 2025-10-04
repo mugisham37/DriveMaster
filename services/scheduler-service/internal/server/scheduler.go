@@ -30,6 +30,8 @@ type SchedulerService struct {
 	cache        *cache.RedisClient
 	sm2Algorithm *algorithms.SM2Algorithm
 	sm2Manager   *state.SM2StateManager
+	bktAlgorithm *algorithms.BKTAlgorithm
+	bktManager   *state.BKTStateManager
 }
 
 // NewSchedulerService creates a new scheduler service instance
@@ -46,6 +48,12 @@ func NewSchedulerService(
 	// Initialize SM-2 state manager
 	sm2Manager := state.NewSM2StateManager(sm2Algorithm, db, cache, log)
 
+	// Initialize BKT algorithm
+	bktAlgorithm := algorithms.NewBKTAlgorithm()
+
+	// Initialize BKT state manager
+	bktManager := state.NewBKTStateManager(bktAlgorithm, db, cache, log)
+
 	return &SchedulerService{
 		config:       cfg,
 		logger:       log,
@@ -54,6 +62,8 @@ func NewSchedulerService(
 		cache:        cache,
 		sm2Algorithm: sm2Algorithm,
 		sm2Manager:   sm2Manager,
+		bktAlgorithm: bktAlgorithm,
+		bktManager:   bktManager,
 	}
 }
 
@@ -97,8 +107,15 @@ func (s *SchedulerService) GetNextItems(ctx context.Context, req *pb.NextItemsRe
 		return nil, status.Error(codes.Internal, "failed to get due items")
 	}
 
-	// Select items based on SM-2 urgency and session constraints
-	selectedItems := s.selectItemsWithSM2(ctx, req, urgencyScores, dueItems, currentTime)
+	// Get BKT mastery gaps for topic-based prioritization
+	masteryGaps, err := s.bktManager.GetMasteryGaps(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get BKT mastery gaps")
+		return nil, status.Error(codes.Internal, "failed to get mastery gaps")
+	}
+
+	// Select items based on SM-2 urgency, BKT mastery gaps, and session constraints
+	selectedItems := s.selectItemsWithBKT(ctx, req, urgencyScores, dueItems, masteryGaps, currentTime)
 
 	// Create session context
 	sessionContext := &pb.SessionContext{
@@ -197,25 +214,48 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 	}
 
 	// Update SM-2 state based on quality
-	newState, err := s.sm2Manager.UpdateState(ctx, req.UserId, req.ItemId, int(req.Quality))
+	newSM2State, err := s.sm2Manager.UpdateState(ctx, req.UserId, req.ItemId, int(req.Quality))
 	if err != nil {
 		s.logger.WithContext(ctx).WithError(err).Error("Failed to update SM-2 state")
 		return nil, status.Error(codes.Internal, "failed to update SM-2 state")
 	}
 
+	// Update BKT states for all topics associated with this item
+	// TODO: Get item topics from item metadata - for now using placeholder topics
+	itemTopics := []string{"general"} // This should come from item metadata
+	masteryChanges := make(map[string]float64)
+
+	for _, topic := range itemTopics {
+		// Get current BKT state before update
+		currentBKTState, err := s.bktManager.GetState(ctx, req.UserId, topic)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("topic", topic).Warn("Failed to get BKT state for topic")
+			continue
+		}
+
+		// Update BKT state based on correctness
+		newBKTState, err := s.bktManager.UpdateState(ctx, req.UserId, topic, req.Correct)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("topic", topic).Error("Failed to update BKT state")
+			continue
+		}
+
+		// Calculate mastery change
+		masteryChange := newBKTState.ProbKnowledge - currentBKTState.ProbKnowledge
+		masteryChanges[topic] = masteryChange
+	}
+
 	// Create state update response
 	stateUpdate := &pb.UserStateUpdate{
-		MasteryChanges: map[string]float64{
-			// TODO: Implement mastery changes based on topics
-		},
+		MasteryChanges: masteryChanges,
 		AbilityChanges: map[string]float64{
 			// TODO: Implement ability changes based on IRT
 		},
 		Sm2Update: &pb.SM2StateUpdate{
-			EasinessFactor: newState.EasinessFactor,
-			Interval:       int32(newState.Interval),
-			Repetition:     int32(newState.Repetition),
-			NextDue:        timestamppb.New(newState.NextDue),
+			EasinessFactor: newSM2State.EasinessFactor,
+			Interval:       int32(newSM2State.Interval),
+			Repetition:     int32(newSM2State.Repetition),
+			NextDue:        timestamppb.New(newSM2State.NextDue),
 		},
 	}
 
@@ -233,17 +273,17 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 		}
 
 		// Track SM-2 specific metrics
-		s.trackSM2Metrics(currentState, newState, req.Quality)
+		s.trackSM2Metrics(currentState, newSM2State, req.Quality)
 	}
 
 	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
 		"user_id":      req.UserId,
 		"item_id":      req.ItemId,
 		"old_interval": currentState.Interval,
-		"new_interval": newState.Interval,
+		"new_interval": newSM2State.Interval,
 		"old_easiness": currentState.EasinessFactor,
-		"new_easiness": newState.EasinessFactor,
-		"repetition":   newState.Repetition,
+		"new_easiness": newSM2State.EasinessFactor,
+		"repetition":   newSM2State.Repetition,
 	}).Info("SM-2 state updated successfully")
 
 	return &pb.AttemptResponse{
@@ -341,13 +381,26 @@ func (s *SchedulerService) GetUserState(ctx context.Context, req *pb.GetUserStat
 		pbSM2States[itemID] = s.sm2Manager.ConvertToProto(state)
 	}
 
+	// Get BKT states for the user
+	bktStates, err := s.bktManager.GetUserStates(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get user BKT states")
+		return nil, status.Error(codes.Internal, "failed to get user BKT states")
+	}
+
+	// Convert BKT states to protobuf format
+	pbBKTStates := make(map[string]*pb.BKTState)
+	for topic, state := range bktStates {
+		pbBKTStates[topic] = s.bktManager.ConvertToProto(state)
+	}
+
 	// Create user scheduler state
 	state := &pb.UserSchedulerState{
 		UserId:            req.UserId,
 		AbilityVector:     map[string]float64{}, // TODO: Implement IRT ability tracking
 		AbilityConfidence: map[string]float64{}, // TODO: Implement IRT confidence tracking
 		Sm2States:         pbSM2States,
-		BktStates:         map[string]*pb.BKTState{}, // TODO: Implement BKT states
+		BktStates:         pbBKTStates,
 		BanditState: &pb.BanditState{
 			StrategyWeights: map[string]float64{
 				"practice": 0.4,
@@ -408,13 +461,18 @@ func (s *SchedulerService) GetTopicMastery(ctx context.Context, req *pb.GetTopic
 		return nil, status.Error(codes.InvalidArgument, "topic is required")
 	}
 
-	// TODO: Implement actual mastery retrieval
-	// For now, return placeholder values
+	// Get BKT state for the topic
+	bktState, err := s.bktManager.GetState(ctx, req.UserId, req.Topic)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get BKT state for topic mastery")
+		return nil, status.Error(codes.Internal, "failed to get topic mastery")
+	}
+
 	return &pb.GetTopicMasteryResponse{
-		Mastery:       0.7,
-		Confidence:    0.8,
-		PracticeCount: 25,
-		LastPracticed: timestamppb.New(time.Now().AddDate(0, 0, -1)),
+		Mastery:       bktState.ProbKnowledge,
+		Confidence:    bktState.Confidence,
+		PracticeCount: int32(bktState.AttemptsCount),
+		LastPracticed: timestamppb.New(bktState.LastUpdated),
 	}, nil
 }
 
@@ -462,12 +520,13 @@ func (s *SchedulerService) Health(ctx context.Context, req *pb.HealthRequest) (*
 
 // Helper methods for SM-2 integration
 
-// selectItemsWithSM2 selects items based on SM-2 urgency scores and session constraints
-func (s *SchedulerService) selectItemsWithSM2(
+// selectItemsWithBKT selects items based on SM-2 urgency, BKT mastery gaps, and session constraints
+func (s *SchedulerService) selectItemsWithBKT(
 	ctx context.Context,
 	req *pb.NextItemsRequest,
 	urgencyScores map[string]float64,
 	dueItems []string,
+	masteryGaps map[string]float64,
 	currentTime time.Time,
 ) []*pb.RecommendedItem {
 	var items []*pb.RecommendedItem
@@ -506,7 +565,23 @@ func (s *SchedulerService) selectItemsWithSM2(
 		})
 	}
 
-	// Sort by priority: due items first, then by urgency score
+	// Calculate combined scores incorporating BKT mastery gaps
+	for i := range scoredItems {
+		// TODO: Get item topics from item metadata
+		// For now, assume each item maps to a topic with the same name
+		itemTopic := scoredItems[i].itemID // Placeholder - should be actual topic mapping
+
+		masteryGap := 0.5 // Default gap if topic not found
+		if gap, exists := masteryGaps[itemTopic]; exists {
+			masteryGap = gap
+		}
+
+		// Combine SM-2 urgency (40%) and BKT mastery gap (60%)
+		combinedScore := 0.4*scoredItems[i].score + 0.6*masteryGap
+		scoredItems[i].score = combinedScore
+	}
+
+	// Sort by priority: due items first, then by combined score
 	for i := 0; i < len(scoredItems)-1; i++ {
 		for j := i + 1; j < len(scoredItems); j++ {
 			// Prioritize due items
@@ -515,7 +590,7 @@ func (s *SchedulerService) selectItemsWithSM2(
 					scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
 				}
 			} else if scoredItems[j].score > scoredItems[i].score {
-				// Within same due status, sort by urgency score
+				// Within same due status, sort by combined score
 				scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
 			}
 		}
