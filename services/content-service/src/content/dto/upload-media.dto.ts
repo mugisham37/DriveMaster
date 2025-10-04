@@ -4,10 +4,12 @@ import {
     IsOptional,
     IsObject,
     IsNumber,
+    IsBoolean,
     Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MediaType } from '../entities/media-asset.entity';
+import { MediaProcessingOptionsDto } from './media-processing.dto';
 
 export class UploadMediaDto {
     @ApiProperty({ description: 'Media type', enum: MediaType })
@@ -41,4 +43,9 @@ export class UploadMediaDto {
     @IsNumber()
     @Min(1)
     duration?: number;
+
+    @ApiPropertyOptional({ description: 'Processing options for the media' })
+    @IsOptional()
+    @IsObject()
+    processingOptions?: MediaProcessingOptionsDto;
 }

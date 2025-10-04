@@ -27,6 +27,7 @@ import {
 import { S3Service } from '../services/s3.service';
 import { ValidationService } from '../services/validation.service';
 import { NotificationService } from '../services/notification.service';
+import { MediaAssetService, MediaUploadOptions, MediaAssetWithUrls } from '../services/media-asset.service';
 
 export interface PaginatedResult<T> {
     items: T[];
@@ -55,6 +56,7 @@ export class ContentService {
         private readonly s3Service: S3Service,
         private readonly validationService: ValidationService,
         private readonly notificationService: NotificationService,
+        private readonly mediaAssetService: MediaAssetService,
     ) { }
 
     async createItem(createItemDto: CreateItemDto, createdBy: string): Promise<Item> {
@@ -256,7 +258,8 @@ export class ContentService {
         itemId: string,
         file: Express.Multer.File,
         uploadDto: UploadMediaDto,
-    ): Promise<MediaAsset> {
+        options: MediaUploadOptions = {}
+    ): Promise<MediaAssetWithUrls> {
         // Verify item exists
         await this.getItem(itemId);
 
@@ -269,47 +272,30 @@ export class ContentService {
             caption: uploadDto.caption,
         });
 
-        // Generate S3 key
-        const timestamp = Date.now();
-        const fileExtension = file.originalname.split('.').pop();
-        const s3Key = `items/${itemId}/media/${timestamp}-${uploadDto.mediaType}.${fileExtension}`;
+        // Prepare metadata
+        const metadata = {
+            alt: uploadDto.alt,
+            caption: uploadDto.caption,
+            width: uploadDto.width,
+            height: uploadDto.height,
+            duration: uploadDto.duration,
+        };
 
-        try {
-            // Upload to S3
-            const uploadResult = await this.s3Service.uploadFile(
-                s3Key,
-                file.buffer,
-                file.mimetype,
-            );
-
-            // Create media asset record
-            const mediaAsset = this.mediaRepository.create({
-                itemId,
-                filename: file.filename,
-                originalName: file.originalname,
-                mediaType: uploadDto.mediaType,
-                mimeType: file.mimetype,
-                size: file.size,
-                s3Key: uploadResult.key,
-                s3Bucket: uploadResult.bucket,
-                cdnUrl: uploadResult.url,
-                metadata: {
-                    alt: uploadDto.alt,
-                    caption: uploadDto.caption,
-                    width: uploadDto.width,
-                    height: uploadDto.height,
-                    duration: uploadDto.duration,
-                },
-            });
-
-            const savedAsset = await this.mediaRepository.save(mediaAsset);
-            this.logger.log(`Media asset uploaded successfully: ${savedAsset.id} for item ${itemId}`);
-
-            return savedAsset;
-        } catch (error) {
-            this.logger.error(`Failed to upload media for item ${itemId}:`, error);
-            throw new BadRequestException(`Failed to upload media: ${error.message}`);
-        }
+        // Use the enhanced media asset service
+        return await this.mediaAssetService.uploadMediaAsset(
+            itemId,
+            file,
+            uploadDto.mediaType,
+            metadata,
+            {
+                generateThumbnail: true,
+                generateResponsiveVersions: uploadDto.mediaType === MediaType.IMAGE,
+                processVideo: uploadDto.mediaType === MediaType.VIDEO,
+                processAudio: uploadDto.mediaType === MediaType.AUDIO,
+                quality: 'high',
+                ...options,
+            }
+        );
     }
 
     async getMediaAsset(id: string): Promise<MediaAsset> {
@@ -350,18 +336,34 @@ export class ContentService {
         expiresIn: number = 3600,
         download: boolean = false,
     ): Promise<string> {
-        const media = await this.getMediaAsset(id);
+        return await this.mediaAssetService.getSignedUrl(id, expiresIn, download);
+    }
 
-        const options = {
-            expiresIn,
-            responseContentType: media.mimeType,
-        };
+    async getMediaAssetWithUrls(id: string): Promise<MediaAssetWithUrls> {
+        return await this.mediaAssetService.getMediaAsset(id);
+    }
 
-        if (download) {
-            options['responseContentDisposition'] = `attachment; filename="${media.originalName}"`;
-        }
+    async updateMediaAsset(
+        id: string,
+        updates: Partial<MediaAsset>
+    ): Promise<MediaAssetWithUrls> {
+        return await this.mediaAssetService.updateMediaAsset(id, updates);
+    }
 
-        return await this.s3Service.getSignedUrl(media.s3Key, options, media.s3Bucket);
+    async duplicateMediaAsset(id: string, newItemId: string): Promise<MediaAssetWithUrls> {
+        return await this.mediaAssetService.duplicateMediaAsset(id, newItemId);
+    }
+
+    async getMediaAssetsByItem(itemId: string): Promise<MediaAssetWithUrls[]> {
+        return await this.mediaAssetService.getMediaAssetsByItem(itemId);
+    }
+
+    async getMediaStorageStatistics(): Promise<any> {
+        return await this.mediaAssetService.getStorageStatistics();
+    }
+
+    async cleanupInactiveMedia(): Promise<any> {
+        return await this.mediaAssetService.cleanupInactiveAssets();
     }
 
     private createQueryBuilder(queryDto: QueryItemsDto): SelectQueryBuilder<Item> {

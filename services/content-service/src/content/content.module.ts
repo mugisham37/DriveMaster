@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 import { Item } from './entities/item.entity';
@@ -9,6 +10,9 @@ import { WorkflowHistory } from './entities/workflow-history.entity';
 import { S3Service } from '../services/s3.service';
 import { ValidationService } from '../services/validation.service';
 import { NotificationService } from '../services/notification.service';
+import { MediaProcessingService } from '../services/media-processing.service';
+import { CDNService } from '../services/cdn.service';
+import { MediaAssetService } from '../services/media-asset.service';
 import { multerConfig } from '../common/multer.config';
 
 @Module({
@@ -18,9 +22,26 @@ import { multerConfig } from '../common/multer.config';
             ...multerConfig,
             storage: undefined, // Use memory storage for S3 uploads
         }),
+        ScheduleModule.forRoot(),
     ],
     controllers: [ContentController],
-    providers: [ContentService, S3Service, ValidationService, NotificationService],
-    exports: [ContentService, S3Service, ValidationService, NotificationService],
+    providers: [
+        ContentService,
+        S3Service,
+        ValidationService,
+        NotificationService,
+        MediaProcessingService,
+        CDNService,
+        MediaAssetService,
+    ],
+    exports: [
+        ContentService,
+        S3Service,
+        ValidationService,
+        NotificationService,
+        MediaProcessingService,
+        CDNService,
+        MediaAssetService,
+    ],
 })
 export class ContentModule { }

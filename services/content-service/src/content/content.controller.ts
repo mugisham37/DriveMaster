@@ -373,4 +373,59 @@ export class ContentController {
         const performedBy = 'temp-user-id';
         return await this.contentService.rollbackToVersion(id, targetVersion, performedBy);
     }
+    // Enhanced Media Management Endpoints
+
+    @Get('media/:id/urls')
+    @ApiOperation({ summary: 'Get media asset with CDN URLs' })
+    @ApiResponse({ status: 200, description: 'Media asset with URLs retrieved successfully' })
+    @Roles(UserRole.LEARNER, UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async getMediaAssetWithUrls(@Param('id', ParseUUIDPipe) id: string) {
+        return await this.contentService.getMediaAssetWithUrls(id);
+    }
+
+    @Put('media/:id')
+    @ApiOperation({ summary: 'Update media asset metadata' })
+    @ApiResponse({ status: 200, description: 'Media asset updated successfully' })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async updateMediaAsset(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() updates: Partial<MediaAsset>
+    ) {
+        return await this.contentService.updateMediaAsset(id, updates);
+    }
+
+    @Post('media/:id/duplicate')
+    @ApiOperation({ summary: 'Duplicate media asset to another item' })
+    @ApiResponse({ status: 201, description: 'Media asset duplicated successfully' })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async duplicateMediaAsset(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body('newItemId') newItemId: string
+    ) {
+        return await this.contentService.duplicateMediaAsset(id, newItemId);
+    }
+
+    @Get('items/:itemId/media')
+    @ApiOperation({ summary: 'Get all media assets for an item' })
+    @ApiResponse({ status: 200, description: 'Media assets retrieved successfully' })
+    @Roles(UserRole.LEARNER, UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async getMediaAssetsByItem(@Param('itemId', ParseUUIDPipe) itemId: string) {
+        return await this.contentService.getMediaAssetsByItem(itemId);
+    }
+
+    @Get('media/statistics')
+    @ApiOperation({ summary: 'Get media storage statistics' })
+    @ApiResponse({ status: 200, description: 'Storage statistics retrieved successfully' })
+    @Roles(UserRole.ADMIN)
+    async getMediaStorageStatistics() {
+        return await this.contentService.getMediaStorageStatistics();
+    }
+
+    @Post('media/cleanup')
+    @ApiOperation({ summary: 'Cleanup inactive media assets' })
+    @ApiResponse({ status: 200, description: 'Media cleanup completed' })
+    @Roles(UserRole.ADMIN)
+    async cleanupInactiveMedia() {
+        return await this.contentService.cleanupInactiveMedia();
+    }
 }
