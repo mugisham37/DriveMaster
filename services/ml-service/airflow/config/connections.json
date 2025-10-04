@@ -1,0 +1,61 @@
+{
+  "connections": [
+    {
+      "conn_id": "postgres_ml",
+      "conn_type": "postgres",
+      "host": "postgres",
+      "port": 5432,
+      "schema": "adaptive_learning",
+      "login": "ml_user",
+      "password": "ml_password",
+      "description": "PostgreSQL connection for ML training data"
+    },
+    {
+      "conn_id": "aws_s3",
+      "conn_type": "aws",
+      "host": "",
+      "port": null,
+      "schema": "",
+      "login": "AKIA...",
+      "password": "secret_key",
+      "extra": {
+        "region_name": "us-west-2",
+        "aws_access_key_id": "AKIA...",
+        "aws_secret_access_key": "secret_key"
+      },
+      "description": "AWS S3 connection for data lake access"
+    },
+    {
+      "conn_id": "mlflow_tracking",
+      "conn_type": "http",
+      "host": "mlflow",
+      "port": 5000,
+      "schema": "http",
+      "description": "MLflow tracking server connection"
+    },
+    {
+      "conn_id": "kafka_connect",
+      "conn_type": "http",
+      "host": "kafka-connect",
+      "port": 8083,
+      "schema": "http",
+      "description": "Kafka Connect REST API"
+    },
+    {
+      "conn_id": "prometheus_pushgateway",
+      "conn_type": "http",
+      "host": "prometheus-pushgateway",
+      "port": 9091,
+      "schema": "http",
+      "description": "Prometheus Pushgateway for metrics"
+    },
+    {
+      "conn_id": "redis_cache",
+      "conn_type": "redis",
+      "host": "redis",
+      "port": 6379,
+      "schema": "0",
+      "description": "Redis connection for caching"
+    }
+  ]
+}

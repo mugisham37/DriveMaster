@@ -1,0 +1,64 @@
+{
+  "kafka_bootstrap_servers": "kafka:9092",
+  "data_lake_bucket": "adaptive-learning-data",
+  "feature_store_path": "s3://adaptive-learning-features",
+  "mlflow_tracking_uri": "http://mlflow:5000",
+  "mlflow_experiment": "dkt_production_training",
+  "prometheus_gateway_url": "http://prometheus-pushgateway:9091",
+  "model_registry_name": "DKT_Production_Model",
+  "training_config": {
+    "max_sequence_length": 100,
+    "min_sequence_length": 5,
+    "batch_size": 32,
+    "max_epochs": 100,
+    "early_stopping_patience": 15,
+    "learning_rate": 0.001,
+    "dropout": 0.2,
+    "hidden_size": 128,
+    "num_layers": 2
+  },
+  "quality_thresholds": {
+    "min_auc": 0.75,
+    "min_accuracy": 0.7,
+    "min_f1": 0.65,
+    "max_val_loss": 0.6,
+    "min_improvement_threshold": 0.01
+  },
+  "resource_limits": {
+    "max_memory_gb": 16,
+    "max_cpu_cores": 8,
+    "gpu_memory_fraction": 0.8,
+    "max_training_time_hours": 12
+  },
+  "monitoring_config": {
+    "enable_alerts": true,
+    "alert_email": "ml-team@company.com",
+    "slack_webhook": "",
+    "monitoring_interval_seconds": 300
+  },
+  "feature_engineering": {
+    "user_window_days": 30,
+    "min_attempts_per_user": 5,
+    "min_attempts_per_item": 10,
+    "sequence_overlap": 0.5,
+    "correlation_threshold": 0.95,
+    "variance_threshold": 0.01
+  },
+  "hyperparameter_optimization": {
+    "n_trials": 50,
+    "optimization_timeout_hours": 6,
+    "pruning_enabled": true,
+    "parallel_trials": 2
+  },
+  "cross_validation": {
+    "k_folds": 5,
+    "stratify": false,
+    "random_seed": 42
+  },
+  "deployment": {
+    "auto_deploy_threshold": 0.02,
+    "require_manual_review": false,
+    "rollback_on_failure": true,
+    "canary_deployment": false
+  }
+}
