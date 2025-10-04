@@ -57,21 +57,24 @@ func main() {
 	defer redisClient.Close()
 
 	// Initialize event publisher
-	eventPublisher := events.NewNoOpEventPublisher() // Use NoOp for now
+	eventPublisher := events.NewKafkaEventPublisher(cfg)
 
 	// Initialize repository
 	userRepo := repository.NewUserRepository(db.Pool)
 	progressRepo := repository.NewProgressRepository(db.Pool)
 	schedulerStateRepo := repository.NewSchedulerStateRepository(db.Pool)
+	activityRepo := repository.NewActivityRepository(db.Pool)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher)
 	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log)
 	schedulerStateService := service.NewSchedulerStateService(schedulerStateRepo, redisClient, cfg, eventPublisher)
+	activityService := service.NewActivityService(activityRepo, redisClient, eventPublisher, cfg, log)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService, progressService)
 	schedulerStateHandler := handlers.NewSchedulerStateHandler(schedulerStateService)
+	activityHandler := handlers.NewActivityHandler(activityService, log)
 
 	// Create gRPC server with interceptors
 	grpcServer := grpc.NewServer(

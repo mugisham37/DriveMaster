@@ -17,6 +17,7 @@ services:
       - ./scripts/db-setup/01-create-users.sql:/docker-entrypoint-initdb.d/02-create-users.sql
       - ./scripts/db-setup/02-connection-pooling.sql:/docker-entrypoint-initdb.d/03-connection-pooling.sql
       - ./scripts/db-setup/03-backup-recovery.sql:/docker-entrypoint-initdb.d/04-backup-recovery.sql
+      - ./scripts/db-setup/04-create-activity-tables.sql:/docker-entrypoint-initdb.d/05-create-activity-tables.sql
       - ./scripts/db-config/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./scripts/db-config/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - postgres_backups:/var/lib/postgresql/backups
