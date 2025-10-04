@@ -17,20 +17,29 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
-	config         *config.Config
-	httpServer     *http.Server
-	handler        *handlers.EventHandler
-	publisher      *publisher.KafkaPublisher
-	rateLimiter    *middleware.RateLimiter
-	circuitBreaker *middleware.CircuitBreaker
+	config              *config.Config
+	httpServer          *http.Server
+	handler             *handlers.EventHandler
+	publisher           *publisher.KafkaPublisher
+	router              *publisher.EventRouter
+	metricsHandler      *publisher.MetricsHandler
+	rateLimiter         *middleware.RateLimiter
+	circuitBreaker      *middleware.CircuitBreaker
+	backpressureManager *BackpressureManager
 }
 
 // NewServer creates a new server instance
 func NewServer(cfg *config.Config) *Server {
-	// Create Kafka publisher
+	// Create Kafka publisher with enhanced features
 	kafkaPublisher := publisher.NewKafkaPublisher(cfg)
 
-	// Create event handler
+	// Create event router with intelligent routing
+	eventRouter := publisher.NewEventRouter(cfg, kafkaPublisher)
+
+	// Create metrics handler for publisher monitoring
+	metricsHandler := publisher.NewMetricsHandler(kafkaPublisher)
+
+	// Create event handler with router
 	eventHandler := handlers.NewEventHandler(cfg, kafkaPublisher)
 
 	// Create rate limiter
@@ -54,12 +63,18 @@ func NewServer(cfg *config.Config) *Server {
 		},
 	})
 
+	// Create backpressure manager
+	backpressureManager := NewBackpressureManager(1000) // Max 1000 queued requests
+
 	return &Server{
-		config:         cfg,
-		handler:        eventHandler,
-		publisher:      kafkaPublisher,
-		rateLimiter:    rateLimiter,
-		circuitBreaker: circuitBreaker,
+		config:              cfg,
+		handler:             eventHandler,
+		publisher:           kafkaPublisher,
+		router:              eventRouter,
+		metricsHandler:      metricsHandler,
+		rateLimiter:         rateLimiter,
+		circuitBreaker:      circuitBreaker,
+		backpressureManager: backpressureManager,
 	}
 }
 
@@ -85,8 +100,14 @@ func (s *Server) Start() error {
 	router.GET("/health", s.handler.GetHealth)
 	router.GET("/metrics", s.handler.GetMetrics)
 
-	// Event ingestion endpoints
+	// Publisher-specific metrics endpoints
+	router.GET("/metrics/publisher", s.metricsHandler.GetMetrics)
+	router.GET("/metrics/publisher/health", s.metricsHandler.GetHealthStatus)
+	router.GET("/metrics/prometheus", s.metricsHandler.GetPrometheusMetrics)
+
+	// Event ingestion endpoints with backpressure protection
 	v1 := router.Group("/api/v1")
+	v1.Use(s.backpressureMiddleware())
 	{
 		v1.POST("/events/attempt", s.handler.HandleAttemptEvent)
 		v1.POST("/events/session", s.handler.HandleSessionEvent)
@@ -116,14 +137,18 @@ func (s *Server) Stop(ctx context.Context) error {
 		s.rateLimiter.Stop()
 	}
 
-	// Close Kafka publisher
+	// Close Kafka publisher (this will flush any pending messages)
 	if s.publisher != nil {
+		log.Println("Closing Kafka publisher...")
 		if err := s.publisher.Close(); err != nil {
 			log.Printf("Error closing Kafka publisher: %v", err)
+		} else {
+			log.Println("Kafka publisher closed successfully")
 		}
 	}
 
 	// Shutdown HTTP server
+	log.Println("Shutting down HTTP server...")
 	return s.httpServer.Shutdown(ctx)
 }
 
@@ -186,6 +211,28 @@ func (s *Server) circuitBreakerMiddleware() gin.HandlerFunc {
 			})
 			c.Abort()
 		}
+	}
+}
+
+// backpressureMiddleware implements backpressure protection
+func (s *Server) backpressureMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Check if we should reject due to backpressure
+		if s.backpressureManager.ShouldReject() {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "backpressure_limit_exceeded",
+				"message":     "Service is under high load, please retry later",
+				"retry_after": 5,
+			})
+			c.Abort()
+			return
+		}
+
+		// Increment queue size
+		s.backpressureManager.IncrementQueue()
+		defer s.backpressureManager.DecrementQueue()
+
+		c.Next()
 	}
 }
 
