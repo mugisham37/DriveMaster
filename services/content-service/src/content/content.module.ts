@@ -13,6 +13,7 @@ import { NotificationService } from '../services/notification.service';
 import { MediaProcessingService } from '../services/media-processing.service';
 import { CDNService } from '../services/cdn.service';
 import { MediaAssetService } from '../services/media-asset.service';
+import { BulkOperationsService } from '../services/bulk-operations.service';
 import { multerConfig } from '../common/multer.config';
 
 @Module({
@@ -33,6 +34,7 @@ import { multerConfig } from '../common/multer.config';
         MediaProcessingService,
         CDNService,
         MediaAssetService,
+        BulkOperationsService,
     ],
     exports: [
         ContentService,
@@ -42,6 +44,7 @@ import { multerConfig } from '../common/multer.config';
         MediaProcessingService,
         CDNService,
         MediaAssetService,
+        BulkOperationsService,
     ],
 })
 export class ContentModule { }

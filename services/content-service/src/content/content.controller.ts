@@ -41,15 +41,31 @@ import {
     BulkWorkflowDto,
     BulkWorkflowResult,
 } from './dto/workflow.dto';
+import {
+    BulkImportRequestDto,
+    BulkImportResultDto,
+    BulkExportRequestDto,
+    BulkExportResultDto,
+    BatchOperationRequestDto,
+    BatchOperationResultDto,
+    ContentMigrationRequestDto,
+    ContentMigrationResultDto,
+    ContentAnalyticsRequestDto,
+    ContentAnalyticsResultDto,
+} from './dto/bulk-operations.dto';
 import { RolesGuard, UserRole } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { BulkOperationsService } from '../services/bulk-operations.service';
 
 @ApiTags('Content Management')
 @Controller('content')
 @ApiBearerAuth()
 @UseGuards(RolesGuard)
 export class ContentController {
-    constructor(private readonly contentService: ContentService) { }
+    constructor(
+        private readonly contentService: ContentService,
+        private readonly bulkOperationsService: BulkOperationsService,
+    ) { }
 
     @Post('items')
     @ApiOperation({ summary: 'Create a new content item' })
@@ -427,5 +443,97 @@ export class ContentController {
     @Roles(UserRole.ADMIN)
     async cleanupInactiveMedia() {
         return await this.contentService.cleanupInactiveMedia();
+    }
+
+    // Bulk Operations Endpoints
+
+    @Post('bulk/import')
+    @ApiOperation({ summary: 'Bulk import content items from CSV or JSON' })
+    @ApiResponse({ status: 200, description: 'Bulk import completed', type: BulkImportResultDto })
+    @ApiResponse({ status: 400, description: 'Invalid import data' })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.ADMIN)
+    async bulkImport(
+        @Body() importRequest: BulkImportRequestDto,
+        // TODO: Extract from JWT token
+        // @CurrentUser() user: User,
+    ): Promise<BulkImportResultDto> {
+        const createdBy = 'temp-user-id';
+        return await this.bulkOperationsService.bulkImport(importRequest, createdBy);
+    }
+
+    @Post('bulk/import/csv')
+    @ApiOperation({ summary: 'Parse CSV content for bulk import preview' })
+    @ApiConsumes('text/csv')
+    @ApiResponse({ status: 200, description: 'CSV parsed successfully' })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.ADMIN)
+    async parseCsvImport(@Body() csvContent: string) {
+        return await this.bulkOperationsService.parseCsvImport(csvContent);
+    }
+
+    @Post('bulk/export')
+    @ApiOperation({ summary: 'Start bulk export of content items' })
+    @ApiResponse({ status: 200, description: 'Export job started', type: BulkExportResultDto })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async bulkExport(
+        @Body() exportRequest: BulkExportRequestDto,
+        // TODO: Extract from JWT token
+        // @CurrentUser() user: User,
+    ): Promise<BulkExportResultDto> {
+        const requestedBy = 'temp-user-id';
+        return await this.bulkOperationsService.bulkExport(exportRequest, requestedBy);
+    }
+
+    @Get('bulk/export/:jobId')
+    @ApiOperation({ summary: 'Get bulk export job status' })
+    @ApiParam({ name: 'jobId', description: 'Export job ID' })
+    @ApiResponse({ status: 200, description: 'Export job status retrieved', type: BulkExportResultDto })
+    @Roles(UserRole.CONTENT_AUTHOR, UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async getExportJobStatus(@Param('jobId') jobId: string): Promise<BulkExportResultDto> {
+        return await this.bulkOperationsService.getExportJobStatus(jobId);
+    }
+
+    @Post('bulk/batch-operation')
+    @ApiOperation({ summary: 'Perform batch operations on multiple items' })
+    @ApiResponse({ status: 200, description: 'Batch operation completed', type: BatchOperationResultDto })
+    @Roles(UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async batchOperation(
+        @Body() batchRequest: BatchOperationRequestDto,
+        // TODO: Extract from JWT token
+        // @CurrentUser() user: User,
+    ): Promise<BatchOperationResultDto> {
+        const performedBy = 'temp-user-id';
+        return await this.bulkOperationsService.batchOperation(batchRequest, performedBy);
+    }
+
+    @Post('migration/start')
+    @ApiOperation({ summary: 'Start content migration between environments' })
+    @ApiResponse({ status: 200, description: 'Migration job started', type: ContentMigrationResultDto })
+    @Roles(UserRole.ADMIN)
+    async startContentMigration(
+        @Body() migrationRequest: ContentMigrationRequestDto,
+        // TODO: Extract from JWT token
+        // @CurrentUser() user: User,
+    ): Promise<ContentMigrationResultDto> {
+        const requestedBy = 'temp-user-id';
+        return await this.bulkOperationsService.migrateContent(migrationRequest, requestedBy);
+    }
+
+    @Get('migration/:jobId')
+    @ApiOperation({ summary: 'Get content migration job status' })
+    @ApiParam({ name: 'jobId', description: 'Migration job ID' })
+    @ApiResponse({ status: 200, description: 'Migration job status retrieved', type: ContentMigrationResultDto })
+    @Roles(UserRole.ADMIN)
+    async getMigrationJobStatus(@Param('jobId') jobId: string): Promise<ContentMigrationResultDto> {
+        return await this.bulkOperationsService.getMigrationJobStatus(jobId);
+    }
+
+    @Get('analytics')
+    @ApiOperation({ summary: 'Get content analytics and usage reporting' })
+    @ApiResponse({ status: 200, description: 'Content analytics retrieved', type: ContentAnalyticsResultDto })
+    @Roles(UserRole.CONTENT_REVIEWER, UserRole.ADMIN)
+    async getContentAnalytics(
+        @Query() analyticsRequest: ContentAnalyticsRequestDto,
+    ): Promise<ContentAnalyticsResultDto> {
+        return await this.bulkOperationsService.getContentAnalytics(analyticsRequest);
     }
 }
