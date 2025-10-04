@@ -20,14 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SchedulerService_GetNextItems_FullMethodName      = "/scheduler.SchedulerService/GetNextItems"
-	SchedulerService_GetPlacementItems_FullMethodName = "/scheduler.SchedulerService/GetPlacementItems"
-	SchedulerService_RecordAttempt_FullMethodName     = "/scheduler.SchedulerService/RecordAttempt"
-	SchedulerService_InitializeUser_FullMethodName    = "/scheduler.SchedulerService/InitializeUser"
-	SchedulerService_GetUserState_FullMethodName      = "/scheduler.SchedulerService/GetUserState"
-	SchedulerService_GetItemDifficulty_FullMethodName = "/scheduler.SchedulerService/GetItemDifficulty"
-	SchedulerService_GetTopicMastery_FullMethodName   = "/scheduler.SchedulerService/GetTopicMastery"
-	SchedulerService_Health_FullMethodName            = "/scheduler.SchedulerService/Health"
+	SchedulerService_GetNextItems_FullMethodName           = "/scheduler.SchedulerService/GetNextItems"
+	SchedulerService_GetPlacementItems_FullMethodName      = "/scheduler.SchedulerService/GetPlacementItems"
+	SchedulerService_RecordAttempt_FullMethodName          = "/scheduler.SchedulerService/RecordAttempt"
+	SchedulerService_InitializeUser_FullMethodName         = "/scheduler.SchedulerService/InitializeUser"
+	SchedulerService_GetUserState_FullMethodName           = "/scheduler.SchedulerService/GetUserState"
+	SchedulerService_GetItemDifficulty_FullMethodName      = "/scheduler.SchedulerService/GetItemDifficulty"
+	SchedulerService_GetTopicMastery_FullMethodName        = "/scheduler.SchedulerService/GetTopicMastery"
+	SchedulerService_SelectSessionStrategy_FullMethodName  = "/scheduler.SchedulerService/SelectSessionStrategy"
+	SchedulerService_UpdateSessionReward_FullMethodName    = "/scheduler.SchedulerService/UpdateSessionReward"
+	SchedulerService_GetBanditMetrics_FullMethodName       = "/scheduler.SchedulerService/GetBanditMetrics"
+	SchedulerService_GetAvailableStrategies_FullMethodName = "/scheduler.SchedulerService/GetAvailableStrategies"
+	SchedulerService_Health_FullMethodName                 = "/scheduler.SchedulerService/Health"
 )
 
 // SchedulerServiceClient is the client API for SchedulerService service.
@@ -48,6 +52,14 @@ type SchedulerServiceClient interface {
 	GetItemDifficulty(ctx context.Context, in *GetItemDifficultyRequest, opts ...grpc.CallOption) (*GetItemDifficultyResponse, error)
 	// Get topic mastery for a user
 	GetTopicMastery(ctx context.Context, in *GetTopicMasteryRequest, opts ...grpc.CallOption) (*GetTopicMasteryResponse, error)
+	// Contextual bandit methods for strategy selection
+	SelectSessionStrategy(ctx context.Context, in *SelectSessionStrategyRequest, opts ...grpc.CallOption) (*SelectSessionStrategyResponse, error)
+	// Update session reward for bandit learning
+	UpdateSessionReward(ctx context.Context, in *UpdateSessionRewardRequest, opts ...grpc.CallOption) (*UpdateSessionRewardResponse, error)
+	// Get bandit performance metrics
+	GetBanditMetrics(ctx context.Context, in *GetBanditMetricsRequest, opts ...grpc.CallOption) (*GetBanditMetricsResponse, error)
+	// Get available session strategies
+	GetAvailableStrategies(ctx context.Context, in *GetAvailableStrategiesRequest, opts ...grpc.CallOption) (*GetAvailableStrategiesResponse, error)
 	// Health check
 	Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
 }
@@ -123,6 +135,42 @@ func (c *schedulerServiceClient) GetTopicMastery(ctx context.Context, in *GetTop
 	return out, nil
 }
 
+func (c *schedulerServiceClient) SelectSessionStrategy(ctx context.Context, in *SelectSessionStrategyRequest, opts ...grpc.CallOption) (*SelectSessionStrategyResponse, error) {
+	out := new(SelectSessionStrategyResponse)
+	err := c.cc.Invoke(ctx, SchedulerService_SelectSessionStrategy_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerServiceClient) UpdateSessionReward(ctx context.Context, in *UpdateSessionRewardRequest, opts ...grpc.CallOption) (*UpdateSessionRewardResponse, error) {
+	out := new(UpdateSessionRewardResponse)
+	err := c.cc.Invoke(ctx, SchedulerService_UpdateSessionReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerServiceClient) GetBanditMetrics(ctx context.Context, in *GetBanditMetricsRequest, opts ...grpc.CallOption) (*GetBanditMetricsResponse, error) {
+	out := new(GetBanditMetricsResponse)
+	err := c.cc.Invoke(ctx, SchedulerService_GetBanditMetrics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerServiceClient) GetAvailableStrategies(ctx context.Context, in *GetAvailableStrategiesRequest, opts ...grpc.CallOption) (*GetAvailableStrategiesResponse, error) {
+	out := new(GetAvailableStrategiesResponse)
+	err := c.cc.Invoke(ctx, SchedulerService_GetAvailableStrategies_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *schedulerServiceClient) Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error) {
 	out := new(HealthResponse)
 	err := c.cc.Invoke(ctx, SchedulerService_Health_FullMethodName, in, out, opts...)
@@ -150,6 +198,14 @@ type SchedulerServiceServer interface {
 	GetItemDifficulty(context.Context, *GetItemDifficultyRequest) (*GetItemDifficultyResponse, error)
 	// Get topic mastery for a user
 	GetTopicMastery(context.Context, *GetTopicMasteryRequest) (*GetTopicMasteryResponse, error)
+	// Contextual bandit methods for strategy selection
+	SelectSessionStrategy(context.Context, *SelectSessionStrategyRequest) (*SelectSessionStrategyResponse, error)
+	// Update session reward for bandit learning
+	UpdateSessionReward(context.Context, *UpdateSessionRewardRequest) (*UpdateSessionRewardResponse, error)
+	// Get bandit performance metrics
+	GetBanditMetrics(context.Context, *GetBanditMetricsRequest) (*GetBanditMetricsResponse, error)
+	// Get available session strategies
+	GetAvailableStrategies(context.Context, *GetAvailableStrategiesRequest) (*GetAvailableStrategiesResponse, error)
 	// Health check
 	Health(context.Context, *HealthRequest) (*HealthResponse, error)
 	mustEmbedUnimplementedSchedulerServiceServer()
@@ -185,6 +241,22 @@ func (UnimplementedSchedulerServiceServer) GetItemDifficulty(context.Context, *G
 
 func (UnimplementedSchedulerServiceServer) GetTopicMastery(context.Context, *GetTopicMasteryRequest) (*GetTopicMasteryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTopicMastery not implemented")
+}
+
+func (UnimplementedSchedulerServiceServer) SelectSessionStrategy(context.Context, *SelectSessionStrategyRequest) (*SelectSessionStrategyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectSessionStrategy not implemented")
+}
+
+func (UnimplementedSchedulerServiceServer) UpdateSessionReward(context.Context, *UpdateSessionRewardRequest) (*UpdateSessionRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSessionReward not implemented")
+}
+
+func (UnimplementedSchedulerServiceServer) GetBanditMetrics(context.Context, *GetBanditMetricsRequest) (*GetBanditMetricsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBanditMetrics not implemented")
+}
+
+func (UnimplementedSchedulerServiceServer) GetAvailableStrategies(context.Context, *GetAvailableStrategiesRequest) (*GetAvailableStrategiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAvailableStrategies not implemented")
 }
 
 func (UnimplementedSchedulerServiceServer) Health(context.Context, *HealthRequest) (*HealthResponse, error) {

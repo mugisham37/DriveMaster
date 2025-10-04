@@ -880,3 +880,480 @@ func (x *HealthResponse) GetTimestamp() *timestamppb.Timestamp {
 	}
 	return nil
 }
+
+// Contextual bandit message types
+
+type SelectSessionStrategyRequest struct {
+	UserId            string  `json:"user_id,omitempty"`
+	SessionNumber     int32   `json:"session_number,omitempty"`
+	AvailableTime     int32   `json:"available_time,omitempty"`
+	RecentAccuracy    float64 `json:"recent_accuracy,omitempty"`
+	RecentDifficulty  float64 `json:"recent_difficulty,omitempty"`
+	DueItemsCount     int32   `json:"due_items_count,omitempty"`
+	OverdueItemsCount int32   `json:"overdue_items_count,omitempty"`
+	NewItemsCount     int32   `json:"new_items_count,omitempty"`
+	MasteryGapSum     float64 `json:"mastery_gap_sum,omitempty"`
+	UrgencyScore      float64 `json:"urgency_score,omitempty"`
+	RecentEngagement  float64 `json:"recent_engagement,omitempty"`
+	RecentRetention   float64 `json:"recent_retention,omitempty"`
+	RecentProgress    float64 `json:"recent_progress,omitempty"`
+	PredictedFatigue  float64 `json:"predicted_fatigue,omitempty"`
+	MotivationLevel   float64 `json:"motivation_level,omitempty"`
+}
+
+func (x *SelectSessionStrategyRequest) Reset()         { *x = SelectSessionStrategyRequest{} }
+func (x *SelectSessionStrategyRequest) String() string { return "" }
+func (*SelectSessionStrategyRequest) ProtoMessage()    {}
+
+func (x *SelectSessionStrategyRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *SelectSessionStrategyRequest) GetSessionNumber() int32 {
+	if x != nil {
+		return x.SessionNumber
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetAvailableTime() int32 {
+	if x != nil {
+		return x.AvailableTime
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetRecentAccuracy() float64 {
+	if x != nil {
+		return x.RecentAccuracy
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetRecentDifficulty() float64 {
+	if x != nil {
+		return x.RecentDifficulty
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetDueItemsCount() int32 {
+	if x != nil {
+		return x.DueItemsCount
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetOverdueItemsCount() int32 {
+	if x != nil {
+		return x.OverdueItemsCount
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetNewItemsCount() int32 {
+	if x != nil {
+		return x.NewItemsCount
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetMasteryGapSum() float64 {
+	if x != nil {
+		return x.MasteryGapSum
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetUrgencyScore() float64 {
+	if x != nil {
+		return x.UrgencyScore
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetRecentEngagement() float64 {
+	if x != nil {
+		return x.RecentEngagement
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetRecentRetention() float64 {
+	if x != nil {
+		return x.RecentRetention
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetRecentProgress() float64 {
+	if x != nil {
+		return x.RecentProgress
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetPredictedFatigue() float64 {
+	if x != nil {
+		return x.PredictedFatigue
+	}
+	return 0
+}
+
+func (x *SelectSessionStrategyRequest) GetMotivationLevel() float64 {
+	if x != nil {
+		return x.MotivationLevel
+	}
+	return 0
+}
+
+type SelectSessionStrategyResponse struct {
+	Strategy  *SessionStrategy `json:"strategy,omitempty"`
+	Selection *BanditSelection `json:"selection,omitempty"`
+}
+
+func (x *SelectSessionStrategyResponse) Reset()         { *x = SelectSessionStrategyResponse{} }
+func (x *SelectSessionStrategyResponse) String() string { return "" }
+func (*SelectSessionStrategyResponse) ProtoMessage()    {}
+
+func (x *SelectSessionStrategyResponse) GetStrategy() *SessionStrategy {
+	if x != nil {
+		return x.Strategy
+	}
+	return nil
+}
+
+func (x *SelectSessionStrategyResponse) GetSelection() *BanditSelection {
+	if x != nil {
+		return x.Selection
+	}
+	return nil
+}
+
+type SessionStrategy struct {
+	Name        string  `json:"name,omitempty"`
+	Description string  `json:"description,omitempty"`
+	MinDuration int32   `json:"min_duration,omitempty"`
+	MaxDuration int32   `json:"max_duration,omitempty"`
+	Difficulty  float64 `json:"difficulty,omitempty"`
+	Variety     float64 `json:"variety,omitempty"`
+	Urgency     float64 `json:"urgency,omitempty"`
+	Mastery     float64 `json:"mastery,omitempty"`
+}
+
+func (x *SessionStrategy) Reset()         { *x = SessionStrategy{} }
+func (x *SessionStrategy) String() string { return "" }
+func (*SessionStrategy) ProtoMessage()    {}
+
+func (x *SessionStrategy) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SessionStrategy) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *SessionStrategy) GetMinDuration() int32 {
+	if x != nil {
+		return x.MinDuration
+	}
+	return 0
+}
+
+func (x *SessionStrategy) GetMaxDuration() int32 {
+	if x != nil {
+		return x.MaxDuration
+	}
+	return 0
+}
+
+func (x *SessionStrategy) GetDifficulty() float64 {
+	if x != nil {
+		return x.Difficulty
+	}
+	return 0
+}
+
+func (x *SessionStrategy) GetVariety() float64 {
+	if x != nil {
+		return x.Variety
+	}
+	return 0
+}
+
+func (x *SessionStrategy) GetUrgency() float64 {
+	if x != nil {
+		return x.Urgency
+	}
+	return 0
+}
+
+func (x *SessionStrategy) GetMastery() float64 {
+	if x != nil {
+		return x.Mastery
+	}
+	return 0
+}
+
+type BanditSelection struct {
+	Strategy         string                 `json:"strategy,omitempty"`
+	Confidence       float64                `json:"confidence,omitempty"`
+	ExpectedReward   float64                `json:"expected_reward,omitempty"`
+	ExplorationBonus float64                `json:"exploration_bonus,omitempty"`
+	Reason           string                 `json:"reason,omitempty"`
+	Timestamp        *timestamppb.Timestamp `json:"timestamp,omitempty"`
+}
+
+func (x *BanditSelection) Reset()         { *x = BanditSelection{} }
+func (x *BanditSelection) String() string { return "" }
+func (*BanditSelection) ProtoMessage()    {}
+
+func (x *BanditSelection) GetStrategy() string {
+	if x != nil {
+		return x.Strategy
+	}
+	return ""
+}
+
+func (x *BanditSelection) GetConfidence() float64 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *BanditSelection) GetExpectedReward() float64 {
+	if x != nil {
+		return x.ExpectedReward
+	}
+	return 0
+}
+
+func (x *BanditSelection) GetExplorationBonus() float64 {
+	if x != nil {
+		return x.ExplorationBonus
+	}
+	return 0
+}
+
+func (x *BanditSelection) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *BanditSelection) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+type UpdateSessionRewardRequest struct {
+	UserId         string                     `json:"user_id,omitempty"`
+	SessionId      string                     `json:"session_id,omitempty"`
+	Strategy       string                     `json:"strategy,omitempty"`
+	Reward         float64                    `json:"reward,omitempty"`
+	SessionMetrics *SessionPerformanceMetrics `json:"session_metrics,omitempty"`
+}
+
+func (x *UpdateSessionRewardRequest) Reset()         { *x = UpdateSessionRewardRequest{} }
+func (x *UpdateSessionRewardRequest) String() string { return "" }
+func (*UpdateSessionRewardRequest) ProtoMessage()    {}
+
+func (x *UpdateSessionRewardRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateSessionRewardRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *UpdateSessionRewardRequest) GetStrategy() string {
+	if x != nil {
+		return x.Strategy
+	}
+	return ""
+}
+
+func (x *UpdateSessionRewardRequest) GetReward() float64 {
+	if x != nil {
+		return x.Reward
+	}
+	return 0
+}
+
+func (x *UpdateSessionRewardRequest) GetSessionMetrics() *SessionPerformanceMetrics {
+	if x != nil {
+		return x.SessionMetrics
+	}
+	return nil
+}
+
+type UpdateSessionRewardResponse struct {
+	Success bool   `json:"success,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+func (x *UpdateSessionRewardResponse) Reset()         { *x = UpdateSessionRewardResponse{} }
+func (x *UpdateSessionRewardResponse) String() string { return "" }
+func (*UpdateSessionRewardResponse) ProtoMessage()    {}
+
+func (x *UpdateSessionRewardResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *UpdateSessionRewardResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type SessionPerformanceMetrics struct {
+	Accuracy           float64 `json:"accuracy,omitempty"`
+	EngagementScore    float64 `json:"engagement_score,omitempty"`
+	EfficiencyScore    float64 `json:"efficiency_score,omitempty"`
+	CompletionRate     float64 `json:"completion_rate,omitempty"`
+	ObjectivesAchieved float64 `json:"objectives_achieved,omitempty"`
+	FatigueLevel       float64 `json:"fatigue_level,omitempty"`
+	TimeSpent          int32   `json:"time_spent,omitempty"`
+	ItemsCompleted     int32   `json:"items_completed,omitempty"`
+	MasteryImprovement float64 `json:"mastery_improvement,omitempty"`
+	RetentionRate      float64 `json:"retention_rate,omitempty"`
+}
+
+func (x *SessionPerformanceMetrics) Reset()         { *x = SessionPerformanceMetrics{} }
+func (x *SessionPerformanceMetrics) String() string { return "" }
+func (*SessionPerformanceMetrics) ProtoMessage()    {}
+
+func (x *SessionPerformanceMetrics) GetAccuracy() float64 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetEngagementScore() float64 {
+	if x != nil {
+		return x.EngagementScore
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetEfficiencyScore() float64 {
+	if x != nil {
+		return x.EfficiencyScore
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetCompletionRate() float64 {
+	if x != nil {
+		return x.CompletionRate
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetObjectivesAchieved() float64 {
+	if x != nil {
+		return x.ObjectivesAchieved
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetFatigueLevel() float64 {
+	if x != nil {
+		return x.FatigueLevel
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetTimeSpent() int32 {
+	if x != nil {
+		return x.TimeSpent
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetItemsCompleted() int32 {
+	if x != nil {
+		return x.ItemsCompleted
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetMasteryImprovement() float64 {
+	if x != nil {
+		return x.MasteryImprovement
+	}
+	return 0
+}
+
+func (x *SessionPerformanceMetrics) GetRetentionRate() float64 {
+	if x != nil {
+		return x.RetentionRate
+	}
+	return 0
+}
+
+type GetBanditMetricsRequest struct{}
+
+func (x *GetBanditMetricsRequest) Reset()         { *x = GetBanditMetricsRequest{} }
+func (x *GetBanditMetricsRequest) String() string { return "" }
+func (*GetBanditMetricsRequest) ProtoMessage()    {}
+
+type GetBanditMetricsResponse struct {
+	Metrics map[string]string `json:"metrics,omitempty"`
+}
+
+func (x *GetBanditMetricsResponse) Reset()         { *x = GetBanditMetricsResponse{} }
+func (x *GetBanditMetricsResponse) String() string { return "" }
+func (*GetBanditMetricsResponse) ProtoMessage()    {}
+
+func (x *GetBanditMetricsResponse) GetMetrics() map[string]string {
+	if x != nil {
+		return x.Metrics
+	}
+	return nil
+}
+
+type GetAvailableStrategiesRequest struct{}
+
+func (x *GetAvailableStrategiesRequest) Reset()         { *x = GetAvailableStrategiesRequest{} }
+func (x *GetAvailableStrategiesRequest) String() string { return "" }
+func (*GetAvailableStrategiesRequest) ProtoMessage()    {}
+
+type GetAvailableStrategiesResponse struct {
+	Strategies []*SessionStrategy `json:"strategies,omitempty"`
+}
+
+func (x *GetAvailableStrategiesResponse) Reset()         { *x = GetAvailableStrategiesResponse{} }
+func (x *GetAvailableStrategiesResponse) String() string { return "" }
+func (*GetAvailableStrategiesResponse) ProtoMessage()    {}
+
+func (x *GetAvailableStrategiesResponse) GetStrategies() []*SessionStrategy {
+	if x != nil {
+		return x.Strategies
+	}
+	return nil
+}

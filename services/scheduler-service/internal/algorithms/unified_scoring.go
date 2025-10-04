@@ -37,6 +37,9 @@ type UnifiedScoringAlgorithm struct {
 	ScoringStrategies map[string]ScoringStrategy // Available scoring strategies
 	DefaultStrategy   string                     // Default strategy name
 
+	// Contextual bandit for strategy selection
+	ContextualBandit *ContextualBandit // Bandit for session strategy selection
+
 	logger *logger.Logger
 }
 
@@ -152,6 +155,9 @@ func NewUnifiedScoringAlgorithm(logger *logger.Logger) *UnifiedScoringAlgorithm 
 
 	// Initialize scoring strategies
 	usa.initializeScoringStrategies()
+
+	// Initialize contextual bandit with Thompson Sampling
+	usa.ContextualBandit = NewContextualBandit(ThompsonSampling, logger)
 
 	return usa
 }
@@ -316,17 +322,19 @@ func (usa *UnifiedScoringAlgorithm) ComputeUnifiedScore(
 	// Generate explanation
 	result.Reason = usa.generateScoringReason(result, candidate, sm2State)
 
-	usa.logger.WithContext(ctx).WithFields(map[string]interface{}{
-		"item_id":       candidate.ItemID,
-		"strategy":      strategy,
-		"unified_score": result.UnifiedScore,
-		"urgency":       urgencyScore,
-		"mastery_gap":   masteryGapScore,
-		"difficulty":    difficultyScore,
-		"exploration":   explorationScore,
-		"novelty_bonus": noveltyBonus,
-		"variety_bonus": varietyBonus,
-	}).Debug("Computed unified score")
+	if usa.logger != nil {
+		usa.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"item_id":       candidate.ItemID,
+			"strategy":      strategy,
+			"unified_score": result.UnifiedScore,
+			"urgency":       urgencyScore,
+			"mastery_gap":   masteryGapScore,
+			"difficulty":    difficultyScore,
+			"exploration":   explorationScore,
+			"novelty_bonus": noveltyBonus,
+			"variety_bonus": varietyBonus,
+		}).Debug("Computed unified score")
+	}
 
 	return result, nil
 }
@@ -782,4 +790,206 @@ func (usa *UnifiedScoringAlgorithm) ValidateConfiguration() error {
 	}
 
 	return nil
+}
+
+// SelectSessionStrategy uses the contextual bandit to select the best session strategy
+func (usa *UnifiedScoringAlgorithm) SelectSessionStrategy(ctx context.Context, contextFeatures ContextFeatures) (*BanditSelection, error) {
+	if usa.ContextualBandit == nil {
+		return nil, fmt.Errorf("contextual bandit not initialized")
+	}
+
+	selection, err := usa.ContextualBandit.SelectStrategy(ctx, contextFeatures)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select session strategy: %w", err)
+	}
+
+	if usa.logger != nil {
+		usa.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"selected_strategy": selection.Strategy,
+			"expected_reward":   selection.ExpectedReward,
+			"confidence":        selection.Confidence,
+			"reason":            selection.Reason,
+		}).Info("Session strategy selected by contextual bandit")
+	}
+
+	return selection, nil
+}
+
+// UpdateSessionReward updates the contextual bandit with session performance feedback
+func (usa *UnifiedScoringAlgorithm) UpdateSessionReward(ctx context.Context, strategyName string, contextFeatures ContextFeatures, reward float64, sessionID string) error {
+	if usa.ContextualBandit == nil {
+		return fmt.Errorf("contextual bandit not initialized")
+	}
+
+	err := usa.ContextualBandit.UpdateReward(ctx, strategyName, contextFeatures, reward, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update session reward: %w", err)
+	}
+
+	if usa.logger != nil {
+		usa.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"strategy":   strategyName,
+			"reward":     reward,
+			"session_id": sessionID,
+		}).Info("Session reward updated in contextual bandit")
+	}
+
+	return nil
+}
+
+// GetBanditPerformanceMetrics returns performance metrics for the contextual bandit
+func (usa *UnifiedScoringAlgorithm) GetBanditPerformanceMetrics() map[string]interface{} {
+	if usa.ContextualBandit == nil {
+		return map[string]interface{}{
+			"error": "contextual bandit not initialized",
+		}
+	}
+
+	return usa.ContextualBandit.GetPerformanceMetrics()
+}
+
+// GetAvailableStrategies returns all available session strategies from the bandit
+func (usa *UnifiedScoringAlgorithm) GetAvailableStrategies() map[string]*Strategy {
+	if usa.ContextualBandit == nil {
+		return make(map[string]*Strategy)
+	}
+
+	return usa.ContextualBandit.ListStrategies()
+}
+
+// AddSessionStrategy adds a new session strategy to the contextual bandit
+func (usa *UnifiedScoringAlgorithm) AddSessionStrategy(strategy *Strategy) error {
+	if usa.ContextualBandit == nil {
+		return fmt.Errorf("contextual bandit not initialized")
+	}
+
+	err := usa.ContextualBandit.AddStrategy(strategy)
+	if err != nil {
+		return fmt.Errorf("failed to add session strategy: %w", err)
+	}
+
+	if usa.logger != nil {
+		usa.logger.WithFields(map[string]interface{}{
+			"strategy_name": strategy.Name,
+			"description":   strategy.Description,
+		}).Info("Session strategy added to contextual bandit")
+	}
+
+	return nil
+}
+
+// RemoveSessionStrategy removes a session strategy from the contextual bandit
+func (usa *UnifiedScoringAlgorithm) RemoveSessionStrategy(strategyName string) error {
+	if usa.ContextualBandit == nil {
+		return fmt.Errorf("contextual bandit not initialized")
+	}
+
+	err := usa.ContextualBandit.RemoveStrategy(strategyName)
+	if err != nil {
+		return fmt.Errorf("failed to remove session strategy: %w", err)
+	}
+
+	if usa.logger != nil {
+		usa.logger.WithFields(map[string]interface{}{
+			"strategy_name": strategyName,
+		}).Info("Session strategy removed from contextual bandit")
+	}
+
+	return nil
+}
+
+// GetSessionStrategy retrieves a specific session strategy
+func (usa *UnifiedScoringAlgorithm) GetSessionStrategy(strategyName string) (*Strategy, bool) {
+	if usa.ContextualBandit == nil {
+		return nil, false
+	}
+
+	return usa.ContextualBandit.GetStrategy(strategyName)
+}
+
+// ResetBanditState resets the contextual bandit state (useful for testing or retraining)
+func (usa *UnifiedScoringAlgorithm) ResetBanditState() {
+	if usa.ContextualBandit != nil {
+		usa.ContextualBandit.Reset()
+		if usa.logger != nil {
+			usa.logger.Info("Contextual bandit state reset")
+		}
+	}
+}
+
+// SetBanditAlgorithm changes the bandit algorithm (Thompson Sampling or LinUCB)
+func (usa *UnifiedScoringAlgorithm) SetBanditAlgorithm(algorithm BanditAlgorithm) error {
+	if usa.ContextualBandit == nil {
+		return fmt.Errorf("contextual bandit not initialized")
+	}
+
+	// Create new bandit with the specified algorithm
+	newBandit := NewContextualBandit(algorithm, usa.logger)
+
+	// Copy existing strategies
+	for name, strategy := range usa.ContextualBandit.Strategies {
+		err := newBandit.AddStrategy(strategy)
+		if err != nil {
+			if usa.logger != nil {
+				usa.logger.WithError(err).WithField("strategy", name).Warn("Failed to copy strategy to new bandit")
+			}
+		}
+	}
+
+	usa.ContextualBandit = newBandit
+
+	if usa.logger != nil {
+		usa.logger.WithFields(map[string]interface{}{
+			"algorithm": algorithm,
+		}).Info("Contextual bandit algorithm changed")
+	}
+
+	return nil
+}
+
+// CalculateSessionReward calculates reward based on session performance metrics
+func (usa *UnifiedScoringAlgorithm) CalculateSessionReward(sessionMetrics SessionPerformanceMetrics) float64 {
+	// Weighted combination of different performance aspects
+	accuracyWeight := 0.4
+	engagementWeight := 0.3
+	efficiencyWeight := 0.2
+	completionWeight := 0.1
+
+	// Normalize metrics to [0, 1] range
+	accuracyScore := math.Max(0.0, math.Min(1.0, sessionMetrics.Accuracy))
+	engagementScore := math.Max(0.0, math.Min(1.0, sessionMetrics.EngagementScore))
+	efficiencyScore := math.Max(0.0, math.Min(1.0, sessionMetrics.EfficiencyScore))
+	completionScore := math.Max(0.0, math.Min(1.0, sessionMetrics.CompletionRate))
+
+	// Calculate weighted reward
+	reward := accuracyWeight*accuracyScore +
+		engagementWeight*engagementScore +
+		efficiencyWeight*efficiencyScore +
+		completionWeight*completionScore
+
+	// Apply bonus for achieving learning objectives
+	if sessionMetrics.ObjectivesAchieved > 0.8 {
+		reward *= 1.1 // 10% bonus for high objective achievement
+	}
+
+	// Apply penalty for excessive time or fatigue
+	if sessionMetrics.FatigueLevel > 0.7 {
+		reward *= 0.9 // 10% penalty for high fatigue
+	}
+
+	return math.Max(0.0, math.Min(1.0, reward))
+}
+
+// SessionPerformanceMetrics represents metrics used to calculate session reward
+type SessionPerformanceMetrics struct {
+	Accuracy           float64 `json:"accuracy"`            // Accuracy rate (0-1)
+	EngagementScore    float64 `json:"engagement_score"`    // Engagement level (0-1)
+	EfficiencyScore    float64 `json:"efficiency_score"`    // Learning efficiency (0-1)
+	CompletionRate     float64 `json:"completion_rate"`     // Session completion rate (0-1)
+	ObjectivesAchieved float64 `json:"objectives_achieved"` // Learning objectives achieved (0-1)
+	FatigueLevel       float64 `json:"fatigue_level"`       // User fatigue level (0-1)
+	TimeSpent          int     `json:"time_spent"`          // Time spent in minutes
+	ItemsCompleted     int     `json:"items_completed"`     // Number of items completed
+	MasteryImprovement float64 `json:"mastery_improvement"` // Improvement in mastery scores
+	RetentionRate      float64 `json:"retention_rate"`      // Retention of previously learned material
 }

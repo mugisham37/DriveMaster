@@ -29,6 +29,18 @@ service SchedulerService {
   // Get topic mastery for a user
   rpc GetTopicMastery(GetTopicMasteryRequest) returns (GetTopicMasteryResponse);
   
+  // Contextual bandit methods for strategy selection
+  rpc SelectSessionStrategy(SelectSessionStrategyRequest) returns (SelectSessionStrategyResponse);
+  
+  // Update session reward for bandit learning
+  rpc UpdateSessionReward(UpdateSessionRewardRequest) returns (UpdateSessionRewardResponse);
+  
+  // Get bandit performance metrics
+  rpc GetBanditMetrics(GetBanditMetricsRequest) returns (GetBanditMetricsResponse);
+  
+  // Get available session strategies
+  rpc GetAvailableStrategies(GetAvailableStrategiesRequest) returns (GetAvailableStrategiesResponse);
+  
   // Health check
   rpc Health(HealthRequest) returns (HealthResponse);
 }
@@ -249,4 +261,92 @@ message SessionContext {
   repeated string topics_practiced = 6;
   double average_difficulty = 7;
   google.protobuf.Timestamp started_at = 8;
+}
+
+// Contextual bandit messages
+message SelectSessionStrategyRequest {
+  string user_id = 1;
+  
+  // Session context
+  int32 session_number = 2;
+  int32 available_time = 3;
+  double recent_accuracy = 4;
+  double recent_difficulty = 5;
+  
+  // Learning state
+  int32 due_items_count = 6;
+  int32 overdue_items_count = 7;
+  int32 new_items_count = 8;
+  double mastery_gap_sum = 9;
+  double urgency_score = 10;
+  
+  // Performance indicators
+  double recent_engagement = 11;
+  double recent_retention = 12;
+  double recent_progress = 13;
+  double predicted_fatigue = 14;
+  double motivation_level = 15;
+}
+
+message SelectSessionStrategyResponse {
+  SessionStrategy strategy = 1;
+  BanditSelection selection = 2;
+}
+
+message SessionStrategy {
+  string name = 1;
+  string description = 2;
+  int32 min_duration = 3;
+  int32 max_duration = 4;
+  double difficulty = 5;
+  double variety = 6;
+  double urgency = 7;
+  double mastery = 8;
+}
+
+message BanditSelection {
+  string strategy = 1;
+  double confidence = 2;
+  double expected_reward = 3;
+  double exploration_bonus = 4;
+  string reason = 5;
+  google.protobuf.Timestamp timestamp = 6;
+}
+
+message UpdateSessionRewardRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string strategy = 3;
+  double reward = 4;
+  SessionPerformanceMetrics session_metrics = 5;
+}
+
+message UpdateSessionRewardResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SessionPerformanceMetrics {
+  double accuracy = 1;
+  double engagement_score = 2;
+  double efficiency_score = 3;
+  double completion_rate = 4;
+  double objectives_achieved = 5;
+  double fatigue_level = 6;
+  int32 time_spent = 7;
+  int32 items_completed = 8;
+  double mastery_improvement = 9;
+  double retention_rate = 10;
+}
+
+message GetBanditMetricsRequest {}
+
+message GetBanditMetricsResponse {
+  map<string, string> metrics = 1;
+}
+
+message GetAvailableStrategiesRequest {}
+
+message GetAvailableStrategiesResponse {
+  repeated SessionStrategy strategies = 1;
 }

@@ -291,9 +291,10 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Create A/B testing framework for scoring strategies
     - _Requirements: 3.5, 3.6_
 
-  - [ ] 8.6 Add contextual bandit for strategy selection
+  - [x] 8.6 Add contextual bandit for strategy selection
 
     - Implement Thompson Sampling or LinUCB algorithms
+
     - Create session strategy selection (practice, review, mock test)
     - Add context feature extraction and processing
     - Implement bandit reward tracking and model updates

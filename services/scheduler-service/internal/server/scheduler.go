@@ -860,6 +860,267 @@ func (s *SchedulerService) GetRecommendationScoreWithIRT(ctx context.Context, us
 	return s.irtManager.GetRecommendationScore(ctx, userID, topic, itemParams)
 }
 
+// SelectSessionStrategy uses contextual bandit to select optimal session strategy
+func (s *SchedulerService) SelectSessionStrategy(ctx context.Context, req *pb.SelectSessionStrategyRequest) (*pb.SelectSessionStrategyResponse, error) {
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":        req.UserId,
+		"available_time": req.AvailableTime,
+		"recent_accuracy": req.RecentAccuracy,
+	}).Info("Selecting session strategy")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Create context features from request
+	contextFeatures := s.createContextFeatures(ctx, req)
+
+	// Select strategy using contextual bandit
+	selection, err := s.unifiedScoring.SelectSessionStrategy(ctx, contextFeatures)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to select session strategy")
+		return nil, status.Error(codes.Internal, "failed to select session strategy")
+	}
+
+	// Get strategy details
+	strategy, exists := s.unifiedScoring.GetSessionStrategy(selection.Strategy)
+	if !exists {
+		return nil, status.Error(codes.Internal, "selected strategy not found")
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":         req.UserId,
+		"selected_strategy": selection.Strategy,
+		"expected_reward": selection.ExpectedReward,
+		"confidence":      selection.Confidence,
+	}).Info("Session strategy selected")
+
+	return &pb.SelectSessionStrategyResponse{
+		Strategy: &pb.SessionStrategy{
+			Name:        strategy.Name,
+			Description: strategy.Description,
+			MinDuration: int32(strategy.MinDuration),
+			MaxDuration: int32(strategy.MaxDuration),
+			Difficulty:  strategy.Difficulty,
+			Variety:     strategy.Variety,
+			Urgency:     strategy.Urgency,
+			Mastery:     strategy.Mastery,
+		},
+		Selection: &pb.BanditSelection{
+			Strategy:         selection.Strategy,
+			Confidence:       selection.Confidence,
+			ExpectedReward:   selection.ExpectedReward,
+			ExplorationBonus: selection.ExplorationBonus,
+			Reason:           selection.Reason,
+			Timestamp:        timestamppb.New(selection.Timestamp),
+		},
+	}, nil
+}
+
+// UpdateSessionReward updates the contextual bandit with session performance feedback
+func (s *SchedulerService) UpdateSessionReward(ctx context.Context, req *pb.UpdateSessionRewardRequest) (*pb.UpdateSessionRewardResponse, error) {
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":    req.UserId,
+		"session_id": req.SessionId,
+		"strategy":   req.Strategy,
+		"reward":     req.Reward,
+	}).Info("Updating session reward")
+
+	// Validate request
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	if req.SessionId == "" {
+		return nil, status.Error(codes.InvalidArgument, "session_id is required")
+	}
+	if req.Strategy == "" {
+		return nil, status.Error(codes.InvalidArgument, "strategy is required")
+	}
+
+	// Create context features from request
+	contextFeatures := s.createContextFeaturesFromReward(ctx, req)
+
+	// Update bandit with reward
+	err := s.unifiedScoring.UpdateSessionReward(ctx, req.Strategy, contextFeatures, req.Reward, req.SessionId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to update session reward")
+		return nil, status.Error(codes.Internal, "failed to update session reward")
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":    req.UserId,
+		"session_id": req.SessionId,
+		"strategy":   req.Strategy,
+		"reward":     req.Reward,
+	}).Info("Session reward updated successfully")
+
+	return &pb.UpdateSessionRewardResponse{
+		Success: true,
+		Message: "Session reward updated successfully",
+	}, nil
+}
+
+// GetBanditMetrics returns performance metrics for the contextual bandit
+func (s *SchedulerService) GetBanditMetrics(ctx context.Context, req *pb.GetBanditMetricsRequest) (*pb.GetBanditMetricsResponse, error) {
+	s.logger.WithContext(ctx).Info("Getting bandit metrics")
+
+	metrics := s.unifiedScoring.GetBanditPerformanceMetrics()
+
+	// Convert metrics to protobuf format
+	pbMetrics := make(map[string]string)
+	for key, value := range metrics {
+		pbMetrics[key] = fmt.Sprintf("%v", value)
+	}
+
+	return &pb.GetBanditMetricsResponse{
+		Metrics: pbMetrics,
+	}, nil
+}
+
+// GetAvailableStrategies returns all available session strategies
+func (s *SchedulerService) GetAvailableStrategies(ctx context.Context, req *pb.GetAvailableStrategiesRequest) (*pb.GetAvailableStrategiesResponse, error) {
+	s.logger.WithContext(ctx).Info("Getting available strategies")
+
+	strategies := s.unifiedScoring.GetAvailableStrategies()
+
+	var pbStrategies []*pb.SessionStrategy
+	for _, strategy := range strategies {
+		pbStrategies = append(pbStrategies, &pb.SessionStrategy{
+			Name:        strategy.Name,
+			Description: strategy.Description,
+			MinDuration: int32(strategy.MinDuration),
+			MaxDuration: int32(strategy.MaxDuration),
+			Difficulty:  strategy.Difficulty,
+			Variety:     strategy.Variety,
+			Urgency:     strategy.Urgency,
+			Mastery:     strategy.Mastery,
+		})
+	}
+
+	return &pb.GetAvailableStrategiesResponse{
+		Strategies: pbStrategies,
+	}, nil
+}
+
+// createContextFeatures creates context features from session strategy request
+func (s *SchedulerService) createContextFeatures(ctx context.Context, req *pb.SelectSessionStrategyRequest) algorithms.ContextFeatures {
+	now := time.Now()
+
+	// Get user's current state for more accurate context
+	// In a real implementation, these would be fetched from the database
+	userAbilityMean := 0.5     // Default - should be calculated from IRT states
+	userMasteryMean := 0.6     // Default - should be calculated from BKT states
+	userStreakDays := 1        // Default - should be fetched from user data
+	userTotalSessions := 10    // Default - should be fetched from user data
+
+	return algorithms.ContextFeatures{
+		// User characteristics (defaults - should be fetched from actual data)
+		UserAbilityMean:     userAbilityMean,
+		UserAbilityVariance: 0.2,
+		UserMasteryMean:     userMasteryMean,
+		UserMasteryVariance: 0.3,
+		UserStreakDays:      userStreakDays,
+		UserTotalSessions:   userTotalSessions,
+
+		// Session context from request
+		TimeOfDay:        now.Hour(),
+		DayOfWeek:        int(now.Weekday()),
+		SessionNumber:    int(req.SessionNumber),
+		AvailableTime:    int(req.AvailableTime),
+		RecentAccuracy:   req.RecentAccuracy,
+		RecentDifficulty: req.RecentDifficulty,
+
+		// Learning state from request
+		DueItemsCount:     int(req.DueItemsCount),
+		OverdueItemsCount: int(req.OverdueItemsCount),
+		NewItemsCount:     int(req.NewItemsCount),
+		MasteryGapSum:     req.MasteryGapSum,
+		UrgencyScore:      req.UrgencyScore,
+
+		// Performance indicators from request
+		RecentEngagement: req.RecentEngagement,
+		RecentRetention:  req.RecentRetention,
+		RecentProgress:   req.RecentProgress,
+		PredictedFatigue: req.PredictedFatigue,
+		MotivationLevel:  req.MotivationLevel,
+
+		Timestamp: now,
+	}
+}
+
+// createContextFeaturesFromReward creates context features from reward update request
+func (s *SchedulerService) createContextFeaturesFromReward(ctx context.Context, req *pb.UpdateSessionRewardRequest) algorithms.ContextFeatures {
+	now := time.Now()
+
+	// Extract context from session metrics if provided
+	var contextFeatures algorithms.ContextFeatures
+	if req.SessionMetrics != nil {
+		contextFeatures = algorithms.ContextFeatures{
+			// User characteristics (defaults - should be fetched from actual data)
+			UserAbilityMean:     0.5,
+			UserAbilityVariance: 0.2,
+			UserMasteryMean:     0.6,
+			UserMasteryVariance: 0.3,
+			UserStreakDays:      1,
+			UserTotalSessions:   10,
+
+			// Session context from metrics
+			TimeOfDay:        now.Hour(),
+			DayOfWeek:        int(now.Weekday()),
+			SessionNumber:    1,
+			AvailableTime:    int(req.SessionMetrics.TimeSpent),
+			RecentAccuracy:   req.SessionMetrics.Accuracy,
+			RecentDifficulty: 0.5, // Default
+
+			// Learning state (defaults)
+			DueItemsCount:     10,
+			OverdueItemsCount: 5,
+			NewItemsCount:     20,
+			MasteryGapSum:     3.0,
+			UrgencyScore:      0.5,
+
+			// Performance indicators from metrics
+			RecentEngagement: req.SessionMetrics.EngagementScore,
+			RecentRetention:  req.SessionMetrics.RetentionRate,
+			RecentProgress:   req.SessionMetrics.MasteryImprovement,
+			PredictedFatigue: req.SessionMetrics.FatigueLevel,
+			MotivationLevel:  0.8, // Default
+
+			Timestamp: now,
+		}
+	} else {
+		// Use defaults if no metrics provided
+		contextFeatures = algorithms.ContextFeatures{
+			UserAbilityMean:     0.5,
+			UserAbilityVariance: 0.2,
+			UserMasteryMean:     0.6,
+			UserMasteryVariance: 0.3,
+			UserStreakDays:      1,
+			UserTotalSessions:   10,
+			TimeOfDay:           now.Hour(),
+			DayOfWeek:           int(now.Weekday()),
+			SessionNumber:       1,
+			AvailableTime:       30,
+			RecentAccuracy:      0.7,
+			RecentDifficulty:    0.5,
+			DueItemsCount:       10,
+			OverdueItemsCount:   5,
+			NewItemsCount:       20,
+			MasteryGapSum:       3.0,
+			UrgencyScore:        0.5,
+			RecentEngagement:    0.7,
+			RecentRetention:     0.8,
+			RecentProgress:      0.6,
+			PredictedFatigue:    0.3,
+			MotivationLevel:     0.8,
+			Timestamp:           now,
+		}
+	}
+
+	return contextFeatures
+}
+
 // trackIRTMetrics updates metrics related to IRT algorithm performance
 func (s *SchedulerService) trackIRTMetrics(oldState, newState *algorithms.IRTState, correct bool) {
 	if s.metrics == nil {
