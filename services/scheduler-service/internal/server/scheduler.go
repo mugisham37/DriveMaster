@@ -175,26 +175,68 @@ func (s *SchedulerService) GetPlacementItems(ctx context.Context, req *pb.Placem
 		return nil, status.Error(codes.InvalidArgument, "country_code is required")
 	}
 
-	// TODO: Implement actual placement item selection
-	// For now, return placeholder items
-	items := []*pb.PlacementItem{
-		{
-			ItemId:         "placement_1",
-			Topics:         []string{"traffic_signs"},
-			Difficulty:     0.0,
-			Discrimination: 1.0,
-		},
-		{
-			ItemId:         "placement_2",
-			Topics:         []string{"road_rules"},
-			Difficulty:     0.5,
-			Discrimination: 1.2,
-		},
+	// Initialize placement test algorithm
+	placementAlgorithm := algorithms.NewPlacementTestAlgorithm(s.irtAlgorithm, s.logger)
+
+	// Create placement session ID
+	placementSessionId := fmt.Sprintf("placement_%s_%d", req.UserId, time.Now().Unix())
+
+	// Initialize placement test state
+	placementState, err := placementAlgorithm.InitializePlacementTest(ctx, req.UserId, placementSessionId, req.CountryCode)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to initialize placement test")
+		return nil, status.Error(codes.Internal, "failed to initialize placement test")
 	}
 
+	// Get available items for the country/jurisdiction
+	availableItems := s.getAvailablePlacementItems(ctx, req.CountryCode)
+	if len(availableItems) == 0 {
+		s.logger.WithContext(ctx).WithField("country_code", req.CountryCode).Error("No placement items available")
+		return nil, status.Error(codes.NotFound, "no placement items available for country")
+	}
+
+	// Select initial items for the placement test
+	var selectedItems []*pb.PlacementItem
+	maxInitialItems := 5 // Start with 5 items, more will be selected adaptively
+
+	for i := 0; i < maxInitialItems && i < len(availableItems); i++ {
+		nextItem, err := placementAlgorithm.SelectNextItem(ctx, placementState, availableItems)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).Error("Failed to select next placement item")
+			break
+		}
+
+		// Add item to test state
+		placementAlgorithm.AddItemToTest(placementState, nextItem)
+
+		// Convert to protobuf format
+		pbItem := &pb.PlacementItem{
+			ItemId:         nextItem.ItemID,
+			Topics:         nextItem.Topics,
+			Difficulty:     nextItem.Difficulty,
+			Discrimination: nextItem.Discrimination,
+		}
+
+		selectedItems = append(selectedItems, pbItem)
+	}
+
+	// Store placement state in cache for continuation
+	err = s.storePlacementState(ctx, placementSessionId, placementState)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to store placement state")
+		// Continue anyway, as this is not critical for initial response
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":              req.UserId,
+		"placement_session_id": placementSessionId,
+		"items_selected":       len(selectedItems),
+		"available_items":      len(availableItems),
+	}).Info("Placement items selected")
+
 	return &pb.PlacementResponse{
-		Items:              items,
-		PlacementSessionId: fmt.Sprintf("placement_%s_%d", req.UserId, time.Now().Unix()),
+		Items:              selectedItems,
+		PlacementSessionId: placementSessionId,
 	}, nil
 }
 
@@ -863,8 +905,8 @@ func (s *SchedulerService) GetRecommendationScoreWithIRT(ctx context.Context, us
 // SelectSessionStrategy uses contextual bandit to select optimal session strategy
 func (s *SchedulerService) SelectSessionStrategy(ctx context.Context, req *pb.SelectSessionStrategyRequest) (*pb.SelectSessionStrategyResponse, error) {
 	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
-		"user_id":        req.UserId,
-		"available_time": req.AvailableTime,
+		"user_id":         req.UserId,
+		"available_time":  req.AvailableTime,
 		"recent_accuracy": req.RecentAccuracy,
 	}).Info("Selecting session strategy")
 
@@ -890,10 +932,10 @@ func (s *SchedulerService) SelectSessionStrategy(ctx context.Context, req *pb.Se
 	}
 
 	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
-		"user_id":         req.UserId,
+		"user_id":           req.UserId,
 		"selected_strategy": selection.Strategy,
-		"expected_reward": selection.ExpectedReward,
-		"confidence":      selection.Confidence,
+		"expected_reward":   selection.ExpectedReward,
+		"confidence":        selection.Confidence,
 	}).Info("Session strategy selected")
 
 	return &pb.SelectSessionStrategyResponse{
@@ -1009,10 +1051,10 @@ func (s *SchedulerService) createContextFeatures(ctx context.Context, req *pb.Se
 
 	// Get user's current state for more accurate context
 	// In a real implementation, these would be fetched from the database
-	userAbilityMean := 0.5     // Default - should be calculated from IRT states
-	userMasteryMean := 0.6     // Default - should be calculated from BKT states
-	userStreakDays := 1        // Default - should be fetched from user data
-	userTotalSessions := 10    // Default - should be fetched from user data
+	userAbilityMean := 0.5  // Default - should be calculated from IRT states
+	userMasteryMean := 0.6  // Default - should be calculated from BKT states
+	userStreakDays := 1     // Default - should be fetched from user data
+	userTotalSessions := 10 // Default - should be fetched from user data
 
 	return algorithms.ContextFeatures{
 		// User characteristics (defaults - should be fetched from actual data)
@@ -1467,3 +1509,302 @@ func (s *SchedulerService) UpdateSessionConstraints(constraints map[string]inter
 
 	return nil
 }
+
+// Placement Test Methods
+
+// getAvailablePlacementItems retrieves available items for placement testing
+func (s *SchedulerService) getAvailablePlacementItems(ctx context.Context, countryCode string) []algorithms.PlacementItem {
+	// TODO: Retrieve actual items from database based on country/jurisdiction
+	// For now, return a set of calibrated placement items
+
+	items := []algorithms.PlacementItem{
+		{
+			ItemID:         "placement_traffic_easy_1",
+			Topics:         []string{"traffic_signs"},
+			Difficulty:     -1.0,
+			Discrimination: 1.2,
+			Guessing:       0.25,
+			EstimatedTime:  45,
+			ExposureCount:  0,
+			ContentArea:    "traffic_signs",
+		},
+		{
+			ItemID:         "placement_traffic_medium_1",
+			Topics:         []string{"traffic_signs"},
+			Difficulty:     0.0,
+			Discrimination: 1.5,
+			Guessing:       0.25,
+			EstimatedTime:  60,
+			ExposureCount:  0,
+			ContentArea:    "traffic_signs",
+		},
+		{
+			ItemID:         "placement_traffic_hard_1",
+			Topics:         []string{"traffic_signs"},
+			Difficulty:     1.0,
+			Discrimination: 1.3,
+			Guessing:       0.25,
+			EstimatedTime:  75,
+			ExposureCount:  0,
+			ContentArea:    "traffic_signs",
+		},
+		{
+			ItemID:         "placement_rules_easy_1",
+			Topics:         []string{"road_rules"},
+			Difficulty:     -0.8,
+			Discrimination: 1.1,
+			Guessing:       0.25,
+			EstimatedTime:  50,
+			ExposureCount:  0,
+			ContentArea:    "road_rules",
+		},
+		{
+			ItemID:         "placement_rules_medium_1",
+			Topics:         []string{"road_rules"},
+			Difficulty:     0.2,
+			Discrimination: 1.4,
+			Guessing:       0.25,
+			EstimatedTime:  65,
+			ExposureCount:  0,
+			ContentArea:    "road_rules",
+		},
+		{
+			ItemID:         "placement_rules_hard_1",
+			Topics:         []string{"road_rules"},
+			Difficulty:     1.2,
+			Discrimination: 1.6,
+			Guessing:       0.25,
+			EstimatedTime:  80,
+			ExposureCount:  0,
+			ContentArea:    "road_rules",
+		},
+		{
+			ItemID:         "placement_vehicle_easy_1",
+			Topics:         []string{"vehicle_operation"},
+			Difficulty:     -0.5,
+			Discrimination: 1.0,
+			Guessing:       0.25,
+			EstimatedTime:  55,
+			ExposureCount:  0,
+			ContentArea:    "vehicle_operation",
+		},
+		{
+			ItemID:         "placement_vehicle_medium_1",
+			Topics:         []string{"vehicle_operation"},
+			Difficulty:     0.3,
+			Discrimination: 1.3,
+			Guessing:       0.25,
+			EstimatedTime:  70,
+			ExposureCount:  0,
+			ContentArea:    "vehicle_operation",
+		},
+		{
+			ItemID:         "placement_vehicle_hard_1",
+			Topics:         []string{"vehicle_operation"},
+			Difficulty:     1.1,
+			Discrimination: 1.4,
+			Guessing:       0.25,
+			EstimatedTime:  85,
+			ExposureCount:  0,
+			ContentArea:    "vehicle_operation",
+		},
+		{
+			ItemID:         "placement_safety_easy_1",
+			Topics:         []string{"safety_procedures"},
+			Difficulty:     -0.7,
+			Discrimination: 1.2,
+			Guessing:       0.25,
+			EstimatedTime:  50,
+			ExposureCount:  0,
+			ContentArea:    "safety_procedures",
+		},
+		{
+			ItemID:         "placement_safety_medium_1",
+			Topics:         []string{"safety_procedures"},
+			Difficulty:     0.1,
+			Discrimination: 1.5,
+			Guessing:       0.25,
+			EstimatedTime:  65,
+			ExposureCount:  0,
+			ContentArea:    "safety_procedures",
+		},
+		{
+			ItemID:         "placement_safety_hard_1",
+			Topics:         []string{"safety_procedures"},
+			Difficulty:     0.9,
+			Discrimination: 1.3,
+			Guessing:       0.25,
+			EstimatedTime:  75,
+			ExposureCount:  0,
+			ContentArea:    "safety_procedures",
+		},
+		{
+			ItemID:         "placement_emergency_easy_1",
+			Topics:         []string{"emergency_situations"},
+			Difficulty:     -0.3,
+			Discrimination: 1.1,
+			Guessing:       0.25,
+			EstimatedTime:  60,
+			ExposureCount:  0,
+			ContentArea:    "emergency_situations",
+		},
+		{
+			ItemID:         "placement_emergency_medium_1",
+			Topics:         []string{"emergency_situations"},
+			Difficulty:     0.4,
+			Discrimination: 1.4,
+			Guessing:       0.25,
+			EstimatedTime:  70,
+			ExposureCount:  0,
+			ContentArea:    "emergency_situations",
+		},
+		{
+			ItemID:         "placement_emergency_hard_1",
+			Topics:         []string{"emergency_situations"},
+			Difficulty:     1.3,
+			Discrimination: 1.5,
+			Guessing:       0.25,
+			EstimatedTime:  90,
+			ExposureCount:  0,
+			ContentArea:    "emergency_situations",
+		},
+		{
+			ItemID:         "placement_parking_easy_1",
+			Topics:         []string{"parking_maneuvers"},
+			Difficulty:     -0.6,
+			Discrimination: 1.0,
+			Guessing:       0.25,
+			EstimatedTime:  55,
+			ExposureCount:  0,
+			ContentArea:    "parking_maneuvers",
+		},
+		{
+			ItemID:         "placement_parking_medium_1",
+			Topics:         []string{"parking_maneuvers"},
+			Difficulty:     0.2,
+			Discrimination: 1.3,
+			Guessing:       0.25,
+			EstimatedTime:  65,
+			ExposureCount:  0,
+			ContentArea:    "parking_maneuvers",
+		},
+		{
+			ItemID:         "placement_parking_hard_1",
+			Topics:         []string{"parking_maneuvers"},
+			Difficulty:     1.0,
+			Discrimination: 1.4,
+			Guessing:       0.25,
+			EstimatedTime:  80,
+			ExposureCount:  0,
+			ContentArea:    "parking_maneuvers",
+		},
+		{
+			ItemID:         "placement_intersection_easy_1",
+			Topics:         []string{"intersection_navigation"},
+			Difficulty:     -0.4,
+			Discrimination: 1.2,
+			Guessing:       0.25,
+			EstimatedTime:  50,
+			ExposureCount:  0,
+			ContentArea:    "intersection_navigation",
+		},
+		{
+			ItemID:         "placement_intersection_medium_1",
+			Topics:         []string{"intersection_navigation"},
+			Difficulty:     0.3,
+			Discrimination: 1.5,
+			Guessing:       0.25,
+			EstimatedTime:  70,
+			ExposureCount:  0,
+			ContentArea:    "intersection_navigation",
+		},
+		{
+			ItemID:         "placement_intersection_hard_1",
+			Topics:         []string{"intersection_navigation"},
+			Difficulty:     1.1,
+			Discrimination: 1.3,
+			Guessing:       0.25,
+			EstimatedTime:  85,
+			ExposureCount:  0,
+			ContentArea:    "intersection_navigation",
+		},
+		{
+			ItemID:         "placement_highway_easy_1",
+			Topics:         []string{"highway_driving"},
+			Difficulty:     -0.2,
+			Discrimination: 1.1,
+			Guessing:       0.25,
+			EstimatedTime:  60,
+			ExposureCount:  0,
+			ContentArea:    "highway_driving",
+		},
+		{
+			ItemID:         "placement_highway_medium_1",
+			Topics:         []string{"highway_driving"},
+			Difficulty:     0.5,
+			Discrimination: 1.4,
+			Guessing:       0.25,
+			EstimatedTime:  75,
+			ExposureCount:  0,
+			ContentArea:    "highway_driving",
+		},
+		{
+			ItemID:         "placement_highway_hard_1",
+			Topics:         []string{"highway_driving"},
+			Difficulty:     1.4,
+			Discrimination: 1.6,
+			Guessing:       0.25,
+			EstimatedTime:  90,
+			ExposureCount:  0,
+			ContentArea:    "highway_driving",
+		},
+	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"country_code":    countryCode,
+		"available_items": len(items),
+	}).Debug("Retrieved available placement items")
+
+	return items
+}
+
+// storePlacementState stores placement test state in cache
+func (s *SchedulerService) storePlacementState(ctx context.Context, sessionID string, state *algorithms.PlacementTestState) error {
+	if s.cache == nil {
+		return fmt.Errorf("cache not available")
+	}
+
+	// Store in Redis with 24-hour expiration
+	key := fmt.Sprintf("placement_state:%s", sessionID)
+	err := s.cache.Set(ctx, key, state, 24*time.Hour)
+	if err != nil {
+		return fmt.Errorf("failed to store placement state in cache: %w", err)
+	}
+
+	return nil
+}
+
+// retrievePlacementState retrieves placement test state from cache
+func (s *SchedulerService) retrievePlacementState(ctx context.Context, sessionID string) (*algorithms.PlacementTestState, error) {
+	if s.cache == nil {
+		return nil, fmt.Errorf("cache not available")
+	}
+
+	key := fmt.Sprintf("placement_state:%s", sessionID)
+	var state algorithms.PlacementTestState
+	err := s.cache.Get(ctx, key, &state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve placement state from cache: %w", err)
+	}
+
+	return &state, nil
+}
+
+// TODO: Add ProcessPlacementResponse and GetPlacementAnalytics methods
+// These require additional protobuf message definitions for:
+// - ProcessPlacementResponseRequest/Response
+// - GetPlacementAnalyticsRequest/Response
+// - PlacementResult
+//
+// For now, the placement test algorithm is implemented and can be used
+// through the existing GetPlacementItems method and custom processing logic.
