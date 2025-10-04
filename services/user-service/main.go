@@ -62,13 +62,16 @@ func main() {
 	// Initialize repository
 	userRepo := repository.NewUserRepository(db.Pool)
 	progressRepo := repository.NewProgressRepository(db.Pool)
+	schedulerStateRepo := repository.NewSchedulerStateRepository(db.Pool)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher)
 	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log)
+	schedulerStateService := service.NewSchedulerStateService(schedulerStateRepo, redisClient, cfg, eventPublisher)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService, progressService)
+	schedulerStateHandler := handlers.NewSchedulerStateHandler(schedulerStateService)
 
 	// Create gRPC server with interceptors
 	grpcServer := grpc.NewServer(
@@ -80,6 +83,7 @@ func main() {
 
 	// Register services
 	pb.RegisterUserServiceServer(grpcServer, userHandler)
+	pb.RegisterSchedulerStateServiceServer(grpcServer, schedulerStateHandler)
 
 	// Enable reflection for development
 	if cfg.Environment == "development" {

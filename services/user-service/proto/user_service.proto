@@ -21,17 +21,32 @@ service UserService {
   rpc UpdateMastery(UpdateMasteryRequest) returns (UpdateMasteryResponse);
   rpc GetProgressSummary(GetProgressSummaryRequest) returns (GetProgressSummaryResponse);
 
-  // Scheduler state
-  rpc GetSchedulerState(GetSchedulerStateRequest) returns (GetSchedulerStateResponse);
-  rpc UpdateSchedulerState(UpdateSchedulerStateRequest) returns (UpdateSchedulerStateResponse);
-  rpc InitializeSchedulerState(InitializeSchedulerStateRequest) returns (InitializeSchedulerStateResponse);
-
   // Activity tracking
   rpc RecordActivity(RecordActivityRequest) returns (RecordActivityResponse);
   rpc GetActivitySummary(GetActivitySummaryRequest) returns (GetActivitySummaryResponse);
 
   // Health check
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Scheduler State Service Definition
+service SchedulerStateService {
+  // Basic state management
+  rpc GetSchedulerState(GetSchedulerStateRequest) returns (GetSchedulerStateResponse);
+  rpc CreateSchedulerState(CreateSchedulerStateRequest) returns (CreateSchedulerStateResponse);
+
+  // Algorithm-specific updates
+  rpc UpdateSM2State(UpdateSM2StateRequest) returns (UpdateSM2StateResponse);
+  rpc UpdateBKTState(UpdateBKTStateRequest) returns (UpdateBKTStateResponse);
+  rpc UpdateAbility(UpdateAbilityRequest) returns (UpdateAbilityResponse);
+
+  // Session management
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+
+  // Backup and recovery
+  rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+  rpc RestoreFromBackup(RestoreFromBackupRequest) returns (RestoreFromBackupResponse);
 }
 
 // User Messages
@@ -108,16 +123,18 @@ message IRTAbility {
 
 message SchedulerState {
   string user_id = 1;
-  map<string, IRTAbility> ability_vector = 2;
-  map<string, SM2State> sm2_states = 3;
-  map<string, BKTState> bkt_states = 4;
-  google.protobuf.Struct bandit_state = 5;
-  string current_session_id = 6;
-  google.protobuf.Timestamp last_session_end = 7;
-  int32 consecutive_days = 8;
-  int64 total_study_time_ms = 9;
-  int32 version = 10;
-  google.protobuf.Timestamp last_updated = 11;
+  google.protobuf.Struct ability_vector = 2;
+  google.protobuf.Struct ability_confidence = 3;
+  google.protobuf.Struct sm2_states = 4;
+  google.protobuf.Struct bkt_states = 5;
+  google.protobuf.Struct bandit_state = 6;
+  string current_session_id = 7;
+  google.protobuf.Timestamp last_session_end = 8;
+  int32 consecutive_days = 9;
+  int64 total_study_time_ms = 10;
+  int32 version = 11;
+  google.protobuf.Timestamp last_updated = 12;
+  google.protobuf.Timestamp created_at = 13;
 }
 
 // Activity Messages
@@ -262,4 +279,80 @@ message HealthCheckRequest {}
 message HealthCheckResponse {
   string status = 1;
   google.protobuf.Timestamp timestamp = 2;
+}
+
+// Scheduler State Service Messages
+message CreateSchedulerStateRequest {
+  string user_id = 1;
+}
+
+message CreateSchedulerStateResponse {
+  SchedulerState state = 1;
+}
+
+message UpdateSM2StateRequest {
+  string user_id = 1;
+  string item_id = 2;
+  int32 quality = 3;
+}
+
+message UpdateSM2StateResponse {
+  SchedulerState state = 1;
+}
+
+message UpdateBKTStateRequest {
+  string user_id = 1;
+  string topic = 2;
+  bool correct = 3;
+}
+
+message UpdateBKTStateResponse {
+  SchedulerState state = 1;
+}
+
+message UpdateAbilityRequest {
+  string user_id = 1;
+  string topic = 2;
+  double ability = 3;
+  double confidence = 4;
+}
+
+message UpdateAbilityResponse {
+  SchedulerState state = 1;
+}
+
+message StartSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message StartSessionResponse {
+  SchedulerState state = 1;
+}
+
+message EndSessionRequest {
+  string user_id = 1;
+  int64 study_time_ms = 2;
+}
+
+message EndSessionResponse {
+  SchedulerState state = 1;
+}
+
+message CreateBackupRequest {
+  string user_id = 1;
+  string reason = 2;
+}
+
+message CreateBackupResponse {
+  string backup_id = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+message RestoreFromBackupRequest {
+  string backup_id = 1;
+}
+
+message RestoreFromBackupResponse {
+  SchedulerState state = 1;
 }

@@ -31,9 +31,10 @@ type Config struct {
 
 	// Cache configuration
 	CacheTTL struct {
-		User      time.Duration
-		Mastery   time.Duration
-		Scheduler time.Duration
+		User           time.Duration
+		Mastery        time.Duration
+		Scheduler      time.Duration
+		SchedulerState time.Duration
 	}
 }
 
@@ -59,6 +60,7 @@ func Load() *Config {
 	cfg.CacheTTL.User = time.Hour
 	cfg.CacheTTL.Mastery = 30 * time.Minute
 	cfg.CacheTTL.Scheduler = 15 * time.Minute
+	cfg.CacheTTL.SchedulerState = 30 * time.Minute
 
 	return cfg
 }

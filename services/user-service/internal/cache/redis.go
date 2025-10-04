@@ -126,6 +126,10 @@ func SchedulerHotKey(userID string) string {
 	return fmt.Sprintf("scheduler:hot:%s", userID)
 }
 
+func SchedulerStateKey(userID string) string {
+	return fmt.Sprintf("scheduler:state:%s", userID)
+}
+
 func SessionKey(sessionID string) string {
 	return fmt.Sprintf("session:%s", sessionID)
 }

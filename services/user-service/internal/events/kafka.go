@@ -25,6 +25,10 @@ const (
 	EventTypeUserPreferencesUpdated EventType = "user.preferences.updated"
 	EventTypeUserActivity           EventType = "user.activity"
 	EventTypeUserLastActiveUpdated  EventType = "user.last_active.updated"
+	EventTypeSchedulerStateCreated  EventType = "scheduler.state.created"
+	EventTypeSchedulerStateUpdated  EventType = "scheduler.state.updated"
+	EventTypeSchedulerStateDeleted  EventType = "scheduler.state.deleted"
+	EventTypeSchedulerStateRestored EventType = "scheduler.state.restored"
 )
 
 // BaseEvent represents the common fields for all events
@@ -123,6 +127,50 @@ type UserLastActiveUpdatedData struct {
 	LastActiveAt time.Time `json:"last_active_at"`
 }
 
+// SchedulerStateCreatedEvent represents a scheduler state creation event
+type SchedulerStateCreatedEvent struct {
+	BaseEvent
+	Data SchedulerStateCreatedData `json:"data"`
+}
+
+type SchedulerStateCreatedData struct {
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// SchedulerStateUpdatedEvent represents a scheduler state update event
+type SchedulerStateUpdatedEvent struct {
+	BaseEvent
+	Data SchedulerStateUpdatedData `json:"data"`
+}
+
+type SchedulerStateUpdatedData struct {
+	PreviousVersion int       `json:"previous_version"`
+	NewVersion      int       `json:"new_version"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// SchedulerStateDeletedEvent represents a scheduler state deletion event
+type SchedulerStateDeletedEvent struct {
+	BaseEvent
+	Data SchedulerStateDeletedData `json:"data"`
+}
+
+type SchedulerStateDeletedData struct {
+	DeletedAt time.Time `json:"deleted_at"`
+}
+
+// SchedulerStateRestoredEvent represents a scheduler state restoration event
+type SchedulerStateRestoredEvent struct {
+	BaseEvent
+	Data SchedulerStateRestoredData `json:"data"`
+}
+
+type SchedulerStateRestoredData struct {
+	BackupID   string    `json:"backup_id"`
+	RestoredAt time.Time `json:"restored_at"`
+	NewVersion int       `json:"new_version"`
+}
+
 // EventPublisher interface for publishing events
 type EventPublisher interface {
 	PublishUserCreated(ctx context.Context, user *models.User) error
@@ -132,6 +180,10 @@ type EventPublisher interface {
 	PublishUserPreferencesUpdated(ctx context.Context, userID uuid.UUID, oldPrefs, newPrefs map[string]interface{}) error
 	PublishUserActivity(ctx context.Context, userID uuid.UUID, activityType string, metadata map[string]interface{}, sessionID, deviceType, appVersion string) error
 	PublishUserLastActiveUpdated(ctx context.Context, userID uuid.UUID, lastActiveAt time.Time) error
+	PublishSchedulerStateCreated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState) error
+	PublishSchedulerStateUpdated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState, oldVersion, newVersion int) error
+	PublishSchedulerStateDeleted(ctx context.Context, userID uuid.UUID) error
+	PublishSchedulerStateRestored(ctx context.Context, userID uuid.UUID, backupID uuid.UUID, state *models.UserSchedulerState) error
 	Close() error
 }
 
@@ -323,6 +375,86 @@ func (p *KafkaEventPublisher) PublishUserLastActiveUpdated(ctx context.Context, 
 	return p.publishEvent(ctx, "user.events", userID.String(), event)
 }
 
+// PublishSchedulerStateCreated publishes a scheduler state created event
+func (p *KafkaEventPublisher) PublishSchedulerStateCreated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState) error {
+	event := SchedulerStateCreatedEvent{
+		BaseEvent: BaseEvent{
+			ID:        uuid.New().String(),
+			Type:      EventTypeSchedulerStateCreated,
+			Source:    "user-service",
+			UserID:    userID.String(),
+			Timestamp: time.Now(),
+			Version:   "1.0",
+		},
+		Data: SchedulerStateCreatedData{
+			CreatedAt: state.CreatedAt,
+		},
+	}
+
+	return p.publishEvent(ctx, "user.events", userID.String(), event)
+}
+
+// PublishSchedulerStateUpdated publishes a scheduler state updated event
+func (p *KafkaEventPublisher) PublishSchedulerStateUpdated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState, oldVersion, newVersion int) error {
+	event := SchedulerStateUpdatedEvent{
+		BaseEvent: BaseEvent{
+			ID:        uuid.New().String(),
+			Type:      EventTypeSchedulerStateUpdated,
+			Source:    "user-service",
+			UserID:    userID.String(),
+			Timestamp: time.Now(),
+			Version:   "1.0",
+		},
+		Data: SchedulerStateUpdatedData{
+			PreviousVersion: oldVersion,
+			NewVersion:      newVersion,
+			UpdatedAt:       state.LastUpdated,
+		},
+	}
+
+	return p.publishEvent(ctx, "user.events", userID.String(), event)
+}
+
+// PublishSchedulerStateDeleted publishes a scheduler state deleted event
+func (p *KafkaEventPublisher) PublishSchedulerStateDeleted(ctx context.Context, userID uuid.UUID) error {
+	event := SchedulerStateDeletedEvent{
+		BaseEvent: BaseEvent{
+			ID:        uuid.New().String(),
+			Type:      EventTypeSchedulerStateDeleted,
+			Source:    "user-service",
+			UserID:    userID.String(),
+			Timestamp: time.Now(),
+			Version:   "1.0",
+		},
+		Data: SchedulerStateDeletedData{
+			DeletedAt: time.Now(),
+		},
+	}
+
+	return p.publishEvent(ctx, "user.events", userID.String(), event)
+}
+
+// PublishSchedulerStateRestored publishes a scheduler state restored event
+func (p *KafkaEventPublisher) PublishSchedulerStateRestored(ctx context.Context, userID uuid.UUID, backupID uuid.UUID, state *models.UserSchedulerState) error {
+	event := SchedulerStateRestoredEvent{
+		BaseEvent: BaseEvent{
+			ID:        uuid.New().String(),
+			Type:      EventTypeSchedulerStateRestored,
+			Source:    "user-service",
+			UserID:    userID.String(),
+			Timestamp: time.Now(),
+			Version:   "1.0",
+		},
+		Data: SchedulerStateRestoredData{
+			BackupID:   backupID.String(),
+			RestoredAt: time.Now(),
+			NewVersion: state.Version,
+		},
+	}
+
+	return p.publishEvent(ctx, "user.events", userID.String(), event)
+}
+
 // publishEvent publishes an event to the specified topic
 func (p *KafkaEventPublisher) publishEvent(ctx context.Context, topic, key string, event interface{}) error {
 	log := logger.WithContext(ctx).WithField("topic", topic).WithField("key", key)
@@ -417,6 +549,22 @@ func (p *NoOpEventPublisher) PublishUserActivity(ctx context.Context, userID uui
 }
 
 func (p *NoOpEventPublisher) PublishUserLastActiveUpdated(ctx context.Context, userID uuid.UUID, lastActiveAt time.Time) error {
+	return nil
+}
+
+func (p *NoOpEventPublisher) PublishSchedulerStateCreated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState) error {
+	return nil
+}
+
+func (p *NoOpEventPublisher) PublishSchedulerStateUpdated(ctx context.Context, userID uuid.UUID, state *models.UserSchedulerState, oldVersion, newVersion int) error {
+	return nil
+}
+
+func (p *NoOpEventPublisher) PublishSchedulerStateDeleted(ctx context.Context, userID uuid.UUID) error {
+	return nil
+}
+
+func (p *NoOpEventPublisher) PublishSchedulerStateRestored(ctx context.Context, userID uuid.UUID, backupID uuid.UUID, state *models.UserSchedulerState) error {
 	return nil
 }
 
