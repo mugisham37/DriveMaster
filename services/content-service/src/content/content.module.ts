@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -14,6 +14,7 @@ import { MediaProcessingService } from '../services/media-processing.service';
 import { CDNService } from '../services/cdn.service';
 import { MediaAssetService } from '../services/media-asset.service';
 import { BulkOperationsService } from '../services/bulk-operations.service';
+import { SearchModule } from '../search/search.module';
 import { multerConfig } from '../common/multer.config';
 
 @Module({
@@ -24,6 +25,7 @@ import { multerConfig } from '../common/multer.config';
             storage: undefined, // Use memory storage for S3 uploads
         }),
         ScheduleModule.forRoot(),
+        forwardRef(() => SearchModule),
     ],
     controllers: [ContentController],
     providers: [
