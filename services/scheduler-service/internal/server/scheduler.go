@@ -9,11 +9,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"scheduler-service/internal/algorithms"
 	"scheduler-service/internal/cache"
 	"scheduler-service/internal/config"
 	"scheduler-service/internal/database"
 	"scheduler-service/internal/logger"
 	"scheduler-service/internal/metrics"
+	"scheduler-service/internal/state"
 	pb "scheduler-service/proto"
 )
 
@@ -21,11 +23,13 @@ import (
 type SchedulerService struct {
 	pb.UnimplementedSchedulerServiceServer
 
-	config  *config.Config
-	logger  *logger.Logger
-	metrics *metrics.Metrics
-	db      *database.DB
-	cache   *cache.RedisClient
+	config       *config.Config
+	logger       *logger.Logger
+	metrics      *metrics.Metrics
+	db           *database.DB
+	cache        *cache.RedisClient
+	sm2Algorithm *algorithms.SM2Algorithm
+	sm2Manager   *state.SM2StateManager
 }
 
 // NewSchedulerService creates a new scheduler service instance
@@ -36,12 +40,20 @@ func NewSchedulerService(
 	db *database.DB,
 	cache *cache.RedisClient,
 ) *SchedulerService {
+	// Initialize SM-2 algorithm
+	sm2Algorithm := algorithms.NewSM2Algorithm()
+
+	// Initialize SM-2 state manager
+	sm2Manager := state.NewSM2StateManager(sm2Algorithm, db, cache, log)
+
 	return &SchedulerService{
-		config:  cfg,
-		logger:  log,
-		metrics: metrics,
-		db:      db,
-		cache:   cache,
+		config:       cfg,
+		logger:       log,
+		metrics:      metrics,
+		db:           db,
+		cache:        cache,
+		sm2Algorithm: sm2Algorithm,
+		sm2Manager:   sm2Manager,
 	}
 }
 
@@ -54,7 +66,12 @@ func (s *SchedulerService) GetNextItems(ctx context.Context, req *pb.NextItemsRe
 		}
 	}()
 
-	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Getting next items")
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":      req.UserId,
+		"session_id":   req.SessionId,
+		"session_type": req.SessionType,
+		"count":        req.Count,
+	}).Info("Getting next items")
 
 	// Validate request
 	if req.UserId == "" {
@@ -64,19 +81,26 @@ func (s *SchedulerService) GetNextItems(ctx context.Context, req *pb.NextItemsRe
 		return nil, status.Error(codes.InvalidArgument, "count must be between 1 and 50")
 	}
 
-	// TODO: Implement actual item selection logic
-	// For now, return a placeholder response
-	items := []*pb.RecommendedItem{
-		{
-			ItemId:               "item_1",
-			Score:                0.85,
-			Reason:               "High mastery gap in traffic signs",
-			Topics:               []string{"traffic_signs"},
-			Difficulty:           0.6,
-			PredictedCorrectness: 0.75,
-		},
+	currentTime := time.Now()
+
+	// Get SM-2 urgency scores for all user items
+	urgencyScores, err := s.sm2Manager.GetUrgencyScores(ctx, req.UserId, currentTime)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get SM-2 urgency scores")
+		return nil, status.Error(codes.Internal, "failed to get urgency scores")
 	}
 
+	// Get due items for prioritization
+	dueItems, err := s.sm2Manager.GetDueItems(ctx, req.UserId, currentTime)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get due items")
+		return nil, status.Error(codes.Internal, "failed to get due items")
+	}
+
+	// Select items based on SM-2 urgency and session constraints
+	selectedItems := s.selectItemsWithSM2(ctx, req, urgencyScores, dueItems, currentTime)
+
+	// Create session context
 	sessionContext := &pb.SessionContext{
 		SessionId:         req.SessionId,
 		SessionType:       req.SessionType,
@@ -88,14 +112,22 @@ func (s *SchedulerService) GetNextItems(ctx context.Context, req *pb.NextItemsRe
 		StartedAt:         timestamppb.Now(),
 	}
 
+	// Update metrics
 	if s.metrics != nil && s.metrics.ItemsRecommended != nil {
-		s.metrics.ItemsRecommended.Add(float64(len(items)))
+		s.metrics.ItemsRecommended.Add(float64(len(selectedItems)))
 	}
 
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":        req.UserId,
+		"items_returned": len(selectedItems),
+		"due_items":      len(dueItems),
+		"total_items":    len(urgencyScores),
+	}).Info("Items selected successfully")
+
 	return &pb.NextItemsResponse{
-		Items:          items,
+		Items:          selectedItems,
 		SessionContext: sessionContext,
-		Strategy:       "adaptive_practice",
+		Strategy:       "sm2_spaced_repetition",
 	}, nil
 }
 
@@ -140,6 +172,7 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 		"user_id": req.UserId,
 		"item_id": req.ItemId,
 		"correct": req.Correct,
+		"quality": req.Quality,
 	}).Info("Recording attempt")
 
 	// Validate request
@@ -152,42 +185,80 @@ func (s *SchedulerService) RecordAttempt(ctx context.Context, req *pb.AttemptReq
 	if req.ClientAttemptId == "" {
 		return nil, status.Error(codes.InvalidArgument, "client_attempt_id is required")
 	}
+	if req.Quality < 0 || req.Quality > 5 {
+		return nil, status.Error(codes.InvalidArgument, "quality must be between 0 and 5")
+	}
 
-	// TODO: Implement actual attempt processing
-	// For now, return a placeholder response
+	// Get current SM-2 state before update
+	currentState, err := s.sm2Manager.GetState(ctx, req.UserId, req.ItemId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get current SM-2 state")
+		return nil, status.Error(codes.Internal, "failed to get current state")
+	}
+
+	// Update SM-2 state based on quality
+	newState, err := s.sm2Manager.UpdateState(ctx, req.UserId, req.ItemId, int(req.Quality))
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to update SM-2 state")
+		return nil, status.Error(codes.Internal, "failed to update SM-2 state")
+	}
+
+	// Create state update response
 	stateUpdate := &pb.UserStateUpdate{
 		MasteryChanges: map[string]float64{
-			"traffic_signs": 0.05,
+			// TODO: Implement mastery changes based on topics
 		},
 		AbilityChanges: map[string]float64{
-			"traffic_signs": 0.1,
+			// TODO: Implement ability changes based on IRT
 		},
 		Sm2Update: &pb.SM2StateUpdate{
-			EasinessFactor: 2.5,
-			Interval:       1,
-			Repetition:     1,
-			NextDue:        timestamppb.New(time.Now().AddDate(0, 0, 1)),
+			EasinessFactor: newState.EasinessFactor,
+			Interval:       int32(newState.Interval),
+			Repetition:     int32(newState.Repetition),
+			NextDue:        timestamppb.New(newState.NextDue),
 		},
 	}
 
 	// Update metrics
-	if s.metrics != nil && s.metrics.MasteryUpdates != nil {
-		s.metrics.MasteryUpdates.Inc()
+	if s.metrics != nil {
+		if s.metrics.MasteryUpdates != nil {
+			s.metrics.MasteryUpdates.Inc()
+		}
+
+		// Track attempt outcomes
+		if req.GetCorrect() {
+			// Track correct attempts
+		} else {
+			// Track incorrect attempts
+		}
+
+		// Track SM-2 specific metrics
+		s.trackSM2Metrics(currentState, newState, req.Quality)
 	}
-	if req.GetCorrect() {
-		// Track correct attempts
-	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":      req.UserId,
+		"item_id":      req.ItemId,
+		"old_interval": currentState.Interval,
+		"new_interval": newState.Interval,
+		"old_easiness": currentState.EasinessFactor,
+		"new_easiness": newState.EasinessFactor,
+		"repetition":   newState.Repetition,
+	}).Info("SM-2 state updated successfully")
 
 	return &pb.AttemptResponse{
 		Success:     true,
-		Message:     "Attempt recorded successfully",
+		Message:     "Attempt recorded and SM-2 state updated successfully",
 		StateUpdate: stateUpdate,
 	}, nil
 }
 
 // InitializeUser initializes scheduler state for a new user
 func (s *SchedulerService) InitializeUser(ctx context.Context, req *pb.InitializeUserRequest) (*pb.InitializeUserResponse, error) {
-	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("Initializing user")
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":      req.UserId,
+		"country_code": req.CountryCode,
+	}).Info("Initializing user")
 
 	// Validate request
 	if req.UserId == "" {
@@ -197,8 +268,11 @@ func (s *SchedulerService) InitializeUser(ctx context.Context, req *pb.Initializ
 		return nil, status.Error(codes.InvalidArgument, "country_code is required")
 	}
 
-	// TODO: Implement actual user initialization
-	// For now, return a placeholder state
+	// Initialize SM-2 states for available items
+	// TODO: Get available items for the country/jurisdiction
+	// For now, we'll initialize with empty states and create them on-demand
+
+	// Create initial scheduler state
 	initialState := &pb.UserSchedulerState{
 		UserId:            req.UserId,
 		AbilityVector:     map[string]float64{},
@@ -221,9 +295,26 @@ func (s *SchedulerService) InitializeUser(ctx context.Context, req *pb.Initializ
 		LastUpdated:      timestamppb.Now(),
 	}
 
+	// If placement results are provided, initialize ability estimates
+	if req.PlacementResults != nil {
+		initialState.AbilityVector = req.PlacementResults.TopicAbilities
+		initialState.AbilityConfidence = req.PlacementResults.TopicConfidence
+
+		s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+			"user_id":         req.UserId,
+			"topic_abilities": req.PlacementResults.TopicAbilities,
+			"overall_ability": req.PlacementResults.OverallAbility,
+		}).Info("Initialized user with placement results")
+	}
+
+	// TODO: Persist initial state to database
+	// For now, the state will be created on-demand when items are accessed
+
+	s.logger.WithContext(ctx).WithField("user_id", req.UserId).Info("User initialized successfully")
+
 	return &pb.InitializeUserResponse{
 		Success:      true,
-		Message:      "User initialized successfully",
+		Message:      "User initialized successfully with SM-2 spaced repetition",
 		InitialState: initialState,
 	}, nil
 }
@@ -237,25 +328,46 @@ func (s *SchedulerService) GetUserState(ctx context.Context, req *pb.GetUserStat
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	// TODO: Implement actual state retrieval
-	// For now, return a placeholder state
+	// Get SM-2 states for the user
+	sm2States, err := s.sm2Manager.GetUserStates(ctx, req.UserId)
+	if err != nil {
+		s.logger.WithContext(ctx).WithError(err).Error("Failed to get user SM-2 states")
+		return nil, status.Error(codes.Internal, "failed to get user SM-2 states")
+	}
+
+	// Convert SM-2 states to protobuf format
+	pbSM2States := make(map[string]*pb.SM2State)
+	for itemID, state := range sm2States {
+		pbSM2States[itemID] = s.sm2Manager.ConvertToProto(state)
+	}
+
+	// Create user scheduler state
 	state := &pb.UserSchedulerState{
 		UserId:            req.UserId,
-		AbilityVector:     map[string]float64{},
-		AbilityConfidence: map[string]float64{},
-		Sm2States:         map[string]*pb.SM2State{},
-		BktStates:         map[string]*pb.BKTState{},
+		AbilityVector:     map[string]float64{}, // TODO: Implement IRT ability tracking
+		AbilityConfidence: map[string]float64{}, // TODO: Implement IRT confidence tracking
+		Sm2States:         pbSM2States,
+		BktStates:         map[string]*pb.BKTState{}, // TODO: Implement BKT states
 		BanditState: &pb.BanditState{
-			StrategyWeights: map[string]float64{},
+			StrategyWeights: map[string]float64{
+				"practice": 0.4,
+				"review":   0.3,
+				"test":     0.3,
+			},
 			StrategyCounts:  map[string]int32{},
 			StrategyRewards: map[string]float64{},
 			ExplorationRate: 0.1,
 		},
-		ConsecutiveDays:  0,
-		TotalStudyTimeMs: 0,
+		ConsecutiveDays:  0, // TODO: Implement streak tracking
+		TotalStudyTimeMs: 0, // TODO: Implement time tracking
 		Version:          1,
 		LastUpdated:      timestamppb.Now(),
 	}
+
+	s.logger.WithContext(ctx).WithFields(map[string]interface{}{
+		"user_id":    req.UserId,
+		"sm2_states": len(pbSM2States),
+	}).Info("User state retrieved successfully")
 
 	return &pb.GetUserStateResponse{
 		State: state,
@@ -346,4 +458,153 @@ func (s *SchedulerService) Health(ctx context.Context, req *pb.HealthRequest) (*
 		Checks:    checks,
 		Timestamp: timestamppb.Now(),
 	}, nil
+}
+
+// Helper methods for SM-2 integration
+
+// selectItemsWithSM2 selects items based on SM-2 urgency scores and session constraints
+func (s *SchedulerService) selectItemsWithSM2(
+	ctx context.Context,
+	req *pb.NextItemsRequest,
+	urgencyScores map[string]float64,
+	dueItems []string,
+	currentTime time.Time,
+) []*pb.RecommendedItem {
+	var items []*pb.RecommendedItem
+
+	// Create a map for quick lookup of due items
+	dueItemsMap := make(map[string]bool)
+	for _, itemID := range dueItems {
+		dueItemsMap[itemID] = true
+	}
+
+	// Sort items by urgency score (highest first)
+	type itemScore struct {
+		itemID string
+		score  float64
+		isDue  bool
+	}
+
+	var scoredItems []itemScore
+	for itemID, score := range urgencyScores {
+		// Skip excluded items
+		excluded := false
+		for _, excludeID := range req.ExcludeItems {
+			if itemID == excludeID {
+				excluded = true
+				break
+			}
+		}
+		if excluded {
+			continue
+		}
+
+		scoredItems = append(scoredItems, itemScore{
+			itemID: itemID,
+			score:  score,
+			isDue:  dueItemsMap[itemID],
+		})
+	}
+
+	// Sort by priority: due items first, then by urgency score
+	for i := 0; i < len(scoredItems)-1; i++ {
+		for j := i + 1; j < len(scoredItems); j++ {
+			// Prioritize due items
+			if scoredItems[i].isDue != scoredItems[j].isDue {
+				if scoredItems[j].isDue {
+					scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
+				}
+			} else if scoredItems[j].score > scoredItems[i].score {
+				// Within same due status, sort by urgency score
+				scoredItems[i], scoredItems[j] = scoredItems[j], scoredItems[i]
+			}
+		}
+	}
+
+	// Select top items up to requested count
+	count := int(req.Count)
+	if count > len(scoredItems) {
+		count = len(scoredItems)
+	}
+
+	for i := 0; i < count; i++ {
+		item := scoredItems[i]
+
+		// Get SM-2 state for additional information
+		state, err := s.sm2Manager.GetState(ctx, req.UserId, item.itemID)
+		if err != nil {
+			s.logger.WithContext(ctx).WithError(err).WithField("item_id", item.itemID).Warn("Failed to get SM-2 state for item")
+			continue
+		}
+
+		// Calculate predicted correctness based on retention probability
+		predictedCorrectness := s.sm2Algorithm.GetRetentionProbability(state, currentTime)
+
+		// Generate reason for recommendation
+		reason := s.generateRecommendationReason(state, item.isDue, currentTime)
+
+		recommendedItem := &pb.RecommendedItem{
+			ItemId:               item.itemID,
+			Score:                item.score,
+			Reason:               reason,
+			Topics:               []string{}, // TODO: Get from item metadata
+			Difficulty:           0.5,        // TODO: Get from item metadata
+			PredictedCorrectness: predictedCorrectness,
+		}
+
+		items = append(items, recommendedItem)
+	}
+
+	return items
+}
+
+// generateRecommendationReason creates a human-readable reason for item recommendation
+func (s *SchedulerService) generateRecommendationReason(state *algorithms.SM2State, isDue bool, currentTime time.Time) string {
+	if isDue {
+		daysOverdue := currentTime.Sub(state.NextDue).Hours() / 24.0
+		if daysOverdue > 1 {
+			return fmt.Sprintf("Overdue by %.1f days - needs review", daysOverdue)
+		}
+		return "Due for review"
+	}
+
+	if state.Repetition == 0 {
+		return "New item - first learning"
+	}
+
+	if state.Repetition == 1 {
+		return "Early learning stage"
+	}
+
+	if state.EasinessFactor < 2.0 {
+		return "Difficult item - needs reinforcement"
+	}
+
+	return "Scheduled for spaced repetition"
+}
+
+// trackSM2Metrics updates metrics related to SM-2 algorithm performance
+func (s *SchedulerService) trackSM2Metrics(oldState, newState *algorithms.SM2State, quality int32) {
+	if s.metrics == nil {
+		return
+	}
+
+	// Track easiness factor changes
+	easinessChange := newState.EasinessFactor - oldState.EasinessFactor
+
+	// Track interval changes
+	intervalChange := newState.Interval - oldState.Interval
+
+	// Track repetition resets (when quality < 3)
+	if quality < 3 && oldState.Repetition > 0 {
+		// Repetition was reset
+	}
+
+	// Log metrics for monitoring
+	s.logger.WithFields(map[string]interface{}{
+		"easiness_change": easinessChange,
+		"interval_change": intervalChange,
+		"quality":         quality,
+		"repetition":      newState.Repetition,
+	}).Debug("SM-2 metrics tracked")
 }

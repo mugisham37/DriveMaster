@@ -243,9 +243,9 @@ This implementation plan breaks down the adaptive learning platform into discret
 
 ## Phase 4: Adaptive Learning Scheduler
 
-- [ ] 8. Scheduler service core implementation (Go)
+- [-] 8. Scheduler service core implementation (Go)
 
-  - [ ] 8.1 Build scheduler service foundation
+  - [x] 8.1 Build scheduler service foundation
 
     - Create Go service with high-performance architecture
     - Implement gRPC server for internal communication
@@ -254,7 +254,7 @@ This implementation plan breaks down the adaptive learning platform into discret
     - Add comprehensive logging and metrics collection
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ] 8.2 Implement SM-2 spaced repetition algorithm
+  - [x] 8.2 Implement SM-2 spaced repetition algorithm
 
     - Create SM-2 state data structures and persistence
     - Implement SM-2 update logic with quality scoring
