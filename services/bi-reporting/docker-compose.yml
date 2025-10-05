@@ -1,0 +1,153 @@
+version: "3.8"
+
+services:
+  bi-reporting:
+    build: .
+    container_name: bi-reporting-service
+    ports:
+      - "8001:8001"
+    environment:
+      # Application
+      APP_NAME: "BI Reporting Service"
+      DEBUG: "false"
+      LOG_LEVEL: "INFO"
+
+      # Database
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/adaptive_learning"
+      DATABASE_POOL_SIZE: "10"
+      DATABASE_MAX_OVERFLOW: "20"
+
+      # Redis
+      REDIS_URL: "redis://redis:6379/2"
+      REDIS_POOL_SIZE: "10"
+
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+      KAFKA_CONSUMER_GROUP: "bi-reporting"
+
+      # Data Lake
+      DATA_LAKE_PROVIDER: "s3"
+      DATA_LAKE_BUCKET: "adaptive-learning-data-lake"
+      DATA_LAKE_REGION: "us-west-2"
+
+      # Reports
+      REPORTS_DIR: "/app/reports"
+      TEMP_DIR: "/app/temp"
+      REPORT_RETENTION_DAYS: "30"
+      MAX_REPORT_SIZE_MB: "100"
+
+      # ML Models
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      MODEL_REGISTRY_NAME: "adaptive-learning-models"
+
+      # Security
+      SECRET_KEY: "your-secret-key-change-in-production"
+
+      # Background Tasks
+      CELERY_BROKER_URL: "redis://redis:6379/3"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/3"
+
+    volumes:
+      - ./reports:/app/reports
+      - ./temp:/app/temp
+      - ./logs:/app/logs
+
+    depends_on:
+      - postgres
+      - redis
+      - kafka-1
+
+    networks:
+      - adaptive-learning-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Celery worker for background tasks
+  bi-reporting-worker:
+    build: .
+    container_name: bi-reporting-worker
+    command: celery -A app.main.celery worker --loglevel=info
+    environment:
+      # Same environment as main service
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/adaptive_learning"
+      REDIS_URL: "redis://redis:6379/2"
+      CELERY_BROKER_URL: "redis://redis:6379/3"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/3"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+      DATA_LAKE_PROVIDER: "s3"
+      DATA_LAKE_BUCKET: "adaptive-learning-data-lake"
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+
+    volumes:
+      - ./reports:/app/reports
+      - ./temp:/app/temp
+      - ./logs:/app/logs
+
+    depends_on:
+      - postgres
+      - redis
+      - kafka-1
+
+    networks:
+      - adaptive-learning-network
+
+    restart: unless-stopped
+
+  # Celery beat for scheduled tasks
+  bi-reporting-scheduler:
+    build: .
+    container_name: bi-reporting-scheduler
+    command: celery -A app.main.celery beat --loglevel=info
+    environment:
+      # Same environment as main service
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/adaptive_learning"
+      REDIS_URL: "redis://redis:6379/2"
+      CELERY_BROKER_URL: "redis://redis:6379/3"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/3"
+
+    volumes:
+      - ./logs:/app/logs
+
+    depends_on:
+      - postgres
+      - redis
+
+    networks:
+      - adaptive-learning-network
+
+    restart: unless-stopped
+
+  # Flower for monitoring Celery tasks
+  bi-reporting-flower:
+    build: .
+    container_name: bi-reporting-flower
+    command: celery -A app.main.celery flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: "redis://redis:6379/3"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/3"
+
+    depends_on:
+      - redis
+
+    networks:
+      - adaptive-learning-network
+
+    restart: unless-stopped
+
+networks:
+  adaptive-learning-network:
+    external: true
+
+volumes:
+  bi-reports:
+  bi-temp:
+  bi-logs:
