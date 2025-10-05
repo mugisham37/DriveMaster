@@ -1,0 +1,265 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: adaptive-learning
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Detect changed services
+      id: changes
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          auth-service:
+            - 'services/auth-service/**'
+          user-service:
+            - 'services/user-service/**'
+          content-service:
+            - 'services/content-service/**'
+          scheduler-service:
+            - 'services/scheduler-service/**'
+          ml-service:
+            - 'services/ml-service/**'
+          event-service:
+            - 'services/event-service/**'
+          notification-service:
+            - 'services/notification-service/**'
+          fraud-service:
+            - 'services/fraud-service/**'
+
+    - name: Set build matrix
+      id: set-matrix
+      run: |
+        services=()
+        
+        if [[ "${{ steps.changes.outputs.auth-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("auth-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.user-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("user-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.content-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("content-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.scheduler-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("scheduler-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.ml-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("ml-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.event-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("event-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.notification-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("notification-service")
+        fi
+        
+        if [[ "${{ steps.changes.outputs.fraud-service }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          services+=("fraud-service")
+        fi
+        
+        # Convert array to JSON
+        printf -v joined '"%s",' "${services[@]}"
+        matrix="[${joined%,}]"
+        echo "matrix=$matrix" >> $GITHUB_OUTPUT
+        echo "Building services: $matrix"
+
+  build-and-push:
+    needs: build-matrix
+    if: needs.build-matrix.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+      fail-fast: false
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: services/${{ matrix.service }}
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,scope=${{ matrix.service }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+          VERSION=${{ steps.meta.outputs.version }}
+          COMMIT_SHA=${{ github.sha }}
+          BUILD_DATE=${{ steps.meta.outputs.created }}
+
+    - name: Run Trivy vulnerability scanner
+      if: github.event_name != 'pull_request'
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.meta.outputs.version }}
+        format: 'sarif'
+        output: 'trivy-results-${{ matrix.service }}.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      if: github.event_name != 'pull_request'
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+        category: 'trivy-${{ matrix.service }}'
+
+    - name: Generate SBOM
+      if: github.event_name != 'pull_request'
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.meta.outputs.version }}
+        format: spdx-json
+        output-file: sbom-${{ matrix.service }}.spdx.json
+
+    - name: Upload SBOM
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        name: sbom-${{ matrix.service }}
+        path: sbom-${{ matrix.service }}.spdx.json
+
+  # Multi-arch build for production releases
+  build-multiarch:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, user-service, content-service, scheduler-service, ml-service, event-service, notification-service, fraud-service]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+
+    - name: Build and push multi-arch Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: services/${{ matrix.service }}
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,scope=${{ matrix.service }}-multiarch
+        cache-to: type=gha,mode=max,scope=${{ matrix.service }}-multiarch
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+          VERSION=${{ steps.meta.outputs.version }}
+          COMMIT_SHA=${{ github.sha }}
+          BUILD_DATE=${{ steps.meta.outputs.created }}
+
+  # Update deployment manifests with new image tags
+  update-manifests:
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Kubernetes manifests
+      run: |
+        # Update image tags in Helm values
+        sed -i "s/tag: .*/tag: ${{ github.sha }}/g" infrastructure/helm/adaptive-learning/values.yaml
+        
+        # Update image tags in Kubernetes manifests
+        find infrastructure/k8s/deployments -name "*.yaml" -exec sed -i "s/:latest/:${{ github.sha }}/g" {} \;
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add infrastructure/
+        git diff --staged --quiet || git commit -m "Update image tags to ${{ github.sha }}"
+        git push
+
+  # Cleanup old images
+  cleanup-images:
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, user-service, content-service, scheduler-service, ml-service, event-service, notification-service, fraud-service]
+    steps:
+    - name: Delete old container images
+      uses: actions/delete-package-versions@v4
+      with:
+        package-name: '${{ env.IMAGE_PREFIX }}-${{ matrix.service }}'
+        package-type: 'container'
+        min-versions-to-keep: 10
+        delete-only-untagged-versions: true
+        token: ${{ secrets.GITHUB_TOKEN }}

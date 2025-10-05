@@ -1,0 +1,355 @@
+# Default values for adaptive-learning platform
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: "fast-ssd"
+
+# Environment configuration
+environment: production
+namespace: adaptive-learning-prod
+
+# Image configuration
+image:
+  registry: docker.io
+  repository: adaptive-learning
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Service configurations
+services:
+  authService:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: adaptive-learning/auth-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 3000
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  userService:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: adaptive-learning/user-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8080
+      grpcPort: 9090
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 15
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  contentService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: adaptive-learning/content-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 3001
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 8
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  schedulerService:
+    enabled: true
+    replicaCount: 4
+    image:
+      repository: adaptive-learning/scheduler-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8081
+      grpcPort: 9091
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  mlService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: adaptive-learning/ml-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8000
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "1000m"
+        nvidia.com/gpu: 0
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+        nvidia.com/gpu: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  eventService:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: adaptive-learning/event-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8082
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 12
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  notificationService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: adaptive-learning/notification-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 3002
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+  fraudService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: adaptive-learning/fraud-service
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8003
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+# Infrastructure dependencies
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "CHANGE_ME_IN_PRODUCTION"
+    username: "adaptive_user"
+    password: "CHANGE_ME_IN_PRODUCTION"
+    database: "adaptive_learning"
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "CHANGE_ME_IN_PRODUCTION"
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+
+kafka:
+  enabled: true
+  replicaCount: 3
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: "fast-ssd"
+  zookeeper:
+    enabled: true
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+# Secrets configuration
+secrets:
+  database:
+    postgresPassword: "CHANGE_ME_IN_PRODUCTION"
+    username: "adaptive_user"
+    password: "CHANGE_ME_IN_PRODUCTION"
+  redis:
+    password: "CHANGE_ME_IN_PRODUCTION"
+  jwt:
+    secret: "CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET"
+    refreshSecret: "CHANGE_ME_IN_PRODUCTION_USE_DIFFERENT_SECRET"
+  oauth:
+    googleClientId: "your-google-client-id"
+    googleClientSecret: "your-google-client-secret"
+    appleClientId: "your-apple-client-id"
+    appleClientSecret: "your-apple-client-secret"
+  s3:
+    accessKeyId: "your-aws-access-key"
+    secretAccessKey: "your-aws-secret-key"
+    region: "us-west-2"
+    bucket: "adaptive-learning-content"
+  notifications:
+    fcmServerKey: "your-fcm-server-key"
+    apnsKeyId: "your-apns-key-id"
+    apnsTeamId: "your-apns-team-id"
+    apnsPrivateKey: "your-apns-private-key"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.adaptivelearning.com
+      paths:
+        - path: /auth
+          pathType: Prefix
+          service: auth-service
+          port: 3000
+        - path: /users
+          pathType: Prefix
+          service: user-service
+          port: 8080
+        - path: /content
+          pathType: Prefix
+          service: content-service
+          port: 3001
+        - path: /scheduler
+          pathType: Prefix
+          service: scheduler-service
+          port: 8081
+        - path: /ml
+          pathType: Prefix
+          service: ml-service
+          port: 8000
+        - path: /events
+          pathType: Prefix
+          service: event-service
+          port: 8082
+        - path: /notifications
+          pathType: Prefix
+          service: notification-service
+          port: 3002
+        - path: /fraud
+          pathType: Prefix
+          service: fraud-service
+          port: 8003
+  tls:
+    - secretName: adaptive-learning-tls
+      hosts:
+        - api.adaptivelearning.com
+
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: adaptive-learning-monitoring
+  interval: 30s
+  scrapeTimeout: 10s

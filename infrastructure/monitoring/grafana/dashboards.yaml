@@ -1,0 +1,366 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: adaptive-learning-monitoring
+  labels:
+    app: grafana
+data:
+  adaptive-learning-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Adaptive Learning Platform Overview",
+        "tags": ["adaptive-learning", "overview"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Service Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=~\"auth-service|user-service|content-service|scheduler-service|ml-service|event-service|notification-service|fraud-service\"}",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total[5m])) by (job)",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Requests/sec",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Response Time (95th percentile)",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (job, le))",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job)",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Error Rate",
+                "min": 0,
+                "max": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(container_memory_usage_bytes{pod=~\".*-service-.*\"}) by (pod) / sum(container_spec_memory_limit_bytes{pod=~\".*-service-.*\"}) by (pod)",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Memory Usage %",
+                "min": 0,
+                "max": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\".*-service-.*\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "CPU Cores",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+    
+  scheduler-service-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Scheduler Service Dashboard",
+        "tags": ["adaptive-learning", "scheduler"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Next Item Selection Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(scheduler_next_item_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(scheduler_next_item_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Algorithm Component Scores",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "avg(scheduler_sm2_score)",
+                "legendFormat": "SM-2 Score"
+              },
+              {
+                "expr": "avg(scheduler_bkt_score)",
+                "legendFormat": "BKT Score"
+              },
+              {
+                "expr": "avg(scheduler_irt_score)",
+                "legendFormat": "IRT Score"
+              },
+              {
+                "expr": "avg(scheduler_exploration_score)",
+                "legendFormat": "Exploration Score"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Score",
+                "min": 0,
+                "max": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "User State Updates",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(scheduler_state_updates_total[5m])",
+                "legendFormat": "State Updates/sec"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Updates/sec",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Cache Hit Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(scheduler_cache_hits_total[5m]) / (rate(scheduler_cache_hits_total[5m]) + rate(scheduler_cache_misses_total[5m]))",
+                "legendFormat": "Cache Hit Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 0.7},
+                    {"color": "green", "value": 0.9}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+    
+  ml-service-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "ML Service Dashboard",
+        "tags": ["adaptive-learning", "ml", "machine-learning"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Model Prediction Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(ml_prediction_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Model Accuracy",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "ml_model_accuracy",
+                "legendFormat": "Current Accuracy"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 0.7},
+                    {"color": "green", "value": 0.8}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Prediction Cache Hit Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(ml_cache_hits_total[5m]) / (rate(ml_cache_hits_total[5m]) + rate(ml_cache_misses_total[5m]))",
+                "legendFormat": "Cache Hit Rate"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Hit Rate",
+                "min": 0,
+                "max": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Model Training Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "ml_training_loss",
+                "legendFormat": "Training Loss"
+              },
+              {
+                "expr": "ml_validation_loss",
+                "legendFormat": "Validation Loss"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Loss",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }

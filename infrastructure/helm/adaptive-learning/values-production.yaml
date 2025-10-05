@@ -1,0 +1,456 @@
+# Production values for adaptive-learning platform
+# This file contains production-specific overrides
+
+# Global configuration
+global:
+  imageRegistry: "ghcr.io"
+  imagePullSecrets:
+    - name: ghcr-secret
+
+# Environment configuration
+environment: production
+namespace: adaptive-learning-prod
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: adaptive-learning
+  tag: latest
+  pullPolicy: Always
+
+# Service configurations with production scaling
+services:
+  authService:
+    enabled: true
+    replicaCount: 5
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 5
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  userService:
+    enabled: true
+    replicaCount: 6
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "1000m"
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 6
+      maxReplicas: 30
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  contentService:
+    enabled: true
+    replicaCount: 4
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 15
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  schedulerService:
+    enabled: true
+    replicaCount: 8
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "1000m"
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 8
+      maxReplicas: 40
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  mlService:
+    enabled: true
+    replicaCount: 4
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "2000m"
+        nvidia.com/gpu: 1
+      limits:
+        memory: "4Gi"
+        cpu: "4000m"
+        nvidia.com/gpu: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 12
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  eventService:
+    enabled: true
+    replicaCount: 6
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 6
+      maxReplicas: 25
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  notificationService:
+    enabled: true
+    replicaCount: 3
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+  fraudService:
+    enabled: true
+    replicaCount: 3
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "1000m"
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+
+# Production infrastructure dependencies
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "CHANGE_ME_IN_PRODUCTION"
+    username: "adaptive_user"
+    password: "CHANGE_ME_IN_PRODUCTION"
+    database: "adaptive_learning"
+  primary:
+    persistence:
+      enabled: true
+      size: 500Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "2000m"
+      limits:
+        memory: "8Gi"
+        cpu: "4000m"
+    configuration: |
+      # PostgreSQL production configuration
+      max_connections = 200
+      shared_buffers = 2GB
+      effective_cache_size = 6GB
+      maintenance_work_mem = 512MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+      work_mem = 10MB
+      min_wal_size = 1GB
+      max_wal_size = 4GB
+      max_worker_processes = 8
+      max_parallel_workers_per_gather = 4
+      max_parallel_workers = 8
+      max_parallel_maintenance_workers = 4
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 500Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "CHANGE_ME_IN_PRODUCTION"
+  master:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+    configuration: |
+      # Redis production configuration
+      maxmemory 3gb
+      maxmemory-policy allkeys-lru
+      save 900 1
+      save 300 10
+      save 60 10000
+      tcp-keepalive 300
+      timeout 0
+  replica:
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+kafka:
+  enabled: true
+  replicaCount: 5
+  persistence:
+    enabled: true
+    size: 500Gi
+    storageClass: "fast-ssd"
+  zookeeper:
+    enabled: true
+    replicaCount: 5
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2000m"
+    limits:
+      memory: "8Gi"
+      cpu: "4000m"
+  configuration: |
+    # Kafka production configuration
+    num.network.threads=8
+    num.io.threads=16
+    socket.send.buffer.bytes=102400
+    socket.receive.buffer.bytes=102400
+    socket.request.max.bytes=104857600
+    num.partitions=12
+    num.recovery.threads.per.data.dir=2
+    offsets.topic.replication.factor=3
+    transaction.state.log.replication.factor=3
+    transaction.state.log.min.isr=2
+    log.retention.hours=168
+    log.segment.bytes=1073741824
+    log.retention.check.interval.ms=300000
+    zookeeper.connection.timeout.ms=18000
+    group.initial.rebalance.delay.ms=3000
+
+# Production secrets (use external secret management in real production)
+secrets:
+  database:
+    postgresPassword: "CHANGE_ME_IN_PRODUCTION"
+    username: "adaptive_user"
+    password: "CHANGE_ME_IN_PRODUCTION"
+  redis:
+    password: "CHANGE_ME_IN_PRODUCTION"
+  jwt:
+    secret: "CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET"
+    refreshSecret: "CHANGE_ME_IN_PRODUCTION_USE_DIFFERENT_SECRET"
+  oauth:
+    googleClientId: "your-production-google-client-id"
+    googleClientSecret: "your-production-google-client-secret"
+    appleClientId: "your-production-apple-client-id"
+    appleClientSecret: "your-production-apple-client-secret"
+  s3:
+    accessKeyId: "your-production-aws-access-key"
+    secretAccessKey: "your-production-aws-secret-key"
+    region: "us-west-2"
+    bucket: "adaptive-learning-content-prod"
+  notifications:
+    fcmServerKey: "your-production-fcm-server-key"
+    apnsKeyId: "your-production-apns-key-id"
+    apnsTeamId: "your-production-apns-team-id"
+    apnsPrivateKey: "your-production-apns-private-key"
+
+# Production ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.adaptivelearning.com
+      paths:
+        - path: /auth
+          pathType: Prefix
+          service: auth-service
+          port: 3000
+        - path: /users
+          pathType: Prefix
+          service: user-service
+          port: 8080
+        - path: /content
+          pathType: Prefix
+          service: content-service
+          port: 3001
+        - path: /scheduler
+          pathType: Prefix
+          service: scheduler-service
+          port: 8081
+        - path: /ml
+          pathType: Prefix
+          service: ml-service
+          port: 8000
+        - path: /events
+          pathType: Prefix
+          service: event-service
+          port: 8082
+        - path: /notifications
+          pathType: Prefix
+          service: notification-service
+          port: 3002
+        - path: /fraud
+          pathType: Prefix
+          service: fraud-service
+          port: 8003
+  tls:
+    - secretName: adaptive-learning-tls
+      hosts:
+        - api.adaptivelearning.com
+
+# Service Monitor for Prometheus (production settings)
+serviceMonitor:
+  enabled: true
+  namespace: adaptive-learning-monitoring
+  interval: 15s
+  scrapeTimeout: 10s
+  labels:
+    environment: production
+
+# Pod Disruption Budgets for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%
+
+# Network Policies for security
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+
+# Security Context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+  seccompProfile:
+    type: RuntimeDefault
+
+# Pod Security Standards
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Container Security Context
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+# Resource Quotas
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "50"
+    requests.memory: "100Gi"
+    limits.cpu: "100"
+    limits.memory: "200Gi"
+    persistentvolumeclaims: "50"
+
+# Limit Ranges
+limitRange:
+  enabled: true
+  limits:
+    - default:
+        cpu: "1000m"
+        memory: "1Gi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
+
+# Canary deployment configuration
+canary:
+  enabled: false
+  weight: 10
+  analysis:
+    interval: 30s
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+      - name: success-rate
+        threshold: 99
+        interval: 30s
+      - name: latency
+        threshold: 500
+        interval: 30s

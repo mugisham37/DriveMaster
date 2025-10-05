@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: adaptive-learning-prod
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  CORS_ORIGIN: "https://app.adaptivelearning.com"
+  SESSION_TIMEOUT: "3600"
+  MFA_ISSUER: "Adaptive Learning Platform"
+  RATE_LIMIT_WINDOW: "900"
+  RATE_LIMIT_MAX: "100"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+  namespace: adaptive-learning-prod
+data:
+  PORT: "8080"
+  GRPC_PORT: "9090"
+  LOG_LEVEL: "info"
+  CACHE_TTL: "3600"
+  MAX_CONNECTIONS: "100"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: content-service-config
+  namespace: adaptive-learning-prod
+data:
+  NODE_ENV: "production"
+  PORT: "3001"
+  MAX_FILE_SIZE: "10485760"
+  ALLOWED_FILE_TYPES: "jpg,jpeg,png,gif,mp4,mp3,pdf"
+  CDN_BASE_URL: "https://cdn.adaptivelearning.com"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scheduler-service-config
+  namespace: adaptive-learning-prod
+data:
+  PORT: "8081"
+  GRPC_PORT: "9091"
+  LOG_LEVEL: "info"
+  ALGORITHM_WEIGHTS: |
+    {
+      "urgency": 0.3,
+      "mastery": 0.4,
+      "difficulty": 0.2,
+      "exploration": 0.1
+    }
+  SM2_INITIAL_INTERVAL: "1"
+  BKT_INITIAL_KNOWLEDGE: "0.1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-service-config
+  namespace: adaptive-learning-prod
+data:
+  PORT: "8000"
+  MODEL_REGISTRY_URL: "http://mlflow-service:5000"
+  BATCH_SIZE: "32"
+  MAX_SEQUENCE_LENGTH: "100"
+  PREDICTION_CACHE_TTL: "900"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-service-config
+  namespace: adaptive-learning-prod
+data:
+  PORT: "8082"
+  LOG_LEVEL: "info"
+  BATCH_SIZE: "1000"
+  FLUSH_INTERVAL: "5s"
+  MAX_RETRIES: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-service-config
+  namespace: adaptive-learning-prod
+data:
+  NODE_ENV: "production"
+  PORT: "3002"
+  NOTIFICATION_BATCH_SIZE: "100"
+  RETRY_ATTEMPTS: "3"
+  RETRY_DELAY: "1000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fraud-service-config
+  namespace: adaptive-learning-prod
+data:
+  PORT: "8003"
+  ANOMALY_THRESHOLD: "0.8"
+  REVIEW_THRESHOLD: "0.9"
+  MODEL_UPDATE_INTERVAL: "3600"

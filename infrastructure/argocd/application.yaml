@@ -1,0 +1,149 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adaptive-learning-platform
+  namespace: argocd
+  labels:
+    app: adaptive-learning
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/adaptive-learning-platform
+    targetRevision: HEAD
+    path: infrastructure/helm/adaptive-learning
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-production.yaml
+      parameters:
+        - name: image.tag
+          value: latest
+        - name: environment
+          value: production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: adaptive-learning-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adaptive-learning-monitoring
+  namespace: argocd
+  labels:
+    app: adaptive-learning-monitoring
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/adaptive-learning-platform
+    targetRevision: HEAD
+    path: infrastructure/monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: adaptive-learning-monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 5
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: adaptive-learning
+  namespace: argocd
+spec:
+  description: Adaptive Learning Platform Project
+  sourceRepos:
+    - 'https://github.com/your-org/adaptive-learning-platform'
+    - 'https://charts.bitnami.com/bitnami'
+  destinations:
+    - namespace: adaptive-learning-*
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: apps
+      kind: DaemonSet
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+  roles:
+    - name: admin
+      description: Admin access to adaptive learning applications
+      policies:
+        - p, proj:adaptive-learning:admin, applications, *, adaptive-learning/*, allow
+        - p, proj:adaptive-learning:admin, repositories, *, *, allow
+      groups:
+        - adaptive-learning:admins
+    - name: developer
+      description: Developer access to adaptive learning applications
+      policies:
+        - p, proj:adaptive-learning:developer, applications, get, adaptive-learning/*, allow
+        - p, proj:adaptive-learning:developer, applications, sync, adaptive-learning/*, allow
+        - p, proj:adaptive-learning:developer, applications, action/*, adaptive-learning/*, allow
+        - p, proj:adaptive-learning:developer, repositories, get, *, allow
+      groups:
+        - adaptive-learning:developers
+    - name: readonly
+      description: Read-only access to adaptive learning applications
+      policies:
+        - p, proj:adaptive-learning:readonly, applications, get, adaptive-learning/*, allow
+        - p, proj:adaptive-learning:readonly, repositories, get, *, allow
+      groups:
+        - adaptive-learning:viewers

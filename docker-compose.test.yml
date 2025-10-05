@@ -1,0 +1,324 @@
+version: "3.8"
+
+services:
+  # Test database
+  postgres-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: adaptive_learning_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d adaptive_learning_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Redis
+  redis-test:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass test_password
+    healthcheck:
+      test:
+        ["CMD", "redis-cli", "--no-auth-warning", "-a", "test_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Kafka
+  zookeeper-test:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181"
+
+  kafka-test:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper-test
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9093",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Auth Service (Test)
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: test
+      PORT: 3000
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      REDIS_URL: redis://:test_password@redis-test:6379
+      JWT_SECRET: test_jwt_secret_key_for_testing_only
+      JWT_REFRESH_SECRET: test_jwt_refresh_secret_key_for_testing_only
+      GOOGLE_CLIENT_ID: test_google_client_id
+      GOOGLE_CLIENT_SECRET: test_google_client_secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # User Service (Test)
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      kafka-test:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+      - "9091:9090"
+    environment:
+      PORT: 8080
+      GRPC_PORT: 9090
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      REDIS_URL: redis://:test_password@redis-test:6379
+      KAFKA_BROKERS: kafka-test:29092
+      LOG_LEVEL: debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Content Service (Test)
+  content-service:
+    build:
+      context: ./services/content-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "3002:3001"
+    environment:
+      NODE_ENV: test
+      PORT: 3001
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      REDIS_URL: redis://:test_password@redis-test:6379
+      AWS_ACCESS_KEY_ID: test_access_key
+      AWS_SECRET_ACCESS_KEY: test_secret_key
+      AWS_REGION: us-west-2
+      S3_BUCKET: test-adaptive-learning-content
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Scheduler Service (Test)
+  scheduler-service:
+    build:
+      context: ./services/scheduler-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "8082:8081"
+      - "9092:9091"
+    environment:
+      PORT: 8081
+      GRPC_PORT: 9091
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      REDIS_URL: redis://:test_password@redis-test:6379
+      LOG_LEVEL: debug
+      ALGORITHM_WEIGHTS: '{"urgency":0.3,"mastery":0.4,"difficulty":0.2,"exploration":0.1}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ML Service (Test)
+  ml-service:
+    build:
+      context: ./services/ml-service
+      dockerfile: Dockerfile
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    environment:
+      PORT: 8000
+      REDIS_URL: redis://:test_password@redis-test:6379
+      MODEL_REGISTRY_URL: http://mlflow-test:5000
+      BATCH_SIZE: 16
+      MAX_SEQUENCE_LENGTH: 50
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Event Service (Test)
+  event-service:
+    build:
+      context: ./services/event-service
+      dockerfile: Dockerfile
+    depends_on:
+      kafka-test:
+        condition: service_healthy
+    ports:
+      - "8083:8082"
+    environment:
+      PORT: 8082
+      KAFKA_BROKERS: kafka-test:29092
+      LOG_LEVEL: debug
+      BATCH_SIZE: 100
+      FLUSH_INTERVAL: 1s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Notification Service (Test)
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "3003:3002"
+    environment:
+      NODE_ENV: test
+      PORT: 3002
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      REDIS_URL: redis://:test_password@redis-test:6379
+      FCM_SERVER_KEY: test_fcm_server_key
+      APNS_KEY_ID: test_apns_key_id
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Fraud Service (Test)
+  fraud-service:
+    build:
+      context: ./services/fraud-service
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      kafka-test:
+        condition: service_healthy
+    ports:
+      - "8004:8003"
+    environment:
+      PORT: 8003
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/adaptive_learning_test
+      KAFKA_BROKERS: kafka-test:29092
+      ANOMALY_THRESHOLD: 0.8
+      LOG_LEVEL: debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MLflow for testing
+  mlflow-test:
+    image: python:3.9-slim
+    ports:
+      - "5001:5000"
+    command: >
+      bash -c "
+        pip install mlflow &&
+        mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./artifacts
+      "
+    volumes:
+      - mlflow_test_data:/app
+
+  # Test runner service
+  test-runner:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./tests:/app/tests
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+    command: >
+      sh -c "
+        npm install &&
+        npm run test:integration
+      "
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      content-service:
+        condition: service_healthy
+      scheduler-service:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      fraud-service:
+        condition: service_healthy
+
+volumes:
+  postgres_test_data:
+  mlflow_test_data:
+
+networks:
+  default:
+    name: adaptive-learning-test

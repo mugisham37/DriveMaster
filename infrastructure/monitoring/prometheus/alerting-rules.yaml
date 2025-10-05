@@ -1,0 +1,222 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: adaptive-learning-monitoring
+  labels:
+    app: prometheus
+data:
+  adaptive-learning-alerts.yml: |
+    groups:
+    - name: adaptive-learning.rules
+      rules:
+      
+      # High-level service availability alerts
+      - alert: ServiceDown
+        expr: up{job=~"auth-service|user-service|content-service|scheduler-service|ml-service|event-service|notification-service|fraud-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute."
+
+      # High error rate alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.job }}"
+
+      # High response time alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.job }}"
+
+      # Critical response time alerts
+      - alert: CriticalResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.job }}"
+
+      # Database connection alerts
+      - alert: DatabaseConnectionHigh
+        expr: db_connections_active / db_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connection usage is {{ $value | humanizePercentage }}"
+
+      # Redis connection alerts
+      - alert: RedisConnectionHigh
+        expr: redis_connected_clients / redis_config_maxclients > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis connection usage"
+          description: "Redis connection usage is {{ $value | humanizePercentage }}"
+
+      # Memory usage alerts
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{pod=~".*-service-.*"} / container_spec_memory_limit_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.pod }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.pod }}"
+
+      # CPU usage alerts
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{pod=~".*-service-.*"}[5m]) / (container_spec_cpu_quota / container_spec_cpu_period) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.pod }}"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.pod }}"
+
+      # Disk usage alerts
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      # Kafka consumer lag alerts
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag_sum > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Kafka consumer lag is {{ $value }} messages"
+
+      # ML model prediction alerts
+      - alert: MLModelPredictionFailure
+        expr: rate(ml_prediction_errors_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML model prediction failures"
+          description: "ML model prediction error rate is {{ $value }} per second"
+
+      # Scheduler algorithm performance alerts
+      - alert: SchedulerSlowResponse
+        expr: histogram_quantile(0.95, rate(scheduler_next_item_duration_seconds_bucket[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scheduler algorithm slow response"
+          description: "95th percentile scheduler response time is {{ $value }}s (target: <300ms)"
+
+      # Authentication service alerts
+      - alert: AuthenticationFailureRate
+        expr: rate(auth_login_failures_total[5m]) / rate(auth_login_attempts_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value | humanizePercentage }}"
+
+      # Fraud detection alerts
+      - alert: HighFraudDetectionRate
+        expr: rate(fraud_detections_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High fraud detection rate"
+          description: "Fraud detection rate is {{ $value }} per second"
+
+      # Pod restart alerts
+      - alert: PodRestartingTooOften
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} restarting too often"
+          description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+
+      # Node alerts
+      - alert: NodeNotReady
+        expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node {{ $labels.node }} not ready"
+          description: "Node {{ $labels.node }} has been not ready for more than 5 minutes"
+
+      # Persistent Volume alerts
+      - alert: PersistentVolumeUsageHigh
+        expr: (kubelet_volume_stats_capacity_bytes - kubelet_volume_stats_available_bytes) / kubelet_volume_stats_capacity_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High PV usage on {{ $labels.persistentvolumeclaim }}"
+          description: "PV usage is {{ $value | humanizePercentage }} on {{ $labels.persistentvolumeclaim }}"
+
+    - name: adaptive-learning.business-metrics
+      rules:
+      
+      # Business metric alerts
+      - alert: LowUserEngagement
+        expr: rate(user_sessions_total[1h]) < 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low user engagement"
+          description: "User session rate is {{ $value }} per second (expected: >10/hour)"
+
+      - alert: HighUserChurnRate
+        expr: rate(user_churn_total[24h]) / rate(user_registrations_total[24h]) > 0.2
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High user churn rate"
+          description: "User churn rate is {{ $value | humanizePercentage }} (target: <20%)"
+
+      - alert: LowContentEngagement
+        expr: rate(content_interactions_total[1h]) < 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low content engagement"
+          description: "Content interaction rate is {{ $value }} per second"
+
+      - alert: MLModelAccuracyDrop
+        expr: ml_model_accuracy < 0.8
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ML model accuracy dropped"
+          description: "ML model accuracy is {{ $value | humanizePercentage }} (target: >80%)"
