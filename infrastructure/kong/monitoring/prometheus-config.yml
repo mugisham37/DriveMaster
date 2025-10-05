@@ -1,0 +1,49 @@
+# Prometheus configuration for Kong monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "kong-alerts.yml"
+
+scrape_configs:
+  # Kong Gateway metrics
+  - job_name: 'kong'
+    static_configs:
+      - targets: ['kong:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Kong services health checks
+  - job_name: 'kong-services'
+    static_configs:
+      - targets: 
+        - 'auth-service:3000'
+        - 'user-service:8080'
+        - 'content-service:3001'
+        - 'scheduler-service:8081'
+        - 'ml-service:8000'
+        - 'event-service:8082'
+        - 'notification-service:3002'
+    metrics_path: '/health'
+    scrape_interval: 30s
+
+  # Redis metrics (if redis_exporter is available)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+
+  # PostgreSQL metrics (if postgres_exporter is available)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

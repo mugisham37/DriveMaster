@@ -1,0 +1,116 @@
+# Kong Gateway Alerting Rules
+
+groups:
+  - name: kong.rules
+    rules:
+      # High error rate alert
+      - alert: KongHighErrorRate
+        expr: rate(kong_http_status{code=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kong is experiencing high error rates"
+          description: "Kong error rate is {{ $value }} errors per second for service {{ $labels.service }}"
+
+      # High latency alert
+      - alert: KongHighLatency
+        expr: histogram_quantile(0.95, rate(kong_latency_bucket[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kong is experiencing high latency"
+          description: "Kong 95th percentile latency is {{ $value }}ms for service {{ $labels.service }}"
+
+      # Rate limiting triggered frequently
+      - alert: KongRateLimitingActive
+        expr: rate(kong_http_status{code="429"}[5m]) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kong rate limiting is being triggered frequently"
+          description: "Rate limiting is active with {{ $value }} requests per second being rejected"
+
+      # Service unavailable
+      - alert: KongServiceDown
+        expr: up{job="kong-services"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kong upstream service is down"
+          description: "Service {{ $labels.instance }} is not responding to health checks"
+
+      # Kong gateway down
+      - alert: KongGatewayDown
+        expr: up{job="kong"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kong Gateway is down"
+          description: "Kong Gateway is not responding to health checks"
+
+      # High memory usage
+      - alert: KongHighMemoryUsage
+        expr: kong_memory_workers_lua_vms_bytes / (1024*1024*1024) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kong is using high memory"
+          description: "Kong memory usage is {{ $value }}GB"
+
+      # Database connection issues
+      - alert: KongDatabaseConnectionIssues
+        expr: kong_database_reachable == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kong cannot reach its database"
+          description: "Kong has lost connection to its PostgreSQL database"
+
+      # Certificate expiration warning
+      - alert: KongCertificateExpiringSoon
+        expr: (kong_ssl_certificate_expiry_timestamp - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kong SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.sni }} expires in {{ $value }} days"
+
+  - name: kong-performance.rules
+    rules:
+      # Request rate monitoring
+      - record: kong:request_rate_5m
+        expr: rate(kong_http_requests_total[5m])
+
+      # Error rate monitoring
+      - record: kong:error_rate_5m
+        expr: rate(kong_http_status{code=~"5.."}[5m])
+
+      # Success rate monitoring
+      - record: kong:success_rate_5m
+        expr: rate(kong_http_status{code=~"2.."}[5m])
+
+      # Average latency
+      - record: kong:latency_avg_5m
+        expr: rate(kong_latency_sum[5m]) / rate(kong_latency_count[5m])
+
+  - name: kong-business.rules
+    rules:
+      # Authentication success rate
+      - record: kong:auth_success_rate_5m
+        expr: rate(kong_http_status{service="auth-service",code=~"2.."}[5m]) / rate(kong_http_requests_total{service="auth-service"}[5m])
+
+      # API usage by service
+      - record: kong:requests_by_service_5m
+        expr: rate(kong_http_requests_total[5m]) by (service)
+
+      # Top consumers by request volume
+      - record: kong:top_consumers_5m
+        expr: topk(10, rate(kong_http_requests_total[5m]) by (consumer))

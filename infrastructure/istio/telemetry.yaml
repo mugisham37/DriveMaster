@@ -1,0 +1,192 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: default
+  namespace: adaptive-learning
+spec:
+  # Distributed tracing configuration
+  tracing:
+  - providers:
+    - name: jaeger
+  - customTags:
+      user_id:
+        header:
+          name: x-user-id
+      service_version:
+        environment:
+          name: SERVICE_VERSION
+      request_id:
+        header:
+          name: x-request-id
+  
+  # Metrics configuration
+  metrics:
+  - providers:
+    - name: prometheus
+  - overrides:
+    - match:
+        metric: ALL_METRICS
+      tagOverrides:
+        user_id:
+          header:
+            name: x-user-id
+        service_version:
+          environment:
+            name: SERVICE_VERSION
+  
+  # Access logging configuration
+  accessLogging:
+  - providers:
+    - name: otel
+  - format:
+      labels:
+        timestamp: "%START_TIME%"
+        method: "%REQ(:METHOD)%"
+        path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+        protocol: "%PROTOCOL%"
+        response_code: "%RESPONSE_CODE%"
+        response_flags: "%RESPONSE_FLAGS%"
+        bytes_received: "%BYTES_RECEIVED%"
+        bytes_sent: "%BYTES_SENT%"
+        duration: "%DURATION%"
+        upstream_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
+        x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
+        user_agent: "%REQ(USER-AGENT)%"
+        request_id: "%REQ(X-REQUEST-ID)%"
+        authority: "%REQ(:AUTHORITY)%"
+        upstream_host: "%UPSTREAM_HOST%"
+        user_id: "%REQ(X-USER-ID)%"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-tracing-config
+  namespace: istio-system
+data:
+  mesh: |
+    defaultConfig:
+      tracing:
+        sampling: 1.0  # 100% sampling for development, reduce for production
+        custom_tags:
+          user_id:
+            header:
+              name: x-user-id
+          service_version:
+            environment:
+              name: SERVICE_VERSION
+          request_id:
+            header:
+              name: x-request-id
+      proxyStatsMatcher:
+        inclusionRegexps:
+        - ".*circuit_breakers.*"
+        - ".*upstream_rq_retry.*"
+        - ".*upstream_rq_pending.*"
+        - ".*_cx_.*"
+        exclusionRegexps:
+        - ".*osconfig.*"
+---
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: control-plane
+  namespace: istio-system
+spec:
+  values:
+    telemetry:
+      v2:
+        prometheus:
+          configOverride:
+            metric_relabeling_configs:
+            - source_labels: [__name__]
+              regex: 'istio_.*'
+              target_label: __tmp_istio_metric
+            - source_labels: [__tmp_istio_metric]
+              regex: 'istio_(.*)'
+              target_label: __name__
+              replacement: '${1}'
+        stackdriver:
+          enabled: false
+    pilot:
+      env:
+        PILOT_ENABLE_WORKLOAD_ENTRY_AUTOREGISTRATION: true
+        PILOT_ENABLE_CROSS_CLUSTER_WORKLOAD_ENTRY: true
+        PILOT_TRACE_SAMPLING: 1.0
+    global:
+      meshID: mesh1
+      multiCluster:
+        clusterName: cluster1
+      network: network1
+      tracer:
+        jaeger:
+          address: jaeger-collector.istio-system:14268
+        zipkin:
+          address: zipkin.istio-system:9411
+---
+# OpenTelemetry configuration for enhanced observability
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: istio-system
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      jaeger:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:14250
+          thrift_http:
+            endpoint: 0.0.0.0:14268
+          thrift_compact:
+            endpoint: 0.0.0.0:6831
+          thrift_binary:
+            endpoint: 0.0.0.0:6832
+      zipkin:
+        endpoint: 0.0.0.0:9411
+    
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+      memory_limiter:
+        limit_mib: 512
+      resource:
+        attributes:
+        - key: service.name
+          from_attribute: service_name
+          action: upsert
+        - key: service.version
+          from_attribute: service_version
+          action: upsert
+    
+    exporters:
+      jaeger:
+        endpoint: jaeger-collector.istio-system:14250
+        tls:
+          insecure: true
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: istio
+        const_labels:
+          cluster: adaptive-learning
+      logging:
+        loglevel: info
+    
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp, jaeger, zipkin]
+          processors: [memory_limiter, resource, batch]
+          exporters: [jaeger, logging]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [prometheus, logging]
+      extensions: [health_check, pprof, zpages]

@@ -1,0 +1,204 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: adaptive-learning
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: auth-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: auth-service
+  rules:
+  # Allow all traffic to auth service (public endpoints)
+  - {}
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: user-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: user-service
+  rules:
+  # Allow authenticated requests with valid JWT
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow internal service-to-service communication
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/scheduler-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/ml-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/event-service"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: content-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: content-service
+  rules:
+  # Allow authenticated requests
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow internal service communication
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/scheduler-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/ml-service"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: scheduler-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: scheduler-service
+  rules:
+  # Allow authenticated requests
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow internal service communication
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/user-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/ml-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/event-service"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ml-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: ml-service
+  rules:
+  # Allow authenticated requests
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow internal service communication
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/scheduler-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/user-service"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: event-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: event-service
+  rules:
+  # Allow authenticated requests
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow all internal services to publish events
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/*"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: notification-service-policy
+  namespace: adaptive-learning
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+  rules:
+  # Allow authenticated requests
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.headers[authorization]
+      values: ["Bearer *"]
+  # Allow internal service communication
+  - from:
+    - source:
+        principals: ["cluster.local/ns/adaptive-learning/sa/scheduler-service"]
+        principals: ["cluster.local/ns/adaptive-learning/sa/user-service"]
+---
+# Rate limiting policy using Envoy rate limiting
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: rate-limit-filter
+  namespace: adaptive-learning
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.local_ratelimit
+        typed_config:
+          "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+          value:
+            stat_prefix: local_rate_limiter
+            token_bucket:
+              max_tokens: 1000
+              tokens_per_fill: 100
+              fill_interval: 60s
+            filter_enabled:
+              runtime_key: local_rate_limit_enabled
+              default_value:
+                numerator: 100
+                denominator: HUNDRED
+            filter_enforced:
+              runtime_key: local_rate_limit_enforced
+              default_value:
+                numerator: 100
+                denominator: HUNDRED
+            response_headers_to_add:
+            - append: false
+              header:
+                key: x-local-rate-limit
+                value: 'true'
