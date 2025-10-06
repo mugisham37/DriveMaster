@@ -37,6 +37,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "ioredis": "^5.8.0",
+    "isomorphic-dompurify": "^2.28.0",
     "passport": "^0.6.0",
     "passport-apple": "^2.0.2",
     "passport-azure-ad": "^4.3.5",

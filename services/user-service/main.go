@@ -21,10 +21,14 @@ import (
 	"user-service/internal/service"
 	pb "user-service/proto"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	
+	"	"shared/security"
+	userSecurity "user-service/internal/security""
 )
 
 func main() {
@@ -41,6 +45,18 @@ func main() {
 	log := logger.GetLogger()
 
 	log.Info("Starting User Service...")
+
+	// Initialize security manager
+	securityManager, err := security.InitializeSecurity(log)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to initialize security manager")
+	}
+	defer securityManager.Shutdown(context.Background())
+
+	// Validate service security configuration
+	if err := securityManager.ValidateServiceConfiguration("user-service"); err != nil {
+		log.WithError(err).Fatal("Security configuration validation failed")
+	}
 
 	// Initialize database connection
 	db, err := database.NewConnection(cfg.DatabaseURL)
@@ -65,22 +81,30 @@ func main() {
 	schedulerStateRepo := repository.NewSchedulerStateRepository(db.Pool)
 	activityRepo := repository.NewActivityRepository(db.Pool)
 
-	// Initialize services
-	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher)
-	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log)
-	schedulerStateService := service.NewSchedulerStateService(schedulerStateRepo, redisClient, cfg, eventPublisher)
-	activityService := service.NewActivityService(activityRepo, redisClient, eventPublisher, cfg, log)
+	// Initialize services with security manager
+	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher, securityManager)
+	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log, securityManager)
+	schedulerStateService := service.NewSchedulerStateService(schedulerStateRepo, redisClient, cfg, eventPublisher, securityManager)
+	activityService := service.NewActivityService(activityRepo, redisClient, eventPublisher, cfg, log, securityManager)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService, progressService)
 	schedulerStateHandler := handlers.NewSchedulerStateHandler(schedulerStateService)
 	activityHandler := handlers.NewActivityHandler(activityService, log)
+	gdprHandler := handlers.NewGDPRHandler(userService, securityManager, log)
+
+	// Initialize security interceptor
+	securityInterceptor := userSecurity.NewSecurityInterceptor(securityManager, log)
 
 	// Create gRPC server with interceptors
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			securityInterceptor.UnaryServerInterceptor(),
 			logger.UnaryServerInterceptor(),
 			metrics.UnaryServerInterceptor(),
+		),
+		grpc.ChainStreamInterceptor(
+			securityInterceptor.StreamServerInterceptor(),
 		),
 	)
 
@@ -93,17 +117,31 @@ func main() {
 		reflection.Register(grpcServer)
 	}
 
-	// Start metrics server
+	// Start HTTP server with GDPR endpoints
 	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+		// Create Gin router
+		router := gin.New()
+		
+		// Add security middleware
+		for _, middleware := range securityManager.GetSecurityMiddleware() {
+			if ginMiddleware, ok := middleware.(gin.HandlerFunc); ok {
+				router.Use(ginMiddleware)
+			}
+		}
+		
+		// Setup API routes
+		api := router.Group("/api/v1")
+		gdprHandler.SetupGDPRRoutes(api)
+		
+		// Add metrics and health endpoints
+		router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		router.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
 
-		log.WithField("port", cfg.HTTPPort).Info("Starting metrics server")
-		if err := http.ListenAndServe(":"+cfg.HTTPPort, nil); err != nil {
-			log.WithError(err).Error("Metrics server failed")
+		log.WithField("port", cfg.HTTPPort).Info("Starting HTTP server")
+		if err := router.Run(":" + cfg.HTTPPort); err != nil {
+			log.WithError(err).Error("HTTP server failed")
 		}
 	}()
 
