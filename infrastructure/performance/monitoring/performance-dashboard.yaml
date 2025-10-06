@@ -1,0 +1,426 @@
+# Performance Monitoring Dashboard Configuration
+# Comprehensive monitoring setup for performance optimization
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: performance-dashboard-config
+  namespace: adaptive-learning
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Adaptive Learning Platform - Performance Dashboard",
+        "tags": ["performance", "adaptive-learning"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Response Time Distribution",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "99th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Response Time (seconds)",
+                "max": 1,
+                "min": 0
+              }
+            ],
+            "alert": {
+              "conditions": [
+                {
+                  "query": {
+                    "queryType": "",
+                    "refId": "A"
+                  },
+                  "reducer": {
+                    "type": "last",
+                    "params": []
+                  },
+                  "evaluator": {
+                    "params": [0.3],
+                    "type": "gt"
+                  }
+                }
+              ],
+              "executionErrorState": "alerting",
+              "for": "5m",
+              "frequency": "10s",
+              "handler": 1,
+              "name": "High Response Time Alert",
+              "noDataState": "no_data",
+              "notifications": []
+            }
+          },
+          {
+            "id": 2,
+            "title": "Request Rate by Service",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{service=\"scheduler-service\"}[5m])",
+                "legendFormat": "Scheduler Service"
+              },
+              {
+                "expr": "rate(http_requests_total{service=\"user-service\"}[5m])",
+                "legendFormat": "User Service"
+              },
+              {
+                "expr": "rate(http_requests_total{service=\"content-service\"}[5m])",
+                "legendFormat": "Content Service"
+              },
+              {
+                "expr": "rate(http_requests_total{service=\"ml-service\"}[5m])",
+                "legendFormat": "ML Service"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Database Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(db_queries_total[5m])",
+                "legendFormat": "Queries per second"
+              },
+              {
+                "expr": "db_connections_active",
+                "legendFormat": "Active connections"
+              },
+              {
+                "expr": "rate(db_slow_queries_total[5m])",
+                "legendFormat": "Slow queries per second"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Cache Performance",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "cache_hit_ratio",
+                "legendFormat": "Hit Ratio"
+              },
+              {
+                "expr": "rate(cache_operations_total[5m])",
+                "legendFormat": "Operations/sec"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": 0
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.7
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.85
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Algorithm Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(algorithm_scoring_duration_seconds_bucket[5m]))",
+                "legendFormat": "Scoring Algorithm P95"
+              },
+              {
+                "expr": "rate(algorithm_cache_hits_total[5m]) / rate(algorithm_cache_requests_total[5m])",
+                "legendFormat": "Algorithm Cache Hit Ratio"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Resource Utilization",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total[5m]) * 100",
+                "legendFormat": "CPU Usage %"
+              },
+              {
+                "expr": "container_memory_usage_bytes / container_spec_memory_limit_bytes * 100",
+                "legendFormat": "Memory Usage %"
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Error Rates",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+                "legendFormat": "5xx Errors"
+              },
+              {
+                "expr": "rate(http_requests_total{status=~\"4..\"}[5m])",
+                "legendFormat": "4xx Errors"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Auto-scaling Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "kube_deployment_status_replicas",
+                "legendFormat": "Current Replicas - {{deployment}}"
+              },
+              {
+                "expr": "kube_hpa_status_desired_replicas",
+                "legendFormat": "Desired Replicas - {{hpa}}"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerting-rules
+  namespace: adaptive-learning
+data:
+  performance.rules: |
+    groups:
+    - name: performance.rules
+      rules:
+      # High response time alert
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.3
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for service {{ $labels.service }}"
+      
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}"
+      
+      # Database performance alerts
+      - alert: DatabaseSlowQueries
+        expr: rate(db_slow_queries_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of slow database queries"
+          description: "{{ $value }} slow queries per second detected"
+      
+      - alert: DatabaseConnectionsHigh
+        expr: db_connections_active / db_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of database connections in use"
+      
+      # Cache performance alerts
+      - alert: LowCacheHitRatio
+        expr: cache_hit_ratio < 0.7
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit ratio"
+          description: "Cache hit ratio is {{ $value | humanizePercentage }}"
+      
+      # Resource utilization alerts
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          container: "{{ $labels.container }}"
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for container {{ $labels.container }}"
+      
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          container: "{{ $labels.container }}"
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% for container {{ $labels.container }}"
+      
+      # Algorithm performance alerts
+      - alert: SlowAlgorithmScoring
+        expr: histogram_quantile(0.95, rate(algorithm_scoring_duration_seconds_bucket[5m])) > 0.3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow algorithm scoring detected"
+          description: "95th percentile scoring time is {{ $value }}s"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: performance-monitor
+  namespace: adaptive-learning
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: performance-monitor
+  template:
+    metadata:
+      labels:
+        app: performance-monitor
+    spec:
+      containers:
+      - name: performance-monitor
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        - name: rules
+          mountPath: /etc/prometheus/rules
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--storage.tsdb.retention.time=15d'
+        - '--web.enable-lifecycle'
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: prometheus-config
+      - name: rules
+        configMap:
+          name: alerting-rules
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: performance-monitor-service
+  namespace: adaptive-learning
+spec:
+  selector:
+    app: performance-monitor
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
+
+---
+# Grafana deployment for visualization
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: adaptive-learning
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin123"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        - name: dashboard-config
+          mountPath: /etc/grafana/provisioning/dashboards
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+      - name: dashboard-config
+        configMap:
+          name: performance-dashboard-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: adaptive-learning
+spec:
+  selector:
+    app: grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: LoadBalancer
