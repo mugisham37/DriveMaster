@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "drizzle",
+    "postgres",
+    "postgresql",
+    "uuidv",
+    "TIMESTAMPTZ",
+    "schemaname",
+    "tablename",
+    "partitionboundspec",
+    "ossp",
+    "trgm",
+    "onnotice",
+    "onparameter"
+  ],
+  "ignorePaths": ["node_modules/**", "dist/**", "migrations/**", "*.log"]
+}

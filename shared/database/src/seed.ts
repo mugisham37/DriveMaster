@@ -262,7 +262,7 @@ export class DatabaseSeeder {
             return [];
         }
 
-        const goals = learners.flatMap(learner => [
+        const goals = learners.flatMap((learner: any) => [
             {
                 id: uuidv4(),
                 userId: learner.id,
@@ -310,7 +310,7 @@ export class DatabaseSeeder {
             'intersections', 'road_rules', 'safety_procedures', 'dui_laws'
         ];
 
-        const masteryData = learners.flatMap(learner =>
+        const masteryData = learners.flatMap((learner: any) =>
             topics.map(topic => ({
                 userId: learner.id,
                 topic,
@@ -382,7 +382,7 @@ export async function clearSeedData() {
 }
 
 // Run seeding if this file is executed directly
-if (require.main === module) {
+if (typeof require !== 'undefined' && require.main === module) {
     seedDatabase()
         .then(() => {
             console.log('Seeding completed');

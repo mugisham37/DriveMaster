@@ -21,7 +21,7 @@ migrationCommand
     .command('run')
     .description('Run pending migrations')
     .option('-f, --folder <folder>', 'Migrations folder', './migrations')
-    .action(async (options) => {
+    .action(async (options: { folder: string }) => {
         try {
             console.log('Running migrations...');
             await runMigrations(options.folder);
@@ -63,7 +63,7 @@ migrationCommand
 migrationCommand
     .command('generate <name>')
     .description('Generate a new migration file')
-    .action(async (name) => {
+    .action(async (name: string) => {
         try {
             const filepath = await generateMigration(name);
             console.log(`Migration file created: ${filepath}`);
@@ -134,7 +134,7 @@ seedCommand
     .command('clear')
     .description('Clear seed data')
     .option('--confirm', 'Confirm deletion of seed data')
-    .action(async (options) => {
+    .action(async (options: { confirm?: boolean }) => {
         if (!options.confirm) {
             console.log('This will delete all seed data. Use --confirm to proceed.');
             return;
@@ -161,7 +161,6 @@ connectionCommand
     .action(async () => {
         try {
             const connection = createMigrationConnection();
-            const db = connection.getDb();
             const client = connection.getClient();
 
             console.log('Testing database connection...');
@@ -229,7 +228,7 @@ program
     .command('reset')
     .description('Reset database (drop all tables and recreate)')
     .option('--confirm', 'Confirm database reset')
-    .action(async (options) => {
+    .action(async (options: { confirm?: boolean }) => {
         if (!options.confirm) {
             console.log('This will completely reset the database. Use --confirm to proceed.');
             return;

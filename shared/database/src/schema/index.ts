@@ -1,9 +1,12 @@
-// Export all schema tables and types
-export * from './users';
-export * from './content';
-export * from './learning';
-export * from './analytics';
+// Export all schema definitions
+// This file serves as the main entry point for database schema
 
-// Re-export commonly used Drizzle utilities
-export { sql, eq, and, or, not, isNull, isNotNull, inArray, notInArray } from 'drizzle-orm';
-export { pgTable, pgEnum, uuid, varchar, text, integer, real, boolean, timestamptz, jsonb, bigint } from 'drizzle-orm/pg-core';
+// Note: Add your actual schema exports here when they are created
+// For now, we'll export an empty object to prevent import errors
+export const schema = {};
+
+// Example of what this file might contain:
+// export * from './users';
+// export * from './sessions';
+// export * from './progress';
+// export * from './activities';

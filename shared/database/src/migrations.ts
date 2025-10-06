@@ -87,7 +87,7 @@ export class MigrationRunner {
       ORDER BY applied_at DESC
     `;
 
-        return appliedMigrations.map(migration => ({
+        return appliedMigrations.map((migration: any) => ({
             id: migration.migration_hash,
             name: migration.migration_name,
             timestamp: migration.applied_at,

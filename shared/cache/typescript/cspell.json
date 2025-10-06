@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "setex",
+    "setnx",
+    "incrby",
+    "sadd",
+    "smembers",
+    "srem",
+    "zadd",
+    "zrange",
+    "WITHSCORES",
+    "ioredis",
+    "nestjs",
+    "redis"
+  ],
+  "ignorePaths": ["node_modules/**", "dist/**", "*.log"]
+}

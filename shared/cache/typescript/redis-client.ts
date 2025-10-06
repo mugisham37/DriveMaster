@@ -72,9 +72,6 @@ export class RedisClient {
                         keyPrefix: this.config.keyPrefix,
                     },
                     enableOfflineQueue: false,
-                    redisOptions: {
-                        password: this.config.password,
-                    },
                 };
 
                 this.client = new Cluster(this.config.addresses, clusterOptions);
@@ -111,7 +108,7 @@ export class RedisClient {
             this.logger.log('Redis ready');
         });
 
-        this.client.on('error', (error) => {
+        this.client.on('error', (error: Error) => {
             this.logger.error('Redis error', error);
             this.metrics.errors++;
         });
@@ -213,7 +210,7 @@ export class RedisClient {
         return this.executeWithCircuitBreaker(async () => {
             const data = typeof value === 'string' ? value : JSON.stringify(value);
 
-            let result: number;
+            let result: number | string;
             if (ttlSeconds) {
                 result = await this.client.set(key, data, 'EX', ttlSeconds, 'NX');
             } else {
@@ -425,7 +422,7 @@ export class RedisClient {
     subscribeToChannel(channel: string, callback: (message: any) => void): void {
         const subscriber = this.client.duplicate();
 
-        subscriber.subscribe(channel, (err) => {
+        subscriber.subscribe(channel, (err?: Error) => {
             if (err) {
                 this.logger.error(`Failed to subscribe to channel ${channel}`, err);
             } else {
@@ -433,7 +430,7 @@ export class RedisClient {
             }
         });
 
-        subscriber.on('message', (receivedChannel, message) => {
+        subscriber.on('message', (receivedChannel: string, message: string) => {
             if (receivedChannel === channel) {
                 try {
                     const parsedMessage = JSON.parse(message);

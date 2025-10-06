@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { RedisClient, CacheMetrics } from './redis-client';
+import { RedisClient } from './redis-client';
 import { CachePatterns } from './cache-patterns';
 
 export interface CacheManagerConfig {
@@ -101,7 +101,8 @@ export class CacheManager implements OnModuleDestroy {
                 return cached;
             }
         } catch (error) {
-            this.logger.warn(`Cache error for key ${key}: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`Cache error for key ${key}: ${errorMessage}`);
         }
 
         // Cache miss or error, use fallback
@@ -109,7 +110,8 @@ export class CacheManager implements OnModuleDestroy {
 
         // Store in cache for next time (fire and forget)
         this.client.set(key, data, ttlSeconds).catch((error) => {
-            this.logger.warn(`Failed to cache data for key ${key}: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`Failed to cache data for key ${key}: ${errorMessage}`);
         });
 
         return data;
@@ -188,7 +190,8 @@ export class CacheManager implements OnModuleDestroy {
             // Store metrics in cache for monitoring
             const metricsKey = `metrics:cache:${Math.floor(Date.now() / 1000)}`;
             this.client.set(metricsKey, stats, CachePatterns.TTL.METRICS).catch((error) => {
-                this.logger.warn(`Failed to store cache metrics: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.warn(`Failed to store cache metrics: ${errorMessage}`);
             });
         }, interval);
     }
@@ -212,7 +215,8 @@ export class CacheManager implements OnModuleDestroy {
 
                 await this.warmer.warmCache(warmupData, CachePatterns.TTL.FEATURE_FLAGS);
             } catch (error) {
-                this.logger.warn(`Cache warmup failed: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.warn(`Cache warmup failed: ${errorMessage}`);
             }
         }, interval);
     }
@@ -224,7 +228,8 @@ export class CacheManager implements OnModuleDestroy {
             try {
                 await this.client.health();
             } catch (error) {
-                this.logger.error(`Cache health check failed: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Cache health check failed: ${errorMessage}`);
             }
         }, interval);
     }
@@ -255,16 +260,17 @@ export class CacheManager implements OnModuleDestroy {
 class CacheWarmer {
     private readonly logger = new Logger(CacheWarmer.name);
 
-    constructor(private readonly client: RedisClient) { }
+    constructor(private readonly _client: RedisClient) { }
 
     async warmCache(warmupData: Record<string, any>, ttlSeconds: number): Promise<void> {
         this.logger.log(`Starting cache warmup with ${Object.keys(warmupData).length} items`);
 
         try {
-            await this.client.setMultiple(warmupData, ttlSeconds);
+            await this._client.setMultiple(warmupData, ttlSeconds);
             this.logger.log('Cache warmup completed successfully');
         } catch (error) {
-            this.logger.error(`Cache warmup failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Cache warmup failed: ${errorMessage}`);
             throw error;
         }
     }
@@ -276,7 +282,7 @@ class CacheInvalidator {
 
     constructor(
         private readonly client: RedisClient,
-        private readonly patterns: CachePatterns,
+        private readonly _patterns: CachePatterns,
     ) { }
 
     registerListener(pattern: string, listener: InvalidationListener): void {
@@ -293,8 +299,9 @@ class CacheInvalidator {
                     try {
                         await listener(key, reason);
                     } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
                         this.logger.error(
-                            `Invalidation listener error for key ${key}: ${error.message}`,
+                            `Invalidation listener error for key ${key}: ${errorMessage}`,
                         );
                     }
                 }
@@ -321,11 +328,11 @@ export function Cacheable(
     keyGenerator: (...args: any[]) => string,
     ttlSeconds: number = CachePatterns.TTL.USER_DATA,
 ) {
-    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function (_target: any, _propertyName: string, descriptor: PropertyDescriptor) {
         const method = descriptor.value;
 
         descriptor.value = async function (...args: any[]) {
-            const cacheManager: CacheManager = this.cacheManager;
+            const cacheManager: CacheManager = (this as any).cacheManager;
             if (!cacheManager) {
                 return method.apply(this, args);
             }
@@ -347,13 +354,13 @@ export function Cacheable(
 export function CacheEvict(
     keyGenerator: (...args: any[]) => string | string[],
 ) {
-    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function (_target: any, _propertyName: string, descriptor: PropertyDescriptor) {
         const method = descriptor.value;
 
         descriptor.value = async function (...args: any[]) {
             const result = await method.apply(this, args);
 
-            const cacheManager: CacheManager = this.cacheManager;
+            const cacheManager: CacheManager = (this as any).cacheManager;
             if (cacheManager) {
                 const keys = keyGenerator(...args);
                 const keysArray = Array.isArray(keys) ? keys : [keys];

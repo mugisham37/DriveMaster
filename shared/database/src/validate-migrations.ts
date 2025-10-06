@@ -61,7 +61,8 @@ export class MigrationValidator {
 
         } catch (error) {
             result.passed = false;
-            result.errors.push(`Validation failed: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            result.errors.push(`Validation failed: ${errorMessage}`);
         }
 
         return result;
@@ -74,7 +75,7 @@ export class MigrationValidator {
       SELECT extname FROM pg_extension WHERE extname = ANY(${requiredExtensions})
     `;
 
-        const installedExtensions = extensions.map(e => e.extname);
+        const installedExtensions = extensions.map((e: any) => e.extname);
         const missingExtensions = requiredExtensions.filter(ext => !installedExtensions.includes(ext));
 
         if (missingExtensions.length > 0) {
@@ -100,7 +101,7 @@ export class MigrationValidator {
       AND table_type = 'BASE TABLE'
     `;
 
-        const existingTables = tables.map(t => t.table_name);
+        const existingTables = tables.map((t: any) => t.table_name);
         const missingTables = requiredTables.filter(table => !existingTables.includes(table));
 
         if (missingTables.length > 0) {
@@ -143,7 +144,7 @@ export class MigrationValidator {
 
     private validateUsersTable(columns: any[], result: ValidationResult) {
         const requiredColumns = ['id', 'email', 'country_code', 'created_at', 'updated_at'];
-        const existingColumns = columns.map(c => c.column_name);
+        const existingColumns = columns.map((c: any) => c.column_name);
 
         const missingColumns = requiredColumns.filter(col => !existingColumns.includes(col));
         if (missingColumns.length > 0) {
@@ -160,7 +161,7 @@ export class MigrationValidator {
 
     private validateItemsTable(columns: any[], result: ValidationResult) {
         const requiredColumns = ['id', 'slug', 'content', 'choices', 'correct', 'difficulty'];
-        const existingColumns = columns.map(c => c.column_name);
+        const existingColumns = columns.map((c: any) => c.column_name);
 
         const missingColumns = requiredColumns.filter(col => !existingColumns.includes(col));
         if (missingColumns.length > 0) {
@@ -169,9 +170,9 @@ export class MigrationValidator {
         }
     }
 
-    private validateAttemptsTable(columns: any[], result: ValidationResult) {
+    private async validateAttemptsTable(columns: any[], result: ValidationResult) {
         const requiredColumns = ['id', 'user_id', 'item_id', 'session_id', 'correct', 'client_attempt_id'];
-        const existingColumns = columns.map(c => c.column_name);
+        const existingColumns = columns.map((c: any) => c.column_name);
 
         const missingColumns = requiredColumns.filter(col => !existingColumns.includes(col));
         if (missingColumns.length > 0) {
@@ -205,7 +206,7 @@ export class MigrationValidator {
       WHERE schemaname = 'public'
     `;
 
-        const existingIndexes = indexes.map(i => i.indexname);
+        const existingIndexes = indexes.map((i: any) => i.indexname);
         const missingIndexes = requiredIndexes.filter(index => !existingIndexes.includes(index));
 
         if (missingIndexes.length > 0) {
@@ -229,7 +230,7 @@ export class MigrationValidator {
       WHERE trigger_schema = 'public'
     `;
 
-        const existingTriggers = triggers.map(t => t.trigger_name);
+        const existingTriggers = triggers.map((t: any) => t.trigger_name);
         const missingTriggers = requiredTriggers.filter(trigger => !existingTriggers.includes(trigger));
 
         if (missingTriggers.length > 0) {
@@ -254,7 +255,7 @@ export class MigrationValidator {
       WHERE table_schema = 'public'
     `;
 
-        const existingViews = views.map(v => v.table_name);
+        const existingViews = views.map((v: any) => v.table_name);
         const missingViews = requiredViews.filter(view => !existingViews.includes(view));
 
         if (missingViews.length > 0) {
@@ -364,7 +365,7 @@ export async function validateMigrations(): Promise<ValidationResult> {
 }
 
 // CLI usage
-if (require.main === module) {
+if (typeof require !== 'undefined' && require.main === module) {
     validateMigrations()
         .then((result) => {
             console.log('\n=== Migration Validation Results ===');

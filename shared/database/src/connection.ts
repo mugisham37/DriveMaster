@@ -33,10 +33,10 @@ class DatabaseConnection {
             idle_timeout: finalConfig.idleTimeout,
             connect_timeout: finalConfig.connectionTimeout,
             ssl: finalConfig.ssl,
-            onnotice: (notice) => {
+            onnotice: (notice: any) => {
                 console.log('PostgreSQL notice:', notice);
             },
-            onparameter: (key, value) => {
+            onparameter: (key: string, value: any) => {
                 console.log('PostgreSQL parameter:', key, value);
             },
         });
