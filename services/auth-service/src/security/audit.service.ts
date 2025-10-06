@@ -79,7 +79,7 @@ export class AuditService {
     /**
      * Logs an audit event
      */
-    logEvent(event: Partial<AuditEvent>): void {
+    logEvent(event: Partial<AuditEvent> & { action: AuditAction }): void {
         const auditEvent: AuditEvent = {
             id: this.generateAuditId(),
             timestamp: new Date(),
@@ -316,7 +316,6 @@ export class AuditService {
      */
     private getClientIP(req: Request): string {
         return req.ip ||
-            req.connection.remoteAddress ||
             req.socket.remoteAddress ||
             'unknown';
     }
@@ -332,7 +331,7 @@ export class AuditService {
      * Generates unique audit event ID
      */
     private generateAuditId(): string {
-        return `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return `audit_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
 
     /**

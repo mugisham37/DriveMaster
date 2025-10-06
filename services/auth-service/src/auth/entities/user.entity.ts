@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { OAuthProvider } from './oauth-provider.entity';
 import { RefreshToken } from './refresh-token.entity';
+import { MfaBackupCode } from './mfa-backup-code.entity';
 
 @Entity('users')
 export class User {
@@ -19,6 +20,12 @@ export class User {
 
     @Column({ name: 'email_verified', default: false })
     emailVerified: boolean;
+
+    @Column({ name: 'first_name', nullable: true })
+    firstName: string;
+
+    @Column({ name: 'last_name', nullable: true })
+    lastName: string;
 
     @Column({ name: 'hashed_password', nullable: true })
     hashedPassword: string;
@@ -56,6 +63,9 @@ export class User {
     @Column({ name: 'last_active_at', default: () => 'CURRENT_TIMESTAMP' })
     lastActiveAt: Date;
 
+    @Column({ name: 'last_login_at', nullable: true })
+    lastLoginAt: Date;
+
     @Column({ name: 'is_active', default: true })
     isActive: boolean;
 
@@ -64,4 +74,7 @@ export class User {
 
     @OneToMany(() => RefreshToken, (token) => token.user)
     refreshTokens: RefreshToken[];
+
+    @OneToMany(() => MfaBackupCode, (code) => code.user)
+    mfaBackupCodes: MfaBackupCode[];
 }

@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import * as helmet from 'helmet';
-import * as rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 @Injectable()
 export class SecurityMiddleware implements NestMiddleware {
@@ -57,7 +57,7 @@ export class SecurityMiddleware implements NestMiddleware {
     }
 
     private generateRequestId(): string {
-        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
 }
 
@@ -160,9 +160,10 @@ export class AuditMiddleware implements NestMiddleware {
         const startTime = Date.now();
 
         // Capture original end function
-        const originalEnd = res.end;
+        const originalEnd = res.end.bind(res);
+        const logger = this.logger;
 
-        res.end = function (chunk?: any, encoding?: any) {
+        res.end = function (...args: any[]): Response {
             const duration = Date.now() - startTime;
 
             // Log audit information
@@ -182,17 +183,17 @@ export class AuditMiddleware implements NestMiddleware {
 
             // Log based on status code and risk level
             if (res.statusCode >= 500) {
-                this.logger.error('Server error', auditLog);
+                logger.error('Server error', auditLog);
             } else if (res.statusCode >= 400) {
-                this.logger.warn('Client error', auditLog);
+                logger.warn('Client error', auditLog);
             } else if (req.path.includes('/auth/') || req.path.includes('/admin/')) {
-                this.logger.log('Security-sensitive request', auditLog);
+                logger.log('Security-sensitive request', auditLog);
             } else {
-                this.logger.debug('Request completed', auditLog);
+                logger.debug('Request completed', auditLog);
             }
 
-            // Call original end function
-            originalEnd.call(this, chunk, encoding);
+            // Call original end function with all arguments
+            return originalEnd(...args);
         };
 
         next();

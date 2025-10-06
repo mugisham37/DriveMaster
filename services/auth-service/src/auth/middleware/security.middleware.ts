@@ -240,7 +240,7 @@ export class SecurityMiddleware implements NestMiddleware {
         if (realIP) return realIP;
         if (forwarded) return forwarded.split(',')[0].trim();
 
-        return req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        return req.socket.remoteAddress || 'unknown';
     }
 
     /**

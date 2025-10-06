@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { createRateLimitMiddleware } from './security/security.middleware';
-import * as compression from 'compression';
+import compression from 'compression';
 
 async function bootstrap() {
     const logger = new Logger('Bootstrap');
@@ -12,7 +12,7 @@ async function bootstrap() {
     });
 
     // Enable trust proxy for accurate IP addresses
-    app.set('trust proxy', 1);
+    app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
     // Enable compression
     app.use(compression());
