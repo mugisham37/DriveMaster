@@ -170,11 +170,6 @@ func (cp *CachePatterns) SetItemsByTopic(ctx context.Context, topic string, item
 // ML prediction cache operations
 func (cp *CachePatterns) GetPrediction(ctx context.Context, userID, itemID string) (float64, error) {
 	key := fmt.Sprintf(PredictionKeyPattern, userID, itemID)
-	result, err := cp.client.Get(ctx, key)
-	if err != nil {
-		return 0, err
-	}
-
 	var prediction float64
 	if err := cp.client.GetJSON(ctx, key, &prediction); err != nil {
 		return 0, err
@@ -346,7 +341,7 @@ func (cp *CachePatterns) GetMultipleItems(ctx context.Context, itemIDs []string)
 	items := make(map[string]map[string]interface{})
 	for i, itemID := range itemIDs {
 		key := keys[i]
-		if data, exists := results[key]; exists {
+		if _, exists := results[key]; exists {
 			var item map[string]interface{}
 			if err := cp.client.GetJSON(ctx, key, &item); err == nil {
 				items[itemID] = item

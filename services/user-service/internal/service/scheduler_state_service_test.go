@@ -8,6 +8,7 @@ import (
 	"user-service/internal/config"
 	"user-service/internal/events"
 	"user-service/internal/models"
+	"user-service/internal/testutils"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -99,7 +100,7 @@ func (m *MockSchedulerStateRepository) GetStaleStates(ctx context.Context, stale
 func TestSchedulerStateService_CreateSchedulerState(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {
@@ -141,7 +142,7 @@ func TestSchedulerStateService_CreateSchedulerState(t *testing.T) {
 func TestSchedulerStateService_UpdateSM2State(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {
@@ -186,7 +187,7 @@ func TestSchedulerStateService_UpdateSM2State(t *testing.T) {
 func TestSchedulerStateService_UpdateBKTState(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {
@@ -231,7 +232,7 @@ func TestSchedulerStateService_UpdateBKTState(t *testing.T) {
 func TestSchedulerStateService_StartSession(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {
@@ -278,7 +279,7 @@ func TestSchedulerStateService_StartSession(t *testing.T) {
 func TestSchedulerStateService_EndSession(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {
@@ -328,7 +329,7 @@ func TestSchedulerStateService_EndSession(t *testing.T) {
 func TestSchedulerStateService_GetSchedulerState_NotFound_CreatesNew(t *testing.T) {
 	// Setup
 	mockRepo := new(MockSchedulerStateRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{
 		CacheTTL: struct {

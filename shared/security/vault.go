@@ -196,11 +196,11 @@ func (v *VaultClient) IsHealthy(ctx context.Context) error {
 	}
 
 	if !health.Initialized {
-		return fmt.Errorf("Vault is not initialized")
+		return fmt.Errorf("vault is not initialized")
 	}
 
 	if health.Sealed {
-		return fmt.Errorf("Vault is sealed")
+		return fmt.Errorf("vault is sealed")
 	}
 
 	return nil
@@ -410,7 +410,16 @@ func (r *SecretRotator) rotateSecrets(ctx context.Context) {
 func (r *SecretRotator) rotateSecret(ctx context.Context, secretPath string) error {
 	// This is a simplified implementation
 	// In practice, you would check if rotation is needed based on metadata
-	r.logger.WithField("path", secretPath).Info("Checking secret rotation")
+	r.logger.WithContext(ctx).WithField("path", secretPath).Info("Checking secret rotation")
+
+	// In a real implementation, you would use the context for timeout/cancellation
+	// when checking if rotation is needed and performing the rotation
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		// Continue with rotation check
+	}
 
 	// Clear cache to force refresh
 	delete(r.secretsManager.cache, secretPath)

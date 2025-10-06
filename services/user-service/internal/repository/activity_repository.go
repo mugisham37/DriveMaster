@@ -10,6 +10,8 @@ import (
 	"user-service/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lib/pq"
 )
 
@@ -44,11 +46,11 @@ type ActivityRepository interface {
 }
 
 type activityRepository struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
 // NewActivityRepository creates a new activity repository instance
-func NewActivityRepository(db *sql.DB) ActivityRepository {
+func NewActivityRepository(db *pgxpool.Pool) ActivityRepository {
 	return &activityRepository{db: db}
 }
 
@@ -68,7 +70,7 @@ func (r *activityRepository) CreateActivity(ctx context.Context, activity *model
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
-	_, err = r.db.ExecContext(ctx, query,
+	_, err = r.db.Exec(ctx, query,
 		activity.ID,
 		activity.UserID,
 		activity.ActivityType,
@@ -108,7 +110,7 @@ func (r *activityRepository) GetActivity(ctx context.Context, activityID uuid.UU
 	var activity models.UserActivity
 	var metadataJSON []byte
 
-	err := r.db.QueryRowContext(ctx, query, activityID).Scan(
+	err := r.db.QueryRow(ctx, query, activityID).Scan(
 		&activity.ID,
 		&activity.UserID,
 		&activity.ActivityType,
@@ -127,7 +129,7 @@ func (r *activityRepository) GetActivity(ctx context.Context, activityID uuid.UU
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, models.ErrActivityNotFound
 		}
 		return nil, fmt.Errorf("failed to get activity: %w", err)
@@ -219,7 +221,7 @@ func (r *activityRepository) GetActivitiesByUser(ctx context.Context, userID uui
 		}
 	}
 
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query activities: %w", err)
 	}
@@ -272,7 +274,7 @@ func (r *activityRepository) GetActivitiesBySession(ctx context.Context, session
 		WHERE session_id = $1
 		ORDER BY timestamp ASC`
 
-	rows, err := r.db.QueryContext(ctx, query, sessionID)
+	rows, err := r.db.Query(ctx, query, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query session activities: %w", err)
 	}
@@ -319,15 +321,12 @@ func (r *activityRepository) GetActivitiesBySession(ctx context.Context, session
 func (r *activityRepository) DeleteActivity(ctx context.Context, activityID uuid.UUID) error {
 	query := `DELETE FROM user_activities WHERE id = $1`
 
-	result, err := r.db.ExecContext(ctx, query, activityID)
+	result, err := r.db.Exec(ctx, query, activityID)
 	if err != nil {
 		return fmt.Errorf("failed to delete activity: %w", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
+	rowsAffected := result.RowsAffected()
 
 	if rowsAffected == 0 {
 		return models.ErrActivityNotFound
@@ -350,7 +349,7 @@ func (r *activityRepository) GetActivitySummary(ctx context.Context, userID uuid
 		WHERE user_id = $1 AND timestamp >= $2 AND timestamp <= $3
 		GROUP BY activity_type, device_type, platform`
 
-	rows, err := r.db.QueryContext(ctx, query, userID, dateRange.Start, dateRange.End)
+	rows, err := r.db.Query(ctx, query, userID, dateRange.Start, dateRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query activity summary: %w", err)
 	}
@@ -407,9 +406,9 @@ func (r *activityRepository) GetActivitySummary(ctx context.Context, userID uuid
 	var sessionCount int
 	var avgSessionDuration float64
 
-	err = r.db.QueryRowContext(ctx, sessionQuery, userID, dateRange.Start, dateRange.End).Scan(
+	err = r.db.QueryRow(ctx, sessionQuery, userID, dateRange.Start, dateRange.End).Scan(
 		&sessionCount, &avgSessionDuration)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, fmt.Errorf("failed to get session statistics: %w", err)
 	}
 
@@ -426,7 +425,7 @@ func (r *activityRepository) GetActivitySummary(ctx context.Context, userID uuid
 		WHERE user_id = $1 AND timestamp >= $2 AND timestamp <= $3
 		GROUP BY EXTRACT(HOUR FROM timestamp)`
 
-	hourlyRows, err := r.db.QueryContext(ctx, hourlyQuery, userID, dateRange.Start, dateRange.End)
+	hourlyRows, err := r.db.Query(ctx, hourlyQuery, userID, dateRange.Start, dateRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query hourly distribution: %w", err)
 	}
@@ -453,7 +452,7 @@ func (r *activityRepository) GetActivitySummary(ctx context.Context, userID uuid
 		WHERE user_id = $1 AND timestamp >= $2 AND timestamp <= $3
 		GROUP BY DATE(timestamp)`
 
-	dailyRows, err := r.db.QueryContext(ctx, dailyQuery, userID, dateRange.Start, dateRange.End)
+	dailyRows, err := r.db.Query(ctx, dailyQuery, userID, dateRange.Start, dateRange.End)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query daily distribution: %w", err)
 	}
@@ -561,7 +560,7 @@ func (r *activityRepository) GetActivityAggregation(ctx context.Context, filters
 
 	query.WriteString(" GROUP BY period, group_key ORDER BY period DESC")
 
-	rows, err := r.db.QueryContext(ctx, query.String(), args...)
+	rows, err := r.db.Query(ctx, query.String(), args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query activity aggregation: %w", err)
 	}
@@ -615,9 +614,9 @@ func (r *activityRepository) GetEngagementMetrics(ctx context.Context, userID uu
 	var totalActivities, activeDays, totalSessions int
 	var avgSessionLength float64
 
-	err := r.db.QueryRowContext(ctx, query, userID, cutoffDate).Scan(
+	err := r.db.QueryRow(ctx, query, userID, cutoffDate).Scan(
 		&totalActivities, &activeDays, &totalSessions, &avgSessionLength)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return nil, fmt.Errorf("failed to get basic engagement metrics: %w", err)
 	}
 
@@ -670,7 +669,7 @@ func (r *activityRepository) calculateDailyStreak(ctx context.Context, userID uu
 
 	cutoffDate := time.Now().AddDate(0, 0, -30) // Look back 30 days
 
-	rows, err := r.db.QueryContext(ctx, query, userID, cutoffDate)
+	rows, err := r.db.Query(ctx, query, userID, cutoffDate)
 	if err != nil {
 		return 0
 	}
@@ -695,7 +694,7 @@ func (r *activityRepository) calculateDailyStreak(ctx context.Context, userID uu
 
 	for i, date := range dates {
 		expectedDate := today.AddDate(0, 0, -i)
-		if date.Truncate(24*time.Hour).Equal(expectedDate) {
+		if date.Truncate(24 * time.Hour).Equal(expectedDate) {
 			streak++
 		} else {
 			break
@@ -715,7 +714,7 @@ func (r *activityRepository) calculateWeeklyStreak(ctx context.Context, userID u
 
 	cutoffDate := time.Now().AddDate(0, 0, -84) // Look back 12 weeks
 
-	rows, err := r.db.QueryContext(ctx, query, userID, cutoffDate)
+	rows, err := r.db.Query(ctx, query, userID, cutoffDate)
 	if err != nil {
 		return 0
 	}
@@ -775,8 +774,22 @@ func (r *activityRepository) calculateEngagementScore(totalActivities, activeDay
 		}
 	}
 
+	// Normalize consistency score based on active days (0-1)
+	consistencyScore := 0.0
+	if activeDays > 0 {
+		// Reward consistency - more active days relative to total activities indicates regular engagement
+		consistencyRatio := float64(activeDays) / float64(totalActivities+1) // +1 to avoid division by zero
+		if consistencyRatio > 0.5 {
+			consistencyScore = 1.0
+		} else if consistencyRatio > 0.3 {
+			consistencyScore = 0.7
+		} else if consistencyRatio > 0.1 {
+			consistencyScore = 0.4
+		}
+	}
+
 	// Combine scores with weights
-	engagementScore := (activityScore * 0.4) + (sessionScore * 0.3) + (returnRate * 0.3)
+	engagementScore := (activityScore * 0.3) + (sessionScore * 0.3) + (returnRate * 0.2) + (consistencyScore * 0.2)
 
 	if engagementScore > 1.0 {
 		engagementScore = 1.0
@@ -805,7 +818,7 @@ func (r *activityRepository) GetBehaviorPatterns(ctx context.Context, userID uui
 		ORDER BY count DESC
 		LIMIT 3`
 
-	rows, err := r.db.QueryContext(ctx, hourlyQuery, userID, cutoffDate)
+	rows, err := r.db.Query(ctx, hourlyQuery, userID, cutoffDate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query hourly patterns: %w", err)
 	}
@@ -843,7 +856,7 @@ func (r *activityRepository) GetBehaviorPatterns(ctx context.Context, userID uui
 		WHERE user_id = $1 AND timestamp >= $2 AND duration_ms IS NOT NULL AND duration_ms > 0`
 
 	var avgDuration sql.NullFloat64
-	err = r.db.QueryRowContext(ctx, sessionQuery, userID, cutoffDate).Scan(&avgDuration)
+	err = r.db.QueryRow(ctx, sessionQuery, userID, cutoffDate).Scan(&avgDuration)
 	if err == nil && avgDuration.Valid {
 		sessionType := "short"
 		if avgDuration.Float64 > 300000 { // 5 minutes
@@ -887,7 +900,7 @@ func (r *activityRepository) GetTopTopics(ctx context.Context, userID uuid.UUID,
 		ORDER BY activity_count DESC
 		LIMIT $3`
 
-	rows, err := r.db.QueryContext(ctx, query, userID, cutoffDate, limit)
+	rows, err := r.db.Query(ctx, query, userID, cutoffDate, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query top topics: %w", err)
 	}
@@ -928,7 +941,7 @@ func (r *activityRepository) GetActivityInsights(ctx context.Context, userID uui
 		WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > NOW())
 		ORDER BY generated_at DESC`
 
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query activity insights: %w", err)
 	}
@@ -993,7 +1006,7 @@ func (r *activityRepository) CreateActivityInsight(ctx context.Context, insight 
 		return fmt.Errorf("failed to marshal action items: %w", err)
 	}
 
-	_, err = r.db.ExecContext(ctx, query,
+	_, err = r.db.Exec(ctx, query,
 		insight.ID,
 		insight.UserID,
 		insight.Type,
@@ -1023,7 +1036,7 @@ func (r *activityRepository) GetActivityRecommendations(ctx context.Context, use
 		WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > NOW())
 		ORDER BY priority DESC, generated_at DESC`
 
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query activity recommendations: %w", err)
 	}
@@ -1094,7 +1107,7 @@ func (r *activityRepository) CreateActivityRecommendation(ctx context.Context, r
 		return fmt.Errorf("failed to marshal actions: %w", err)
 	}
 
-	_, err = r.db.ExecContext(ctx, query,
+	_, err = r.db.Exec(ctx, query,
 		recommendation.ID,
 		recommendation.UserID,
 		recommendation.Type,
@@ -1124,15 +1137,12 @@ func (r *activityRepository) MarkRecommendationApplied(ctx context.Context, reco
 		SET applied = true, applied_at = NOW()
 		WHERE id = $1 AND user_id = $2`
 
-	result, err := r.db.ExecContext(ctx, query, recommendationID, userID)
+	result, err := r.db.Exec(ctx, query, recommendationID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to mark recommendation as applied: %w", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
+	rowsAffected := result.RowsAffected()
 
 	if rowsAffected == 0 {
 		return models.ErrActivityNotFound
@@ -1147,11 +1157,11 @@ func (r *activityRepository) CreateActivitiesBatch(ctx context.Context, activiti
 		return nil
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer tx.Rollback(ctx)
 
 	query := `
 		INSERT INTO user_activities (
@@ -1160,19 +1170,13 @@ func (r *activityRepository) CreateActivitiesBatch(ctx context.Context, activiti
 			duration_ms, timestamp, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
-	stmt, err := tx.PrepareContext(ctx, query)
-	if err != nil {
-		return fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
-
 	for _, activity := range activities {
 		metadataJSON, err := json.Marshal(activity.Metadata)
 		if err != nil {
 			return fmt.Errorf("failed to marshal metadata: %w", err)
 		}
 
-		_, err = stmt.ExecContext(ctx,
+		_, err = tx.Exec(ctx, query,
 			activity.ID,
 			activity.UserID,
 			activity.ActivityType,
@@ -1195,7 +1199,7 @@ func (r *activityRepository) CreateActivitiesBatch(ctx context.Context, activiti
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 

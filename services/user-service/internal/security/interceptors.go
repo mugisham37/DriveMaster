@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"github.com/sirupsen/logrus"
-	
+
 	"shared/security"
 )
 
@@ -33,7 +33,7 @@ func NewSecurityInterceptor(securityManager *security.SecurityManager, logger *l
 func (s *SecurityInterceptor) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		start := time.Now()
-		
+
 		// Extract metadata
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -59,7 +59,7 @@ func (s *SecurityInterceptor) UnaryServerInterceptor() grpc.UnaryServerIntercept
 
 		// Call handler
 		resp, err := handler(ctx, req)
-		
+
 		// Log audit event
 		duration := time.Since(start)
 		outcome := security.AuditOutcomeSuccess
@@ -124,6 +124,9 @@ func (s *SecurityInterceptor) StreamServerInterceptor() grpc.StreamServerInterce
 func (s *SecurityInterceptor) createAuditContext(md metadata.MD, method string) *security.AuditContext {
 	auditCtx := &security.AuditContext{}
 
+	// Set the method being called for audit purposes
+	auditCtx.Resource = method
+
 	// Extract user ID
 	if userIDs := md.Get("user-id"); len(userIDs) > 0 {
 		auditCtx.UserID = userIDs[0]
@@ -164,10 +167,22 @@ func (s *SecurityInterceptor) validateRequest(req interface{}, method string) er
 	// Convert request to map for validation
 	// This is a simplified implementation - in practice, you'd use reflection
 	// or protocol buffer reflection to validate fields
-	
+
 	// For now, just check if request is not nil
 	if req == nil {
-		return fmt.Errorf("request cannot be nil")
+		return fmt.Errorf("request cannot be nil for method %s", method)
+	}
+
+	// Add method-specific validation if needed
+	switch method {
+	case "/user.UserService/CreateUser":
+		// Could add specific validation for user creation
+		s.logger.Debug("Validating user creation request")
+	case "/user.UserService/UpdateUser":
+		// Could add specific validation for user updates
+		s.logger.Debug("Validating user update request")
+	default:
+		s.logger.Debug("Validating generic request", "method", method)
 	}
 
 	return nil

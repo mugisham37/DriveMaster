@@ -8,6 +8,7 @@ import (
 	"user-service/internal/config"
 	"user-service/internal/events"
 	"user-service/internal/models"
+	"user-service/internal/testutils"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -105,40 +106,10 @@ func (m *MockActivityRepository) GetRecentActivities(ctx context.Context, userID
 	return args.Get(0).([]models.UserActivity), args.Error(1)
 }
 
-// MockCache is a mock implementation of CacheInterface
-type MockCache struct {
-	mock.Mock
-}
-
-func (m *MockCache) Get(ctx context.Context, key string, dest interface{}) error {
-	args := m.Called(ctx, key, dest)
-	return args.Error(0)
-}
-
-func (m *MockCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	args := m.Called(ctx, key, value, ttl)
-	return args.Error(0)
-}
-
-func (m *MockCache) Delete(ctx context.Context, key string) error {
-	args := m.Called(ctx, key)
-	return args.Error(0)
-}
-
-func (m *MockCache) Exists(ctx context.Context, key string) (bool, error) {
-	args := m.Called(ctx, key)
-	return args.Bool(0), args.Error(1)
-}
-
-func (m *MockCache) Close() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
 func TestActivityService_RecordActivity(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -173,7 +144,7 @@ func TestActivityService_RecordActivity(t *testing.T) {
 func TestActivityService_ValidateActivity(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -241,7 +212,7 @@ func TestActivityService_ValidateActivity(t *testing.T) {
 func TestActivityService_GetActivitySummary(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -289,7 +260,7 @@ func TestActivityService_GetActivitySummary(t *testing.T) {
 func TestActivityService_GenerateActivityInsights(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -303,10 +274,10 @@ func TestActivityService_GenerateActivityInsights(t *testing.T) {
 		UserID:          userID,
 		TotalActivities: 10,
 		EngagementMetrics: models.EngagementMetrics{
-			EngagementScore:      0.2, // Low engagement
+			EngagementScore:      0.2,   // Low engagement
 			AverageSessionLength: 60000, // 1 minute
 			DailyActiveStreak:    0,
-			ChurnRisk:           "high",
+			ChurnRisk:            "high",
 		},
 		TopTopics: []models.TopicActivitySummary{
 			{
@@ -321,7 +292,7 @@ func TestActivityService_GenerateActivityInsights(t *testing.T) {
 		EngagementScore:      0.2,
 		AverageSessionLength: 60000,
 		DailyActiveStreak:    0,
-		ChurnRisk:           "high",
+		ChurnRisk:            "high",
 	}
 
 	// Mock expectations
@@ -371,7 +342,7 @@ func TestActivityService_GenerateActivityInsights(t *testing.T) {
 func TestActivityService_GenerateActivityRecommendations(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -385,7 +356,7 @@ func TestActivityService_GenerateActivityRecommendations(t *testing.T) {
 		EngagementScore:      0.2,
 		AverageSessionLength: 30000, // 30 seconds - very short
 		DailyActiveStreak:    1,     // Low streak
-		ChurnRisk:           "high",
+		ChurnRisk:            "high",
 	}
 
 	// Mock behavior patterns with peak hours
@@ -445,7 +416,7 @@ func TestActivityService_GenerateActivityRecommendations(t *testing.T) {
 func TestActivityService_RecordActivitiesBatch(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -492,7 +463,7 @@ func TestActivityService_RecordActivitiesBatch(t *testing.T) {
 func TestActivityService_EnrichActivity(t *testing.T) {
 	// Setup
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()
@@ -523,7 +494,7 @@ func TestActivityService_EnrichActivity(t *testing.T) {
 // Benchmark tests
 func BenchmarkActivityService_RecordActivity(b *testing.B) {
 	mockRepo := new(MockActivityRepository)
-	mockCache := new(MockCache)
+	mockCache := new(testutils.MockCache)
 	mockPublisher := events.NewNoOpEventPublisher()
 	cfg := &config.Config{}
 	logger := logrus.New()

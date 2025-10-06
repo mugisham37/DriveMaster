@@ -213,6 +213,93 @@ func (m *mockHandlerCache) Close() error {
 	return nil
 }
 
+// mockProgressService is a simple mock for testing
+type mockProgressService struct{}
+
+func (m *mockProgressService) GetSkillMastery(ctx context.Context, userID uuid.UUID, topic string) (*models.SkillMastery, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetAllSkillMasteries(ctx context.Context, userID uuid.UUID) ([]models.SkillMastery, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) UpdateSkillMastery(ctx context.Context, userID uuid.UUID, topic string, attempts []models.AttemptRecord) error {
+	return nil
+}
+
+func (m *mockProgressService) RecalculateAllMasteries(ctx context.Context, userID uuid.UUID) error {
+	return nil
+}
+
+func (m *mockProgressService) GetProgressSummary(ctx context.Context, userID uuid.UUID) (*models.ProgressSummary, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetWeeklyProgress(ctx context.Context, userID uuid.UUID, weeks int) ([]models.WeeklyProgressPoint, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetTopicProgress(ctx context.Context, userID uuid.UUID, topics []string) ([]models.TopicProgressPoint, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetLearningStreak(ctx context.Context, userID uuid.UUID) (*models.LearningStreak, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) UpdateLearningStreak(ctx context.Context, userID uuid.UUID) error {
+	return nil
+}
+
+func (m *mockProgressService) GetMilestones(ctx context.Context, userID uuid.UUID) ([]models.Milestone, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) CheckMilestoneAchievements(ctx context.Context, userID uuid.UUID) ([]models.Milestone, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetProgressVisualizationData(ctx context.Context, userID uuid.UUID, timeRange string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetMasteryTrendData(ctx context.Context, userID uuid.UUID, topic string, days int) ([]map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetAccuracyTrendData(ctx context.Context, userID uuid.UUID, days int) ([]map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetProgressComparison(ctx context.Context, userID uuid.UUID, comparisonType string, target string) (*models.ProgressComparison, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetPeerComparison(ctx context.Context, userID uuid.UUID, countryCode string) (*models.ProgressComparison, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GetHistoricalComparison(ctx context.Context, userID uuid.UUID, days int) (*models.ProgressComparison, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) ProcessAttempt(ctx context.Context, attempt *models.AttemptRecord) error {
+	return nil
+}
+
+func (m *mockProgressService) RecordAttempt(ctx context.Context, attempt *models.AttemptRecord) error {
+	return nil
+}
+
+func (m *mockProgressService) GenerateInsights(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	return nil, nil
+}
+
+func (m *mockProgressService) GenerateRecommendations(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	return nil, nil
+}
+
 func setupHandler() *UserHandler {
 	repo := newMockHandlerUserRepository()
 	cache := &mockHandlerCache{}
@@ -220,7 +307,8 @@ func setupHandler() *UserHandler {
 	publisher := events.NewNoOpEventPublisher()
 
 	userService := service.NewUserService(repo, cache, cfg, publisher)
-	return NewUserHandler(userService)
+	progressService := &mockProgressService{}
+	return NewUserHandler(userService, progressService)
 }
 
 func TestUserHandler_GetUser(t *testing.T) {

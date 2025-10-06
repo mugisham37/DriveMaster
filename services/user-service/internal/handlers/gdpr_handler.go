@@ -14,14 +14,14 @@ import (
 
 // GDPRHandler handles GDPR compliance requests
 type GDPRHandler struct {
-	userService     *service.UserService
+	userService     service.UserService
 	gdprService     *security.GDPRService
 	securityManager *security.SecurityManager
 	logger          *logrus.Logger
 }
 
 // NewGDPRHandler creates a new GDPR handler
-func NewGDPRHandler(userService *service.UserService, securityManager *security.SecurityManager, logger *logrus.Logger) *GDPRHandler {
+func NewGDPRHandler(userService service.UserService, securityManager *security.SecurityManager, logger *logrus.Logger) *GDPRHandler {
 	// Initialize GDPR service
 	gdprService := security.NewGDPRService(
 		securityManager.AuditLogger,

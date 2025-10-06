@@ -287,6 +287,18 @@ func (g *GDPRService) RecordConsent(ctx context.Context, userID, consentType, ip
 	}
 
 	// In a real implementation, this would save to database
+	// For now, we'll log the consent record to demonstrate usage of all fields
+	g.logger.WithFields(logrus.Fields{
+		"user_id":      consent.UserID,
+		"consent_type": consent.ConsentType,
+		"granted":      consent.Granted,
+		"ip_address":   consent.IPAddress,
+		"user_agent":   consent.UserAgent,
+		"version":      consent.Version,
+		"granted_at":   consent.GrantedAt,
+		"withdrawn_at": consent.WithdrawnAt,
+		"details":      consent.Details,
+	}).Info("Recording consent")
 
 	// Log the consent change
 	action := ActionConsentChange

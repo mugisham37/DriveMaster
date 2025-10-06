@@ -11,23 +11,23 @@ import (
 
 // AuditEvent represents a security audit event
 type AuditEvent struct {
-	ID          string                 `json:"id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	UserID      string                 `json:"user_id,omitempty"`
-	Email       string                 `json:"email,omitempty"`
-	IPAddress   string                 `json:"ip_address"`
-	UserAgent   string                 `json:"user_agent,omitempty"`
-	Service     string                 `json:"service"`
-	Action      string                 `json:"action"`
-	Resource    string                 `json:"resource,omitempty"`
-	Outcome     AuditOutcome           `json:"outcome"`
-	RiskScore   float64                `json:"risk_score"`
-	Details     map[string]interface{} `json:"details,omitempty"`
-	SessionID   string                 `json:"session_id,omitempty"`
-	RequestID   string                 `json:"request_id,omitempty"`
-	Duration    time.Duration          `json:"duration,omitempty"`
-	ErrorCode   string                 `json:"error_code,omitempty"`
-	ErrorMsg    string                 `json:"error_message,omitempty"`
+	ID        string         `json:"id"`
+	Timestamp time.Time      `json:"timestamp"`
+	UserID    string         `json:"user_id,omitempty"`
+	Email     string         `json:"email,omitempty"`
+	IPAddress string         `json:"ip_address"`
+	UserAgent string         `json:"user_agent,omitempty"`
+	Service   string         `json:"service"`
+	Action    string         `json:"action"`
+	Resource  string         `json:"resource,omitempty"`
+	Outcome   AuditOutcome   `json:"outcome"`
+	RiskScore float64        `json:"risk_score"`
+	Details   map[string]any `json:"details,omitempty"`
+	SessionID string         `json:"session_id,omitempty"`
+	RequestID string         `json:"request_id,omitempty"`
+	Duration  time.Duration  `json:"duration,omitempty"`
+	ErrorCode string         `json:"error_code,omitempty"`
+	ErrorMsg  string         `json:"error_message,omitempty"`
 }
 
 // AuditOutcome represents the outcome of an audited action
@@ -45,49 +45,49 @@ type AuditAction string
 
 const (
 	// Authentication actions
-	ActionLogin              AuditAction = "login"
-	ActionLogout             AuditAction = "logout"
-	ActionRegister           AuditAction = "register"
-	ActionPasswordChange     AuditAction = "password_change"
-	ActionPasswordReset      AuditAction = "password_reset"
-	ActionMFAEnable          AuditAction = "mfa_enable"
-	ActionMFADisable         AuditAction = "mfa_disable"
-	ActionMFAVerify          AuditAction = "mfa_verify"
-	ActionOAuthLink          AuditAction = "oauth_link"
-	ActionOAuthUnlink        AuditAction = "oauth_unlink"
-	ActionTokenRefresh       AuditAction = "token_refresh"
-	ActionTokenRevoke        AuditAction = "token_revoke"
-	ActionAccountLock        AuditAction = "account_lock"
-	ActionAccountUnlock      AuditAction = "account_unlock"
+	ActionLogin          AuditAction = "login"
+	ActionLogout         AuditAction = "logout"
+	ActionRegister       AuditAction = "register"
+	ActionPasswordChange AuditAction = "password_change"
+	ActionPasswordReset  AuditAction = "password_reset"
+	ActionMFAEnable      AuditAction = "mfa_enable"
+	ActionMFADisable     AuditAction = "mfa_disable"
+	ActionMFAVerify      AuditAction = "mfa_verify"
+	ActionOAuthLink      AuditAction = "oauth_link"
+	ActionOAuthUnlink    AuditAction = "oauth_unlink"
+	ActionTokenRefresh   AuditAction = "token_refresh"
+	ActionTokenRevoke    AuditAction = "token_revoke"
+	ActionAccountLock    AuditAction = "account_lock"
+	ActionAccountUnlock  AuditAction = "account_unlock"
 
 	// Data access actions
-	ActionDataRead           AuditAction = "data_read"
-	ActionDataCreate         AuditAction = "data_create"
-	ActionDataUpdate         AuditAction = "data_update"
-	ActionDataDelete         AuditAction = "data_delete"
-	ActionDataExport         AuditAction = "data_export"
-	ActionDataImport         AuditAction = "data_import"
+	ActionDataRead   AuditAction = "data_read"
+	ActionDataCreate AuditAction = "data_create"
+	ActionDataUpdate AuditAction = "data_update"
+	ActionDataDelete AuditAction = "data_delete"
+	ActionDataExport AuditAction = "data_export"
+	ActionDataImport AuditAction = "data_import"
 
 	// Security actions
-	ActionSecurityViolation  AuditAction = "security_violation"
-	ActionRateLimitExceeded  AuditAction = "rate_limit_exceeded"
-	ActionSuspiciousActivity AuditAction = "suspicious_activity"
+	ActionSecurityViolation   AuditAction = "security_violation"
+	ActionRateLimitExceeded   AuditAction = "rate_limit_exceeded"
+	ActionSuspiciousActivity  AuditAction = "suspicious_activity"
 	ActionSQLInjectionAttempt AuditAction = "sql_injection_attempt"
-	ActionXSSAttempt         AuditAction = "xss_attempt"
-	ActionCSRFAttempt        AuditAction = "csrf_attempt"
+	ActionXSSAttempt          AuditAction = "xss_attempt"
+	ActionCSRFAttempt         AuditAction = "csrf_attempt"
 
 	// Administrative actions
-	ActionAdminAccess        AuditAction = "admin_access"
-	ActionConfigChange       AuditAction = "config_change"
-	ActionUserManagement     AuditAction = "user_management"
-	ActionRoleChange         AuditAction = "role_change"
-	ActionPermissionChange   AuditAction = "permission_change"
+	ActionAdminAccess      AuditAction = "admin_access"
+	ActionConfigChange     AuditAction = "config_change"
+	ActionUserManagement   AuditAction = "user_management"
+	ActionRoleChange       AuditAction = "role_change"
+	ActionPermissionChange AuditAction = "permission_change"
 
 	// Privacy actions
-	ActionGDPRRequest        AuditAction = "gdpr_request"
-	ActionDataAnonymization  AuditAction = "data_anonymization"
-	ActionDataRetention      AuditAction = "data_retention"
-	ActionConsentChange      AuditAction = "consent_change"
+	ActionGDPRRequest       AuditAction = "gdpr_request"
+	ActionDataAnonymization AuditAction = "data_anonymization"
+	ActionDataRetention     AuditAction = "data_retention"
+	ActionConsentChange     AuditAction = "consent_change"
 )
 
 // AuditLogger provides comprehensive audit logging capabilities
@@ -115,37 +115,37 @@ func NewAuditLogger(logger *logrus.Logger, service string, processor AuditProces
 func (a *AuditLogger) LogEvent(ctx context.Context, event *AuditEvent) {
 	// Set service name
 	event.Service = a.service
-	
+
 	// Set timestamp if not provided
 	if event.Timestamp.IsZero() {
 		event.Timestamp = time.Now()
 	}
-	
+
 	// Generate ID if not provided
 	if event.ID == "" {
 		event.ID = generateAuditID()
 	}
-	
+
 	// Log to structured logger
 	logEntry := a.logger.WithFields(logrus.Fields{
-		"audit_id":     event.ID,
-		"user_id":      event.UserID,
-		"email":        event.Email,
-		"ip_address":   event.IPAddress,
-		"user_agent":   event.UserAgent,
-		"service":      event.Service,
-		"action":       event.Action,
-		"resource":     event.Resource,
-		"outcome":      event.Outcome,
-		"risk_score":   event.RiskScore,
-		"session_id":   event.SessionID,
-		"request_id":   event.RequestID,
-		"duration":     event.Duration,
-		"error_code":   event.ErrorCode,
-		"error_msg":    event.ErrorMsg,
-		"details":      event.Details,
+		"audit_id":   event.ID,
+		"user_id":    event.UserID,
+		"email":      event.Email,
+		"ip_address": event.IPAddress,
+		"user_agent": event.UserAgent,
+		"service":    event.Service,
+		"action":     event.Action,
+		"resource":   event.Resource,
+		"outcome":    event.Outcome,
+		"risk_score": event.RiskScore,
+		"session_id": event.SessionID,
+		"request_id": event.RequestID,
+		"duration":   event.Duration,
+		"error_code": event.ErrorCode,
+		"error_msg":  event.ErrorMsg,
+		"details":    event.Details,
 	})
-	
+
 	// Log based on outcome and risk score
 	switch event.Outcome {
 	case AuditOutcomeSuccess:
@@ -163,7 +163,7 @@ func (a *AuditLogger) LogEvent(ctx context.Context, event *AuditEvent) {
 	default:
 		logEntry.Info("Unknown outcome")
 	}
-	
+
 	// Process event through processor (e.g., send to SIEM, database, etc.)
 	if a.processor != nil {
 		if err := a.processor.ProcessEvent(ctx, event); err != nil {
@@ -175,7 +175,7 @@ func (a *AuditLogger) LogEvent(ctx context.Context, event *AuditEvent) {
 // LogAuthentication logs authentication events
 func (a *AuditLogger) LogAuthentication(ctx context.Context, action AuditAction, userID, email, ipAddress, userAgent string, outcome AuditOutcome, details map[string]interface{}) {
 	riskScore := a.calculateAuthRiskScore(action, outcome, details)
-	
+
 	event := &AuditEvent{
 		UserID:    userID,
 		Email:     email,
@@ -186,14 +186,14 @@ func (a *AuditLogger) LogAuthentication(ctx context.Context, action AuditAction,
 		RiskScore: riskScore,
 		Details:   details,
 	}
-	
+
 	a.LogEvent(ctx, event)
 }
 
 // LogDataAccess logs data access events
 func (a *AuditLogger) LogDataAccess(ctx context.Context, action AuditAction, userID, resource, ipAddress string, outcome AuditOutcome, details map[string]interface{}) {
 	riskScore := a.calculateDataAccessRiskScore(action, outcome, details)
-	
+
 	event := &AuditEvent{
 		UserID:    userID,
 		IPAddress: ipAddress,
@@ -203,7 +203,7 @@ func (a *AuditLogger) LogDataAccess(ctx context.Context, action AuditAction, use
 		RiskScore: riskScore,
 		Details:   details,
 	}
-	
+
 	a.LogEvent(ctx, event)
 }
 
@@ -217,7 +217,7 @@ func (a *AuditLogger) LogSecurityViolation(ctx context.Context, violation AuditA
 		RiskScore: 0.9, // High risk for security violations
 		Details:   details,
 	}
-	
+
 	a.LogEvent(ctx, event)
 }
 
@@ -232,7 +232,7 @@ func (a *AuditLogger) LogAdministrativeAction(ctx context.Context, action AuditA
 		RiskScore: 0.7, // High risk for admin actions
 		Details:   details,
 	}
-	
+
 	a.LogEvent(ctx, event)
 }
 
@@ -247,14 +247,14 @@ func (a *AuditLogger) LogGDPRAction(ctx context.Context, action AuditAction, use
 		RiskScore: 0.5, // Medium risk for GDPR actions
 		Details:   details,
 	}
-	
+
 	a.LogEvent(ctx, event)
 }
 
 // calculateAuthRiskScore calculates risk score for authentication events
 func (a *AuditLogger) calculateAuthRiskScore(action AuditAction, outcome AuditOutcome, details map[string]interface{}) float64 {
 	baseScore := 0.1
-	
+
 	// Increase risk based on action type
 	switch action {
 	case ActionLogin:
@@ -268,26 +268,26 @@ func (a *AuditLogger) calculateAuthRiskScore(action AuditAction, outcome AuditOu
 	case ActionAccountLock:
 		baseScore = 0.8
 	}
-	
+
 	// Increase risk based on failure patterns
 	if outcome == AuditOutcomeFailure {
 		if failedAttempts, ok := details["failed_attempts"].(int); ok && failedAttempts > 3 {
 			baseScore += 0.3
 		}
 	}
-	
+
 	// Cap at 1.0
 	if baseScore > 1.0 {
 		baseScore = 1.0
 	}
-	
+
 	return baseScore
 }
 
 // calculateDataAccessRiskScore calculates risk score for data access events
 func (a *AuditLogger) calculateDataAccessRiskScore(action AuditAction, outcome AuditOutcome, details map[string]interface{}) float64 {
 	baseScore := 0.1
-	
+
 	// Increase risk based on action type
 	switch action {
 	case ActionDataDelete:
@@ -297,22 +297,34 @@ func (a *AuditLogger) calculateDataAccessRiskScore(action AuditAction, outcome A
 	case ActionDataImport:
 		baseScore = 0.4
 	}
-	
+
+	// Adjust risk based on outcome
+	switch outcome {
+	case AuditOutcomeFailure:
+		baseScore += 0.2 // Failed operations are more suspicious
+	case AuditOutcomeBlocked:
+		baseScore += 0.3 // Blocked operations indicate potential threats
+	case AuditOutcomeWarning:
+		baseScore += 0.1 // Warnings indicate minor issues
+	case AuditOutcomeSuccess:
+		// No adjustment for successful operations
+	}
+
 	// Increase risk for bulk operations
 	if recordCount, ok := details["record_count"].(int); ok && recordCount > 1000 {
 		baseScore += 0.2
 	}
-	
+
 	// Increase risk for sensitive data
 	if sensitive, ok := details["contains_pii"].(bool); ok && sensitive {
 		baseScore += 0.3
 	}
-	
+
 	// Cap at 1.0
 	if baseScore > 1.0 {
 		baseScore = 1.0
 	}
-	
+
 	return baseScore
 }
 
@@ -330,10 +342,10 @@ func (d *DatabaseAuditProcessor) ProcessEvent(ctx context.Context, event *AuditE
 	if err != nil {
 		return fmt.Errorf("failed to marshal audit event: %w", err)
 	}
-	
+
 	// Log the JSON representation
 	fmt.Printf("AUDIT_EVENT: %s\n", string(eventJSON))
-	
+
 	return nil
 }
 
@@ -341,6 +353,11 @@ func (d *DatabaseAuditProcessor) ProcessEvent(ctx context.Context, event *AuditE
 func generateAuditID() string {
 	return fmt.Sprintf("audit_%d_%d", time.Now().Unix(), time.Now().Nanosecond())
 }
+
+// AuditContextKey is a custom type for context keys to avoid collisions
+type AuditContextKey string
+
+const auditContextKey AuditContextKey = "audit_context"
 
 // AuditContext provides audit context for requests
 type AuditContext struct {
@@ -350,11 +367,12 @@ type AuditContext struct {
 	UserAgent string
 	SessionID string
 	RequestID string
+	Resource  string
 }
 
 // GetAuditContext extracts audit context from request context
 func GetAuditContext(ctx context.Context) *AuditContext {
-	if auditCtx, ok := ctx.Value("audit_context").(*AuditContext); ok {
+	if auditCtx, ok := ctx.Value(auditContextKey).(*AuditContext); ok {
 		return auditCtx
 	}
 	return &AuditContext{}
@@ -362,5 +380,5 @@ func GetAuditContext(ctx context.Context) *AuditContext {
 
 // WithAuditContext adds audit context to request context
 func WithAuditContext(ctx context.Context, auditCtx *AuditContext) context.Context {
-	return context.WithValue(ctx, "audit_context", auditCtx)
+	return context.WithValue(ctx, auditContextKey, auditCtx)
 }

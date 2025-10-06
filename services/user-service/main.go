@@ -26,9 +26,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	
-	"	"shared/security"
-	userSecurity "user-service/internal/security""
+
+	"shared/security"
+	userSecurity "user-service/internal/security"
 )
 
 func main() {
@@ -78,19 +78,13 @@ func main() {
 	// Initialize repository
 	userRepo := repository.NewUserRepository(db.Pool)
 	progressRepo := repository.NewProgressRepository(db.Pool)
-	schedulerStateRepo := repository.NewSchedulerStateRepository(db.Pool)
-	activityRepo := repository.NewActivityRepository(db.Pool)
 
-	// Initialize services with security manager
-	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher, securityManager)
-	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log, securityManager)
-	schedulerStateService := service.NewSchedulerStateService(schedulerStateRepo, redisClient, cfg, eventPublisher, securityManager)
-	activityService := service.NewActivityService(activityRepo, redisClient, eventPublisher, cfg, log, securityManager)
+	// Initialize services
+	userService := service.NewUserService(userRepo, redisClient, cfg, eventPublisher)
+	progressService := service.NewProgressService(progressRepo, redisClient, cfg, log)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService, progressService)
-	schedulerStateHandler := handlers.NewSchedulerStateHandler(schedulerStateService)
-	activityHandler := handlers.NewActivityHandler(activityService, log)
 	gdprHandler := handlers.NewGDPRHandler(userService, securityManager, log)
 
 	// Initialize security interceptor
@@ -110,7 +104,8 @@ func main() {
 
 	// Register services
 	pb.RegisterUserServiceServer(grpcServer, userHandler)
-	pb.RegisterSchedulerStateServiceServer(grpcServer, schedulerStateHandler)
+	// TODO: Regenerate protobuf files to include SchedulerStateService
+	// pb.RegisterSchedulerStateServiceServer(grpcServer, schedulerStateHandler)
 
 	// Enable reflection for development
 	if cfg.Environment == "development" {
@@ -121,18 +116,18 @@ func main() {
 	go func() {
 		// Create Gin router
 		router := gin.New()
-		
+
 		// Add security middleware
 		for _, middleware := range securityManager.GetSecurityMiddleware() {
 			if ginMiddleware, ok := middleware.(gin.HandlerFunc); ok {
 				router.Use(ginMiddleware)
 			}
 		}
-		
+
 		// Setup API routes
 		api := router.Group("/api/v1")
 		gdprHandler.SetupGDPRRoutes(api)
-		
+
 		// Add metrics and health endpoints
 		router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 		router.GET("/health", func(c *gin.Context) {

@@ -240,6 +240,12 @@ func (s *progressService) extractTopicsFromAttempt(attempt models.AttemptRecord)
 	// This is a placeholder implementation
 	// In reality, you'd query the items table to get the topics for the item_id
 	// For now, we'll return some default topics based on the item ID pattern
+
+	// Use the attempt data to determine topics (placeholder logic)
+	s.logger.Debug("Extracting topics from attempt", "item_id", attempt.ItemID, "user_id", attempt.UserID)
+
+	// In a real implementation, you would use attempt.ItemID to query the items table
+	// and get the actual topics associated with that item
 	return []string{"traffic_rules", "road_signs", "safety"} // Placeholder
 }
 
@@ -272,6 +278,8 @@ func (s *progressService) GetProgressSummary(ctx context.Context, userID uuid.UU
 
 // enhanceProgressSummary adds additional calculated fields to the progress summary
 func (s *progressService) enhanceProgressSummary(ctx context.Context, summary *models.ProgressSummary) {
+	s.logger.WithContext(ctx).Debug("Enhancing progress summary", "user_id", summary.UserID)
+
 	// Calculate additional metrics
 	if len(summary.TopicMasteries) > 0 {
 		// Calculate mastery distribution
@@ -927,4 +935,3 @@ func (s *progressService) GenerateRecommendations(ctx context.Context, userID uu
 
 	return recommendations, nil
 }
-

@@ -795,6 +795,8 @@ func (s *activityService) buildActivityCacheKey(userID uuid.UUID, filters *model
 
 // enhanceActivitySummary adds additional calculations to activity summary
 func (s *activityService) enhanceActivitySummary(ctx context.Context, summary *models.ActivitySummary) {
+	s.logger.WithContext(ctx).Debug("Enhancing activity summary", "user_id", summary.UserID)
+
 	// Calculate engagement score
 	summary.EngagementMetrics.EngagementScore = summary.GetEngagementScore()
 
@@ -832,6 +834,8 @@ func (s *activityService) enhanceActivitySummary(ctx context.Context, summary *m
 
 // enhanceBehaviorPatterns adds additional analysis to behavior patterns
 func (s *activityService) enhanceBehaviorPatterns(ctx context.Context, userID uuid.UUID, patterns []models.BehaviorPattern) {
+	s.logger.WithContext(ctx).Debug("Enhancing behavior patterns", "user_id", userID, "pattern_count", len(patterns))
+
 	// Sort patterns by confidence
 	sort.Slice(patterns, func(i, j int) bool {
 		return patterns[i].Confidence > patterns[j].Confidence
@@ -847,6 +851,7 @@ func (s *activityService) enhanceBehaviorPatterns(ctx context.Context, userID uu
 				// Categorize time of day
 				timeCategory := s.categorizeTimeOfDay(peakHours)
 				pattern.Metadata["time_category"] = timeCategory
+				pattern.Metadata["user_id"] = userID.String() // Use userID parameter
 				pattern.Description = fmt.Sprintf("Most active during %s hours: %v", timeCategory, peakHours)
 			}
 		}
@@ -856,6 +861,7 @@ func (s *activityService) enhanceBehaviorPatterns(ctx context.Context, userID uu
 			if avgDuration, ok := pattern.Metadata["avg_duration_ms"].(float64); ok {
 				efficiency := s.calculateSessionEfficiency(avgDuration)
 				pattern.Metadata["efficiency_score"] = efficiency
+				pattern.Metadata["user_id"] = userID.String() // Use userID parameter
 				pattern.Confidence = math.Min(pattern.Confidence+efficiency*0.2, 1.0)
 			}
 		}
