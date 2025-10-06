@@ -1,0 +1,325 @@
+# Blue-Green Deployment Configuration
+# This configuration enables zero-downtime deployments with instant rollback capability
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adaptive-learning-blue
+  labels:
+    environment: production
+    deployment-slot: blue
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adaptive-learning-green
+  labels:
+    environment: production
+    deployment-slot: green
+---
+# Traffic Router Service (Routes to active environment)
+apiVersion: v1
+kind: Service
+metadata:
+  name: adaptive-learning-router
+  namespace: adaptive-learning-production
+  labels:
+    app: traffic-router
+spec:
+  selector:
+    app: adaptive-learning
+    environment: production
+    active: "true"
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
+    targetPort: 8443
+  type: LoadBalancer
+---
+# Blue Environment Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-blue
+  namespace: adaptive-learning-blue
+  labels:
+    app: auth-service
+    environment: production
+    deployment-slot: blue
+spec:
+  selector:
+    app: auth-service
+    deployment-slot: blue
+  ports:
+  - port: 3001
+    targetPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service-blue
+  namespace: adaptive-learning-blue
+  labels:
+    app: user-service
+    environment: production
+    deployment-slot: blue
+spec:
+  selector:
+    app: user-service
+    deployment-slot: blue
+  ports:
+  - port: 3002
+    targetPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-service-blue
+  namespace: adaptive-learning-blue
+  labels:
+    app: scheduler-service
+    environment: production
+    deployment-slot: blue
+spec:
+  selector:
+    app: scheduler-service
+    deployment-slot: blue
+  ports:
+  - port: 3003
+    targetPort: 3003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service-blue
+  namespace: adaptive-learning-blue
+  labels:
+    app: content-service
+    environment: production
+    deployment-slot: blue
+spec:
+  selector:
+    app: content-service
+    deployment-slot: blue
+  ports:
+  - port: 3004
+    targetPort: 3004
+---
+# Green Environment Services (Mirror of Blue)
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-green
+  namespace: adaptive-learning-green
+  labels:
+    app: auth-service
+    environment: production
+    deployment-slot: green
+spec:
+  selector:
+    app: auth-service
+    deployment-slot: green
+  ports:
+  - port: 3001
+    targetPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service-green
+  namespace: adaptive-learning-green
+  labels:
+    app: user-service
+    environment: production
+    deployment-slot: green
+spec:
+  selector:
+    app: user-service
+    deployment-slot: green
+  ports:
+  - port: 3002
+    targetPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-service-green
+  namespace: adaptive-learning-green
+  labels:
+    app: scheduler-service
+    environment: production
+    deployment-slot: green
+spec:
+  selector:
+    app: scheduler-service
+    deployment-slot: green
+  ports:
+  - port: 3003
+    targetPort: 3003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service-green
+  namespace: adaptive-learning-green
+  labels:
+    app: content-service
+    environment: production
+    deployment-slot: green
+  ports:
+  - port: 3004
+    targetPort: 3004
+---
+# Ingress Controller for Blue-Green Traffic Management
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adaptive-learning-ingress
+  namespace: adaptive-learning-production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api.adaptivelearning.com
+    - app.adaptivelearning.com
+    secretName: adaptive-learning-tls
+  rules:
+  - host: api.adaptivelearning.com
+    http:
+      paths:
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service-active
+            port:
+              number: 3001
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service-active
+            port:
+              number: 3002
+      - path: /scheduler
+        pathType: Prefix
+        backend:
+          service:
+            name: scheduler-service-active
+            port:
+              number: 3003
+      - path: /content
+        pathType: Prefix
+        backend:
+          service:
+            name: content-service-active
+            port:
+              number: 3004
+  - host: app.adaptivelearning.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-app-active
+            port:
+              number: 3000
+---
+# ConfigMap for Blue-Green Deployment Scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-green-scripts
+  namespace: adaptive-learning-production
+data:
+  switch-to-blue.sh: |
+    #!/bin/bash
+    echo "Switching traffic to BLUE environment..."
+    
+    # Update service selectors to point to blue
+    kubectl patch service auth-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"blue"}}}'
+    kubectl patch service user-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"blue"}}}'
+    kubectl patch service scheduler-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"blue"}}}'
+    kubectl patch service content-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"blue"}}}'
+    
+    # Update labels
+    kubectl label namespace adaptive-learning-blue active=true --overwrite
+    kubectl label namespace adaptive-learning-green active=false --overwrite
+    
+    echo "Traffic switched to BLUE environment successfully"
+    
+  switch-to-green.sh: |
+    #!/bin/bash
+    echo "Switching traffic to GREEN environment..."
+    
+    # Update service selectors to point to green
+    kubectl patch service auth-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"green"}}}'
+    kubectl patch service user-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"green"}}}'
+    kubectl patch service scheduler-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"green"}}}'
+    kubectl patch service content-service-active -n adaptive-learning-production -p '{"spec":{"selector":{"deployment-slot":"green"}}}'
+    
+    # Update labels
+    kubectl label namespace adaptive-learning-green active=true --overwrite
+    kubectl label namespace adaptive-learning-blue active=false --overwrite
+    
+    echo "Traffic switched to GREEN environment successfully"
+    
+  health-check.sh: |
+    #!/bin/bash
+    ENVIRONMENT=${1:-blue}
+    NAMESPACE="adaptive-learning-${ENVIRONMENT}"
+    
+    echo "Performing health check for $ENVIRONMENT environment..."
+    
+    # Check all services are ready
+    services=("auth-service" "user-service" "scheduler-service" "content-service")
+    
+    for service in "${services[@]}"; do
+        echo "Checking $service..."
+        
+        # Wait for deployment to be ready
+        kubectl wait --for=condition=available --timeout=300s deployment/${service} -n ${NAMESPACE}
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ $service is ready"
+        else
+            echo "❌ $service failed health check"
+            exit 1
+        fi
+        
+        # Check service endpoint
+        kubectl get endpoints ${service}-${ENVIRONMENT} -n ${NAMESPACE} | grep -q "$(kubectl get endpoints ${service}-${ENVIRONMENT} -n ${NAMESPACE} -o jsonpath='{.subsets[0].addresses[0].ip}')"
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ $service endpoint is available"
+        else
+            echo "❌ $service endpoint not available"
+            exit 1
+        fi
+    done
+    
+    echo "✅ All services in $ENVIRONMENT environment are healthy"
+    
+  rollback.sh: |
+    #!/bin/bash
+    CURRENT_ACTIVE=$(kubectl get namespace -l active=true -o jsonpath='{.items[0].metadata.labels.deployment-slot}')
+    
+    if [ "$CURRENT_ACTIVE" = "blue" ]; then
+        echo "Rolling back from BLUE to GREEN..."
+        ./switch-to-green.sh
+    else
+        echo "Rolling back from GREEN to BLUE..."
+        ./switch-to-blue.sh
+    fi
+    
+    echo "Rollback completed successfully"

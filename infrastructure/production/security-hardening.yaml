@@ -1,0 +1,486 @@
+# Security Hardening Configuration for Production
+# Comprehensive security policies, RBAC, and compliance controls
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adaptive-learning-production
+  labels:
+    name: adaptive-learning-production
+    security-policy: strict
+---
+# Network Policies
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: adaptive-learning-production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth-service
+  namespace: adaptive-learning-production
+spec:
+  podSelector:
+    matchLabels:
+      app: auth-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+    ports:
+    - protocol: TCP
+      port: 3001
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS for external OAuth providers
+    - protocol: TCP
+      port: 53   # DNS
+    - protocol: UDP
+      port: 53   # DNS
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-user-service
+  namespace: adaptive-learning-production
+spec:
+  podSelector:
+    matchLabels:
+      app: user-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: auth-service
+    - podSelector:
+        matchLabels:
+          app: scheduler-service
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+    ports:
+    - protocol: TCP
+      port: 3002
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app: kafka
+    ports:
+    - protocol: TCP
+      port: 9092
+---
+# Pod Security Standards
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: resource-limits
+  namespace: adaptive-learning-production
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    type: Container
+  - max:
+      cpu: "2"
+      memory: "4Gi"
+    min:
+      cpu: "50m"
+      memory: "64Mi"
+    type: Container
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: adaptive-learning-psp
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault
+---
+# RBAC Configuration
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: adaptive-learning-sa
+  namespace: adaptive-learning-production
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: adaptive-learning-production
+  name: adaptive-learning-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: adaptive-learning-rolebinding
+  namespace: adaptive-learning-production
+subjects:
+- kind: ServiceAccount
+  name: adaptive-learning-sa
+  namespace: adaptive-learning-production
+roleRef:
+  kind: Role
+  name: adaptive-learning-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Secrets Management
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-credentials
+  namespace: adaptive-learning-production
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "adaptive-learning"
+    vault.hashicorp.com/agent-inject-secret-database: "database/creds/adaptive-learning"
+type: Opaque
+data:
+  # These will be injected by Vault Agent
+  username: ""
+  password: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt-signing-key
+  namespace: adaptive-learning-production
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "adaptive-learning"
+    vault.hashicorp.com/agent-inject-secret-jwt: "secret/jwt-keys"
+type: Opaque
+data:
+  private-key: ""
+  public-key: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth-credentials
+  namespace: adaptive-learning-production
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "adaptive-learning"
+    vault.hashicorp.com/agent-inject-secret-oauth: "secret/oauth"
+type: Opaque
+data:
+  client-id: ""
+  client-secret: ""
+---
+# Security Context Constraints
+apiVersion: v1
+kind: SecurityContextConstraints
+metadata:
+  name: adaptive-learning-scc
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: false
+allowedCapabilities: []
+defaultAddCapabilities: []
+fsGroup:
+  type: MustRunAs
+  ranges:
+  - min: 1000
+    max: 65535
+readOnlyRootFilesystem: true
+requiredDropCapabilities:
+- ALL
+runAsUser:
+  type: MustRunAsNonRoot
+seLinuxContext:
+  type: MustRunAs
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- persistentVolumeClaim
+- projected
+- secret
+---
+# Admission Controller Webhook for Security Validation
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionWebhook
+metadata:
+  name: security-validation-webhook
+webhooks:
+- name: security.adaptive-learning.com
+  clientConfig:
+    service:
+      name: security-webhook
+      namespace: adaptive-learning-production
+      path: "/validate"
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: ["apps"]
+    apiVersions: ["v1"]
+    resources: ["deployments"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Fail
+---
+# Certificate Management
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@adaptivelearning.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: adaptive-learning-tls
+  namespace: adaptive-learning-production
+spec:
+  secretName: adaptive-learning-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - api.adaptivelearning.com
+  - app.adaptivelearning.com
+  - admin.adaptivelearning.com
+---
+# Falco Security Monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: adaptive-learning-production
+data:
+  falco.yaml: |
+    rules_file:
+      - /etc/falco/falco_rules.yaml
+      - /etc/falco/falco_rules.local.yaml
+      - /etc/falco/k8s_audit_rules.yaml
+      - /etc/falco/rules.d
+
+    time_format_iso_8601: true
+    json_output: true
+    json_include_output_property: true
+
+    log_stderr: true
+    log_syslog: true
+    log_level: info
+
+    priority: debug
+
+    buffered_outputs: false
+
+    syscall_event_drops:
+      actions:
+        - log
+        - alert
+      rate: 0.03333
+      max_burst: 1000
+
+    outputs:
+      rate: 1
+      max_burst: 1000
+
+    syslog_output:
+      enabled: true
+
+    program_output:
+      enabled: true
+      keep_alive: false
+      program: "curl -d @- -X POST https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+
+    http_output:
+      enabled: true
+      url: "https://monitoring.adaptivelearning.com/falco-alerts"
+      user_agent: "falcosecurity/falco"
+
+  custom_rules.yaml: |
+    - rule: Suspicious Network Activity
+      desc: Detect suspicious network connections from containers
+      condition: >
+        spawned_process and container and
+        (proc.name in (nc, ncat, netcat, socat, curl, wget) or
+         proc.cmdline contains "bash -i" or
+         proc.cmdline contains "/dev/tcp")
+      output: >
+        Suspicious network activity detected (user=%user.name command=%proc.cmdline
+        container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [network, mitre_command_and_control]
+
+    - rule: Unauthorized File Access
+      desc: Detect access to sensitive files
+      condition: >
+        open_read and container and
+        (fd.name startswith /etc/passwd or
+         fd.name startswith /etc/shadow or
+         fd.name startswith /root/.ssh or
+         fd.name startswith /home/*/.ssh)
+      output: >
+        Unauthorized file access (user=%user.name file=%fd.name
+        container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [filesystem, mitre_credential_access]
+
+    - rule: Container Privilege Escalation
+      desc: Detect privilege escalation attempts
+      condition: >
+        spawned_process and container and
+        (proc.name in (sudo, su, doas) or
+         proc.cmdline contains "chmod +s" or
+         proc.cmdline contains "setuid")
+      output: >
+        Privilege escalation attempt (user=%user.name command=%proc.cmdline
+        container=%container.name image=%container.image.repository)
+      priority: CRITICAL
+      tags: [process, mitre_privilege_escalation]
+---
+# OPA Gatekeeper Policies
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredsecuritycontext
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredSecurityContext
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            runAsNonRoot:
+              type: boolean
+            readOnlyRootFilesystem:
+              type: boolean
+            allowPrivilegeEscalation:
+              type: boolean
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredsecuritycontext
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.runAsNonRoot
+          msg := "Container must run as non-root user"
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.readOnlyRootFilesystem
+          msg := "Container must have read-only root filesystem"
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.securityContext.allowPrivilegeEscalation != false
+          msg := "Container must not allow privilege escalation"
+        }
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredSecurityContext
+metadata:
+  name: must-have-security-context
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces: ["adaptive-learning-production"]
+  parameters:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
