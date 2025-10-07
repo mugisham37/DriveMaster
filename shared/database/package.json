@@ -18,13 +18,13 @@
     "validate-migrations": "tsx src/validate-migrations.ts"
   },
   "dependencies": {
+    "commander": "^11.1.0",
     "drizzle-orm": "^0.29.0",
     "postgres": "^3.4.3",
-    "uuid": "^9.0.1",
-    "commander": "^11.1.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.19.19",
     "@types/uuid": "^9.0.7",
     "drizzle-kit": "^0.20.0",
     "tsx": "^4.6.0",

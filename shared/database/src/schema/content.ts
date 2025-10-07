@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, jsonb, real, integer, timestamptz, boolean, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, jsonb, real, integer, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 
@@ -42,7 +42,7 @@ export const items = pgTable('items', {
     createdBy: uuid('created_by').references(() => users.id),
     reviewedBy: uuid('reviewed_by').references(() => users.id),
     approvedBy: uuid('approved_by').references(() => users.id),
-    publishedAt: timestamptz('published_at'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
 
     // Analytics
     usageCount: integer('usage_count').default(0),
@@ -50,8 +50,8 @@ export const items = pgTable('items', {
     successRate: real('success_rate').default(0.0),
 
     // Audit
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
     isActive: boolean('is_active').default(true),
 });
 
@@ -70,7 +70,7 @@ export const itemVersions = pgTable('item_versions', {
     // Change metadata
     changeDescription: varchar('change_description'),
     changedBy: uuid('changed_by').references(() => users.id),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Content approval workflow
@@ -80,8 +80,8 @@ export const contentReviews = pgTable('content_reviews', {
     reviewerId: uuid('reviewer_id').notNull().references(() => users.id),
     status: varchar('status', { length: 20 }).notNull(), // 'pending', 'approved', 'rejected'
     comments: varchar('comments'),
-    reviewedAt: timestamptz('reviewed_at').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Types for TypeScript

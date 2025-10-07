@@ -81,8 +81,9 @@ export class CacheManager implements OnModuleDestroy {
                 return await operation();
             } catch (error) {
                 lastError = error as Error;
+                const errorMessage = error instanceof Error ? error.message : String(error);
                 this.logger.warn(
-                    `Cache operation failed (attempt ${attempt + 1}/${maxRetries + 1}): ${error.message}`,
+                    `Cache operation failed (attempt ${attempt + 1}/${maxRetries + 1}): ${errorMessage}`,
                 );
             }
         }

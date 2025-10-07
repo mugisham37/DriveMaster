@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, jsonb, real, integer, timestamptz, boolean, bigint } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, jsonb, real, integer, timestamp, boolean, bigint } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { items } from './content';
@@ -20,8 +20,8 @@ export const userActivity = pgTable('user_activity', {
 
     // Timing
     duration: integer('duration'), // duration in milliseconds if applicable
-    timestamp: timestamptz('timestamp').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    timestamp: timestamp('timestamp', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Item performance analytics
@@ -30,8 +30,8 @@ export const itemAnalytics = pgTable('item_analytics', {
     itemId: uuid('item_id').notNull().references(() => items.id, { onDelete: 'cascade' }),
 
     // Time period for this analytics record
-    periodStart: timestamptz('period_start').notNull(),
-    periodEnd: timestamptz('period_end').notNull(),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
 
     // Performance metrics
     totalAttempts: integer('total_attempts').default(0),
@@ -51,8 +51,8 @@ export const itemAnalytics = pgTable('item_analytics', {
     returningUsers: integer('returning_users').default(0),
 
     // Audit
-    calculatedAt: timestamptz('calculated_at').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    calculatedAt: timestamp('calculated_at', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Topic performance analytics
@@ -61,8 +61,8 @@ export const topicAnalytics = pgTable('topic_analytics', {
     topic: varchar('topic', { length: 100 }).notNull(),
 
     // Time period
-    periodStart: timestamptz('period_start').notNull(),
-    periodEnd: timestamptz('period_end').notNull(),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
 
     // Performance metrics
     totalAttempts: integer('total_attempts').default(0),
@@ -80,8 +80,8 @@ export const topicAnalytics = pgTable('topic_analytics', {
     averageAttemptsToMastery: integer('average_attempts_to_mastery'),
 
     // Audit
-    calculatedAt: timestamptz('calculated_at').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    calculatedAt: timestamp('calculated_at', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // User engagement analytics
@@ -90,8 +90,8 @@ export const userEngagement = pgTable('user_engagement', {
     userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 
     // Time period
-    periodStart: timestamptz('period_start').notNull(),
-    periodEnd: timestamptz('period_end').notNull(),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
 
     // Engagement metrics
     sessionsCount: integer('sessions_count').default(0),
@@ -114,8 +114,8 @@ export const userEngagement = pgTable('user_engagement', {
     riskScore: real('risk_score').default(0.0), // churn risk (0-1)
 
     // Audit
-    calculatedAt: timestamptz('calculated_at').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    calculatedAt: timestamp('calculated_at', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // System performance metrics
@@ -136,8 +136,8 @@ export const systemMetrics = pgTable('system_metrics', {
     tags: jsonb('tags').default({}), // additional tags for filtering
 
     // Timing
-    timestamp: timestamptz('timestamp').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    timestamp: timestamp('timestamp', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // A/B test results
@@ -157,14 +157,14 @@ export const abTestResults = pgTable('ab_test_results', {
     conversionValue: real('conversion_value'), // numeric value if applicable
 
     // Context
-    assignedAt: timestamptz('assigned_at').default(sql`NOW()`),
-    convertedAt: timestamptz('converted_at'),
+    assignedAt: timestamp('assigned_at', { withTimezone: true }).default(sql`NOW()`),
+    convertedAt: timestamp('converted_at', { withTimezone: true }),
 
     // Additional data
     metadata: jsonb('metadata').default({}),
 
     // Audit
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Types for TypeScript

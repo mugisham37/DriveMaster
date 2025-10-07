@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, jsonb, real, integer, timestamptz, boolean, bigint, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, jsonb, real, integer, timestamp, boolean, bigint, pgEnum } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { items } from './content';
@@ -37,8 +37,8 @@ export const attempts = pgTable('attempts', {
     irtAbilityAfter: jsonb('irt_ability_after'),
 
     // Audit
-    timestamp: timestamptz('timestamp').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    timestamp: timestamp('timestamp', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Learning sessions
@@ -48,8 +48,8 @@ export const sessions = pgTable('sessions', {
     sessionType: sessionTypeEnum('session_type').notNull(),
 
     // Session metadata
-    startTime: timestamptz('start_time').default(sql`NOW()`),
-    endTime: timestamptz('end_time'),
+    startTime: timestamp('start_time', { withTimezone: true }).default(sql`NOW()`),
+    endTime: timestamp('end_time', { withTimezone: true }),
     itemsAttempted: integer('items_attempted').default(0),
     correctCount: integer('correct_count').default(0),
     totalTimeMs: bigint('total_time_ms', { mode: 'number' }).default(0),
@@ -63,8 +63,8 @@ export const sessions = pgTable('sessions', {
     averageDifficulty: real('average_difficulty'),
 
     // Audit
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Skill mastery tracking
@@ -73,13 +73,13 @@ export const skillMastery = pgTable('skill_mastery', {
     topic: varchar('topic', { length: 100 }).notNull(),
     mastery: real('mastery').notNull(), // 0.0 to 1.0
     confidence: real('confidence').default(0.5), // uncertainty in mastery estimate
-    lastPracticed: timestamptz('last_practiced').notNull(),
+    lastPracticed: timestamp('last_practiced', { withTimezone: true }).notNull(),
     practiceCount: integer('practice_count').default(0),
     correctStreak: integer('correct_streak').default(0),
     longestStreak: integer('longest_streak').default(0),
     totalTimeMs: bigint('total_time_ms', { mode: 'number' }).default(0),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
 }, (table) => ({
     // Composite primary key
     pk: sql`PRIMARY KEY (${table.userId}, ${table.topic})`,
@@ -104,14 +104,14 @@ export const userSchedulerState = pgTable('user_scheduler_state', {
 
     // Session context
     currentSessionId: uuid('current_session_id'),
-    lastSessionEnd: timestamptz('last_session_end'),
+    lastSessionEnd: timestamp('last_session_end', { withTimezone: true }),
     consecutiveDays: integer('consecutive_days').default(0),
     totalStudyTimeMs: bigint('total_study_time_ms', { mode: 'number' }).default(0),
 
     // Versioning for optimistic locking
     version: integer('version').default(1),
-    lastUpdated: timestamptz('last_updated').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    lastUpdated: timestamp('last_updated', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Placement test results
@@ -130,8 +130,8 @@ export const placementTests = pgTable('placement_tests', {
     standardError: jsonb('standard_error').notNull(), // topic -> SE
 
     // Test metadata
-    completedAt: timestamptz('completed_at').default(sql`NOW()`),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    completedAt: timestamp('completed_at', { withTimezone: true }).default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Learning goals and milestones
@@ -144,16 +144,16 @@ export const learningGoals = pgTable('learning_goals', {
     description: varchar('description'),
     targetTopics: jsonb('target_topics').notNull(), // topics to master
     targetMastery: real('target_mastery').default(0.8), // target mastery level
-    targetDate: timestamptz('target_date'),
+    targetDate: timestamp('target_date', { withTimezone: true }),
 
     // Progress tracking
     currentMastery: real('current_mastery').default(0.0),
     isCompleted: boolean('is_completed').default(false),
-    completedAt: timestamptz('completed_at'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
 
     // Audit
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Types for TypeScript

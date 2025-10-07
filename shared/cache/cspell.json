@@ -1,0 +1,27 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "Cmdable",
+    "setex",
+    "setnx",
+    "incrby",
+    "sadd",
+    "smembers",
+    "srem",
+    "zadd",
+    "zrange",
+    "withscores",
+    "unmarshals",
+    "protoc",
+    "grpcio",
+    "jsonschema",
+    "setuptools",
+    "schemaregistry"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "*.log"
+  ]
+}

@@ -136,7 +136,7 @@ export function createMigrationConnection() {
 
 // Export the schema for use in services
 export { schema };
-export type Database = ReturnType<typeof createDatabase>['getDb'];
+export type Database = ReturnType<typeof drizzle>;
 
 // Utility function to run queries with error handling
 export async function withDatabase<T>(
@@ -162,6 +162,6 @@ export async function withTransaction<T>(
     connectionConfig?: DatabaseConfig
 ): Promise<T> {
     return withDatabase(async (db) => {
-        return db.transaction(operation);
+        return await db.transaction(operation);
     }, connectionConfig);
 }

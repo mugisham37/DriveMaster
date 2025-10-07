@@ -1,12 +1,34 @@
 // Export all schema definitions
 // This file serves as the main entry point for database schema
 
-// Note: Add your actual schema exports here when they are created
-// For now, we'll export an empty object to prevent import errors
-export const schema = {};
+// Export all tables and types
+export * from './users';
+export * from './content';
+export * from './learning';
+export * from './analytics';
 
-// Example of what this file might contain:
-// export * from './users';
-// export * from './sessions';
-// export * from './progress';
-// export * from './activities';
+// Re-export commonly used functions from drizzle-orm
+export { eq, and, or, not, isNull, isNotNull, inArray, notInArray, exists, notExists } from 'drizzle-orm';
+
+// Create a schema object containing all tables for drizzle
+import { users, oauthProviders, refreshTokens } from './users';
+import { items } from './content';
+import { attempts, sessions, skillMastery, userSchedulerState, placementTests, learningGoals } from './learning';
+
+export const schema = {
+    // User tables
+    users,
+    oauthProviders,
+    refreshTokens,
+
+    // Content tables
+    items,
+
+    // Learning tables
+    attempts,
+    sessions,
+    skillMastery,
+    userSchedulerState,
+    placementTests,
+    learningGoals,
+};

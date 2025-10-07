@@ -1,9 +1,10 @@
-import { createMigrationConnection, schema } from './connection';
+import { createMigrationConnection } from './connection';
+import * as schema from './schema';
 import { v4 as uuidv4 } from 'uuid';
 
 // Seed data for development and testing
 export class DatabaseSeeder {
-    private db: ReturnType<typeof createMigrationConnection>['getDb'];
+    private db: ReturnType<ReturnType<typeof createMigrationConnection>['getDb']>;
 
     constructor() {
         const connection = createMigrationConnection();

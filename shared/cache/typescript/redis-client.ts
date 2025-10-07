@@ -36,7 +36,7 @@ export interface CircuitBreakerState {
 }
 
 export class RedisClient {
-    private client: Redis | Cluster;
+    private client!: Redis | Cluster;
     private readonly logger = new Logger(RedisClient.name);
     private metrics: CacheMetrics = {
         hits: 0,
@@ -67,7 +67,6 @@ export class RedisClient {
                         password: this.config.password,
                         connectTimeout: this.config.dialTimeout || 5000,
                         commandTimeout: this.config.readTimeout || 3000,
-                        retryDelayOnFailover: 100,
                         maxRetriesPerRequest: this.config.maxRetries || 3,
                         keyPrefix: this.config.keyPrefix,
                     },
@@ -83,7 +82,7 @@ export class RedisClient {
                     db: this.config.db || 0,
                     connectTimeout: this.config.dialTimeout || 5000,
                     commandTimeout: this.config.readTimeout || 3000,
-                    retryDelayOnFailover: 100,
+                    retryDelayOnClusterDown: 100,
                     maxRetriesPerRequest: this.config.maxRetries || 3,
                     keyPrefix: this.config.keyPrefix,
                 };
@@ -210,7 +209,7 @@ export class RedisClient {
         return this.executeWithCircuitBreaker(async () => {
             const data = typeof value === 'string' ? value : JSON.stringify(value);
 
-            let result: number | string;
+            let result: number | string | null;
             if (ttlSeconds) {
                 result = await this.client.set(key, data, 'EX', ttlSeconds, 'NX');
             } else {
@@ -422,12 +421,10 @@ export class RedisClient {
     subscribeToChannel(channel: string, callback: (message: any) => void): void {
         const subscriber = this.client.duplicate();
 
-        subscriber.subscribe(channel, (err?: Error) => {
-            if (err) {
-                this.logger.error(`Failed to subscribe to channel ${channel}`, err);
-            } else {
-                this.logger.log(`Subscribed to channel ${channel}`);
-            }
+        subscriber.subscribe(channel).then(() => {
+            this.logger.log(`Subscribed to channel ${channel}`);
+        }).catch((err: Error) => {
+            this.logger.error(`Failed to subscribe to channel ${channel}`, err);
         });
 
         subscriber.on('message', (receivedChannel: string, message: string) => {

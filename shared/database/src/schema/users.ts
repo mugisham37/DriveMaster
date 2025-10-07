@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, boolean, timestamptz, jsonb, integer, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, boolean, timestamp, jsonb, integer, pgEnum } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Enums
@@ -20,18 +20,18 @@ export const users = pgTable('users', {
     mfaEnabled: boolean('mfa_enabled').default(false),
     mfaSecret: varchar('mfa_secret', { length: 255 }),
     failedLoginAttempts: integer('failed_login_attempts').default(0),
-    lockedUntil: timestamptz('locked_until'),
-    passwordChangedAt: timestamptz('password_changed_at').default(sql`NOW()`),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    passwordChangedAt: timestamp('password_changed_at', { withTimezone: true }).default(sql`NOW()`),
 
     // Privacy and compliance
     gdprConsent: boolean('gdpr_consent').default(false),
-    gdprConsentDate: timestamptz('gdpr_consent_date'),
-    dataRetentionUntil: timestamptz('data_retention_until'),
+    gdprConsentDate: timestamp('gdpr_consent_date', { withTimezone: true }),
+    dataRetentionUntil: timestamp('data_retention_until', { withTimezone: true }),
 
     // Audit fields
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
-    lastActiveAt: timestamptz('last_active_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
+    lastActiveAt: timestamp('last_active_at', { withTimezone: true }).default(sql`NOW()`),
     isActive: boolean('is_active').default(true),
 });
 
@@ -43,10 +43,10 @@ export const oauthProviders = pgTable('oauth_providers', {
     providerUserId: varchar('provider_user_id', { length: 255 }).notNull(),
     accessTokenHash: varchar('access_token_hash', { length: 255 }),
     refreshTokenHash: varchar('refresh_token_hash', { length: 255 }),
-    expiresAt: timestamptz('expires_at'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
     scope: varchar('scope'),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
-    updatedAt: timestamptz('updated_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Refresh tokens table
@@ -54,13 +54,13 @@ export const refreshTokens = pgTable('refresh_tokens', {
     id: uuid('id').primaryKey().default(sql`uuid_generate_v4()`),
     userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     tokenHash: varchar('token_hash', { length: 255 }).notNull().unique(),
-    expiresAt: timestamptz('expires_at').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     revoked: boolean('revoked').default(false),
-    revokedAt: timestamptz('revoked_at'),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
     deviceInfo: jsonb('device_info').default({}),
     ipAddress: varchar('ip_address', { length: 45 }), // IPv6 compatible
     userAgent: varchar('user_agent'),
-    createdAt: timestamptz('created_at').default(sql`NOW()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
 });
 
 // Types for TypeScript

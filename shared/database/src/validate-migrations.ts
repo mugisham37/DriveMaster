@@ -1,6 +1,4 @@
 import { createMigrationConnection } from './connection';
-import * as fs from 'fs';
-import * as path from 'path';
 
 interface ValidationResult {
     passed: boolean;
@@ -15,8 +13,8 @@ interface ValidationResult {
 }
 
 export class MigrationValidator {
-    private db: ReturnType<typeof createMigrationConnection>['getDb'];
-    private client: ReturnType<typeof createMigrationConnection>['getClient'];
+    private db: ReturnType<ReturnType<typeof createMigrationConnection>['getDb']>;
+    private client: ReturnType<ReturnType<typeof createMigrationConnection>['getClient']>;
 
     constructor() {
         const connection = createMigrationConnection();
@@ -130,13 +128,13 @@ export class MigrationValidator {
         // Validate specific table requirements
         switch (tableName) {
             case 'users':
-                this.validateUsersTable(columns, result);
+                this.validateUsersTable(columns as any[], result);
                 break;
             case 'items':
-                this.validateItemsTable(columns, result);
+                this.validateItemsTable(columns as any[], result);
                 break;
             case 'attempts':
-                this.validateAttemptsTable(columns, result);
+                await this.validateAttemptsTable(columns as any[], result);
                 break;
             // Add more table validations as needed
         }
@@ -295,7 +293,7 @@ export class MigrationValidator {
         ];
 
         for (const fk of criticalFKs) {
-            const exists = foreignKeys.some(existing =>
+            const exists = (foreignKeys as any[]).some((existing: any) =>
                 existing.table_name === fk.table &&
                 existing.column_name === fk.column &&
                 existing.foreign_table_name === fk.references
@@ -341,7 +339,7 @@ export class MigrationValidator {
 
         for (const check of orphanedChecks) {
             const result_query = await this.client.unsafe(check.query);
-            const count = parseInt(result_query[0].count);
+            const count = parseInt((result_query as any[])[0].count);
 
             if (count > 0) {
                 result.warnings.push(`${check.name}: ${count} records found`);
