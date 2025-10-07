@@ -143,7 +143,7 @@ func (r *RedisClient) buildKey(key string) string {
 }
 
 // executeWithCircuitBreaker executes Redis operations with circuit breaker pattern
-func (r *RedisClient) executeWithCircuitBreaker(ctx context.Context, operation func() error) error {
+func (r *RedisClient) executeWithCircuitBreaker(operation func() error) error {
 	start := time.Now()
 	defer func() {
 		r.metrics.TotalOps++
@@ -189,7 +189,7 @@ func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
 	var result string
 	var err error
 
-	err = r.executeWithCircuitBreaker(ctx, func() error {
+	err = r.executeWithCircuitBreaker(func() error {
 		result, err = r.client.Get(ctx, r.buildKey(key)).Result()
 		if err == redis.Nil {
 			r.metrics.Misses++
@@ -206,7 +206,7 @@ func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
 }
 
 // GetJSON retrieves and unmarshals JSON data from cache
-func (r *RedisClient) GetJSON(ctx context.Context, key string, dest interface{}) error {
+func (r *RedisClient) GetJSON(ctx context.Context, key string, dest any) error {
 	data, err := r.Get(ctx, key)
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func (r *RedisClient) GetJSON(ctx context.Context, key string, dest interface{})
 }
 
 // Set stores a value in cache with TTL
-func (r *RedisClient) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+func (r *RedisClient) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
 	var data string
 
 	switch v := value.(type) {
@@ -232,7 +232,7 @@ func (r *RedisClient) Set(ctx context.Context, key string, value interface{}, tt
 		data = string(jsonData)
 	}
 
-	err := r.executeWithCircuitBreaker(ctx, func() error {
+	err := r.executeWithCircuitBreaker(func() error {
 		return r.client.Set(ctx, r.buildKey(key), data, ttl).Err()
 	})
 
@@ -244,7 +244,7 @@ func (r *RedisClient) Set(ctx context.Context, key string, value interface{}, tt
 }
 
 // SetNX sets a value only if the key doesn't exist (atomic operation)
-func (r *RedisClient) SetNX(ctx context.Context, key string, value interface{}, ttl time.Duration) (bool, error) {
+func (r *RedisClient) SetNX(ctx context.Context, key string, value any, ttl time.Duration) (bool, error) {
 	var data string
 	var result bool
 
@@ -261,7 +261,7 @@ func (r *RedisClient) SetNX(ctx context.Context, key string, value interface{}, 
 		data = string(jsonData)
 	}
 
-	err := r.executeWithCircuitBreaker(ctx, func() error {
+	err := r.executeWithCircuitBreaker(func() error {
 		var err error
 		result, err = r.client.SetNX(ctx, r.buildKey(key), data, ttl).Result()
 		return err
@@ -286,7 +286,7 @@ func (r *RedisClient) Delete(ctx context.Context, keys ...string) error {
 		prefixedKeys[i] = r.buildKey(key)
 	}
 
-	err := r.executeWithCircuitBreaker(ctx, func() error {
+	err := r.executeWithCircuitBreaker(func() error {
 		return r.client.Del(ctx, prefixedKeys...).Err()
 	})
 
@@ -310,7 +310,7 @@ func (r *RedisClient) Exists(ctx context.Context, keys ...string) (int64, error)
 	}
 
 	var result int64
-	err := r.executeWithCircuitBreaker(ctx, func() error {
+	err := r.executeWithCircuitBreaker(func() error {
 		var err error
 		result, err = r.client.Exists(ctx, prefixedKeys...).Result()
 		return err
@@ -321,7 +321,7 @@ func (r *RedisClient) Exists(ctx context.Context, keys ...string) (int64, error)
 
 // Expire sets TTL for a key
 func (r *RedisClient) Expire(ctx context.Context, key string, ttl time.Duration) error {
-	return r.executeWithCircuitBreaker(ctx, func() error {
+	return r.executeWithCircuitBreaker(func() error {
 		return r.client.Expire(ctx, r.buildKey(key), ttl).Err()
 	})
 }
@@ -405,7 +405,7 @@ func (r *RedisClient) GetMultiple(ctx context.Context, keys ...string) (map[stri
 }
 
 // SetMultiple sets multiple key-value pairs at once
-func (r *RedisClient) SetMultiple(ctx context.Context, pairs map[string]interface{}, ttl time.Duration) error {
+func (r *RedisClient) SetMultiple(ctx context.Context, pairs map[string]any, ttl time.Duration) error {
 	if len(pairs) == 0 {
 		return nil
 	}
@@ -508,7 +508,7 @@ func NewCacheWarmer(client *RedisClient) *CacheWarmer {
 }
 
 // WarmCache preloads frequently accessed data
-func (cw *CacheWarmer) WarmCache(ctx context.Context, warmupData map[string]interface{}, ttl time.Duration) error {
+func (cw *CacheWarmer) WarmCache(ctx context.Context, warmupData map[string]any, ttl time.Duration) error {
 	log.Printf("Starting cache warmup with %d items", len(warmupData))
 
 	// Use pipeline for efficient bulk operations

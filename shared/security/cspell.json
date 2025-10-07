@@ -16,4 +16,11 @@
     "clickjacking",
     "geolocation",
     "executesql",
-    
+    "vbscript",
+    "protoc",
+    "grpcio",
+    "jsonschema",
+    "setuptools",
+    "schemaregistry"
+  ]
+}

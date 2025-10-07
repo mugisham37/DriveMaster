@@ -13,7 +13,24 @@
     "WITHSCORES",
     "ioredis",
     "nestjs",
-    "redis"
+    "redis",
+    "mget",
+    "ttl",
+    "incr",
+    "del",
+    "ping",
+    "quit",
+    "pipeline",
+    "exec",
+    "duplicate",
+    "subscribe",
+    "publish",
+    "retryDelayOnFailover",
+    "maxRetriesPerRequest",
+    "connectTimeout",
+    "commandTimeout",
+    "keyPrefix",
+    "enableOfflineQueue"
   ],
   "ignorePaths": ["node_modules/**", "dist/**", "*.log"]
 }

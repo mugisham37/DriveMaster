@@ -147,10 +147,10 @@ func (cm *CacheManager) GetWithFallback(
 	ctx context.Context,
 	key string,
 	ttl time.Duration,
-	fallback func() (interface{}, error),
-) (interface{}, error) {
+	fallback func() (any, error),
+) (any, error) {
 	// Try to get from cache first
-	var result interface{}
+	var result any
 	err := cm.WithRetry(ctx, func() error {
 		return cm.client.GetJSON(ctx, key, &result)
 	})
@@ -183,7 +183,7 @@ func (cm *CacheManager) GetWithFallback(
 }
 
 // SetWithTags sets a value with associated tags for group invalidation
-func (cm *CacheManager) SetWithTags(ctx context.Context, key string, value interface{}, ttl time.Duration, tags ...string) error {
+func (cm *CacheManager) SetWithTags(ctx context.Context, key string, value any, ttl time.Duration, tags ...string) error {
 	// Set the main value
 	if err := cm.client.Set(ctx, key, value, ttl); err != nil {
 		return err
@@ -264,13 +264,13 @@ func (cm *CacheManager) NotifyInvalidation(ctx context.Context, key, reason stri
 }
 
 // GetStats returns comprehensive cache statistics
-func (cm *CacheManager) GetStats() map[string]interface{} {
+func (cm *CacheManager) GetStats() map[string]any {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
 
 	metrics := cm.client.GetMetrics()
 
-	return map[string]interface{}{
+	return map[string]any{
 		"hits":                     metrics.Hits,
 		"misses":                   metrics.Misses,
 		"sets":                     metrics.Sets,
@@ -317,12 +317,12 @@ func (cm *CacheManager) startCacheWarmup() {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 			// Example warmup data - in practice, this would be loaded from database
-			warmupData := map[string]interface{}{
+			warmupData := map[string]any{
 				"feature_flags": map[string]bool{
 					"new_algorithm": true,
 					"beta_features": false,
 				},
-				"config:global": map[string]interface{}{
+				"config:global": map[string]any{
 					"max_session_time":   3600,
 					"default_difficulty": 0.5,
 				},
@@ -392,7 +392,7 @@ func (cm *CacheMiddleware) CacheResponse(
 	ctx context.Context,
 	cacheKey string,
 	ttl time.Duration,
-	generator func() (interface{}, error),
-) (interface{}, error) {
+	generator func() (any, error),
+) (any, error) {
 	return cm.manager.GetWithFallback(ctx, cacheKey, ttl, generator)
 }

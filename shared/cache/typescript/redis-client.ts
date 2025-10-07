@@ -82,7 +82,6 @@ export class RedisClient {
                     db: this.config.db || 0,
                     connectTimeout: this.config.dialTimeout || 5000,
                     commandTimeout: this.config.readTimeout || 3000,
-                    retryDelayOnClusterDown: 100,
                     maxRetriesPerRequest: this.config.maxRetries || 3,
                     keyPrefix: this.config.keyPrefix,
                 };

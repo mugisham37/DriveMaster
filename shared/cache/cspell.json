@@ -17,11 +17,21 @@
     "grpcio",
     "jsonschema",
     "setuptools",
-    "schemaregistry"
+    "schemaregistry",
+    "sirupsen",
+    "logrus",
+    "ioredis",
+    "nestjs",
+    "typescript",
+    "golang",
+    "argon",
+    "scrypt",
+    "pbkdf",
+    "hmac",
+    "sha256",
+    "aes",
+    "gcm",
+    "cbc"
   ],
-  "ignorePaths": [
-    "node_modules/**",
-    "dist/**",
-    "*.log"
-  ]
+  "ignorePaths": ["node_modules/**", "dist/**", "*.log"]
 }
