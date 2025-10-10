@@ -172,7 +172,29 @@
     "cpus",
     "CPUS",
     "FERNET",
-    "dayofweek"
+    "dayofweek",
+    "lognormal",
+    "ndarray",
+    "importances",
+    "pagesizes",
+    "imshow",
+    "xaxis",
+    "yaxis",
+    "hovermode",
+    "tickangle",
+    "Scatterpolar",
+    "toself",
+    "radialaxis",
+    "TEXTCOLOR",
+    "whitesmoke",
+    "FONTNAME",
+    "FONTSIZE",
+    "BOTTOMPADDING",
+    "MLFLOW",
+    "loglevel",
+    "libpq",
+    "PYTHONPATH",
+    "PYTHONUNBUFFERED"
   ],
   "ignorePaths": [
     "node_modules/**",
@@ -232,7 +254,33 @@
     },
     {
       "filename": "**/docker-compose*.yml",
-      "words": ["psycopg", "isready", "FERNET", "triggerer", "getconf", "numfmt", "cpus"]
+      "words": ["psycopg", "isready", "FERNET", "triggerer", "getconf", "numfmt", "cpus", "MLFLOW", "loglevel"]
+    },
+    {
+      "filename": "**/services/bi-reporting/**/*.py",
+      "words": [
+        "lognormal",
+        "ndarray", 
+        "importances",
+        "pagesizes",
+        "imshow",
+        "xaxis",
+        "yaxis", 
+        "hovermode",
+        "tickangle",
+        "Scatterpolar",
+        "toself",
+        "radialaxis",
+        "TEXTCOLOR",
+        "whitesmoke",
+        "FONTNAME",
+        "FONTSIZE",
+        "BOTTOMPADDING"
+      ]
+    },
+    {
+      "filename": "**/Dockerfile*",
+      "words": ["libpq", "PYTHONPATH", "PYTHONUNBUFFERED"]
     }
   ]
 }
