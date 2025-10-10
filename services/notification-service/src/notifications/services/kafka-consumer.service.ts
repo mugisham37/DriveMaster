@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Kafka, Consumer, EachMessagePayload } from 'kafkajs';
+import { Kafka, Consumer, EachMessagePayload } from 'kafkajs'; // cspell:disable-line
 import { NotificationService } from './notification.service';
 import { NotificationType, NotificationPriority } from '../dto/notification.dto';
 

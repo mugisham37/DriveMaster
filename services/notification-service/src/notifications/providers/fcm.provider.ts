@@ -160,7 +160,7 @@ export class FCMProvider implements INotificationProvider {
         : undefined,
       android: this.buildAndroidConfig(notification),
       apns: this.buildApnsConfig(notification),
-      webpush: this.buildWebpushConfig(notification),
+      webpush: this.buildWebpushConfig(notification), // cspell:disable-line
     };
 
     return message;
@@ -216,9 +216,9 @@ export class FCMProvider implements INotificationProvider {
     };
   }
 
-  private buildWebpushConfig(
+  private buildWebpushConfig( // cspell:disable-line
     notification: NotificationPayload
-  ): admin.messaging.WebpushConfig {
+  ): admin.messaging.WebpushConfig { // cspell:disable-line
     return {
       notification: {
         title: notification.title,
