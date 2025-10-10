@@ -24,6 +24,7 @@ import { FCMProvider } from '../providers/fcm.provider';
 import { APNSProvider } from '../providers/apns.provider';
 import { NotificationTemplateService } from './template.service';
 import { DeviceTokenService } from './device-token.service';
+import { forwardRef, Inject } from '@nestjs/common';
 import { NotificationSchedulerService } from './scheduler.service';
 
 @Injectable()
@@ -37,6 +38,7 @@ export class NotificationService {
         private apnsProvider: APNSProvider,
         private templateService: NotificationTemplateService,
         private deviceTokenService: DeviceTokenService,
+        @Inject(forwardRef(() => NotificationSchedulerService))
         private schedulerService: NotificationSchedulerService,
     ) { }
 

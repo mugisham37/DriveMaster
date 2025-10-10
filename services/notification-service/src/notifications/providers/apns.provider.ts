@@ -175,7 +175,7 @@ export class APNSProvider implements INotificationProvider {
 
         // Add click action if provided
         if (notification.clickAction) {
-            apnNotification.category = notification.clickAction;
+            apnNotification.payload.aps.category = notification.clickAction;
         }
 
         // Add image URL for rich notifications

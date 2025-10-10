@@ -49,6 +49,7 @@ export interface ScheduledNotification {
     templateId?: string;
     templateData?: Record<string, any>;
     tags?: string[];
+    channels?: DeliveryChannel[];
 }
 
 export interface INotificationTemplate {

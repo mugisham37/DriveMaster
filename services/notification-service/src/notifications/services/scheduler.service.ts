@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { INotificationScheduler, ScheduledNotification } from '../interfaces/notification.interface';
@@ -11,6 +11,7 @@ export class NotificationSchedulerService implements INotificationScheduler {
 
     constructor(
         private schedulerRegistry: SchedulerRegistry,
+        @Inject(forwardRef(() => NotificationService))
         private notificationService: NotificationService,
     ) {}
 
@@ -106,3 +107,52 @@ export class NotificationSchedulerService implements INotificationScheduler {
             return userNotifications;
         } catch (error) {
             this.logger.error(`Failed to get scheduled notifications for user ${userId}`, error);
+            return [];
+        }
+    }
+
+    private generateJobId(): string {
+        return `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    private dateToCron(date: Date): string {
+        const minutes = date.getMinutes();
+        const hours = date.getHours();
+        const dayOfMonth = date.getDate();
+        const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+        const dayOfWeek = '*'; // Any day of week
+        
+        return `${minutes} ${hours} ${dayOfMonth} ${month} ${dayOfWeek}`;
+    }
+
+    private async executeScheduledNotification(jobId: string): Promise<void> {
+        try {
+            const notification = this.scheduledNotifications.get(jobId);
+            if (!notification) {
+                this.logger.warn(`Scheduled notification ${jobId} not found`);
+                return;
+            }
+
+            // Send the notification using the notification service
+            await this.notificationService.sendNotification({
+                userId: notification.userId,
+                title: notification.title,
+                body: notification.body,
+                data: notification.data,
+                priority: notification.priority,
+                silent: false
+            });
+
+            // Clean up the scheduled notification
+            this.scheduledNotifications.delete(jobId);
+            
+            // Remove from scheduler registry
+            if (this.schedulerRegistry.doesExist('cron', jobId)) {
+                this.schedulerRegistry.deleteCronJob(jobId);
+            }
+
+            this.logger.log(`Successfully executed scheduled notification ${jobId}`);
+        } catch (error) {
+            this.logger.error(`Failed to execute scheduled notification ${jobId}`, error);
+        }
+    }}
