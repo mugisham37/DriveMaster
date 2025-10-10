@@ -1,14 +1,8 @@
-import React from 'react';
-import {
-  Grid,
-  Typography,
-  Box,
-  Paper,
-  CircularProgress,
-} from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import MetricsCard from '../components/MetricsCard';
+import React from "react";
+import { Grid, Typography, Box, Paper, CircularProgress } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import MetricsCard from "../components/MetricsCard";
 
 interface UserMetrics {
   totalUsers: number;
@@ -20,10 +14,14 @@ interface UserMetrics {
 }
 
 const UserAnalytics: React.FC = () => {
-  const { data: metrics, isLoading, error } = useQuery({
-    queryKey: ['user-analytics'],
+  const {
+    data: metrics,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["user-analytics"],
     queryFn: async () => {
-      const response = await axios.get('/api/analytics/users');
+      const response = await axios.get("/api/analytics/users");
       return response.data as UserMetrics;
     },
     refetchInterval: 60000, // Refetch every minute
@@ -31,7 +29,12 @@ const UserAnalytics: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -61,7 +64,7 @@ const UserAnalytics: React.FC = () => {
             color="primary"
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={3}>
           <MetricsCard
             title="New Users"
@@ -71,7 +74,7 @@ const UserAnalytics: React.FC = () => {
             trendValue="+12%"
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={3}>
           <MetricsCard
             title="Active Users"
@@ -79,7 +82,7 @@ const UserAnalytics: React.FC = () => {
             color="secondary"
           />
         </Grid>
-        
+
         <Grid item xs={12} sm={6} md={3}>
           <MetricsCard
             title="User Retention"
@@ -104,14 +107,19 @@ const UserAnalytics: React.FC = () => {
               </Typography>
             </Paper>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Top User Actions
               </Typography>
               {metrics?.topUserActions?.map((action, index) => (
-                <Box key={index} display="flex" justifyContent="space-between" mb={1}>
+                <Box
+                  key={index}
+                  display="flex"
+                  justifyContent="space-between"
+                  mb={1}
+                >
                   <Typography variant="body2">{action.action}</Typography>
                   <Typography variant="body2" fontWeight="bold">
                     {action.count}

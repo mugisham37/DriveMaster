@@ -161,7 +161,18 @@
     "asyncpg",
     "healthcheck",
     "appendonly",
-    "uvicorn"
+    "uvicorn",
+    "xcom",
+    "triggerer",
+    "psycopg",
+    "isready",
+    "isin",
+    "getconf",
+    "numfmt",
+    "cpus",
+    "CPUS",
+    "FERNET",
+    "dayofweek"
   ],
   "ignorePaths": [
     "node_modules/**",
@@ -210,6 +221,18 @@
     {
       "filename": "**/drizzle.config.ts",
       "words": ["drizzle", "postgresql", "postgres"]
+    },
+    {
+      "filename": "**/dags/**/*.py",
+      "words": ["xcom", "airflow", "triggerer", "dags"]
+    },
+    {
+      "filename": "**/plugins/**/*.py", 
+      "words": ["isin", "dayofweek", "psycopg"]
+    },
+    {
+      "filename": "**/docker-compose*.yml",
+      "words": ["psycopg", "isready", "FERNET", "triggerer", "getconf", "numfmt", "cpus"]
     }
   ]
 }
