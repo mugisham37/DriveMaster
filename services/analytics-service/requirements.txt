@@ -1,4 +1,4 @@
-apache-airflow==2.7.3
+apache-airflow==2.6.3
 apache-airflow-providers-postgres==5.7.1
 apache-airflow-providers-amazon==8.13.0
 apache-airflow-providers-google==10.10.1
@@ -10,6 +10,6 @@ sqlalchemy==1.4.53
 great-expectations==0.18.5
 boto3==1.34.0
 google-cloud-storage==2.10.0
-psycopg2-binary==2.9.9
+# psycopg2-binary==2.9.9  # Commented out due to Windows compilation issues
 redis==5.0.1
 structlog==23.2.0

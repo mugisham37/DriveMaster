@@ -80,7 +80,7 @@ export const skillMastery = pgTable('skill_mastery', {
     totalTimeMs: bigint('total_time_ms', { mode: 'number' }).default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).default(sql`NOW()`),
     updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`NOW()`),
-}, (table) => ({
+}, (table: any) => ({
     // Composite primary key
     pk: sql`PRIMARY KEY (${table.userId}, ${table.topic})`,
 }));
