@@ -82,7 +82,7 @@ export function SystemMonitoring() {
     refetch,
   } = useQuery({
     queryKey: ["systemMetrics", timeRange],
-    queryFn: () => adminApi.getSystemMetrics({ timeRange }),
+    queryFn: () => adminApi.getSystemMetrics(timeRange),
     refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
   });
 
@@ -256,7 +256,7 @@ export function SystemMonitoring() {
               {metrics?.performance.cache.hitRate.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatBytes(metrics?.performance.cache.memory || 0)} used
+              {metrics?.performance.cache.hitRate.toFixed(1)}% hit rate
             </p>
           </CardContent>
         </Card>
@@ -270,7 +270,7 @@ export function SystemMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {metrics?.services.map((service) => (
+              {metrics?.services.map((service: any) => (
                 <div
                   key={service.name}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -320,7 +320,7 @@ export function SystemMonitoring() {
                   </p>
                 </div>
               ) : (
-                metrics?.alerts.map((alert) => (
+                metrics?.alerts.map((alert: any) => (
                   <div
                     key={alert.id}
                     className={`p-3 border rounded-lg ${getSeverityColor(
@@ -382,8 +382,10 @@ export function SystemMonitoring() {
                   <span>{metrics?.performance.memory.toFixed(1)}%</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Disk Usage</span>
-                  <span>{metrics?.performance.disk.toFixed(1)}%</span>
+                  <span>Response Time</span>
+                  <span>
+                    {metrics?.performance.avgResponseTime.toFixed(1)}ms
+                  </span>
                 </div>
               </div>
             </div>

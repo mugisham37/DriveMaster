@@ -63,10 +63,7 @@ export function ProgressDashboard({
     queryKey: ["progressTimeline", user?.id, timeframe],
     queryFn: () =>
       user
-        ? analyticsApi.getProgressTimeline(user.id, {
-            granularity: timeframe === "week" ? "day" : "week",
-            startDate: getStartDate(timeframe),
-          })
+        ? analyticsApi.getProgressTimeline(user.id, timeframe)
         : null,
     enabled: !!user,
   });

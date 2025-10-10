@@ -1,0 +1,51 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "nextjs",
+    "prereq",
+    "prereqs",
+    "partialize",
+    "tailwindcss",
+    "autoprefixer",
+    "clsx",
+    "zustand",
+    "heroicons",
+    "headlessui",
+    "tanstack",
+    "hookform",
+    "radix",
+    "lucide",
+    "drivemaster",
+    "codding",
+    "mugisha",
+    "moses",
+    "dockerfile",
+    "webp",
+    "avif",
+    "rgba",
+    "hsla",
+    "analytics",
+    "leaderboard",
+    "mastery",
+    "addgroup",
+    "adduser",
+    "nodejs",
+    "dumb"
+  ],
+  "flagWords": [],
+  "ignorePaths": [
+    "node_modules/**",
+    ".next/**",
+    "dist/**",
+    "build/**",
+    "*.min.js",
+    "*.min.css",
+    "package-lock.json",
+    "yarn.lock"
+  ],
+  "ignoreRegExpList": [
+    "/\\b[A-Z]{2,}\\b/g",
+    "/\\b\\d+\\b/g"
+  ]
+}

@@ -190,7 +190,7 @@ export function SocialLeaderboard({
 
       <CardContent>
         <div className="space-y-3">
-          {leaderboard?.entries?.map((entry: LeaderboardEntry) => (
+          {(leaderboard || []).map((entry: LeaderboardEntry) => (
             <div
               key={entry.userId}
               className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
@@ -287,7 +287,7 @@ export function SocialLeaderboard({
             </>
           )}
 
-          {(!leaderboard?.entries || leaderboard.entries.length === 0) && (
+          {(!leaderboard || leaderboard.length === 0) && (
             <div className="text-center py-8">
               <UsersIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">No leaderboard data available</p>

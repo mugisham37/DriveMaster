@@ -5,11 +5,10 @@ import { useAuthStore } from "@/stores/auth-store";
 import { authApi } from "@/lib/api/auth";
 
 interface AuthContextType {
-  // Re-export store state and actions for convenience
-  user: ReturnType<typeof useAuthStore>["user"];
-  isAuthenticated: ReturnType<typeof useAuthStore>["isAuthenticated"];
-  isLoading: ReturnType<typeof useAuthStore>["isLoading"];
-  error: ReturnType<typeof useAuthStore>["error"];
+  user: any;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
@@ -18,6 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const store = useAuthStore();
   const {
     user,
     tokens,
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: storeLogin,
     logout: storeLogout,
     clearError,
-  } = useAuthStore();
+  } = store;
 
   // Initialize auth state on mount
   useEffect(() => {

@@ -99,7 +99,7 @@ export function SystemConfiguration() {
 
   // Update feature flag mutation
   const updateFeatureFlagMutation = useMutation({
-    mutationFn: (data: { key: string; updates: Partial<FeatureFlag> }) =>
+    mutationFn: (data: { key: string; updates: any }) =>
       adminApi.updateFeatureFlag(data.key, data.updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["featureFlags"] });
@@ -279,7 +279,7 @@ export function SystemConfiguration() {
       {/* Feature Flags Tab */}
       {activeTab === "features" && (
         <div className="space-y-4">
-          {featureFlags?.map((flag) => (
+          {featureFlags?.map((flag: any) => (
             <Card key={flag.key}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -424,7 +424,7 @@ export function SystemConfiguration() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {settings.map((setting) => (
+                  {(settings as any).map((setting: any) => (
                     <div
                       key={setting.key}
                       className="flex items-center justify-between p-4 border rounded-lg"
@@ -464,7 +464,7 @@ export function SystemConfiguration() {
                   <p className="text-gray-500">No configuration changes yet</p>
                 </div>
               ) : (
-                configHistory?.map((change) => (
+                configHistory?.map((change: any) => (
                   <div
                     key={change.id}
                     className="flex items-start justify-between p-4 border rounded-lg"

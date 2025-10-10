@@ -54,7 +54,7 @@ export function PracticeSession({
       sessionId
         ? practiceApi.resumeSession(sessionId)
         : practiceApi.startSession(sessionType),
-    onSuccess: (session) => {
+    onSuccess: (session: any) => {
       setCurrentSession(session);
       setIsInitialized(true);
     },
@@ -71,10 +71,10 @@ export function PracticeSession({
       return practiceApi.getNextItem({
         userId: user.id,
         sessionId: currentSession.id,
-        sessionType: currentSession.sessionType,
+        sessionType: currentSession.sessionType as "practice" | "review" | "mock_test",
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       setCurrentItem(response.item, response);
     },
     onError: (error: any) => {
@@ -103,7 +103,7 @@ export function PracticeSession({
         clientAttemptId: crypto.randomUUID(),
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       setSessionProgress(response.sessionProgress);
       setShowExplanation(true);
 
@@ -273,8 +273,8 @@ export function PracticeSession({
           <ExplanationModal
             item={currentItem}
             selectedAnswer={selectedAnswer}
-            isCorrect={submitAttemptMutation.data?.correct || false}
-            explanation={submitAttemptMutation.data?.explanation}
+            isCorrect={(submitAttemptMutation.data as any)?.correct || false}
+            explanation={(submitAttemptMutation.data as any)?.explanation}
             onNext={handleNextItem}
             onClose={() => setShowExplanation(false)}
           />

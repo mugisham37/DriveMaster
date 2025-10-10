@@ -5,7 +5,7 @@ import { LearningPath } from "@/types/analytics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import {
   AcademicCapIcon,
   ClockIcon,
@@ -59,10 +59,10 @@ export function LearningPathSelector({
   const handleSelectPath = async (pathId: string) => {
     if (!onSelectPath) return;
     
-    setIsSelecting(true);
     try {
-      await onSelectPath(pathId);
+      setIsSelecting(true);
       setSelectedPath(pathId);
+      await onSelectPath(pathId);
     } catch (error) {
       console.error("Failed to select learning path:", error);
     } finally {
@@ -70,77 +70,46 @@ export function LearningPathSelector({
     }
   };
 
-  const currentPath = paths.find(p => p.progress > 0);
-  const recommendedPaths = paths.filter(p => p.isRecommended && p.progress === 0);
-  const otherPaths = paths.filter(p => !p.isRecommended && p.progress === 0);
+  // Split paths into recommended and others
+  const recommendedPaths = paths.filter(path => path.isRecommended);
+  const otherPaths = paths.filter(path => !path.isRecommended);
 
   return (
     <div className="space-y-6">
-      {/* Current Path */}
-      {currentPath && (
+      {/* Current Path Progress */}
+      {selectedPath && (
         <div>
           <h4 className="font-medium text-gray-900 mb-3">Current Path</h4>
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h5 className="font-medium text-gray-900 mb-1">
-                      {currentPath.name}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-blue-600" />
+                    <h5 className="font-medium text-blue-900">
+                      {paths.find(p => p.id === selectedPath)?.name}
                     </h5>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {currentPath.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <ClockIcon className="w-3 h-3" />
-                        {currentPath.estimatedHours}h
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <BookOpenIcon className="w-3 h-3" />
-                        {currentPath.topics.length} topics
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {getDifficultyStars(currentPath.difficulty)}
-                        <span className="ml-1 capitalize">
-                          {currentPath.difficulty}
-                        </span>
-                      </div>
-                    </div>
                   </div>
+                  <span className="text-sm text-blue-700">
+                    {Math.round((paths.find(p => p.id === selectedPath)?.progress || 0) * 100)}% Complete
+                  </span>
                 </div>
 
-                {/* Progress */}
-                <div className="space-y-2"></div>             <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-medium">
-                      {Math.round(currentPath.progress * 100)}% complete
-                    </span>
-                  </div>
-                  <Progress value={currentPath.progress * 100} className="h-2" />
+                <Progress 
+                  value={(paths.find(p => p.id === selectedPath)?.progress || 0) * 100} 
+                  className="h-2"
+                />
+
+                <div className="flex items-center justify-between text-sm text-blue-700">
+                  <span>
+                    {paths.find(p => p.id === selectedPath)?.topics.length} topics
+                  </span>
+                  <span>
+                    {paths.find(p => p.id === selectedPath)?.estimatedHours}h estimated
+                  </span>
                 </div>
 
-                {/* Topics */}
-                <div>
-                  <p className="text-xs text-gray-600 mb-2">Topics covered:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {currentPath.topics.slice(0, 5).map((topic) => (
-                      <span
-                        key={topic}
-                        className="px-2 py-1 bg-white bg-opacity-60 rounded text-xs text-gray-700"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                    {currentPath.topics.length > 5 && (
-                      <span className="px-2 py-1 bg-white bg-opacity-60 rounded text-xs text-gray-500">
-                        +{currentPath.topics.length - 5} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <Button fullWidth className="mt-3">
+                <Button className="w-full mt-3">
                   Continue Learning
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
                 </Button>
@@ -160,7 +129,7 @@ export function LearningPathSelector({
             {recommendedPaths.map((path) => (
               <Card
                 key={path.id}
-                className={clsx(
+                className={cn(
                   "transition-all duration-200 hover:shadow-md cursor-pointer",
                   selectedPath === path.id && "ring-2 ring-blue-500"
                 )}
@@ -229,7 +198,7 @@ export function LearningPathSelector({
 
                       <Button
                         size="sm"
-                        fullWidth
+                        className="w-full"
                         disabled={isSelecting}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -268,7 +237,7 @@ export function LearningPathSelector({
                         {path.name}
                       </h5>
                       <span
-                        className={clsx(
+                        className={cn(
                           "px-2 py-1 rounded-full text-xs font-medium border",
                           getDifficultyColor(path.difficulty)
                         )}

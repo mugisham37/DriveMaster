@@ -93,7 +93,7 @@ export function ReportsExports() {
     },
   });
 
-  const currentTemplate = templates?.find((t) => t.id === selectedTemplate);
+  const currentTemplate = templates?.find((t: any) => t.id === selectedTemplate);
 
   const handleParameterChange = (paramName: string, value: any) => {
     setParameters((prev) => ({
@@ -273,7 +273,7 @@ export function ReportsExports() {
                   <SelectValue placeholder="Select a report template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates?.map((template) => (
+                  {templates?.map((template: any) => (
                     <SelectItem key={template.id} value={template.id}>
                       <div className="flex items-center gap-2">
                         {getTypeIcon(template.type)}
@@ -302,7 +302,7 @@ export function ReportsExports() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {currentTemplate.formats.map((format) => (
+                    {currentTemplate.formats.map((format: any) => (
                       <SelectItem key={format} value={format}>
                         {format.toUpperCase()}
                       </SelectItem>
@@ -313,7 +313,7 @@ export function ReportsExports() {
             )}
 
             {/* Parameters */}
-            {currentTemplate?.parameters.map((param) => (
+            {currentTemplate?.parameters.map((param: any) => (
               <div key={param.name}>
                 <Label htmlFor={param.name}>
                   {param.label}
@@ -332,7 +332,7 @@ export function ReportsExports() {
                 !selectedTemplate ||
                 generateReportMutation.isPending ||
                 (currentTemplate?.parameters.some(
-                  (p) => p.required && !parameters[p.name]
+                  (p: any) => p.required && !parameters[p.name]
                 ) ??
                   false)
               }
@@ -364,7 +364,7 @@ export function ReportsExports() {
                 variant="outline"
                 className="justify-start h-auto p-4"
                 onClick={() => {
-                  adminApi.generateQuickReport("daily_summary");
+                  adminApi.generateQuickReport("daily_summary", {});
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -382,7 +382,7 @@ export function ReportsExports() {
                 variant="outline"
                 className="justify-start h-auto p-4"
                 onClick={() => {
-                  adminApi.generateQuickReport("user_engagement");
+                  adminApi.generateQuickReport("user_engagement", {});
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -400,7 +400,7 @@ export function ReportsExports() {
                 variant="outline"
                 className="justify-start h-auto p-4"
                 onClick={() => {
-                  adminApi.generateQuickReport("content_analytics");
+                  adminApi.generateQuickReport("content_analytics", {});
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -434,7 +434,7 @@ export function ReportsExports() {
                 </p>
               </div>
             ) : (
-              exportJobs?.map((job) => (
+              exportJobs?.map((job: any) => (
                 <div
                   key={job.id}
                   className="flex items-center justify-between p-4 border rounded-lg"

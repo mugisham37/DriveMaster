@@ -203,7 +203,8 @@ export function ContentManagement() {
               <SelectContent>
                 <SelectItem value="all">All Topics</SelectItem>
                 {uniqueTopics.map((topic) => (
-                  <SelectItem key={topic} value={topic}></SelectItem>                 {topic}
+                  <SelectItem key={topic} value={topic}>
+                    {topic}
                   </SelectItem>
                 ))}
               </SelectContent>
