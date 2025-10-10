@@ -4,7 +4,7 @@
     "module": "commonjs",
     "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,9 +16,9 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "types": ["node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "drizzle.config.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

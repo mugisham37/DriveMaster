@@ -3,17 +3,25 @@
   "language": "en",
   "words": [
     "drizzle",
-    "postgres",
     "postgresql",
-    "uuidv",
-    "TIMESTAMPTZ",
-    "schemaname",
-    "tablename",
-    "partitionboundspec",
-    "ossp",
-    "trgm",
-    "onnotice",
-    "onparameter"
+    "postgres",
+    "uuid",
+    "tsconfig",
+    "tsx",
+    "esModuleInterop",
+    "skipLibCheck",
+    "forceConsistentCasingInFileNames",
+    "declarationMap",
+    "sourceMap",
+    "resolveJsonModule",
+    "allowSyntheticDefaultImports",
+    "experimentalDecorators",
+    "emitDecoratorMetadata",
+    "moduleResolution"
   ],
-  "ignorePaths": ["node_modules/**", "dist/**", "migrations/**", "*.log"]
+  "ignorePaths": [
+    "dist/**",
+    "node_modules/**",
+    "migrations/**"
+  ]
 }
