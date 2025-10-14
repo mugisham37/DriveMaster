@@ -5,7 +5,7 @@ import {
     InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, SelectQueryBuilder, In } from 'typeorm';
+import { Repository, DataSource, SelectQueryBuilder } from 'typeorm';
 import { Item, ItemStatus, ItemType, CognitiveLevel } from '../content/entities/item.entity';
 import { MediaAsset } from '../content/entities/media-asset.entity';
 import {
@@ -317,13 +317,14 @@ export class BulkOperationsService {
                         await this.contentService.deleteItem(itemId);
                         break;
 
-                    case 'duplicate':
+                    case 'duplicate': {
                         const originalItem = await this.contentService.getItem(itemId);
                         const newSlug = batchRequest.parameters?.newSlugPrefix
                             ? `${batchRequest.parameters.newSlugPrefix}-${originalItem.slug}`
                             : `copy-${originalItem.slug}-${Date.now()}`;
                         await this.contentService.duplicateItem(itemId, newSlug, performedBy);
                         break;
+                    }
 
                     default:
                         throw new BadRequestException(`Unsupported batch operation: ${batchRequest.operation}`);

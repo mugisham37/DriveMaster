@@ -4,10 +4,8 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    ManyToOne,
     OneToMany,
     Index,
-    JoinColumn,
 } from 'typeorm';
 import { MediaAsset } from './media-asset.entity';
 

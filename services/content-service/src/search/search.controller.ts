@@ -246,7 +246,7 @@ export class SearchController {
     @UseGuards(RolesGuard)
     @Roles('admin', 'content_admin')
     @HttpCode(HttpStatus.OK)
-    async reindexContent(@Body() reindexDto: ReindexRequestDto): Promise<{ message: string; timestamp: Date }> {
+    async reindexContent(@Body() _reindexDto: ReindexRequestDto): Promise<{ message: string; timestamp: Date }> {
         try {
             this.logger.log('Starting content reindexing...');
             await this.searchService.reindexAll();

@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { ContentModule } from './content/content.module';
 import { SearchModule } from './search/search.module';
+import { SecurityModule } from './security/security.module';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { SearchModule } from './search/search.module';
             isGlobal: true,
         }),
         DatabaseModule,
+        SecurityModule,
         ContentModule,
         SearchModule,
     ],

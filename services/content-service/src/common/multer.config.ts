@@ -4,7 +4,7 @@ import { memoryStorage } from 'multer';
 
 export const multerConfig: MulterOptions = {
     storage: memoryStorage(), // Use memory storage for S3 uploads
-    fileFilter: (req, file, callback) => {
+    fileFilter: (_req, file, callback) => {
         // Allow images, videos, audio, and documents
         const allowedMimeTypes = [
             // Images

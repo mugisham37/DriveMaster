@@ -6,13 +6,11 @@ import {
     IsNumber,
     IsOptional,
     ValidateNested,
-    IsUUID,
     Min,
     Max,
     ArrayMinSize,
-    IsBoolean,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ItemType, CognitiveLevel } from '../entities/item.entity';
 

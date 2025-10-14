@@ -398,13 +398,13 @@ export class ContentRecommendationService {
 
     // Helper methods
 
-    private async getWeakTopicsForUser(userId: string): Promise<string[]> {
+    private async getWeakTopicsForUser(_userId: string): Promise<string[]> {
         // In a real implementation, this would query user progress data
         // For now, return some common topics that users typically struggle with
         return ['traffic-signs', 'parking-rules', 'right-of-way', 'speed-limits'];
     }
 
-    private async getUserDifficultyLevel(userId: string): Promise<number> {
+    private async getUserDifficultyLevel(_userId: string): Promise<number> {
         // In a real implementation, this would calculate based on user performance
         // For now, return a moderate difficulty level
         return 0.0; // Neutral difficulty

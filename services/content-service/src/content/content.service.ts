@@ -7,7 +7,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder, In, DataSource } from 'typeorm';
+import { Repository, SelectQueryBuilder, DataSource } from 'typeorm';
 import { Item, ItemStatus } from './entities/item.entity';
 import { MediaAsset, MediaType } from './entities/media-asset.entity';
 import { WorkflowHistory, WorkflowAction } from './entities/workflow-history.entity';
@@ -99,7 +99,7 @@ export class ContentService {
     async updateItem(
         id: string,
         updateItemDto: UpdateItemDto,
-        updatedBy: string,
+        _updatedBy: string,
     ): Promise<ItemWithVersion> {
         const existingItem = await this.itemRepository.findOne({
             where: { id, isActive: true },
@@ -245,7 +245,7 @@ export class ContentService {
     }
 
     async deleteItem(id: string): Promise<void> {
-        const item = await this.getItem(id);
+        await this.getItem(id); // Verify item exists
 
         // Soft delete
         await this.itemRepository.update(id, {
@@ -456,7 +456,7 @@ export class ContentService {
         return [item];
     }
 
-    async revertToVersion(id: string, version: number): Promise<Item> {
+    async revertToVersion(_id: string, _version: number): Promise<Item> {
         // In a full implementation, this would restore from a versions table
         // For now, we'll throw an error indicating this needs implementation
         throw new BadRequestException('Version revert functionality requires version history table');

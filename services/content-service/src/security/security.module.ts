@@ -1,8 +1,8 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { SecurityMiddleware, InputValidationMiddleware, AuditMiddleware } from './security.middleware.js';
-import { InputValidationService } from './input-validation.service.js';
-import { EncryptionService } from './encryption.service.js';
-import { AuditService } from './audit.service.js';
+import { SecurityMiddleware, InputValidationMiddleware, AuditMiddleware } from './security.middleware';
+import { InputValidationService } from './input-validation.service';
+import { EncryptionService } from './encryption.service';
+import { AuditService } from './audit.service';
 
 @Module({
     providers: [

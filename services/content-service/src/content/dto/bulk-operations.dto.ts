@@ -13,7 +13,7 @@ import {
     IsBoolean,
     IsDateString,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ItemStatus, ItemType, CognitiveLevel } from '../entities/item.entity';
 
