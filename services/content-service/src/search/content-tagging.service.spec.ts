@@ -6,7 +6,7 @@ import { Item } from '../content/entities/item.entity';
 
 describe('ContentTaggingService', () => {
     let service: ContentTaggingService;
-    let itemRepository: jest.Mocked<Repository<Item>>;
+    // let _itemRepository: jest.Mocked<Repository<Item>>;
 
     const mockItemRepository = {
         createQueryBuilder: jest.fn(),
@@ -37,7 +37,7 @@ describe('ContentTaggingService', () => {
         }).compile();
 
         service = module.get<ContentTaggingService>(ContentTaggingService);
-        itemRepository = module.get(getRepositoryToken(Item));
+        // _itemRepository = module.get(getRepositoryToken(Item));
 
         mockItemRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
     });

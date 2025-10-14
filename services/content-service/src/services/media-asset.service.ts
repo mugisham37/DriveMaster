@@ -3,14 +3,13 @@ import {
     Logger,
     NotFoundException,
     BadRequestException,
-    ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, LessThan } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { MediaAsset, MediaType } from '../content/entities/media-asset.entity';
 import { S3Service } from './s3.service';
-import { MediaProcessingService, ProcessedMedia } from './media-processing.service';
+import { MediaProcessingService } from './media-processing.service';
 import { CDNService } from './cdn.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -297,7 +296,7 @@ export class MediaAssetService {
         return [asset];
     }
 
-    async revertToVersion(id: string, version: number): Promise<MediaAssetWithUrls> {
+    async revertToVersion(_id: string, _version: number): Promise<MediaAssetWithUrls> {
         // In a full implementation, this would restore from a versions table
         throw new BadRequestException('Version revert functionality requires version history table');
     }

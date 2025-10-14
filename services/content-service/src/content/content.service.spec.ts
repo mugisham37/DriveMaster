@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { Item, ItemStatus, ItemType, CognitiveLevel } from './entities/item.entity';
-import { MediaAsset, MediaType } from './entities/media-asset.entity';
+import { MediaAsset } from './entities/media-asset.entity';
 import { S3Service } from '../services/s3.service';
 import { ValidationService } from '../services/validation.service';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -14,10 +14,7 @@ import { QueryItemsDto } from './dto/query-items.dto';
 describe('ContentService', () => {
     let service: ContentService;
     let itemRepository: Repository<Item>;
-    let mediaRepository: Repository<MediaAsset>;
-    let s3Service: S3Service;
     let validationService: ValidationService;
-    let dataSource: DataSource;
 
     const mockItem: Item = {
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -117,10 +114,10 @@ describe('ContentService', () => {
 
         service = module.get<ContentService>(ContentService);
         itemRepository = module.get<Repository<Item>>(getRepositoryToken(Item));
-        mediaRepository = module.get<Repository<MediaAsset>>(getRepositoryToken(MediaAsset));
-        s3Service = module.get<S3Service>(S3Service);
+        // _mediaRepository = module.get<Repository<MediaAsset>>(getRepositoryToken(MediaAsset));
+        // _s3Service = module.get<S3Service>(S3Service);
         validationService = module.get<ValidationService>(ValidationService);
-        dataSource = module.get<DataSource>(DataSource);
+        // _dataSource = module.get<DataSource>(DataSource);
     });
 
     it('should be defined', () => {

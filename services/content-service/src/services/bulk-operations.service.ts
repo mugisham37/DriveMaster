@@ -2,7 +2,6 @@ import {
     Injectable,
     BadRequestException,
     Logger,
-    InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, SelectQueryBuilder } from 'typeorm';
@@ -752,7 +751,7 @@ export class BulkOperationsService {
     private async generateExportFile(
         items: Item[],
         format: 'csv' | 'json' | 'xlsx',
-        exportRequest: BulkExportRequestDto
+        _exportRequest: BulkExportRequestDto
     ): Promise<{ fileBuffer: Buffer; fileName: string }> {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
@@ -810,8 +809,8 @@ export class BulkOperationsService {
             publishedAt: item.publishedAt?.toISOString() || '',
         }));
 
-        return new Promise((resolve, reject) => {
-            const chunks: Buffer[] = [];
+        return new Promise((resolve, _reject) => {
+            // const chunks: Buffer[] = []; // Not needed for this implementation
             const writer = csvWriter.createObjectCsvStringifier({
                 header: Object.keys(records[0] || {}).map(key => ({ id: key, title: key })),
             });

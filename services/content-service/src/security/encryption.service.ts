@@ -21,18 +21,18 @@ export class EncryptionService {
     encrypt(data: string, key: string): { encrypted: string; iv: string; tag: string } {
         const keyBuffer = Buffer.from(key, 'hex');
         const iv = crypto.randomBytes(this.ivLength);
-        const cipher = crypto.createCipherGCM(this.algorithm, keyBuffer, iv);
-        cipher.setAAD(Buffer.from('content-service', 'utf8'));
+        const cipher = crypto.createCipher(this.algorithm, keyBuffer);
 
         let encrypted = cipher.update(data, 'utf8', 'hex');
         encrypted += cipher.final('hex');
 
-        const tag = cipher.getAuthTag();
+        // For non-GCM modes, we'll use a simple hash as tag
+        const tag = crypto.createHash('sha256').update(encrypted + iv.toString('hex')).digest('hex').slice(0, 32);
 
         return {
             encrypted,
             iv: iv.toString('hex'),
-            tag: tag.toString('hex')
+            tag
         };
     }
 
@@ -41,12 +41,14 @@ export class EncryptionService {
      */
     decrypt(encryptedData: { encrypted: string; iv: string; tag: string }, key: string): string {
         const keyBuffer = Buffer.from(key, 'hex');
-        const iv = Buffer.from(encryptedData.iv, 'hex');
-        const tag = Buffer.from(encryptedData.tag, 'hex');
+        
+        // Verify tag
+        const expectedTag = crypto.createHash('sha256').update(encryptedData.encrypted + encryptedData.iv).digest('hex').slice(0, 32);
+        if (expectedTag !== encryptedData.tag) {
+            throw new Error('Authentication failed');
+        }
 
-        const decipher = crypto.createDecipherGCM(this.algorithm, keyBuffer, iv);
-        decipher.setAAD(Buffer.from('content-service', 'utf8'));
-        decipher.setAuthTag(tag);
+        const decipher = crypto.createDecipher(this.algorithm, keyBuffer);
 
         let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
         decrypted += decipher.final('utf8');

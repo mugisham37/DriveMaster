@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import * as sharp from 'sharp';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as mime from 'mime-types';
+import * as fs from 'fs';
 import { MediaType } from '../content/entities/media-asset.entity';
 
 // Set ffmpeg path - handle both CommonJS and ES module exports
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const ffmpegPath = require('ffmpeg-static');
-if (ffmpegPath) {
+if (ffmpegPath && typeof ffmpegPath === 'string') {
     ffmpeg.setFfmpegPath(ffmpegPath);
 }
 
@@ -167,7 +169,7 @@ export class MediaProcessingService {
                 const thumbnailPath = `/tmp/thumb_${Date.now()}.jpg`;
 
                 // Write buffer to temporary file
-                require('fs').writeFileSync(inputPath, buffer);
+                fs.writeFileSync(inputPath, buffer);
 
                 let command = ffmpeg(inputPath);
 
@@ -185,7 +187,7 @@ export class MediaProcessingService {
                     .output(outputPath)
                     .on('end', async () => {
                         try {
-                            const processedBuffer = require('fs').readFileSync(outputPath);
+                            const processedBuffer = fs.readFileSync(outputPath);
                             let thumbnail: Buffer | undefined;
 
                             // Generate thumbnail if requested
@@ -202,7 +204,7 @@ export class MediaProcessingService {
                                         .on('end', () => thumbResolve())
                                         .on('error', thumbReject);
                                 });
-                                thumbnail = require('fs').readFileSync(thumbnailPath);
+                                thumbnail = fs.readFileSync(thumbnailPath);
                             }
 
                             // Get video metadata
@@ -256,7 +258,7 @@ export class MediaProcessingService {
                 const outputPath = `/tmp/audio_output_${Date.now()}.mp3`;
 
                 // Write buffer to temporary file
-                require('fs').writeFileSync(inputPath, buffer);
+                fs.writeFileSync(inputPath, buffer);
 
                 let command = ffmpeg(inputPath);
 
@@ -277,7 +279,7 @@ export class MediaProcessingService {
                     .output(outputPath)
                     .on('end', () => {
                         try {
-                            const processedBuffer = require('fs').readFileSync(outputPath);
+                            const processedBuffer = fs.readFileSync(outputPath);
 
                             // Get audio metadata
                             ffmpeg.ffprobe(inputPath, (err, metadata) => {
@@ -362,8 +364,8 @@ export class MediaProcessingService {
     private cleanupTempFiles(paths: string[]): void {
         paths.forEach(path => {
             try {
-                if (require('fs').existsSync(path)) {
-                    require('fs').unlinkSync(path);
+                if (fs.existsSync(path)) {
+                    fs.unlinkSync(path);
                 }
             } catch (error) {
                 this.logger.warn(`Failed to cleanup temp file ${path}:`, error);

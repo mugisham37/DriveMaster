@@ -15,11 +15,7 @@ import {
 
 describe('BulkOperationsService', () => {
     let service: BulkOperationsService;
-    let itemRepository: Repository<Item>;
-    let mediaRepository: Repository<MediaAsset>;
-    let contentService: ContentService;
-    let validationService: ValidationService;
-    let s3Service: S3Service;
+    // Test variables would be declared here when tests are implemented
 
     const mockItemRepository = {
         findOne: jest.fn(),
@@ -92,11 +88,11 @@ describe('BulkOperationsService', () => {
         }).compile();
 
         service = module.get<BulkOperationsService>(BulkOperationsService);
-        itemRepository = module.get<Repository<Item>>(getRepositoryToken(Item));
-        mediaRepository = module.get<Repository<MediaAsset>>(getRepositoryToken(MediaAsset));
-        contentService = module.get<ContentService>(ContentService);
-        validationService = module.get<ValidationService>(ValidationService);
-        s3Service = module.get<S3Service>(S3Service);
+        // _itemRepository = module.get<Repository<Item>>(getRepositoryToken(Item));
+        // _mediaRepository = module.get<Repository<MediaAsset>>(getRepositoryToken(MediaAsset));
+        // _contentService = module.get<ContentService>(ContentService);
+        // _validationService = module.get<ValidationService>(ValidationService);
+        // _s3Service = module.get<S3Service>(S3Service);
     });
 
     afterEach(() => {
