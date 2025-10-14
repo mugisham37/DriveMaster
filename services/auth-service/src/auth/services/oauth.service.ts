@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OAuthStateService } from './oauth-state.service';
-import { OAuthProvider } from '../interfaces/oauth-profile.interface';
+import { OAuthProviderType } from '../interfaces/oauth-profile.interface';
 
 export interface OAuthInitiationResult {
     authUrl: string;
@@ -20,7 +20,7 @@ export class OAuthService {
     /**
      * Generate OAuth authorization URL with state parameter
      */
-    generateAuthUrl(provider: OAuthProvider, redirectUrl?: string): OAuthInitiationResult {
+    generateAuthUrl(provider: OAuthProviderType, redirectUrl?: string): OAuthInitiationResult {
         const state = this.oauthStateService.generateState(redirectUrl);
         const baseUrl = this.getProviderBaseUrl(provider);
         const clientId = this.getProviderClientId(provider);
@@ -102,8 +102,8 @@ export class OAuthService {
     /**
      * Get provider-specific configuration
      */
-    private getProviderBaseUrl(provider: OAuthProvider): string {
-        const urls: Record<OAuthProvider, string> = {
+    private getProviderBaseUrl(provider: OAuthProviderType): string {
+        const urls: Record<OAuthProviderType, string> = {
             google: 'https://accounts.google.com/o/oauth2/v2/auth',
             apple: 'https://appleid.apple.com/auth/authorize',
             facebook: 'https://www.facebook.com/v18.0/dialog/oauth',
@@ -114,8 +114,8 @@ export class OAuthService {
         return urls[provider];
     }
 
-    private getProviderClientId(provider: OAuthProvider): string {
-        const configKeys: Record<OAuthProvider, string> = {
+    private getProviderClientId(provider: OAuthProviderType): string {
+        const configKeys: Record<OAuthProviderType, string> = {
             google: 'GOOGLE_CLIENT_ID',
             apple: 'APPLE_CLIENT_ID',
             facebook: 'FACEBOOK_CLIENT_ID',
@@ -131,8 +131,8 @@ export class OAuthService {
         return clientId;
     }
 
-    private getProviderCallbackUrl(provider: OAuthProvider): string {
-        const configKeys: Record<OAuthProvider, string> = {
+    private getProviderCallbackUrl(provider: OAuthProviderType): string {
+        const configKeys: Record<OAuthProviderType, string> = {
             google: 'GOOGLE_CALLBACK_URL',
             apple: 'APPLE_CALLBACK_URL',
             facebook: 'FACEBOOK_CALLBACK_URL',
@@ -148,8 +148,8 @@ export class OAuthService {
         return callbackUrl;
     }
 
-    private getProviderScope(provider: OAuthProvider): string {
-        const scopes: Record<OAuthProvider, string> = {
+    private getProviderScope(provider: OAuthProviderType): string {
+        const scopes: Record<OAuthProviderType, string> = {
             google: 'openid email profile',
             apple: 'name email',
             facebook: 'email public_profile',
@@ -163,7 +163,7 @@ export class OAuthService {
     /**
      * Check if provider is enabled
      */
-    isProviderEnabled(provider: OAuthProvider): boolean {
+    isProviderEnabled(provider: OAuthProviderType): boolean {
         try {
             this.getProviderClientId(provider);
             this.getProviderCallbackUrl(provider);
@@ -176,8 +176,8 @@ export class OAuthService {
     /**
      * Get list of enabled providers
      */
-    getEnabledProviders(): OAuthProvider[] {
-        const allProviders: OAuthProvider[] = ['google', 'apple', 'facebook', 'github', 'microsoft'];
+    getEnabledProviders(): OAuthProviderType[] {
+        const allProviders: OAuthProviderType[] = ['google', 'apple', 'facebook', 'github', 'microsoft'];
         return allProviders.filter(provider => this.isProviderEnabled(provider));
     }
 }

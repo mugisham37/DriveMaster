@@ -18,7 +18,7 @@ import { MicrosoftStrategy } from './strategies/microsoft.strategy';
 import { User } from './entities/user.entity';
 import { OAuthProvider } from './entities/oauth-provider.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
-import { AuditLog } from './services/audit-logging.service';
+import { AuditLog } from './entities/audit-log.entity';
 import { TokenService } from './services/token.service';
 import { PasswordService } from './services/password.service';
 import { OAuthStateService } from './services/oauth-state.service';

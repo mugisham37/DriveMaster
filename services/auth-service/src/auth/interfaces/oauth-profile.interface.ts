@@ -8,11 +8,14 @@ export interface BaseOAuthProfile {
     username?: string;
 }
 
-export type OAuthProvider = 'google' | 'apple' | 'facebook' | 'github' | 'microsoft';
+export type OAuthProviderType = 'google' | 'apple' | 'facebook' | 'github' | 'microsoft';
+
+// Keep backward compatibility
+export type OAuthProvider = OAuthProviderType;
 
 export interface OAuthResult {
     profile: BaseOAuthProfile;
     accessToken: string;
     refreshToken?: string;
-    provider: OAuthProvider;
+    provider: OAuthProviderType;
 }

@@ -70,7 +70,7 @@ export class EncryptionService {
             const encrypted = combined.slice(this.ivLength + this.tagLength);
 
             // Create decipher
-            const decipher = crypto.createDecipher(this.algorithm, this.masterKey);
+            const decipher = crypto.createDecipheriv(this.algorithm, this.masterKey, iv);
             decipher.setAAD(Buffer.from('auth-service', 'utf8'));
             decipher.setAuthTag(tag);
 

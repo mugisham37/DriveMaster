@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { OAuthProvider } from '../entities/oauth-provider.entity';
-import { BaseOAuthProfile, OAuthProvider as OAuthProviderType } from '../interfaces/oauth-profile.interface';
+import { BaseOAuthProfile, OAuthProviderType } from '../interfaces/oauth-profile.interface';
 import { PasswordService } from './password.service';
 
 export interface LinkAccountDto {

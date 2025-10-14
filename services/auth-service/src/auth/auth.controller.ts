@@ -24,10 +24,10 @@ import { AppleAuthGuard } from './guards/apple-auth.guard';
 import { FacebookAuthGuard } from './guards/facebook-auth.guard';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
 import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
-import { OAuthProvider as OAuthProviderType } from './interfaces/oauth-profile.interface';
+import { OAuthProviderType } from './interfaces/oauth-profile.interface';
 import { OAuthService } from './services/oauth.service';
 import { InitiateOAuthDto } from './dto/oauth-link.dto';
-import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+
 import { User } from './entities/user.entity';
 
 @Controller('auth')
@@ -98,6 +98,7 @@ export class AuthController {
 
     @Get('profile')
     getProfile(@CurrentUser() user: User) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { hashedPassword, mfaSecret, ...profile } = user;
         return profile;
     }

@@ -1,9 +1,9 @@
 import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
-import { OAuthProvider } from '../interfaces/oauth-profile.interface';
+import { OAuthProviderType } from '../interfaces/oauth-profile.interface';
 
 export class InitiateOAuthDto {
     @IsEnum(['google', 'apple', 'facebook', 'github', 'microsoft'])
-    provider: OAuthProvider;
+    provider: OAuthProviderType;
 
     @IsOptional()
     @IsUrl()
@@ -32,10 +32,10 @@ export class OAuthCallbackDto {
 
 export class LinkProviderDto {
     @IsEnum(['google', 'apple', 'facebook', 'github', 'microsoft'])
-    provider: OAuthProvider;
+    provider: OAuthProviderType;
 }
 
 export class UnlinkProviderDto {
     @IsEnum(['google', 'apple', 'facebook', 'github', 'microsoft'])
-    provider: OAuthProvider;
+    provider: OAuthProviderType;
 }

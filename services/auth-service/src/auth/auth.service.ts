@@ -17,12 +17,8 @@ import { AuditLoggingService, AuditAction } from './services/audit-logging.servi
 import { SessionManagementService } from './services/session-management.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { GoogleProfile } from './strategies/google.strategy';
-import { AppleProfile } from './strategies/apple.strategy';
-import { FacebookProfile } from './strategies/facebook.strategy';
-import { GitHubProfile } from './strategies/github.strategy';
-import { MicrosoftProfile } from './strategies/microsoft.strategy';
-import { BaseOAuthProfile, OAuthProvider as OAuthProviderType } from './interfaces/oauth-profile.interface';
+
+import { BaseOAuthProfile, OAuthProviderType } from './interfaces/oauth-profile.interface';
 import { AccountLinkingService } from './services/account-linking.service';
 
 @Injectable()

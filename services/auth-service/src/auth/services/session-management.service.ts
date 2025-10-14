@@ -270,6 +270,7 @@ export class SessionManagementService {
     async validateSessionFromToken(token: string): Promise<SessionInfo | null> {
         try {
             const payload = this.jwtService.verify(token) as UserClaims;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const sessionId = payload.sub; // Using user ID as session reference
 
             // In a more sophisticated implementation, you might store session ID in JWT

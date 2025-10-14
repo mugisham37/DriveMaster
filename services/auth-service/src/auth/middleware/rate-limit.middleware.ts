@@ -110,6 +110,7 @@ export class RateLimitMiddleware implements NestMiddleware {
      */
     private getEndpointName(req: Request): string {
         const path = req.path.toLowerCase();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const method = req.method.toLowerCase();
 
         // Map specific endpoints to rate limit categories
