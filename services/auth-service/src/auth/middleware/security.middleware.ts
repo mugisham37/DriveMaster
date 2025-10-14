@@ -83,6 +83,20 @@ export class SecurityMiddleware implements NestMiddleware {
                 },
             );
 
+            // Log security event for audit trail
+            await this.auditLoggingService.logSuspiciousActivity(
+                ipAddress,
+                suspiciousPatterns.join(', '),
+                userId,
+                undefined, // email not available in middleware
+                userAgent,
+                {
+                    path: req.path,
+                    method: req.method,
+                    patterns: suspiciousPatterns,
+                },
+            );
+
             this.logger.warn(`Suspicious activity detected from IP ${ipAddress}`, {
                 patterns: suspiciousPatterns,
                 userAgent,
@@ -162,8 +176,8 @@ export class SecurityMiddleware implements NestMiddleware {
     private hasSQLInjectionAttempt(req: Request): boolean {
         const sqlPatterns = [
             /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/i,
-            /(\'|\"|;|--|\*|\|)/,
-            /(\bOR\b|\bAND\b).*(\=|\<|\>)/i,
+            /('|"|;|--|\*|\|)/,
+            /(\bOR\b|\bAND\b).*(=|<|>)/i,
             /(INFORMATION_SCHEMA|SYSOBJECTS|SYSCOLUMNS)/i,
         ];
 

@@ -68,7 +68,7 @@ export class OAuthService {
                     `state=${state}`;
                 break;
 
-            case 'microsoft':
+            case 'microsoft': {
                 const tenant = this.configService.get<string>('MICROSOFT_TENANT', 'common');
                 authUrl = `${baseUrl.replace('{tenant}', tenant)}?` +
                     `client_id=${clientId}&` +
@@ -78,6 +78,7 @@ export class OAuthService {
                     `state=${state}&` +
                     `prompt=consent`;
                 break;
+            }
 
             default:
                 throw new BadRequestException(`Unsupported OAuth provider: ${provider}`);
