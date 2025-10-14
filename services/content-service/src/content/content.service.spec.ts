@@ -5,8 +5,11 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { Item, ItemStatus, ItemType, CognitiveLevel } from './entities/item.entity';
 import { MediaAsset } from './entities/media-asset.entity';
+import { WorkflowHistory } from './entities/workflow-history.entity';
 import { S3Service } from '../services/s3.service';
 import { ValidationService } from '../services/validation.service';
+import { NotificationService } from '../services/notification.service';
+import { MediaAssetService } from '../services/media-asset.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { QueryItemsDto } from './dto/query-items.dto';
@@ -85,6 +88,15 @@ describe('ContentService', () => {
                     },
                 },
                 {
+                    provide: getRepositoryToken(WorkflowHistory),
+                    useValue: {
+                        findOne: jest.fn(),
+                        create: jest.fn(),
+                        save: jest.fn(),
+                        find: jest.fn(),
+                    },
+                },
+                {
                     provide: DataSource,
                     useValue: {
                         createQueryRunner: jest.fn(),
@@ -107,6 +119,23 @@ describe('ContentService', () => {
                         validateDifficultyParameters: jest.fn(),
                         validateTopicsAndJurisdictions: jest.fn(),
                         validateMediaMetadata: jest.fn(),
+                    },
+                },
+                {
+                    provide: NotificationService,
+                    useValue: {
+                        notifyStatusChange: jest.fn(),
+                        notifyReviewAssignment: jest.fn(),
+                        notifyAuthorOfApproval: jest.fn(),
+                        notifyAuthorOfRejection: jest.fn(),
+                    },
+                },
+                {
+                    provide: MediaAssetService,
+                    useValue: {
+                        uploadMediaAsset: jest.fn(),
+                        getMediaAsset: jest.fn(),
+                        deleteMediaAsset: jest.fn(),
                     },
                 },
             ],
