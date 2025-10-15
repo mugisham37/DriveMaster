@@ -140,14 +140,14 @@ export function PracticeSession({
     if (!isInitialized && !startSessionMutation.isPending) {
       startSessionMutation.mutate();
     }
-  }, [isInitialized]);
+  }, [isInitialized, startSessionMutation]);
 
   // Get first item when session is ready
   useEffect(() => {
     if (currentSession && !currentItem && !nextItemMutation.isPending) {
       nextItemMutation.mutate();
     }
-  }, [currentSession, currentItem]);
+  }, [currentSession, currentItem, nextItemMutation]);
 
   const handleSubmitAnswer = (confidence: number = 3) => {
     if (!selectedAnswer || !currentItem) return;

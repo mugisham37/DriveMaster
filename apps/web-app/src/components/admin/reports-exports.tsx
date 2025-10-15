@@ -372,7 +372,7 @@ export function ReportsExports() {
                   <div className="text-left">
                     <div className="font-medium">Daily Summary</div>
                     <div className="text-sm text-gray-500">
-                      Today's key metrics and activity
+                      Today&apos;s key metrics and activity
                     </div>
                   </div>
                 </div>

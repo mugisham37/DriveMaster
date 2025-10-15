@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, useCallback, ReactNode } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { authApi } from "@/lib/api/auth";
 
@@ -33,6 +33,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearError,
   } = store;
 
+  const refreshToken = useCallback(async () => {
+    if (!tokens?.refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    try {
+      const newTokens = await authApi.refreshToken(tokens.refreshToken);
+      setTokens(newTokens);
+    } catch (error) {
+      storeLogout();
+      throw error;
+    }
+  }, [tokens?.refreshToken, setTokens, storeLogout]);
+
   // Initialize auth state on mount
   useEffect(() => {
     const initializeAuth = async () => {
@@ -58,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initializeAuth();
-  }, []);
+  }, [tokens?.accessToken, setLoading, setUser, refreshToken, storeLogout]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -87,20 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       storeLogout();
       setLoading(false);
-    }
-  };
-
-  const refreshToken = async () => {
-    if (!tokens?.refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
-    try {
-      const newTokens = await authApi.refreshToken(tokens.refreshToken);
-      setTokens(newTokens);
-    } catch (error) {
-      storeLogout();
-      throw error;
     }
   };
 

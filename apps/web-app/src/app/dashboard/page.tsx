@@ -111,7 +111,7 @@ export default function DashboardPage() {
                 Welcome back, {user?.email?.split("@")[0]}! 👋
               </h2>
               <p className="text-blue-100">
-                You're on a {stats.studyStreak}-day study streak! Keep up the
+                You&apos;re on a {stats.studyStreak}-day study streak! Keep up the
                 great work.
               </p>
             </div>

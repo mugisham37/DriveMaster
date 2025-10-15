@@ -38,7 +38,7 @@ export default function AdminPage() {
             Access Denied
           </h2>
           <p className="text-gray-600">
-            You don't have permission to access the admin panel.
+            You don&apos;t have permission to access the admin panel.
           </p>
         </div>
       </MainLayout>

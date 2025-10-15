@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Item, Choice } from "@/types/practice";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,9 +110,11 @@ export function QuestionDisplay({
               <div key={media.id} className="rounded-lg overflow-hidden">
                 {media.type === "image" && (
                   <div className="relative">
-                    <img
+                    <Image
                       src={media.url}
                       alt={media.alt || "Question image"}
+                      width={800}
+                      height={400}
                       className="w-full h-auto max-h-96 object-contain bg-gray-50"
                     />
                     {media.caption && (
