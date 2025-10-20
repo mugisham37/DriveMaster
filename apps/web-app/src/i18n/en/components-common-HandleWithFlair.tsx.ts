@@ -1,4 +1,4 @@
-export default {
+const handleWithFlair = {
   flair: {
     insider: 'An Insider',
     lifetime_insider: 'A lifetime Insider',
@@ -7,3 +7,5 @@ export default {
     alt: "{{title}}'s flair.",
   },
 }
+
+export default handleWithFlair

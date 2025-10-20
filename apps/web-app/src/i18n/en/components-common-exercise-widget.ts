@@ -1,5 +1,5 @@
 // namespace: components/common/exercise-widget
-export default {
+const exerciseWidget = {
   'info.titleInTrack': 'in <0/> <1>{{trackTitle}}</1>',
   'info.iterationsCount_one': '{{count}} iteration',
   'info.iterationsCount_other': '{{count}} iterations',
@@ -18,3 +18,5 @@ export default {
   'exerciseTypeTag.learningExercise': 'Learning Exercise',
   'exerciseTypeTag.tutorialExercise': 'Tutorial Exercise',
 }
+
+export default exerciseWidget

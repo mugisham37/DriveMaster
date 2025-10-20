@@ -1,4 +1,6 @@
 // namespace: components/common/MedianWaitTime.tsx
-export default {
+const medianWaitTime = {
   'medianWaitTime.avgWaitTime': 'Avg. wait time: ~',
 }
+
+export default medianWaitTime

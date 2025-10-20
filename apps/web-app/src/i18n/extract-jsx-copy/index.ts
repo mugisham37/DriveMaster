@@ -187,7 +187,7 @@ if (require.main === module) {
       const parentDir = path.basename(path.dirname(filePath))
       if (!supportedExtensions.includes(path.extname(filePath))) continue
       if (!batches[parentDir]) batches[parentDir] = []
-      batches[parentDir].push(filePath)
+      batches[parentDir]!.push(filePath)
     }
 
     void (async () => {
@@ -218,6 +218,11 @@ if (require.main === module) {
       process.exit(1)
     })
   } else {
+    if (!folderOrFile) {
+      console.error('Please provide a file or folder path.')
+      process.exit(1)
+    }
+
     let readFilesPromise: Promise<Record<string, string>>
 
     if (isSingleFile) {
@@ -230,6 +235,9 @@ if (require.main === module) {
 
     readFilesPromise
       .then(async (files) => {
+        if (!folderOrFile) {
+          throw new Error('No folder or file path provided')
+        }
         const prompt = buildPrompt(files, folderOrFile)
         const result = await runLLM(prompt)
         if (!result) throw new Error('LLM returned no response')

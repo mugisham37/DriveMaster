@@ -91,7 +91,7 @@ export async function generateEnIndex() {
     const content = await fs.readFile(filePath, 'utf8')
 
     const namespaceMatch = content.match(/\/\/\s*namespace:\s*(.+)/)
-    if (!namespaceMatch) {
+    if (!namespaceMatch || !namespaceMatch[1]) {
       console.warn(` Skipping ${entry} — no // namespace: comment found.`)
       continue
     }

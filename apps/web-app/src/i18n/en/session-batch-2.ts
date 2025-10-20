@@ -1,5 +1,5 @@
 // namespace: session-batch-2
-export default {
+const sessionBatch2 = {
   'components.mentoring.session.guidance.theExemplarSolution':
     'The exemplar solution',
   'components.mentoring.session.guidance.tryAndGuideStudent':
@@ -25,3 +25,5 @@ export default {
   'components.mentoring.session.iterationsList.next': 'Next',
   'components.mentoring.session.guidance.feedbackHere': 'Feedback here',
 }
+
+export default sessionBatch2

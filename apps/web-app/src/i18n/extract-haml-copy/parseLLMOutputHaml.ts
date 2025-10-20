@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import yaml from 'yaml'
 
-type AnyRecord = Record<string, any>
+type AnyRecord = Record<string, unknown>
 
 /**
  * Deep merge: merges b into a (objects only; arrays are replaced)
@@ -36,7 +36,7 @@ export async function parseLLMOutput(llmOutput: string) {
   }
 
   const hamlPart = llmOutput.slice(0, enStart).trim()
-  const yamlPart = llmOutput.slice(enStart).trim()
+  // const yamlPart = llmOutput.slice(enStart).trim() // Commented out as it's not used
 
   const yamlRaw = extractYamlFromMixedText(llmOutput) // safer than manual slicing
   const yamlWithoutRoot = stripEnRoot(yamlRaw)
@@ -50,7 +50,7 @@ export async function parseLLMOutput(llmOutput: string) {
     const e = err as Error
     console.error('YAML parsing failed:\n', sanitized)
     console.error('--- visible char codes around error ---')
-    const idx = (e as any).pos ?? -1 // eemeli/yaml sometimes includes .pos
+    const idx = (e as Error & { pos?: number }).pos ?? -1 // yaml library sometimes includes .pos
     if (idx > -1) {
       const start = Math.max(0, idx - 80)
       const end = Math.min(sanitized.length, idx + 80)
@@ -70,6 +70,9 @@ export async function parseLLMOutput(llmOutput: string) {
   }
 
   const firstKey = Object.keys(parsedYaml)[0]
+  if (!firstKey) {
+    throw new Error('No first key found in parsed YAML')
+  }
   const secondLevel = parsedYaml[firstKey] as AnyRecord
 
   const outputByFile: Record<string, AnyRecord> = {}
@@ -105,25 +108,28 @@ export async function parseLLMOutput(llmOutput: string) {
       if (parsedExisting && typeof parsedExisting === 'object') {
         existing = parsedExisting
       }
-    } catch (e: any) {
-      if (!e || e.code !== 'ENOENT') {
+    } catch (e: unknown) {
+      const error = e as Error & { code?: string }
+      if (!error || error.code !== 'ENOENT') {
         throw e
       }
     }
 
+    const existingEn = existing?.en as AnyRecord | undefined
+    const existingFirstKey = existingEn?.[firstKey] as AnyRecord | undefined
     const existingSub =
-      existing?.en?.[firstKey]?.[namespace] &&
-      typeof existing.en[firstKey][namespace] === 'object'
-        ? (existing.en[firstKey][namespace] as AnyRecord)
+      existingFirstKey?.[namespace] &&
+      typeof existingFirstKey[namespace] === 'object'
+        ? (existingFirstKey[namespace] as AnyRecord)
         : {}
 
     const mergedSub = deepMerge(existingSub, data as AnyRecord)
 
     const finalObj: AnyRecord = {
       en: {
-        ...(existing.en ?? {}),
+        ...(existingEn ?? {}),
         [firstKey]: {
-          ...(existing.en?.[firstKey] ?? {}),
+          ...(existingFirstKey ?? {}),
           [namespace]: mergedSub,
         },
       },
@@ -140,7 +146,7 @@ export async function parseLLMOutput(llmOutput: string) {
   const fileMap = new Map<string, string>()
 
   for (let i = 1; i < sections.length; i += 2) {
-    const filePath = sections[i].trim()
+    const filePath = sections[i]?.trim()
     const content = sections[i + 1]?.trim()
     if (!filePath || !content) continue
     fileMap.set(filePath, content.replace(/^# end file\s*/gm, '').trim())
@@ -168,7 +174,7 @@ export function normalizeYamlBlocks(yamlText: string): string {
       if (!inBlock) {
         // detect start of a block scalar
         const m = /^(\s*[^:#\n]+:\s*[>|])([+-]?\d*)\s*$/.exec(line)
-        if (m) {
+        if (m && m[1]) {
           inBlock = true
           blockIndent = m[1].length // content must be indented > this
         }
@@ -225,7 +231,7 @@ function normalizeIndentAndSpaces(src: string): string {
 function extractYamlFromMixedText(llm: string): string {
   // Prefer fenced ```yaml ... ```
   const fence = /```yaml\s*([\s\S]*?)\s*```/i.exec(llm)
-  if (fence) return fence[1].trimEnd() + '\n'
+  if (fence && fence[1]) return fence[1].trimEnd() + '\n'
 
   // Else: take from the first exact "\nen:" until EOF (your current approach)
   const i = llm.indexOf('\nen:')
@@ -236,7 +242,8 @@ function extractYamlFromMixedText(llm: string): string {
 /** Remove the top-level `en:` key while keeping the rest intact */
 function stripEnRoot(yamlText: string): string {
   const lines = yamlText.split('\n')
-  if (!/^en:\s*$/.test(lines[0])) {
+  const firstLine = lines[0]
+  if (!firstLine || !/^en:\s*$/.test(firstLine)) {
     throw new Error('YAML does not start with `en:`')
   }
   return lines.slice(1).join('\n')

@@ -16,8 +16,13 @@ declare global {
 
 type ErrorBoundaryType = React.ComponentType<{ children?: React.ReactNode }>;
 
-type GeneratorFunc = (data: unknown, elem?: HTMLElement) => React.JSX.Element;
-type Mappings = Record<string, GeneratorFunc>;
+// Use the same types as the component registry
+interface ComponentData {
+  [key: string]: unknown;
+}
+
+type GeneratorFunc = (data: ComponentData, elem?: HTMLElement) => React.JSX.Element;
+type ComponentMappings = Record<string, GeneratorFunc>;
 
 type TurboFrameRenderDetail = {
   fetchResponse: {
@@ -145,7 +150,7 @@ const setTurboStyle = (style: string) => {
   styleElem.textContent = style;
 };
 
-export function initReact(mappings?: Mappings): void {
+export function initReact(mappings?: ComponentMappings): void {
   // Use provided mappings or default to component registry
   const componentMap = mappings || componentMappings;
 
@@ -308,7 +313,7 @@ const render = (elem: HTMLElement, component: React.ReactNode) => {
 
 export function renderComponents(
   parentElement: HTMLElement,
-  mappings: Mappings
+  mappings: ComponentMappings
 ): void {
   if (!parentElement) {
     parentElement = document.body;
@@ -343,7 +348,7 @@ export function renderComponents(
   }
 }
 
-function renderTooltips(parentElement: HTMLElement, mappings: Mappings) {
+function renderTooltips(parentElement: HTMLElement, mappings: ComponentMappings) {
   if (!parentElement) {
     parentElement = document.body;
   }
@@ -352,7 +357,7 @@ function renderTooltips(parentElement: HTMLElement, mappings: Mappings) {
     .forEach((elem) => renderTooltip(mappings, elem as HTMLElement));
 }
 
-function renderTooltip(mappings: Mappings, elem: HTMLElement) {
+function renderTooltip(mappings: ComponentMappings, elem: HTMLElement) {
   const name = elem.dataset["tooltipType"] + "-tooltip";
   const generator = mappings[name];
 

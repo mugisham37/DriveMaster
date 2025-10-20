@@ -1,5 +1,5 @@
 // namespace: components/common/markdown-editor-form
-export default {
+const markdownEditorForm = {
   'mobileIdleFormFooter.send': 'Send',
   'newFormFooter.cancel': 'Cancel',
   'newFormFooter.send': 'Send',
@@ -7,3 +7,5 @@ export default {
   'editFormFooter.delete': 'Delete',
   'editFormFooter.update': 'Update',
 }
+
+export default markdownEditorForm

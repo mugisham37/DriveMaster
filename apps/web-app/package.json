@@ -49,6 +49,8 @@
     "highlightjs-sap-abap": "^0.3.0",
     "highlightjs-zig": "^1.0.2",
     "humps": "^2.0.1",
+    "i18next": "^24.0.0",
+    "i18next-browser-languagedetector": "^8.0.0",
     "lodash": "^4.17.21",
     "lottie-web": "^5.13.0",
     "next": "15.5.6",
@@ -62,10 +64,12 @@
     "tippy.js": "^6.3.7",
     "ua-parser-js": "^2.0.6",
     "web-vitals": "^5.1.0",
-    "xxhashjs": "^0.2.2"
+    "xxhashjs": "^0.2.2",
+    "yaml": "^2.6.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@google/genai": "^0.21.0",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/humps": "^2.0.6",

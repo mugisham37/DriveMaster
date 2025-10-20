@@ -1,4 +1,6 @@
 // namespace: components/common/MarkdownEditorForm.tsx
-export default {
+const markdownEditorForm = {
   areYouSureYouWantToDeleteThis: 'Are you sure you want to delete this?',
 }
+
+export default markdownEditorForm

@@ -206,7 +206,7 @@ import gi from './session-batch-1'
 import gj from './session-batch-2'
 import gk from './session-batch-3'
 
-export default {
+const translations = {
   'automation-batch': aa,
   'components/common/exercise-widget': au,
   'components/common/Loading.tsx': av,
@@ -421,3 +421,5 @@ export default {
   'session-batch-2': gj,
   'session-batch-3': gk,
 }
+
+export default translations

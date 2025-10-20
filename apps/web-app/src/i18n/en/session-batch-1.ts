@@ -1,5 +1,5 @@
 // namespace: session-batch-1
-export default {
+const sessionBatch1 = {
   'components.mentoring.session.automatedFeedbackModal.automatedAnalysis':
     'Automated Analysis',
   'components.mentoring.session.automatedFeedbackModal.forIteration':
@@ -25,3 +25,5 @@ export default {
   'components.mentoring.session.filePanel.instructions': 'Instructions',
   'components.mentoring.session.filePanel.tests': 'Tests',
 }
+
+export default sessionBatch1

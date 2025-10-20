@@ -53,7 +53,7 @@ function runSingle(
       if (code === 0) {
         resolve({ success: true })
       } else {
-        resolve({ success: false, code: code ?? undefined })
+        resolve({ success: false, ...(code !== null && { code }) })
       }
     })
 
@@ -64,6 +64,11 @@ function runSingle(
 }
 
 async function main() {
+  if (!folder) {
+    console.error('Please provide a folder path.')
+    process.exit(1)
+  }
+
   const entries = await fs.readdir(folder, { withFileTypes: true })
 
   for (const entry of entries) {
