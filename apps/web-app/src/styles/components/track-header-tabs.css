@@ -1,0 +1,47 @@
+/* Track Header Tab Styles - migrated from Ruby implementation */
+
+.c-track-header {
+  @apply bg-backgroundColorA border-b border-borderColor7;
+}
+
+.c-track-header .navbar {
+  @apply mt-16;
+}
+
+.c-track-header .tabs {
+  @apply flex items-center gap-16 overflow-x-auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.c-track-header .tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.c-track-header .c-tab-2 {
+  @apply flex items-center gap-8 px-16 py-12 text-14 font-medium text-textColor6 border-b-2 border-transparent whitespace-nowrap transition-colors duration-200;
+}
+
+.c-track-header .c-tab-2:hover {
+  @apply text-textColor2;
+}
+
+.c-track-header .c-tab-2.selected {
+  @apply text-textColor1 border-lightBlue;
+}
+
+.c-track-header .tags {
+  @apply flex items-center gap-8 mb-16;
+}
+
+.c-track-header .c-tag {
+  @apply inline-flex items-center gap-6 px-8 py-4 text-12 font-semibold rounded-5;
+}
+
+.c-track-header .c-tag.--practice-mode {
+  @apply bg-lightYellow text-darkYellow;
+}
+
+.c-track-header .c-tag.--compact {
+  @apply px-6 py-2;
+}

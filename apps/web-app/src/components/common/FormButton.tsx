@@ -1,0 +1,19 @@
+import React from 'react'
+import { MutationStatus } from '@tanstack/react-query'
+
+export const FormButton = ({
+  status,
+  children,
+  disabled: propDisabled,
+  ...props
+}: React.PropsWithChildren<
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { status: MutationStatus }
+>): React.JSX.Element => {
+  const requestDisabled = status === 'pending'
+
+  return (
+    <button {...props} disabled={requestDisabled || propDisabled}>
+      {children}
+    </button>
+  )
+}

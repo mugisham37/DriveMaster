@@ -1,0 +1,1 @@
+export { GraphicalIcon } from './GraphicalIcon'

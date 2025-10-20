@@ -1,0 +1,29 @@
+/* Exercise Status Tag Styles - migrated from Ruby CSS classes */
+
+.c-exercise-status-tag {
+  @apply inline-flex items-center px-8 py-4 text-12 font-semibold rounded-5 uppercase tracking-wide;
+}
+
+.c-exercise-status-tag.--available {
+  @apply bg-lightBlue text-darkBlue;
+}
+
+.c-exercise-status-tag.--locked {
+  @apply bg-lightGray text-textColor6;
+}
+
+.c-exercise-status-tag.--in-progress {
+  @apply bg-lightYellow text-darkYellow;
+}
+
+.c-exercise-status-tag.--completed {
+  @apply bg-lightGreen text-darkGreen;
+}
+
+.c-exercise-status-tag.--published {
+  @apply bg-lightPurple text-darkPurple;
+}
+
+.c-exercise-status-tag.--wip {
+  @apply bg-lightOrange text-darkOrange;
+}

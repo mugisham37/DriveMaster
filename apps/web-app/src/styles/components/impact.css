@@ -1,0 +1,137 @@
+/* Impact Page Styles */
+.c-shapes-impact {
+  position: relative;
+}
+
+.c-shapes-impact.c-shapes-1::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 50%;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+/* Impact Chart Styles */
+.impact-chart-container {
+  position: relative;
+  background-color: #221E31;
+  background-image: url('/photos/chart-bg.jpg');
+  background-size: 90px;
+  background-repeat: repeat;
+}
+
+.impact-chart {
+  position: relative;
+}
+
+/* Impact Map Styles */
+.impact-map {
+  position: relative;
+}
+
+.map-point {
+  position: absolute;
+  z-index: 10;
+  animation: fadeInScale 0.5s ease-out;
+}
+
+.map-point.metric-sign_up_metric {
+  animation: fadeInScale 2s ease-out;
+}
+
+.map-point.metric-start_solution_metric,
+.map-point.metric-submit_submission_metric {
+  animation: pulse 1s ease-in-out;
+}
+
+.map-point.metric-publish_solution_metric,
+.map-point.metric-open_issue_metric,
+.map-point.metric-open_pull_request_metric,
+.map-point.metric-merge_pull_request_metric {
+  animation: fadeInScale 6s ease-out;
+}
+
+/* Impact Testimonials Styles */
+.impact-testimonials-list .testimonial {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.impact-testimonials-list .testimonial:hover {
+  border-color: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+.impact-testimonials-list .testimonial .content {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Impact Stats Styles */
+.impact-stat {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .c-shapes-impact.c-shapes-1::before {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .impact-chart-container {
+    background-size: 60px;
+  }
+}
+
+/* About Navigation Styles */
+.about-nav {
+  margin-bottom: 2rem;
+}
+
+.about-nav .nav-item {
+  position: relative;
+}
+
+.about-nav .nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #6366f1;
+  border-radius: 1px;
+}

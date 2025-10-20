@@ -1,0 +1,9 @@
+/* Unlock On Complete Sentence Styles */
+
+.unlock-on-complete-sentence {
+  @apply p-16 bg-lightBlue rounded-8 border border-borderColor7;
+}
+
+.unlock-on-complete-sentence p {
+  @apply m-0 text-textColor6 text-15 leading-paragraph;
+}
