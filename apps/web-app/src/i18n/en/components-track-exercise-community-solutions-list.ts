@@ -1,5 +1,5 @@
 // namespace: components/track/exercise-community-solutions-list
-export default {
+const translations = {
   'orderSelect.sortByMostSubmitted': 'Sort by Most Submitted',
   'orderSelect.sortByNewest': 'Sort by Newest',
   'orderSelect.sortByOldest': 'Sort by Oldest',
@@ -9,3 +9,5 @@ export default {
     'Filter by {{groupName}}',
   'exerciseTagFilter.exerciseTagFilter.filter': 'Filter',
 }
+
+export default translations

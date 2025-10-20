@@ -26,7 +26,7 @@ export function useTimeout(
   const [startTimer, setStartTimer] = useState(false)
 
   useEffect(() => {
-    let intervalId: NodeJS.Timer | null = null
+    let intervalId: NodeJS.Timeout | null = null
 
     if (!timeoutReached && startTimer) {
       intervalId = setInterval(() => {
@@ -38,8 +38,11 @@ export function useTimeout(
       callback()
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return () => clearInterval(intervalId!)
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
   }, [callback, startTimer, timeoutReached])
 
   useEffect(() => {

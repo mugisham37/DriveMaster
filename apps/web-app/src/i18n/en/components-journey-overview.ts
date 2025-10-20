@@ -1,5 +1,5 @@
 // namespace: components/journey/overview
-export default {
+const translations = {
   'contributingSection.youHaventContributed':
     "You haven't contributed to Exercism yet",
   'contributingSection.seeHowYouCanContribute': 'See how you can contribute',
@@ -13,3 +13,5 @@ export default {
   'badgesSection.aGlimpseOfBadges': 'A glimpse of your badges collection',
   'badgesSection.seeEntireBadgeCollection': 'See your entire badge collection',
 }
+
+export default translations

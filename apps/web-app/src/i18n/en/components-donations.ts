@@ -1,5 +1,5 @@
 // namespace: components/donations
-export default {
+const translations = {
   'transactionForm.orSpecifyCustomAmount': 'Or specify a custom amount:',
   'subscriptionForm.youReCurrentlyDonatingEachMonthToExercism':
     "You're currently donating {{amount}} each month to Exercism.",
@@ -31,3 +31,5 @@ export default {
   'stripeForm.eligibleForInsidersAccess': 'Eligible for Insiders Access',
   'stripeForm.defaultError': 'Unable to fetch subscription information',
 }
+
+export default translations

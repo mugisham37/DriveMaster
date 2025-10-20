@@ -1,5 +1,5 @@
 // namespace: components/mentoring/session/Scratchpad.tsx
-export default {
+const translations = {
   'scratchpad.introducingYourScratchpad': 'Introducing your scratchpad',
   'scratchpad.markdownSupportedPlace':
     'A <0>Markdown-supported</0> place for you to write notes and add code snippets you’d like to refer to during mentoring.',
@@ -9,3 +9,5 @@ export default {
   'scratchpad.save': 'Save',
   'scratchpad.unsaved': 'Unsaved',
 }
+
+export default translations

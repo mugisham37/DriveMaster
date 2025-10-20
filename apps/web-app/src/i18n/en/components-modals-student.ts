@@ -1,5 +1,5 @@
 // namespace: components/modals/student
-export default {
+const translations = {
   'confirmFinishMentorDiscussionModal.areYouSure':
     'Are you sure you want to end this discussion?',
   'confirmFinishMentorDiscussionModal.feelLikeMentoringReachedConclusion':
@@ -13,3 +13,5 @@ export default {
   'finishMentorDiscussionModal.reportShouldNotBeNull':
     'Report should not be null',
 }
+
+export default translations

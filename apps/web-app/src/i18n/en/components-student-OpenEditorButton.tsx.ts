@@ -1,5 +1,5 @@
 // namespace: components/student/OpenEditorButton.tsx
-export default {
+const translations = {
   'openEditor.openInEditor': 'Open in editor',
   'openEditor.startInEditor': 'Start in editor',
   'openEditor.continueInEditor': 'Continue in editor',
@@ -18,3 +18,5 @@ export default {
     'Click the arrow to the right for more information.',
   'openEditor.exerciseCurrentlyLocked': 'This exercise is currently locked',
 }
+
+export default translations

@@ -1,4 +1,6 @@
 // namespace: components/settings/FormMessage.tsx
-export default {
+const translations = {
   'formMessage.error': 'Error',
 }
+
+export default translations

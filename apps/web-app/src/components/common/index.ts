@@ -1,1 +1,8 @@
 export { GraphicalIcon } from './GraphicalIcon'
+export { default as Modal } from './Modal'
+export { default as Loading } from './Loading'
+export { default as Icon } from './Icon'
+export { default as FetchingBoundary } from './FetchingBoundary'
+export { default as ResultsZone } from './ResultsZone'
+export { default as ExerciseWidget } from './ExerciseWidget'
+export { default as ComboButton } from './ComboButton'

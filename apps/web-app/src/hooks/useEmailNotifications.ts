@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { mailer } from '@/lib/email'
 import { EmailContext } from '@/lib/email/templates'
 
 export function useEmailNotifications() {
@@ -45,14 +44,17 @@ export function useEmailNotifications() {
     userEmail: string,
     userHandle: string,
     exerciseTitle: string,
+    exerciseSlug: string,
     trackTitle: string,
-    discussionUuid: string
+    trackSlug: string,
+    discussionUuid: string,
+    discussionStatus: string
   ) => {
     return sendNotificationEmail(type, userEmail, {
       user: { handle: userHandle, email: userEmail },
-      exercise: { title: exerciseTitle },
-      track: { title: trackTitle },
-      discussion: { uuid: discussionUuid }
+      exercise: { title: exerciseTitle, slug: exerciseSlug },
+      track: { title: trackTitle, slug: trackSlug },
+      discussion: { uuid: discussionUuid, status: discussionStatus }
     })
   }, [sendNotificationEmail])
 

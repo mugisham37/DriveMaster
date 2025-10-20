@@ -1,5 +1,5 @@
 // namespace: components/modals/BugReportModal.tsx
-export default {
+const translations = {
   reportABug: 'Report a bug',
   bugReportSubmittedThankYou: 'Bug report submitted. Thank you!',
   close: 'Close',
@@ -10,3 +10,5 @@ export default {
   submitBugReport: 'Submit bug report',
   cancel: 'Cancel',
 }
+
+export default translations

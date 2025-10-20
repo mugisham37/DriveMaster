@@ -19,8 +19,7 @@ export interface KeyboardNavigationOptions {
 }
 
 export function useKeyboardNavigation(
-  options: KeyboardNavigationOptions,
-  dependencies: React.DependencyList = []
+  options: KeyboardNavigationOptions
 ) {
   const {
     onArrowUp,
@@ -152,6 +151,7 @@ export function useKeyboardNavigation(
         document.removeEventListener('keydown', handleKeyDown)
       }
     }
+    return undefined
   }, [handleKeyDown, enabled])
 
   return handleKeyDown

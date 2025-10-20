@@ -1,5 +1,5 @@
 // namespace: components/mentoring/automation/RepresentationList.tsx
-export default {
+const translations = {
   'representationList.noSolutionsFound': 'No solutions found.',
   'representationList.tryChangingFilters':
     'Try changing your filters to find solutions that need feedback.',
@@ -7,3 +7,5 @@ export default {
     'There are currently no solutions that need feedback.',
   'representationList.checkBackLater': 'Check back here later for more!',
 }
+
+export default translations

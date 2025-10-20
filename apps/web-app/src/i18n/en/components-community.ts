@@ -1,5 +1,5 @@
 // namespace: components/community
-export default {
+const translations = {
   'storiesGrid.index.moreStories': 'More Stories from our community',
   'storiesGrid.index.listenLearn':
     'Listen, learn and be inspired by our community members.',
@@ -15,3 +15,5 @@ export default {
   'videoGrid.trackFilterList.openTrackFilter': 'Open the track filter',
   'videoGrid.trackFilterList.clickToChange': 'Click to change',
 }
+
+export default translations

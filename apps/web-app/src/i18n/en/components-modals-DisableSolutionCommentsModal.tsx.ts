@@ -1,5 +1,5 @@
 // namespace: components/modals/DisableSolutionCommentsModal.tsx
-export default {
+const translations = {
   'disableSolutionCommentsModal.confirmationTitle':
     'Do you want to disable comments?',
   'disableSolutionCommentsModal.confirmationDescription':
@@ -7,3 +7,5 @@ export default {
   'disableSolutionCommentsModal.disableComments': 'Disable comments',
   'disableSolutionCommentsModal.cancel': 'Cancel',
 }
+
+export default translations

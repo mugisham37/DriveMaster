@@ -2,12 +2,11 @@ import React, { useCallback, useState, useEffect } from 'react'
 import { Request, usePaginatedRequestQuery } from '../../hooks/request-query'
 import { TagsFilter } from './tracks-list/TagsFilter'
 import { List } from './tracks-list/List'
-import { ResultsZone } from '../common/ResultsZone'
+import { ResultsZone } from '../ResultsZone'
 import { useList } from '../../hooks/use-list'
 import { StudentTrack } from '../../types'
 import { useHistory, removeEmpty } from '../../hooks/use-history'
 import { OrderSelect } from './tracks-list/OrderSelect'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 type APIResponse = {
   tracks: StudentTrack[]
@@ -23,48 +22,47 @@ export type TagOption = {
 
 export type Order = 'last_touched_first'
 
-export default ({
+const TracksList = ({
   tagOptions,
   request: initialRequest,
 }: {
   tagOptions: readonly TagOption[]
   request: Request
-}): JSX.Element => {
-  const { t } = useAppTranslation('components/student/TracksList.tsx')
+}): React.JSX.Element => {
   const {
     request,
     setCriteria: setRequestCriteria,
     setQuery,
   } = useList(initialRequest)
-  const [criteria, setCriteria] = useState(request.query?.criteria)
-  const CACHE_KEY = ['track-list', request.endpoint, request.query]
+  const [criteria, setCriteria] = useState<string>(request.query?.criteria as string || '')
+  const CACHE_KEY = ['track-list', request.endpoint || '', JSON.stringify(request.query || {})]
   const {
     data: resolvedData,
     isError,
     isFetching,
-  } = usePaginatedRequestQuery<APIResponse>(CACHE_KEY, request)
+  } = usePaginatedRequestQuery<APIResponse>(CACHE_KEY, request as Request<APIResponse>)
 
   const setTags = useCallback(
-    (tags) => {
-      setQuery({ ...request.query, tags: tags })
+    (tags: string[]) => {
+      setQuery({ ...(request.query || {}), tags: tags })
     },
     [request.query, setQuery]
   )
 
-  const handleReset = useCallback(() => {
-    setCriteria('')
-    setQuery({ ...request.query, tags: [] })
-  }, [request.query, setQuery])
 
-  const sortedTracks = resolvedData?.tracks.sort((a, b) => {
-    if (a.lastTouchedAt === null || b.lastTouchedAt === null) {
+
+  const sortedTracks = resolvedData?.tracks?.sort((a: StudentTrack, b: StudentTrack) => {
+    const aLastTouched = (a as StudentTrack & { lastTouchedAt?: string }).lastTouchedAt
+    const bLastTouched = (b as StudentTrack & { lastTouchedAt?: string }).lastTouchedAt
+    
+    if (!aLastTouched || !bLastTouched) {
       return 0
     }
 
-    return a.lastTouchedAt > b.lastTouchedAt ? -1 : 1
+    return aLastTouched > bLastTouched ? -1 : 1
   })
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -83,26 +81,29 @@ export default ({
         <div className="lg-container container">
           <input
             type="text"
-            placeholder={t('tracksList.searchLanguageTracks')}
+            placeholder="Search language tracks"
             className="--search"
             onChange={(e) => setCriteria(e.target.value)}
-            value={criteria || ''}
+            value={criteria}
           />
           <TagsFilter
-            setTags={setTags}
-            options={tagOptions}
-            value={request.query.tags ?? []}
-            numTracks={resolvedData ? resolvedData.tracks.length : 0}
+            tags={tagOptions.flatMap(option => option.options.map(opt => opt.value))}
+            selectedTags={((request.query?.tags as string[]) || [])}
+            onTagsChange={setTags}
           />
-          <OrderSelect value="last_touched_first" setValue={() => null} />
+          <OrderSelect 
+            value="last_touched_first" 
+            onChange={() => null}
+            options={[{ value: "last_touched_first", label: "Last Touched First" }]}
+          />
         </div>
       </section>
       <section className="lg-container container">
-        {isError && <p>{t('tracksList.somethingWentWrong')}</p>}
+        {isError && <p>Something went wrong</p>}
         {resolvedData && (
           <ResultsZone isFetching={isFetching}>
             {sortedTracks ? (
-              <List data={sortedTracks} onReset={handleReset} />
+              <List tracks={sortedTracks} />
             ) : null}
           </ResultsZone>
         )}
@@ -110,3 +111,5 @@ export default ({
     </div>
   )
 }
+
+export default TracksList

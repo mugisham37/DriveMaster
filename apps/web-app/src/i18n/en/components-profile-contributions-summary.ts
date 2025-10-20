@@ -1,5 +1,5 @@
 // namespace: components/profile/contributions-summary
-export default {
+const translations = {
   'totalReputation.addressHas': '{{handle}} has',
   'totalReputation.youHave': 'You have',
   'totalReputation.reputation': 'Reputation',
@@ -7,3 +7,5 @@ export default {
   'categorySummary.noRep': 'No rep',
   'categorySummary.rep': '{{reputation}} rep',
 }
+
+export default translations

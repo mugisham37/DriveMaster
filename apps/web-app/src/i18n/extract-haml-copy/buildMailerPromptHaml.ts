@@ -1,8 +1,5 @@
-import path from 'path'
-
 export function buildMailerPrompt(
   files: Record<string, string>,
-  rootFolder: string
 ): string {
   const fileSections = Object.entries(files)
     .map(([filePath, content]) => {

@@ -1,8 +1,5 @@
-import path from 'path'
-
 export function buildPrompt(
   files: Record<string, string>,
-  rootFolder: string
 ): string {
   const fileSections = Object.entries(files)
     .map(([filePath, content]) => {

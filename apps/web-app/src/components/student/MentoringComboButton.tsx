@@ -25,7 +25,7 @@ export const MentoringComboButton = ({
   discussions: readonly MentorDiscussion[]
   className?: string
   links: Links
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/student/MentoringComboButton.tsx')
   return (
     <ComboButton className={className}>

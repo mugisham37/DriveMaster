@@ -1,4 +1,6 @@
 // namespace: components/settings/ResetAccountButton.tsx
-export default {
+const translations = {
   resetAccount: 'Reset account',
 }
+
+export default translations

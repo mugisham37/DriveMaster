@@ -1,2 +1,4 @@
 // namespace: components/student/ExerciseStatusDot.tsx
-export default {}
+const translations = {}
+
+export default translations

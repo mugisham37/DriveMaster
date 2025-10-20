@@ -1,5 +1,7 @@
 // namespace: components/editor/EditorStatusSummary.tsx
-export default {
+const translations = {
   'editorStatusSummary.error': 'Error: {{error}}',
   'editorStatusSummary.revertingFiles': 'Reverting files…',
 }
+
+export default translations

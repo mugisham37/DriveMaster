@@ -1,5 +1,5 @@
 // namespace: components/mentoring/representation/modals
-export default {
+const translations = {
   'previewAutomationModal.modalTitle': 'Thanks for submitting feedback!',
   'submittedAutomationModal.thanksForFeedback':
     'Thanks for submitting feedback!',
@@ -21,3 +21,5 @@ export default {
     '<0>{{mentorName}}</0> gave this feedback on a solution exactly like yours:',
   'previewFeedbackComment.commentedOn': 'Commented on {{date}}',
 }
+
+export default translations

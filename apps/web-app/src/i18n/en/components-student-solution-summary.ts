@@ -1,5 +1,5 @@
 // namespace: components/student/solution-summary
-export default {
+const translations = {
   'communitySolutions.learnFromOthersSolutions': "Learn from others' solutions",
   'communitySolutions.thisIsWhereWeWouldUsuallyLink':
     'This is where we’d usually link you to other peoples’ solutions to the same exercise.',
@@ -62,3 +62,5 @@ export default {
     additionalComments_other: '{{count}} additional comments',
   },
 }
+
+export default translations

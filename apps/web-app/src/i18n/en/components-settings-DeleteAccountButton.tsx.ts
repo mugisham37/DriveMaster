@@ -1,4 +1,6 @@
 // namespace: components/settings/DeleteAccountButton.tsx
-export default {
+const translations = {
   deleteAccount: 'Delete account',
 }
+
+export default translations

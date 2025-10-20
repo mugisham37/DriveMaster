@@ -1,5 +1,5 @@
 // namespace: components/modals/ResetAccountModal.tsx
-export default {
+const translations = {
   youAreAboutToReset: "You're about to reset your Exercism account",
   pleaseReadCarefully:
     'Please read this carefully before commiting to reset your account.',
@@ -19,3 +19,5 @@ export default {
   resetAccount: 'Reset account',
   unableToResetAccount: 'Unable to reset account',
 }
+
+export default translations

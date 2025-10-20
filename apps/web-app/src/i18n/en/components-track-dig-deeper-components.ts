@@ -1,5 +1,5 @@
 // namespace: components/track/dig-deeper-components
-export default {
+const translations = {
   'deepDiveVideo.deepDiveInto': 'Deep Dive into {{exerciseTitle}}!',
   'approaches.approaches': 'Approaches',
   'approaches.otherWaysCommunitySolved':
@@ -17,3 +17,5 @@ export default {
   'diggingDeeper.editViaGitHub': 'Edit via GitHub',
   'diggingDeeper.linkOpensInNewTab': 'The link opens in a new window or tab',
 }
+
+export default translations

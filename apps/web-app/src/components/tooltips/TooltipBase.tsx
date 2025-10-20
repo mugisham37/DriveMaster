@@ -16,7 +16,7 @@ export function TooltipBase({
   width = 300, 
   children, 
   className = '' 
-}: TooltipBaseProps): JSX.Element {
+}: TooltipBaseProps): React.JSX.Element {
   return (
     <div 
       className={`bg-white border border-gray-200 rounded-lg shadow-lg p-4 ${className}`}

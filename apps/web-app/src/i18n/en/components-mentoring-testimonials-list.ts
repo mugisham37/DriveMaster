@@ -1,5 +1,5 @@
 // namespace: components/mentoring/testimonials-list
-export default {
+const translations = {
   'orderSelect.sortByUnrevealedFirst': 'Sort by Unrevealed First',
   'orderSelect.sortByNewestFirst': 'Sort by Newest First',
   'orderSelect.sortByOldestFirst': 'Sort by Oldest First',
@@ -10,3 +10,5 @@ export default {
     'Someone left you a testimonial… 😲',
   'unrevealedTestimonial.clickTapToReveal': 'Click / tap to reveal',
 }
+
+export default translations

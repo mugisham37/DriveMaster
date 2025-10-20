@@ -1,4 +1,6 @@
 // namespace: components/modals/track-welcome-modal/LHS/steps/components
-export default {
+const translations = {
   'welcomeToTrack.welcomeTo': 'Welcome to {{trackTitle}}! 🎉',
 }
+
+export default translations

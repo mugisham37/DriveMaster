@@ -455,7 +455,8 @@
     "verisons",
     "xlarge",
     "dedented",
-    "initialises"
+    "initialises",
+    "contenteditable"
   ],
   "ignorePaths": [
     "node_modules/**",

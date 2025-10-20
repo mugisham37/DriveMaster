@@ -1,59 +1,59 @@
 // Common components
-export * from './common'
+export * from "./common";
 
 // Student components
-export * from './student'
+export * from "./student";
 
 // Mentoring components
-export * from './mentoring'
+export * from "./mentoring";
 
 // Editor components
-export * from './editor'
+export * from "./editor";
 
 // Profile components
-export * from './profile'
+export * from "./profile";
 
 // Community components
-export * from './community'
+export * from "./community";
 
 // Cohorts components
-export * from './cohorts'
+export * from "./cohorts";
 
 // Courses components
-export * from './courses'
+export * from "./courses";
 
 // Contributing components
-export * from './contributing'
+export * from "./contributing";
 
 // Bootcamp components
-export * from './bootcamp'
+export * from "./bootcamp";
 
 // Layout components
-export * from './layout'
+export * from "./layout";
 
 // Auth components
-export * from './auth'
+export * from "./auth";
 
 // Provider components
-export * from './providers'
+export * from "./providers";
 
 // Settings components
-export * from './settings'
+export * from "./settings";
 
 // Insiders components
-export * from './insiders'
+export * from "./insiders";
 
 // Modal components
-export * from './modals'
+export * from "./modals";
 
 // Partner components
-export * from './partner'
+export * from "./partner";
 
 // Training Data components
-export * from './training-data'
+export * from "./training-data";
 
 // About components
-export * from './about'
+export * from "./about";
 
 // Docs components
-export * from './docs'
+export * from "./docs";

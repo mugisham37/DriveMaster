@@ -1,5 +1,5 @@
 // namespace: components/notifications/notifications-list
-export default {
+const translations = {
   'useNotificationMutation.unableToMarkAllNotificationsAsRead':
     'Unable to mark all notifications as read',
   'list.youHaveNoNotifications': 'You have no notifications',
@@ -9,3 +9,5 @@ export default {
   'markAllNotificationsAsReadModal.continue': 'Continue',
   'markAllNotificationsAsReadModal.cancel': 'Cancel',
 }
+
+export default translations

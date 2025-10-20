@@ -1,5 +1,7 @@
 // namespace: components/student/RequestMentoringButton.tsx
-export default {
+const translations = {
   mentoringSlotAvailable: 'Mentoring slot available',
   selectAnExercise: 'Select an exercise',
 }
+
+export default translations

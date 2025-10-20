@@ -1,5 +1,5 @@
 // namespace: components/settings/PasswordForm.tsx
-export default {
+const translations = {
   changeYourPassword: 'Change your password',
   currentPassword: 'Current password',
   newPassword: 'New password',
@@ -8,3 +8,5 @@ export default {
   youCanThenSignBackIn: 'You can then sign back in with your new password.',
   changePassword: 'Change password',
 }
+
+export default translations

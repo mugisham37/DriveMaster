@@ -3,7 +3,7 @@ import { highlightAll, highlightAllAlways } from '@/utils/highlight'
 
 export function useHighlighting<T extends HTMLElement>(
   html?: string
-): RefObject<T> {
+): RefObject<T | null> {
   const parentRef = useRef<T | null>(null)
 
   useLayoutEffect(() => {
@@ -17,7 +17,7 @@ export function useHighlighting<T extends HTMLElement>(
 }
 export function useContinuousHighlighting<T extends HTMLElement>(
   html?: string
-): RefObject<T> {
+): RefObject<T | null> {
   const parentRef = useRef<T | null>(null)
   const prevHtml = useRef<string | undefined>(undefined)
 

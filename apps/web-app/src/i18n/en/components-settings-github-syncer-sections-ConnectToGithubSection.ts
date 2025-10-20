@@ -1,5 +1,5 @@
 // namespace: components/settings/github-syncer/sections/ConnectToGithubSection
-export default {
+const translations = {
   'index.backupYourSolutionsToGithub': 'Backup your Solutions to GitHub',
   'index.automatedBackupDescription':
     'Automatically backup your solutions to GitHub with our automated backup tool.',
@@ -23,3 +23,5 @@ export default {
   'connectModal.connectGithubRepository': 'Connect a GitHub repository',
   'connectModal.cancel': 'Cancel',
 }
+
+export default translations

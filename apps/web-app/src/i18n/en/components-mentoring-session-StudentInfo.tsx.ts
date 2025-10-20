@@ -1,4 +1,6 @@
 // namespace: components/mentoring/session/StudentInfo.tsx
-export default {
+const translations = {
   'studentInfo.whoYoureMentoring': "Who you're mentoring",
 }
+
+export default translations

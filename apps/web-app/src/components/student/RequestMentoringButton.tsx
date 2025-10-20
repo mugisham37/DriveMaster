@@ -2,7 +2,6 @@
 // i18n-namespace: components/student/RequestMentoringButton.tsx
 import React, { useState } from 'react'
 import { RequestMentoringModal } from '../modals/RequestMentoringModal'
-import { Request } from '../../hooks/request-query'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export type Links = {
@@ -10,12 +9,10 @@ export type Links = {
 }
 
 export default function RequestMentoringButton({
-  request,
   links,
 }: {
-  request: Request
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const { t } = useAppTranslation(
     'components/student/RequestMentoringButton.tsx'
@@ -32,10 +29,9 @@ export default function RequestMentoringButton({
         <div className="btn-simple">{t('selectAnExercise')}</div>
       </button>
       <RequestMentoringModal
-        open={open}
+        isOpen={open}
         onClose={() => setOpen(false)}
-        request={request}
-        links={links}
+        endpoint={links.mentorRequest}
       />
     </React.Fragment>
   )

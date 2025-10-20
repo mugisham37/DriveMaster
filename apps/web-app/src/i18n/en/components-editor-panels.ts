@@ -1,5 +1,5 @@
 // namespace: components/editor/panels
-export default {
+const translations = {
   'resultsPanel.testRunCancelled': 'Test run cancelled',
   'resultsPanel.runTestsToCheckYourCode': '<0>Run tests</0> to check your code',
   'resultsPanel.wellRunYourCode':
@@ -13,3 +13,5 @@ export default {
   'instructionsPanel.opensInAModal': 'Opens in a modal',
   'instructionsPanel.howToDebug': 'How to debug',
 }
+
+export default translations

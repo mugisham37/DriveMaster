@@ -1,5 +1,5 @@
 // namespace: components/modals/mentor
-export default {
+const translations = {
   'finishMentorDiscussionModal.areYouSure':
     'Are you sure you want to end this discussion?',
   'finishMentorDiscussionModal.explanation':
@@ -7,3 +7,5 @@ export default {
   'finishMentorDiscussionModal.cancel': 'Cancel',
   'finishMentorDiscussionModal.endDiscussion': 'End discussion',
 }
+
+export default translations

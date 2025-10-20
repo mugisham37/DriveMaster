@@ -1,5 +1,5 @@
 // namespace: components/modals/track-welcome-modal/LHS
-export default {
+const translations = {
   'bootcampRecommendation.header':
     'Coding Fundamentals might be better for you…',
   'bootcampRecommendation.tracksAudience':
@@ -13,3 +13,5 @@ export default {
   'bootcampRecommendation.cta.checkOutCourse': 'Check out the Course ✨',
   'bootcampRecommendation.cta.continueAnyway': 'Continue anyway',
 }
+
+export default translations

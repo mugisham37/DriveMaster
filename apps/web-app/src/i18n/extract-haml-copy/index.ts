@@ -137,7 +137,7 @@ if (require.main === module) {
         } files, ${totalChars} chars)`
       );
 
-      const prompt = buildMailerPrompt(batch, inputPath || ".");
+      const prompt = buildMailerPrompt(batch);
       const result = await runLLMWithRetry(prompt);
 
       await fs.writeFile(debugPath, result, "utf8");

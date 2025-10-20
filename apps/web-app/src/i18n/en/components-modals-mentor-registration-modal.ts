@@ -1,5 +1,5 @@
 // namespace: components/modals/mentor-registration-modal
-export default {
+const translations = {
   'commitStep.title': 'Commit to being a good mentor',
   'commitStep.description':
     "Mentoring on Exercism can be an incredible experience for students and mentors alike. To ensure it remains a positive place for everyone, we ask all mentors to affirm Exercism's values before they mentor their first solution.",
@@ -26,3 +26,5 @@ export default {
   'congratulationsStep.video': 'Video · 0:24',
   'congratulationsStep.readyToGetStarted': "I'm ready to get started!",
 }
+
+export default translations

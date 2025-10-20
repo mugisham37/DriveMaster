@@ -1,5 +1,5 @@
 // namespace: components/modals/seniority-survey-modal
-export default {
+const translations = {
   // i18n - components/modals/seniority-survey-modal.ts
   'bootcampAd.heading':
     'Meet our <strong>Coding Fundamentals</strong> course...',
@@ -31,3 +31,5 @@ export default {
   'initialView.midLevelDeveloper': 'Mid-level Developer',
   'initialView.seniorDeveloper': 'Senior Developer',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/modals/BegModal.tsx
-export default {
+const translations = {
   'begModal.sorryToDisturb': 'Sorry to disturb, but...',
   'begModal.weNeedYourHelp': 'We need your help!',
   'begModal.cantAffordIt': "Can't afford it?",
@@ -24,3 +24,5 @@ export default {
   'begModal.nonDonorContent.only1Percent':
     "If only 1% of our users support us regularly, we'll be able to cover our costs. It takes 30 seconds to donate, using the form on the right 👉",
 }
+
+export default translations

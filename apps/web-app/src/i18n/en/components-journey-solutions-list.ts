@@ -1,5 +1,5 @@
 // namespace: components/journey/solutions-list
-export default {
+const translations = {
   'headTestsStatusSelect.passed': 'Passed',
   'headTestsStatusSelect.failed': 'Failed',
   'headTestsStatusSelect.errored': 'Errored',
@@ -34,3 +34,5 @@ export default {
   'solutionFilter.applyFilters': 'Apply filters',
   'solutionFilter.close': 'Close',
 }
+
+export default translations

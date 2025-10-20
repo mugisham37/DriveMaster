@@ -1,5 +1,5 @@
 // namespace: components/student/mentoring-session/mentoring-request
-export default {
+const translations = {
   'cancelRequestModal.cancelMentoringRequest': 'Cancel mentoring request?',
   'cancelRequestModal.areYouSure':
     'Are you sure you want to cancel this mentoring request? Please note that if someone has started giving feedback in the last few minutes, the session may continue regardless of this cancellation.',
@@ -33,3 +33,5 @@ export default {
   'mentoringRequestForm.openForMentor':
     'Once you submit, your request will be open for a mentor to join and start providing feedback.',
 }
+
+export default translations

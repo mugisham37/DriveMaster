@@ -10,21 +10,26 @@ export function ExerciseStatusChart({
 }: {
   exercisesData: { [slug: string]: [string, string] }
   links: { exercise: string; tooltip: string }
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/student/ExerciseStatusChart.tsx')
   return (
     <div className="exercises">
       {Object.keys(exercisesData).map((key) => {
         const slug = key
-        const status = exercisesData[key][0]
-        const type = exercisesData[key][1]
+        const exerciseData = exercisesData[key]
+        if (!exerciseData || exerciseData.length < 2) {
+          return null
+        }
+        
+        const status = exerciseData[0]
+        const type = exerciseData[1]
 
-        const dotLinks = {
+        const dotLinks: {
+          tooltip: string
+          exercise?: string
+        } = {
           tooltip: links.tooltip.replace('$SLUG', slug),
-          exercise:
-            status !== 'locked'
-              ? links.exercise.replace('$SLUG', slug)
-              : undefined,
+          ...(status !== 'locked' && { exercise: links.exercise.replace('$SLUG', slug) }),
         }
 
         if (

@@ -1,5 +1,5 @@
 // namespace: components/modals/realtime-feedback-modal/feedback-content/no-automated-feedback
-export default {
+const translations = {
   'index.noImmediateFeedback': 'No Immediate Feedback',
   'index.ourSystemsDontHave':
     "Our systems don't have any immediate suggestions about how to improve your code.",
@@ -23,3 +23,5 @@ export default {
   'index.onceYouSubmit':
     'Once you submit, your request will be open for a mentor to join and start providing feedback.',
 }
+
+export default translations

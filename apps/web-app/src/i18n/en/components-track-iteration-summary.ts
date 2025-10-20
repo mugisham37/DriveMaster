@@ -1,5 +1,5 @@
 // namespace: components/track/iteration-summary
-export default {
+const translations = {
   'submissionMethodIcon.submittedViaCLI': 'Submitted via CLI',
   'submissionMethodIcon.submittedViaEditor': 'Submitted via Editor',
   'outOfDateNotice.outdated': 'Outdated',
@@ -8,3 +8,5 @@ export default {
   'analysisStatusSummary.actionable': 'Actionable',
   'analysisStatusSummary.other': 'Other',
 }
+
+export default translations

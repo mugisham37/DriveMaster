@@ -1,5 +1,5 @@
 // namespace: components/settings/PronounsForm.tsx
-export default {
+const translations = {
   'pronounsForm.howWouldYouLikeToBeAddressedOptional':
     'How would you like to be addressed? (optional)',
   'pronounsForm.instructions':
@@ -18,3 +18,5 @@ export default {
   'pronounsForm.savePronouns': 'Save pronouns',
   'pronounsForm.yourPronounsHaveBeenUpdated': 'Your pronouns have been updated',
 }
+
+export default translations

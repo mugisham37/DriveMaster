@@ -1,5 +1,5 @@
 // namespace: components/modals/welcome-modal
-export default {
+const translations = {
   'welcomeModal.helloFellowDeveloper': 'Hello fellow developer 👋',
   'welcomeModal.exercismDeepenSkills':
     "Exercism is the place to deepen your programming skills and explore over {{numTracks}} programming languages. It's 100% free.",
@@ -43,3 +43,5 @@ export default {
   'juniorView.aFormalCertificate':
     'A formal <strong className="font-semibold">certificate</strong> on completion.',
 }
+
+export default translations

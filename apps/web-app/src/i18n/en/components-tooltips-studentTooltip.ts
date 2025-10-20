@@ -1,5 +1,5 @@
 // namespace: components/tooltips/student-tooltip
-export default {
+const translations = {
   previousSessions: {
     never_one:
       'Mentored <strong>{{count}}</strong> time but <strong>never</strong> by you',
@@ -19,3 +19,5 @@ export default {
   trackObjectivesTitle: 'Track objectives',
   unableToLoad: 'Unable to load information',
 }
+
+export default translations

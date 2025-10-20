@@ -1,4 +1,6 @@
 // namespace: components/modals/TaskHintsModal.tsx
-export default {
+const translations = {
   'taskHintsModal.hintsAndTips': 'Hints and Tips',
 }
+
+export default translations

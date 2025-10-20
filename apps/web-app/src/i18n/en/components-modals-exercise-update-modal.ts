@@ -1,5 +1,5 @@
 // namespace: components/modals/exercise-update-modal
-export default {
+const translations = {
   'exerciseUpdateForm.header':
     "See what's changed on <icon/> {{exerciseTitle}}",
   'exerciseUpdateForm.warning':
@@ -7,3 +7,5 @@ export default {
   'exerciseUpdateForm.updateExercise': 'Update exercise',
   'exerciseUpdateForm.dismiss': 'Dismiss',
 }
+
+export default translations

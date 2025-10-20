@@ -1,5 +1,5 @@
 // namespace: components/modals/ExerciseMakersModal.tsx
-export default {
+const translations = {
   'exerciseMakersModal.seeFullHistoryOnGithub':
     'See the full history of this exercise on GitHub',
   'exerciseMakersModal.authors': 'Authors',
@@ -8,3 +8,5 @@ export default {
   'exerciseMakersModal.peopleWhoUpdatedExercise':
     'People who updated the exercise',
 }
+
+export default translations

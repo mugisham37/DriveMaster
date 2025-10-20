@@ -1,5 +1,5 @@
 // namespace: components/common/Pagination.tsx
-export default {
+const translations = {
   'pagination.first': 'First',
   'pagination.previous': 'Previous',
   'pagination.goToPage': 'Go to page {{page}}',
@@ -10,3 +10,5 @@ export default {
   'pagination.next': 'Next',
   'pagination.last': 'Last',
 }
+
+export default translations

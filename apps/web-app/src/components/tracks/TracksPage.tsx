@@ -4,7 +4,7 @@ import { User } from 'next-auth'
 import { Track } from '@/types'
 import { Layout } from '@/components/layout/Layout'
 import { TracksHeader } from './TracksHeader'
-import { TracksList } from '@/components/student/TracksList'
+import TracksList from '@/components/student/TracksList'
 
 interface TracksPageProps {
   tracks: Track[]
@@ -18,7 +18,6 @@ export function TracksPage({
   tracks, 
   numTracks, 
   trackIconUrls, 
-  user,
   searchParams 
 }: TracksPageProps) {
   return (
@@ -30,9 +29,14 @@ export function TracksPage({
         />
         
         <TracksList 
-          user={user}
-          tracks={tracks}
-          params={searchParams}
+          tagOptions={[]}
+          request={{
+            endpoint: '/api/tracks',
+            query: searchParams,
+            options: {
+              initialData: tracks,
+            }
+          }}
         />
       </div>
     </Layout>

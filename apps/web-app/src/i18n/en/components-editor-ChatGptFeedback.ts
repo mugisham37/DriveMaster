@@ -1,5 +1,5 @@
 // namespace: components/editor/ChatGptFeedback
-export default {
+const translations = {
   'chatGptDialog.areYouSureYouWantToAskChatGPT':
     'Are you sure you want to ask ChatGPT?',
   'chatGptDialog.chatGptIsAPowerfulTool':
@@ -39,3 +39,5 @@ export default {
     'Congrats! The tests are passing! 🎉',
   'askChatGptButton.stuckAskChatGPT': 'Stuck? Ask ChatGPT',
 }
+
+export default translations

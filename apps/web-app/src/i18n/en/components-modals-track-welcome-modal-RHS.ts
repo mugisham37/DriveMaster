@@ -1,5 +1,5 @@
 // namespace: components/modals/track-welcome-modal/RHS
-export default {
+const translations = {
   'whoIsThisTrackFor.courseName':
     "Exercism's <strong>Coding Fundamentals</strong>",
   'whoIsThisTrackFor.courseOffersHeading': 'The course offers:',
@@ -14,3 +14,5 @@ export default {
   'videoRHS.watchThisShortVideo':
     '☝️ Watch this short video to learn more about Learning and Practice Modes, and how to choose the right setup for you.',
 }
+
+export default translations

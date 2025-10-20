@@ -1,7 +1,4 @@
-import React from 'react'
-import React from 'react'
-import React from 'react'
-import { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 
 // Hook for managing ARIA live regions
 export function useLiveRegion() {
@@ -153,7 +150,7 @@ export function useScreenReader() {
 
 // Hook for managing ARIA descriptions
 export function useAriaDescription() {
-  const descriptionId = useRef(`description-${Math.random().toString(36).substr(2, 9)}`)
+  const descriptionId = useRef(`description-${Math.random().toString(36).substring(2, 11)}`)
 
   const Description = useCallback(({ children }: { children: React.ReactNode }) => (
     React.createElement('div', {
@@ -170,7 +167,7 @@ export function useAriaDescription() {
 
 // Utility function to generate unique IDs for accessibility
 export function generateId(prefix: string = 'id'): string {
-  return `${prefix}-${Math.random().toString(36).substr(2, 9)}`
+  return `${prefix}-${Math.random().toString(36).substring(2, 11)}`
 }
 
 // Utility function to manage ARIA attributes

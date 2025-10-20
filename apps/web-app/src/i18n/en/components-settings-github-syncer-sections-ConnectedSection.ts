@@ -1,5 +1,5 @@
 // namespace: components/settings/github-syncer/sections/ConnectedSection
-export default {
+const translations = {
   'index.syncerConnected': 'Syncer connected',
   'dangerZoneSection.pauseSyncer': 'Pause Syncer',
   'dangerZoneSection.wantToPause': 'Want to pause your syncer for a while?',
@@ -118,3 +118,5 @@ export default {
   'syncBehaviourSection.automatic': 'Automatic',
   'syncBehaviourSection.manual': 'Manual',
 }
+
+export default translations

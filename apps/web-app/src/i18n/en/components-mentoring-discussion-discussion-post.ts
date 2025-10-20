@@ -1,4 +1,6 @@
 // namespace: components/mentoring/discussion/discussion-post
-export default {
+const translations = {
   'discussionPostView.edit': 'Edit',
 }
+
+export default translations

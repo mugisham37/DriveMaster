@@ -9,8 +9,7 @@ import { camelizeKeys, decamelizeKeys } from 'humps'
 import { sendRequest } from '../utils/send-request'
 import { stringify } from 'qs'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Request<Query = Record<string, any>> = {
+export type Request<Query = Record<string, unknown>> = {
   endpoint: string | undefined
   query?: Query
   options: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>
@@ -26,17 +25,13 @@ function handleFetch(request: Request) {
     : ''
 
   return () => {
-    const { fetch, cancel } = sendRequest({
+    const result = sendRequest({
       endpoint: `${request.endpoint}${params}`,
-      body: null,
+      body: '',
       method: 'GET',
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fetchWithCancel = fetch as any
-    fetchWithCancel.cancel = cancel
-
-    return fetch
+    return result.fetch
   }
 }
 

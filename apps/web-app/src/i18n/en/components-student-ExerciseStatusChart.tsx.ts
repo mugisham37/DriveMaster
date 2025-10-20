@@ -1,4 +1,6 @@
 // namespace: components/student/ExerciseStatusChart.tsx
-export default {
+const translations = {
   'exerciseStatusChart.invalidStatus': 'Invalid status',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/editor/FeedbackPanel
-export default {
+const translations = {
   'feedbackPanelRequestMentoring.takeSolutionToNextLevel':
     'Take your solution to the next level',
   'feedbackPanelRequestMentoring.getFeedbackOnSolution':
@@ -38,3 +38,5 @@ export default {
     'This is your latest code review session for this exercise. To continue the discussion, switch to <link>mentoring mode</link>.',
   'feedbackDetail.automatedFeedback': 'Automated Feedback',
 }
+
+export default translations

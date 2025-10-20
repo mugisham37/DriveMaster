@@ -1,5 +1,5 @@
 // namespace: components/settings/github-syncer/sections/ConnectedSection/SyncBehaviourSection.tsx
-export default {
+const translations = {
   'syncBehaviour.syncBehaviour': 'Sync behaviour',
   'syncBehaviour.syncingOptionDescription':
     'Choose whether syncing should happen automatically when you create a new iteration, or manually when you trigger it yourself. <strong>Automatic</strong> keeps your GitHub repo up to date, while <strong>manual</strong> gives you full control.',
@@ -11,3 +11,5 @@ export default {
   'syncBehaviour.somethingWentWrongWhileSaving':
     'Something went wrong while saving changes. Please try again.',
 }
+
+export default translations

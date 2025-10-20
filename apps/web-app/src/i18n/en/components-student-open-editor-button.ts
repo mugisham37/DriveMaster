@@ -1,4 +1,6 @@
 // namespace: components/student/open-editor-button
-export default {
+const translations = {
   'startExerciseButton.startInEditor': 'Start in editor',
 }
+
+export default translations

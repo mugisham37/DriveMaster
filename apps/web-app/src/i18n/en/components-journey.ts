@@ -1,5 +1,5 @@
 // namespace: components/journey
-export default {
+const translations = {
   'contributionResults.showingContributions':
     'Showing {{totalCount}} {{contributionLabel}}',
   'badgesList.searchByBadgeNameOrDescription':
@@ -33,3 +33,5 @@ export default {
   'unrevealedBadge.clickTapToReveal': 'Click/tap to reveal',
   'contribution.in': 'in',
 }
+
+export default translations

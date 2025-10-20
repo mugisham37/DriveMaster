@@ -1,5 +1,5 @@
 // namespace: components/modals/BadgeModal.tsx
-export default {
+const translations = {
   'badgeModal.newBadgeEarned': 'New Badge Earned',
   'badgeModal.earnedOn': 'Earned on ',
   'badgeModal.membersHaveEarned_one':
@@ -9,3 +9,5 @@ export default {
   'badgeModal.percentageOfUsers':
     "That's {{percentage}}% of all Exercism users",
 }
+
+export default translations

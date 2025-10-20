@@ -27,14 +27,17 @@ export function TrackPage({
           track={track} 
           isJoined={isJoined}
           user={user}
-          userTrack={isJoined ? {
-            id: 1, // TODO: Get from actual user track data
-            slug: track.slug,
-            isJoined: true,
-            isExternal: false, // TODO: Get from actual track data
-            isCourse: track.course || false,
-            isPracticeMode: false // TODO: Get from actual user track data
-          } : undefined}
+          selectedTab="overview"
+          {...(isJoined && {
+            userTrack: {
+              id: 1, // TODO: Get from actual user track data
+              slug: track.slug,
+              isJoined: true,
+              isExternal: false, // TODO: Get from actual track data
+              isCourse: track.course || false,
+              isPracticeMode: false // TODO: Get from actual user track data
+            }
+          })}
         />
 
         <div className="lg-container container">

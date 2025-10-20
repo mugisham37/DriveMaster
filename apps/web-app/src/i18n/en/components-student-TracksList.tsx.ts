@@ -1,5 +1,7 @@
 // namespace: components/student/TracksList.tsx
-export default {
+const translations = {
   'tracksList.searchLanguageTracks': 'Search language tracks',
   'tracksList.somethingWentWrong': 'Something went wrong',
 }
+
+export default translations

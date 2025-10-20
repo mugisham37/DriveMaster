@@ -1,5 +1,5 @@
 // namespace: components/training-data/dashboard
-export default {
+const translations = {
   'dashboardTabs.needsTagging': 'Needs tagging',
   'dashboardTabs.needsChecking': 'Needs checking',
   'dashboardTabs.needsCheckingAdmin': 'Needs checking (admin)',
@@ -8,3 +8,5 @@ export default {
   'taggableCodeList.retry': 'Retry',
   'dashboardHeader.filterExerciseName': 'Filter exercise name',
 }
+
+export default translations

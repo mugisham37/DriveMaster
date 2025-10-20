@@ -1,4 +1,6 @@
 // namespace: components/test
-export default {
+const translations = {
   'loadingOverlay.redirect': 'Redirect',
 }
+
+export default translations

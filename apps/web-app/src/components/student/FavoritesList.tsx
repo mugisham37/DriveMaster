@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 interface Track {
   slug: string
@@ -20,7 +21,7 @@ interface FavoritesListProps {
     }
     options: {
       initialData: {
-        results: any[]
+        results: Array<Record<string, unknown>>
         meta: {
           currentPage: number
           totalCount: number
@@ -72,10 +73,10 @@ export function FavoritesList({ tracks, request, isUserInsider }: FavoritesListP
               Unlock the full Favorites functionality with Exercism Insiders.
             </p>
             <p className="text-purple-700 text-sm mt-1">
-              <a href="/insiders" className="font-semibold underline">
+              <Link href="/insiders" className="font-semibold underline">
                 Upgrade your account
-              </a>
-              {' '}to store more than 10 favourites and add searching and filtering!
+              </Link>
+              {' '}to store more than 10 favorites and add searching and filtering!
             </p>
           </div>
         </div>
@@ -118,12 +119,12 @@ export function FavoritesList({ tracks, request, isUserInsider }: FavoritesListP
           <p className="text-gray-600 mb-4">
             Star solutions you find interesting while browsing the community solutions.
           </p>
-          <a
+          <Link
             href="/tracks"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
           >
             Explore Tracks
-          </a>
+          </Link>
         </div>
       )}
     </div>

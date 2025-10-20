@@ -1,5 +1,5 @@
 // namespace: components/mentoring/discussion/MarkAsNothingToDoButton.tsx
-export default {
+const translations = {
   'markAsNothingToDoButton.studentsTurn':
     "This button allows you to remove this discussion from your Inbox and return it to the student's Inbox. Use it when it's the student's turn but the system incorrectly thinks its yours.",
   'markAsNothingToDoButton.itsTheStudentsTurn': "It's the student's turn…",
@@ -12,3 +12,5 @@ export default {
   'markAsNothingToDoButton.continue': 'Continue',
   'markAsNothingToDoButton.cancel': 'Cancel',
 }
+
+export default translations

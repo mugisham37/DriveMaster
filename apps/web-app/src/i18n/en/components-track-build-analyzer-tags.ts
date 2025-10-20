@@ -1,5 +1,5 @@
 // namespace: components/track/build/analyzer-tags
-export default {
+const translations = {
   'firstRow.tag': 'Tag',
   'firstRow.enabled': 'Enabled',
   'firstRow.filterable': 'Filterable',
@@ -7,3 +7,5 @@ export default {
   'tagTogglerButton.yes': 'Yes',
   'tagTogglerButton.no': 'No',
 }
+
+export default translations

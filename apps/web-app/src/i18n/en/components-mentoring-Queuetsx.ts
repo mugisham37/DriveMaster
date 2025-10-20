@@ -1,4 +1,6 @@
 // namespace: components/mentoring/Queuetsx
-export default {
+const translations = {
   'queue.filterByStudentHandle': 'Filter by student handle',
 }
+
+export default translations

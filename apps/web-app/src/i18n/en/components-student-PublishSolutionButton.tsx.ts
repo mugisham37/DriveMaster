@@ -1,4 +1,6 @@
 // namespace: components/student/PublishSolutionButton.tsx
-export default {
+const translations = {
   'publishSolutionButton.publishSolution': 'Publish solution',
 }
+
+export default translations

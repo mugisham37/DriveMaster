@@ -2,7 +2,6 @@ import React, { forwardRef } from 'react'
 import { ExerciseStatus } from '../../types'
 import { ExerciseTooltip } from '../tooltips'
 import { GenericTooltip } from '../misc/ExercismTippy'
-import { JSX } from 'react/jsx-runtime'
 
 export default function ExerciseStatusDot({
   exerciseStatus,
@@ -15,12 +14,12 @@ export default function ExerciseStatusDot({
     tooltip: string
     exercise?: string
   }
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <GenericTooltip content={<ExerciseTooltip endpoint={links.tooltip} />}>
       <ReferenceElement
         className={`c-ed --${exerciseStatus} --${type}`}
-        link={links.exercise}
+        {...(links.exercise && { link: links.exercise })}
         status={exerciseStatus}
       />
     </GenericTooltip>
@@ -50,3 +49,5 @@ const ReferenceElement = forwardRef<
     <div ref={ref as React.RefObject<HTMLDivElement>} {...props} />
   )
 })
+
+ReferenceElement.displayName = 'ReferenceElement'

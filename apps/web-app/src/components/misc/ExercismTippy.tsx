@@ -41,4 +41,30 @@ export function ExercismTippy({
   )
 }
 
+/**
+ * Generic tooltip component for general use
+ * Alias for ExercismTippy with simplified props
+ */
+export function GenericTooltip({
+  content,
+  children,
+  ...props
+}: {
+  content: React.ReactNode
+  children: React.ReactElement
+} & Omit<ExercismTippyProps, 'reference'>): JSX.Element {
+  return (
+    <Tippy
+      content={content}
+      interactive={false}
+      allowHTML={true}
+      placement="top"
+      theme="exercism"
+      {...props}
+    >
+      {children}
+    </Tippy>
+  )
+}
+
 export default ExercismTippy

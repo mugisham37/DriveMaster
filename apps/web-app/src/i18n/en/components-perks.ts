@@ -1,5 +1,5 @@
 // namespace: components/perks
-export default {
+const translations = {
   'perksModalButton.continueToPartner': 'Continue to {{websiteDomain}}',
   'perksModalButton.close': 'Close',
   'perksExternalModalButton.claimPerk':
@@ -9,3 +9,5 @@ export default {
   'perksExternalModalButton.signUp': 'Sign up',
   'perksExternalModalButton.logIn': 'Log in',
 }
+
+export default translations

@@ -77,7 +77,7 @@ export default function MentoringSession({
   links: MentoringSessionLinks
   outOfDate: boolean
   donation: MentoringSessionDonation
-}): JSX.Element {
+}): React.JSX.Element {
   const [mentorRequest, setMentorRequest] = useState(initialRequest)
 
   const handleCreateMentorRequest = useCallback(

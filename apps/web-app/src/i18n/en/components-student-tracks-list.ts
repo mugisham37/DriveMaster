@@ -1,5 +1,5 @@
 // namespace: components/student/tracks-list
-export default {
+const translations = {
   'orderSelect.sortByLastTouched': 'Sort by last touched',
   'track.learningMode': 'Learning Mode',
   'track.thisTrackIsNew': 'This track is new',
@@ -21,3 +21,5 @@ export default {
   'tagOptionList.apply': 'Apply',
   'tagOptionList.close': 'Close',
 }
+
+export default translations

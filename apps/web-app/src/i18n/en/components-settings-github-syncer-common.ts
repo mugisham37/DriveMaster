@@ -1,6 +1,8 @@
 // namespace: components/settings/github-syncer/common
-export default {
+const translations = {
   'insiderBubble.insidersOnly': 'Insiders only',
   'confirmationModal.confirm': 'Confirm',
   'confirmationModal.cancel': 'Cancel',
 }
+
+export default translations

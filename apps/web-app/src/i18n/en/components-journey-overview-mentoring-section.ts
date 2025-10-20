@@ -1,5 +1,5 @@
 // namespace: components/journey/overview/mentoring-section
-export default {
+const translations = {
   'headerSummary.youVeMostlyMentoredIn': "You've mostly mentored in ",
   'communityRank.topRank': 'Top {{rank}}%',
   'mentoringChart.sessionsMentoredPerTrack': 'Sessions mentored per track',
@@ -9,3 +9,5 @@ export default {
   'sessionRatioSummary.sessionsPerStudent': 'Sessions per student',
   'studentsMentoredSummary.totalStudentsMentored': 'Total students mentored',
 }
+
+export default translations

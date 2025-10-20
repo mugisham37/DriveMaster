@@ -1,5 +1,5 @@
 // namespace: components/track/dig-deeper-components/community-videos
-export default {
+const translations = {
   'communityVideos.communityVideos': 'Community Videos',
   'communityVideos.walkthroughsFromPeople':
     ' Walkthroughs from people using Exercism ',
@@ -13,3 +13,5 @@ export default {
     'Want your video featured here?',
   'communityVideoFooter.submitItHere': 'Submit it here',
 }
+
+export default translations

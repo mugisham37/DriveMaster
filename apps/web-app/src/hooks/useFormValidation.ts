@@ -28,9 +28,8 @@ export interface UseFormValidationReturn {
 export function useFormValidation({
   schema,
   validateOnChange = true,
-  validateOnBlur = true,
   debounceMs = 300
-}: UseFormValidationOptions): UseFormValidationReturn {
+}: Omit<UseFormValidationOptions, 'validateOnBlur'>): UseFormValidationReturn {
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [debounceTimeouts, setDebounceTimeouts] = useState<Record<string, NodeJS.Timeout>>({})
 
@@ -80,7 +79,10 @@ export function useFormValidation({
     
     const newErrors: Record<string, string[]> = {}
     Object.keys(results).forEach(fieldName => {
-      newErrors[fieldName] = results[fieldName].errors
+      const result = results[fieldName]
+      if (result) {
+        newErrors[fieldName] = result.errors
+      }
     })
     
     setErrors(newErrors)

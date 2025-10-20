@@ -9,7 +9,6 @@ function pushQueryParams(key: string, value: string): void {
   const url = new URL(location)
 
   if (value && valueAsString.length > 0) {
-    value
     url.searchParams.set(key, valueAsString)
   } else {
     url.searchParams.delete(key)

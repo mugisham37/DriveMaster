@@ -1,5 +1,5 @@
 // namespace: components/dropdowns
-export default {
+const translations = {
   'trackMenu.seeTrackOnGithub': 'See {{trackTitle}} track on Github <icon/>',
   'trackMenu.documentation': '{{trackTitle}} documentation',
   'trackMenu.trackBuildStatus': 'Track Build Status',
@@ -11,3 +11,5 @@ export default {
   'notifications.unableToLoad': 'Unable to load notifications',
   'reputation.unableToRetrieve': 'Unable to retrieve reputation tokens',
 }
+
+export default translations

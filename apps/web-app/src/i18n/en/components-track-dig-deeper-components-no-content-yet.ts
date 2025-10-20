@@ -1,5 +1,5 @@
 // namespace: components/track/dig-deeper-components/no-content-yet
-export default {
+const translations = {
   'noContentYet.thereAreNoContentTypeForExerciseTitle':
     'There are no {{contentType}} for {{exerciseTitle}}.',
   'noIntroductionYet.digDeeper': 'Dig deeper',
@@ -8,3 +8,5 @@ export default {
   'noIntroductionYet.wantToContribute': 'Want to contribute?',
   'noIntroductionYet.youCanDoItHere': 'You can do it here.',
 }
+
+export default translations

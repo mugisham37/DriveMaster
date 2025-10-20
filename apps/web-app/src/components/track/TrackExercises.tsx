@@ -8,7 +8,7 @@ interface TrackExercisesProps {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export function TrackExercises({ track, exercises, searchParams }: TrackExercisesProps) {
+export function TrackExercises({ track, exercises }: TrackExercisesProps) {
   return (
     <section className="track-exercises">
       <h2>Exercises</h2>

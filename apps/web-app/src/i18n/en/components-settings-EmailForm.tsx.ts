@@ -1,5 +1,5 @@
 // namespace: components/settings/EmailForm.tsx
-export default {
+const translations = {
   changeYourEmail: 'Change your email',
   yourEmailAddress: 'Your email address',
   confirmYourPassword: 'Confirm your password',
@@ -9,3 +9,5 @@ export default {
   'success.confirmationEmailSent':
     "We've sent a confirmation email to {{email}}",
 }
+
+export default translations

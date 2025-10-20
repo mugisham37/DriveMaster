@@ -1,5 +1,5 @@
 // namespace: components/settings/BootcampFreeCouponForm.tsx
-export default {
+const translations = {
   'bootcampFreeCouponForm.freeSeatOnBootcamp': 'Free Seat on the Bootcamp',
   'bootcampFreeCouponForm.lifetimeInsiderEligible':
     "As a lifetime insider you're eligible for a free seat on Exercism's <0>Learn to Code Bootcamp</0>.",
@@ -10,3 +10,5 @@ export default {
   'bootcampFreeCouponForm.failedToGenerateCouponCode':
     'Failed to generate coupon code. Please try again.',
 }
+
+export default translations

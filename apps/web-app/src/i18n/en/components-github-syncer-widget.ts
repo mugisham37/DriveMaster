@@ -1,5 +1,5 @@
 // namespace: components/github-syncer-widget
-export default {
+const translations = {
   'miniAdvert.backupYourSolutionsToGitHub': 'Backup your Solutions to GitHub',
   'miniAdvert.automaticallyBackupSolutions':
     'Automatically backup your solutions to GitHub with our automated backup tool.',
@@ -19,3 +19,5 @@ export default {
     'You have automatic syncs disabled',
   'activeManualSync.clickToBackupSolution': 'Click to back up your solution',
 }
+
+export default translations

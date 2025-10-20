@@ -1,2 +1,4 @@
 // namespace: components/settings/useSettingsMutation.tsx
-export default {}
+const translations = {}
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/profile/avatar-selector/photo
-export default {
+const translations = {
   'deletePhotoButton.deleteYourPicture': 'delete your picture',
   'deletePhotoButton.deletePhotoModal.deleteYourProfilePicture':
     'Delete your profile picture?',
@@ -8,3 +8,5 @@ export default {
   'deletePhotoButton.deletePhotoModal.deletePicture': 'Delete picture',
   'deletePhotoButton.deletePhotoModal.cancel': 'Cancel',
 }
+
+export default translations

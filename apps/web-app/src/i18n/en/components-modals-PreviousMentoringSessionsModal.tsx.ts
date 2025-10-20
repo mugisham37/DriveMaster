@@ -1,5 +1,5 @@
 // namespace: components/modals/PreviousMentoringSessionsModal.tsx
-export default {
+const translations = {
   header_one:
     '<strong>You have {{count}} previous discussion</strong> with <avatar/><name>{{studentHandle}}</name>',
   header_other:
@@ -9,3 +9,5 @@ export default {
   headerMobile_other:
     '{{studentHandle}} and you have <strong>{{count}} previous discussions</strong>',
 }
+
+export default translations

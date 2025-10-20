@@ -1,5 +1,5 @@
 // namespace: components/training-data/code-tagger
-export default {
+const translations = {
   'rightPane.automationRules.theseTagsUsedToTrain':
     "These tags will be used to train neural networks to correct identify student's solutions. Thanks for helping out!",
   'rightPane.automationRules.heresSomeNotes': "Here's some notes to help you:",
@@ -13,3 +13,5 @@ export default {
   'leftPane.codeInfo.youAreAssigningTags': 'You are assigning tags for',
   'leftPane.codeInfo.in': 'in',
 }
+
+export default translations

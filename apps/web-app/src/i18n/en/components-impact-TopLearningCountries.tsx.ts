@@ -1,4 +1,6 @@
 // namespace: components/impact/TopLearningCountries.tsx
-export default {
+const translations = {
   'topLearningCountries.topLearningCountries': 'Top learning countries',
 }
+
+export default translations

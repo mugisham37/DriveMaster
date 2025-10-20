@@ -1,5 +1,5 @@
 // namespace: components/modals/realtime-feedback-modal
-export default {
+const translations = {
   'realTimeFeedbackModal.deepDiveVideo': 'Deep Dive Video',
   'realTimeFeedbackModal.feedback': 'Feedback',
   'checkingForAutomatedFeedback.checking': 'Checking for automated feedback…',
@@ -13,3 +13,5 @@ export default {
   'feedbackContent.noFeedback': 'No Automated Feedback',
   'feedbackContent.foundFeedback': 'Found Automated Feedback',
 }
+
+export default translations

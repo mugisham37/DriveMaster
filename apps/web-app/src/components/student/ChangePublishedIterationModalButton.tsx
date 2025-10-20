@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal } from '@/components/common/Modal'
+import Modal from '@/components/modals/Modal'
 import { useFormSubmission } from '@/hooks/useFormSubmission'
 
 export type RedirectType = 'exercise' | 'solution'
@@ -49,7 +49,7 @@ const ChangePublishedIterationModal = ({
 }: {
   endpoint: string
   redirectType: RedirectType
-  iterations: readonly any[]
+  iterations: ChangePublishedIterationModalButtonProps['iterations']
   defaultIterationIdx: number | null
   open: boolean
   onClose: () => void
@@ -79,7 +79,7 @@ const ChangePublishedIterationModal = ({
   if (!open) return null
 
   return (
-    <Modal onClose={onClose} className={className}>
+    <Modal open={open} onClose={onClose} className={className}>
       <div className="change-published-iteration-modal">
         <h2>Change Published Iteration</h2>
         <form onSubmit={handleSubmit}>
@@ -124,7 +124,7 @@ export default function ChangePublishedIterationModalButton({
   iterations,
   links,
   label,
-}: ChangePublishedIterationModalButtonProps): JSX.Element {
+}: ChangePublishedIterationModalButtonProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
 
   return (

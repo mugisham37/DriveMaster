@@ -1,4 +1,4 @@
-export default {
+const translations = {
   'exerciseCompletedModal.youCompleted': "You've completed {{exerciseTitle}}!",
   'exerciseCompletedModal.awesomeWorkLearning':
     "Awesome work. You're one step closer to learning {{trackTitle}} 🚀",
@@ -52,3 +52,5 @@ export default {
     'No, I just want to mark the exercise as complete.',
   'publishSolutionForm.confirm': 'Confirm',
 }
+
+export default translations

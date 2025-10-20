@@ -1,15 +1,15 @@
 // Request query hooks to preserve exact behavior from Rails implementation
 import { useQuery } from '@tanstack/react-query'
 
-export type Request<T = any> = {
+export type Request<T = Record<string, unknown>> = {
   endpoint: string
-  options?: any
+  options?: Record<string, unknown>
   query?: T
 }
 
-export function usePaginatedRequestQuery<T>(
-  key: any[],
-  request: Request
+export function usePaginatedRequestQuery<T = Record<string, unknown>>(
+  key: (string | number | boolean | null | undefined)[],
+  request: Request<T>
 ) {
   return useQuery({
     queryKey: key,

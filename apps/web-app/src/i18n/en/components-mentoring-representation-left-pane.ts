@@ -1,5 +1,5 @@
 // namespace: components/mentoring/representation/left-pane
-export default {
+const translations = {
   'representationIterationView.solutionNumber': 'Solution #{{solutionNumber}}',
   'representationIterationView.occurrence': '{{count}} occurrence',
   'representationIterationView.occurrences': '{{count}} occurrences',
@@ -8,3 +8,5 @@ export default {
     'You’re giving feedback on a solution set for',
   'leftPane.exerciseInTrack': '{{exerciseTitle}} in {{trackTitle}}',
 }
+
+export default translations

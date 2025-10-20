@@ -1,5 +1,5 @@
 // namespace: components/settings/theme-preference-form
-export default {
+const translations = {
   'infoMessage.insiderAccessToDarkMode':
     'As an Exercism Insider, you have access to Dark Mode. Choose between light, dark, or automatically update based on your system preferences. Enjoy! 💎',
   'infoMessage.eligibleToJoinInsiders':
@@ -9,3 +9,5 @@ export default {
   'disabledTooltip.mustBeExercismInsider':
     'You must be an <0>Exercism Insider <1/></0> to unlock this theme.',
 }
+
+export default translations

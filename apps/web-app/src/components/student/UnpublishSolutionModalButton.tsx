@@ -74,7 +74,7 @@ const UnpublishSolutionModal = ({
 export default function UnpublishSolutionModalButton({
   links,
   label,
-}: UnpublishSolutionModalButtonProps): JSX.Element {
+}: UnpublishSolutionModalButtonProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
 
   return (

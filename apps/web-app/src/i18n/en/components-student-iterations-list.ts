@@ -1,5 +1,5 @@
 // namespace: components/student/iterations-list
-export default {
+const translations = {
   'analyzerFeedback.analyzerGeneratedFeedback':
     'Our <strong>{{trackTitle}} Analyzer</strong> generated this feedback when analyzing your solution.',
   'analyzerFeedback.learnMore': 'Learn more',
@@ -47,3 +47,5 @@ export default {
   'iterationReport.thisIterationHasBeenDeleted':
     'This iteration has been deleted',
 }
+
+export default translations

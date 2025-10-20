@@ -65,7 +65,7 @@ export function useList(initialRequest: Request): {
   setCriteria: (criteria: string) => void
   setOrder: (order: string) => void
   setPage: (page: number, key?: string) => void
-  setQuery: (query: any) => void
+  setQuery: (query: Record<string, unknown>) => void
   setFilter: (filter: string) => void
 } {
   const [request, dispatch] = useReducer(
@@ -102,8 +102,8 @@ export function useList(initialRequest: Request): {
   )
 
   const setQuery = useCallback(
-    (query) => {
-      dispatch({ type: 'query.changed', payload: { query } })
+    (query: Record<string, unknown>) => {
+      dispatch({ type: 'query.changed', payload: { query: { page: 1, ...query } } })
     },
     [dispatch]
   )

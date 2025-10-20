@@ -42,7 +42,7 @@ export type IterationsListRequest = {
   }
 }
 
-export const getCacheKey = (
+const getCacheKey = (
   trackSlug: string,
   exerciseSlug: string
 ): string => {
@@ -63,9 +63,7 @@ export default function IterationsList({
   request,
   exercise,
   track,
-  links,
-  syncer,
-}: IterationsListProps): JSX.Element {
+}: IterationsListProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean[]>([])
 
   const queryClient = useQueryClient()
@@ -73,7 +71,7 @@ export default function IterationsList({
 
   useEffect(() => {
     queryClient.setQueryData([CACHE_KEY], request.options.initialData)
-  }, [])
+  }, [CACHE_KEY, queryClient, request.options.initialData])
 
   const { data: resolvedData } = usePaginatedRequestQuery<{
     iterations: readonly Iteration[]
@@ -82,39 +80,20 @@ export default function IterationsList({
     options: { ...request.options, staleTime: 1000 },
   })
 
-  const handleDelete = (deletedIteration: Iteration) => {
-    queryClient.setQueryData<{ iterations: readonly Iteration[] }>(
-      [CACHE_KEY],
-      (result) => {
-        if (!result) {
-          return { iterations: [] }
-        }
 
-        return {
-          ...result,
-          iterations: result.iterations.map((i) =>
-            i.uuid === deletedIteration.uuid ? deletedIteration : i
-          ),
-        }
-      }
-    )
-  }
 
   useEffect(() => {
-    const solutionChannel = new SolutionChannel(
-      { uuid: solutionUuid },
-      (response) => {
-        queryClient.setQueryData([CACHE_KEY], {
-          iterations: response.iterations,
-        })
-      }
-    )
+    const solutionChannel = SolutionChannel.getInstance()
+    
+    const unsubscribe = solutionChannel.subscribe((data: unknown) => {
+      const response = data as { iterations: Iteration[] }
+      queryClient.setQueryData([CACHE_KEY], {
+        iterations: response.iterations,
+      })
+    })
 
-    return () => {
-      solutionChannel.disconnect()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [CACHE_KEY, solutionUuid])
+    return unsubscribe
+  }, [CACHE_KEY, solutionUuid, queryClient])
 
   useEffect(() => {
     if (
@@ -126,7 +105,7 @@ export default function IterationsList({
     }
 
     if (isOpen.length === 0) {
-      setIsOpen(resolvedData.iterations.map((_, i) => i === 0))
+      setIsOpen(resolvedData.iterations.map((_: Iteration, i: number) => i === 0))
 
       return
     }
@@ -134,7 +113,7 @@ export default function IterationsList({
     const newIterationsLength = resolvedData.iterations.length - isOpen.length
 
     if (newIterationsLength > 0) {
-      const newIsOpen = Array.from(Array(newIterationsLength)).map((_, i) =>
+      const newIsOpen = Array.from(Array(newIterationsLength)).map((_: undefined, i: number) =>
         i === 0 ? !isOpen.some((o) => o === true) : false
       )
 
@@ -147,7 +126,7 @@ export default function IterationsList({
   }
 
   if (resolvedData.iterations.length === 0) {
-    return <EmptyIterations links={links} exercise={exercise} />
+    return <EmptyIterations exerciseTitle={exercise.title} />
   }
 
   return (
@@ -158,23 +137,11 @@ export default function IterationsList({
           .sort((it1: Iteration, it2: Iteration) => {
             return it2.idx > it1.idx ? 1 : -1
           })
-          .map((iteration, index) => {
+          .map((iteration: Iteration, index: number) => {
             return (
               <IterationReport
                 key={index}
                 iteration={iteration}
-                syncer={syncer}
-                exercise={exercise}
-                track={track}
-                links={links}
-                isOpen={isOpen[index]}
-                onExpanded={() => {
-                  setIsOpen(isOpen.map((o, i) => (index === i ? true : o)))
-                }}
-                onCompressed={() => {
-                  setIsOpen(isOpen.map((o, i) => (index === i ? false : o)))
-                }}
-                onDelete={handleDelete}
               />
             )
           })}

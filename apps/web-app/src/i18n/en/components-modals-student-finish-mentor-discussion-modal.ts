@@ -1,5 +1,5 @@
 // namespace: components/modals/student/finish-mentor-discussion-modal
-export default {
+const translations = {
   'reportStep.howCanWeHelp': 'How can we help?',
   'reportStep.explanation':
     'We’re really sorry that you experienced a problematic mentoring discussion, and would like to help ensure your next experience is a positive one.',
@@ -87,3 +87,5 @@ export default {
   'donationStep.lessThanOnePercentDonate':
     'Fewer than 1% of who use Exercism choose to donate. If you can afford to do so, please be one of them.',
 }
+
+export default translations

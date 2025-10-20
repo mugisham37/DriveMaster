@@ -1,5 +1,5 @@
 // namespace: components/mentoring/queue
-export default {
+const translations = {
   'exerciseFilterList.allExercises': 'All exercises',
   'exerciseFilterList.searchByExerciseName': 'Search by Exercise name',
   'exerciseFilterList.onlyShowExercisesThatNeedMentoring':
@@ -12,3 +12,5 @@ export default {
   'trackFilterList.clickToChange': 'Click to change',
   'trackFilterList.changeTheTracksYouMentor': 'Change the tracks you mentor',
 }
+
+export default translations

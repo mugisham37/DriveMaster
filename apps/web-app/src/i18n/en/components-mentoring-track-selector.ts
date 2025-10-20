@@ -1,5 +1,5 @@
 // namespace: components/mentoring/track-selector
-export default {
+const translations = {
   selectedTracks_one: '{{count}} track selected',
   selectedTracks_other: '{{count}} tracks selected',
   selectedTracks_zero: 'No tracks selected',
@@ -7,3 +7,5 @@ export default {
   'tracksList.noTracksFound': 'No tracks found',
   'continueButton.continue': 'Continue',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/modals/realtime-feedback-modal/feedback-content/found-automated-feedback
-export default {
+const translations = {
   'index.suggestionImproveCode':
     "Here's a suggestion on how to improve your code…",
   'index.positiveFeedback': 'We have some positive feedback for you! 🎉',
@@ -13,3 +13,5 @@ export default {
   'representerFeedback.gaveFeedbackSimilarSolution':
     '<0>{{author}}</0>\u00A0gave this feedback on a solution very similar to yours',
 }
+
+export default translations

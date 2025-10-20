@@ -36,6 +36,7 @@ export function useHistory<TParams extends Record<string, unknown>>({
   pushOn: TParams
 }): void {
   const isMounted = useRef(false)
+  const serializedPushOn = JSON.stringify(pushOn)
 
   useEffect(() => {
     if (!isMounted.current) {
@@ -44,5 +45,5 @@ export function useHistory<TParams extends Record<string, unknown>>({
     }
 
     pushState(removeEmpty(pushOn))
-  }, [JSON.stringify(pushOn)])
+  }, [serializedPushOn, pushOn])
 }

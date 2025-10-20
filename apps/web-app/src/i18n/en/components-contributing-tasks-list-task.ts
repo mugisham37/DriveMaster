@@ -1,5 +1,5 @@
 // namespace: components/contributing/tasks-list/task
-export default {
+const translations = {
   'sizeTag.xs': 'xs',
   'sizeTag.s': 's',
   'sizeTag.m': 'm',
@@ -16,3 +16,5 @@ export default {
   'moduleTag.trackConcepts': 'Track Concepts',
   'actionIcon.action': 'Action: {{action}}',
 }
+
+export default translations

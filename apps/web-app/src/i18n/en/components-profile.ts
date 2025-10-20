@@ -1,5 +1,5 @@
 // namespace: components/profile
-export default {
+const translations = {
   'contributionsSummary.contributions': 'Contributions',
   'contributionsSummary.seeYourContributions': 'See your contributions',
   'contributionsSummary.seeHandleContributions':
@@ -29,3 +29,5 @@ export default {
   'avatarSelector.deletePhoto': 'Delete photo',
   'testimonialsList.unableToLoadTestimonials': 'Unable to load testimonials',
 }
+
+export default translations

@@ -1,4 +1,6 @@
 // namespace: components/settings/PhotoForm.tsx
-export default {
+const translations = {
   'photoForm.changeYourPhoto': 'Change your photo',
 }
+
+export default translations

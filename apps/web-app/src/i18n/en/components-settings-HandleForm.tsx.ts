@@ -1,5 +1,5 @@
 // namespace: components/settings/HandleForm.tsx
-export default {
+const translations = {
   'handleForm.changeYourHandle': 'Change your handle',
   'handleForm.yourHandle': 'Your handle',
   'handleForm.confirmYourPassword': 'Confirm your password',
@@ -8,3 +8,5 @@ export default {
   'handleForm.changeHandle': 'Change handle',
   'handleForm.success': 'Your handle has been changed',
 }
+
+export default translations

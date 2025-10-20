@@ -1,6 +1,8 @@
 // namespace: components/mentoring/representation/common
-export default {
+const translations = {
   'cancelButton.cancel': 'Cancel',
   'commentTag.essential': 'Essential',
   'commentTag.recommended': 'Recommended',
 }
+
+export default translations

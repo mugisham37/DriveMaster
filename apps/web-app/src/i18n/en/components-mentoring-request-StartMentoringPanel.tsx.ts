@@ -1,5 +1,5 @@
 // namespace: components/mentoring/request/StartMentoringPanel.tsx
-export default {
+const translations = {
   'startMentoringPanel.helpStudentWriteBetter':
     'Help {{studentHandle}} write better {{trackTitle}}?',
   'startMentoringPanel.showThemWayToCodeBliss':
@@ -9,3 +9,5 @@ export default {
     'You have 30 minutes until the session returns to the queue for others to mentor.',
   'startMentoringPanel.unableToLockSolution': 'Unable to lock solution',
 }
+
+export default translations

@@ -82,7 +82,7 @@ const ActiveAutomaticSync = ({ sync }: { sync: SyncObj }) => {
     <div className="github-syncer-widget active-automatic">
       <div className="content">
         <h3>Auto-backup enabled</h3>
-        <p>Your solution will auto-backup to GitHub. If it doesn't for some reason, please click this button to manually start the backup.</p>
+        <p>Your solution will auto-backup to GitHub. If it does not for some reason, please click this button to manually start the backup.</p>
         <button
           onClick={handleManualSync}
           disabled={isLoading}
@@ -143,7 +143,7 @@ export default function GithubSolutionSyncerWidget({
   syncer,
   links,
   sync,
-}: GithubSolutionSyncerWidgetProps): JSX.Element {
+}: GithubSolutionSyncerWidgetProps): React.JSX.Element {
   if (!syncer) return <MiniAdvert settingsLink={links.githubSyncerSettings} />
 
   if (!syncer.enabled)

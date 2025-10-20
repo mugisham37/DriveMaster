@@ -1,5 +1,5 @@
 // namespace: components/mentoring/representation/right-pane/RadioGroup.tsx
-export default {
+const translations = {
   'radioGroup.essential': 'Essential',
   'radioGroup.actionable': 'Recommended',
   'radioGroup.non_actionable': 'Optional',
@@ -30,3 +30,5 @@ export default {
   'radioGroup.optionalTooltipBody':
     'Student is not prompted to action this before proceeding, entirely a low-value enhancement.',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/donations/subscription-form
-export default {
+const translations = {
   'formOptions.initializedOption.changeAmount': 'Change amount',
   'formOptions.initializedOption.or': 'or',
   'formOptions.initializedOption.cancelRecurringDonation':
@@ -17,3 +17,5 @@ export default {
   'formOptions.cancellingOption.yesPleaseCancel': 'Yes - please cancel it.',
   'formOptions.cancellingOption.noCloseThis': 'No, close this.',
 }
+
+export default translations

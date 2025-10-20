@@ -1,4 +1,6 @@
 // namespace: components/mentoring/discussion/FinishedWizard.tsx
-export default {
+const translations = {
   'finishedWizard.incorrectState': 'Incorrect state: {{step}}',
 }
+
+export default translations

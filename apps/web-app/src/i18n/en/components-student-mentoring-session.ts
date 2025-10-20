@@ -1,5 +1,5 @@
 // namespace: components/student/mentoring-session
-export default {
+const translations = {
   'iterationView.thisIterationHasBeenDeleted':
     'This iteration has been deleted',
   'sessionInfo.youreBeingMentoredByOn':
@@ -20,3 +20,5 @@ export default {
   'discussionActions.reviewDiscussion': 'Review discussion',
   'discussionActions.endDiscussion': 'End discussion',
 }
+
+export default translations

@@ -11,7 +11,7 @@ export default function PublishSolutionButton({
 }: {
   endpoint: string
   iterations: readonly Iteration[]
-}): JSX.Element {
+}): React.JSX.Element {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { t } = useAppTranslation(
     'components/student/PublishSolutionButton.tsx'
@@ -26,9 +26,8 @@ export default function PublishSolutionButton({
         {t('publishSolutionButton.publishSolution')}
       </button>
       <PublishSolutionModal
-        open={isModalOpen}
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        className="m-publish-solution"
         endpoint={endpoint}
         iterations={iterations}
       />

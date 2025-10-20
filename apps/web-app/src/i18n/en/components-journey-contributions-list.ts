@@ -1,5 +1,5 @@
 // namespace: components/journey/contributions-list
-export default {
+const translations = {
   'categorySelect.contributingToExercises': 'Contributing to Exercises',
   'categorySelect.buildingExercism': 'Building Exercism',
   'categorySelect.maintaining': 'Maintaining',
@@ -9,3 +9,5 @@ export default {
   'categorySelect.anyCategory': 'Any category',
   'categorySelect.category': 'Category',
 }
+
+export default translations

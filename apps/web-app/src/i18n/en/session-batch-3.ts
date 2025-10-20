@@ -1,5 +1,5 @@
 // namespace: session-batch-3
-export default {
+const translations = {
   'components.mentoring.session.iterationView.iterationDeleted':
     'This iteration has been deleted',
   'components.mentoring.session.linkButton.conversationLinked':
@@ -27,3 +27,5 @@ export default {
   'components.mentoring.session.previousSessionsLink.seePreviousSessions':
     'See {{numPrevious}} previous {{sessions}}',
 }
+
+export default translations

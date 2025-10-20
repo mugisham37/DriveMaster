@@ -1,5 +1,5 @@
 // namespace: components/journey/contribution-results
-export default {
+const translations = {
   'orderSwitcher.sortByOldestFirst': 'Sort by Oldest First',
   'orderSwitcher.sortByNewestFirst': 'Sort by Newest First',
   'markAllAsSeenButton.markAllAsSeen': 'Mark all as seen',
@@ -9,3 +9,5 @@ export default {
   'markAllAsSeenModal.continue': 'Continue',
   'markAllAsSeenModal.cancel': 'Cancel',
 }
+
+export default translations

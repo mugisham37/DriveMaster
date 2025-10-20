@@ -1,5 +1,5 @@
 // namespace: components/modals/WelcomeToInsidersModal.tsx
-export default {
+const translations = {
   'welcomeToInsidersModal.title': 'Welcome to Insiders! 💙',
   'welcomeToInsidersModal.accessToFeatures':
     'You now have access to Dark Mode, ChatGPT Integration, extra mentoring slots along with behind the scenes videos, new badges, and more!',
@@ -16,3 +16,5 @@ export default {
   'welcomeToInsidersModal.exploreDarkMode':
     "Explore Dark Mode (we've enabled it by default). Check out your new badge(s). Try ChatGPT in the online editor. Use one of your new mentoring slots. Come and say hello on the #insiders channel on Discord. Or watch some of the behind the scenes videos 🎉",
 }
+
+export default translations

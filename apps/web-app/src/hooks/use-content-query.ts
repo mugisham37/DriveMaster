@@ -1,21 +1,8 @@
-import { useRequestQuery } from '../hooks/request-query'
+import { usePaginatedRequestQuery, Request } from './request-query'
 
-export function useContentQuery(
-  id: string,
-  endpoint: string,
-  enabled: boolean
-): {
-  isLoading: boolean
-  isError: boolean
-  htmlContent: { html: string } | undefined
-} {
-  const {
-    isLoading,
-    isError,
-    data: htmlContent,
-  } = useRequestQuery<{
-    html: string
-  }>([id], { endpoint: endpoint, options: { enabled } })
-
-  return { isLoading, isError, htmlContent }
+export function useContentQuery<T = Record<string, unknown>>(
+  key: (string | number | boolean | null | undefined)[],
+  request: Request<T>
+) {
+  return usePaginatedRequestQuery(key, request)
 }

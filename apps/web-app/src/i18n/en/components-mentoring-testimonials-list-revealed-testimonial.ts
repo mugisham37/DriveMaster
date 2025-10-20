@@ -1,5 +1,5 @@
 // namespace: components/mentoring/testimonials-list/revealed-testimonial
-export default {
+const translations = {
   'deleteTestimonialModal.areYouSure':
     'Are you sure you want to delete this testimonial?',
   'deleteTestimonialModal.deletingWillHide':
@@ -9,3 +9,5 @@ export default {
   'optionsDropdown.options': 'Options',
   'optionsDropdown.deleteTestimonial': 'Delete testimonial',
 }
+
+export default translations

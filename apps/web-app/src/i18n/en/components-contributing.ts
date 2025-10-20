@@ -1,5 +1,5 @@
 // namespace: components/contributing
-export default {
+const translations = {
   'tasksList.showingTasks': 'Showing {{totalCount}} {{task}}',
   'tasksList.outOfPossibleTasks':
     'out of {{unscopedTotal}} possible {{unscopedTask}}',
@@ -57,3 +57,5 @@ export default {
   'tasksList.sizeSwitcher.multiple': 'Multiple',
   'tasksList.sizeSwitcher.extraSmall': 'Extra Small',
 }
+
+export default translations

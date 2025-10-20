@@ -1,5 +1,5 @@
 // namespace: components/modals/track-welcome-modal/LHS/steps
-export default {
+const translations = {
   'learningEnvironmentSelectorStep.onlineOrOnYourComputer':
     'Online or on your computer?',
   'learningEnvironmentSelectorStep.solveExercisesUsingEditorOrLocally':
@@ -46,3 +46,5 @@ export default {
   'hasLearningModeStep.practiceMode': 'Practice Mode',
   'openModalStep.loading': 'Loading...',
 }
+
+export default translations

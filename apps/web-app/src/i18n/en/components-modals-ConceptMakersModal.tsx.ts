@@ -1,5 +1,5 @@
 // namespace: components/modals/ConceptMakersModal.tsx
-export default {
+const translations = {
   seeOnGithub: 'See the full history of this concept on GitHub',
   'authors.heading': 'Authors',
   'authors.subtitle': 'People who wrote the concept',
@@ -7,3 +7,5 @@ export default {
   'contributors.subtitle': 'People who updated the concept',
   defaultError: 'Unable to load concept makers',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/dropdowns/track-menu
-export default {
+const translations = {
   'activatePracticeModeModal.disableLearningMode': 'Disable Learning Mode',
   'activatePracticeModeModal.paragraph1':
     'Disabling Learning Mode will unlock all the Practice Exercises on this track, but will disable Concepts and Learning Exercises.',
@@ -75,3 +75,5 @@ export default {
   'leaveTrackModal.leave': 'Leave',
   'leaveTrackModal.leavePlusReset': 'Leave + Reset',
 }
+
+export default translations

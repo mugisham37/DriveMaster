@@ -1,5 +1,5 @@
 // namespace: components/editor/GetHelp
-export default {
+const translations = {
   'getHelpPanelComponents.getHelpPanelTrackHelp.trackHelp':
     '{{trackTitle}} help',
   'getHelpPanelComponents.getHelpPanelHints.stuckHintsWillGive':
@@ -22,3 +22,5 @@ export default {
   'stuckButton.stuckGetHelp': 'Stuck? Get help',
   'getHelpTab.getHelp': 'Get help',
 }
+
+export default translations

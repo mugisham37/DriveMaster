@@ -38,7 +38,7 @@ type Props =
       links: { exercise: string; local: string }
     }
 
-export default function OpenEditorButton(props: Props): JSX.Element | null {
+export default function OpenEditorButton(props: Props): React.JSX.Element | null {
   return (
     <ButtonTooltip {...props}>
       <ComboButton enabled={props.status !== 'locked'}>
@@ -141,10 +141,8 @@ const ButtonTooltip = ({
 }: {
   status: string
   editorEnabled: boolean
-  children:
-    | React.ReactElement<any, string | JSXElementConstructor<any>>
-    | undefined
-}): JSX.Element | null => {
+  children: React.ReactElement<unknown, string | JSXElementConstructor<unknown>>
+}): React.JSX.Element | null => {
   const { t } = useAppTranslation('components/student/OpenEditorButton.tsx')
 
   if (!editorEnabled) {
@@ -165,5 +163,5 @@ const ButtonTooltip = ({
     )
   }
 
-  return <React.Fragment>{children}</React.Fragment>
+  return children
 }

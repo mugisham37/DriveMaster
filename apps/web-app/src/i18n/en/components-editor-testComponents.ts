@@ -1,5 +1,5 @@
 // namespace: components/editor/testComponents
-export default {
+const translations = {
   'testsList.details': 'name: {{name}}, status: {{status}}, output: {{output}}',
   'testRunSummary.noTestResults': 'No test results',
   'testRunSummary.trackNotSupportTests':
@@ -51,3 +51,5 @@ export default {
   'testSummary.yourOutput': 'Your Output',
   'testContentWrapper.fileNotFound': 'File not found',
 }
+
+export default translations

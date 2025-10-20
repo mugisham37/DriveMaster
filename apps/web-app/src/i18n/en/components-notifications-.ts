@@ -1,5 +1,5 @@
 // namespace: components/notifications/
-export default {
+const translations = {
   'notificationsList.notifications': 'Notifications',
   'notificationsList.markAsRead': 'Mark as read',
   'notificationsList.markAsUnread': 'Mark as unread',
@@ -11,3 +11,5 @@ export default {
   'markAllNotificationsAsReadModal.unableToMarkNotificationsAsUnread':
     'Unable to mark notifications as unread',
 }
+
+export default translations

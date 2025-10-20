@@ -1,4 +1,6 @@
 // namespace: components/mentoring/discussion/NewMessageAlert.tsx
-export default {
+const translations = {
   newMessage: 'New Message',
 }
+
+export default translations

@@ -1,4 +1,6 @@
 // namespace: components/settings/ThemePreferenceForm.tsx
-export default {
+const translations = {
   'themePreferenceForm.theme': 'Theme',
 }
+
+export default translations

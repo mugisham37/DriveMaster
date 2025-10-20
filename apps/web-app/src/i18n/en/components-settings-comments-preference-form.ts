@@ -1,5 +1,5 @@
 // namespace: components/settings/comments-preference-form
-export default {
+const translations = {
   'commentsPreferenceForm.commentsOnYourSolutions':
     'Comments on your solutions',
   'commentsPreferenceForm.settingToControlComments':
@@ -20,3 +20,5 @@ export default {
   'useCommentsPreferenceForm.xOutOfY':
     '{{numCommentsEnabled}} / {{numPublished}}',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/student/mentoring-session/mentoring-request/MentoringRequestFormComponents
-export default {
+const translations = {
   'solutionCommentTextArea.howCanMentorHelpYou':
     'How can a mentor help you with this solution?',
   'solutionCommentTextArea.giveMentorStartingPoint':
@@ -9,3 +9,5 @@ export default {
   'trackObjectivesTextArea.tellOurMentorsAboutYourBackground':
     "Tell our mentors a little about your programming background and what you're aiming to learn from {{trackTitle}}.",
 }
+
+export default translations

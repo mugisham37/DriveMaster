@@ -1,33 +1,19 @@
 import { useEffect, useState, useCallback } from 'react'
-import { usePopper } from 'react-popper'
 
-export function usePanel(options?: any) {
-  let modifiers = [
-    {
-      name: 'offset',
-      options: {
-        offset: [0, 2],
-      },
-    },
-  ]
+interface PanelOptions {
+  placement?: string
+}
 
+export function usePanel(_options?: PanelOptions) {
   const [open, setOpen] = useState(false)
   const [buttonElement, setButtonElement] = useState<HTMLElement | null>(null)
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null)
-  const { styles, attributes, update } = usePopper(
-    buttonElement,
-    panelElement,
-    options || {
-      placement: options?.placement || 'bottom-end',
-      modifiers: modifiers,
-    }
-  )
 
   const handleMouseDown = useCallback(
-    (e) => {
+    (e: MouseEvent) => {
       if (
-        buttonElement?.contains(e.target) ||
-        panelElement?.contains(e.target)
+        buttonElement?.contains(e.target as Node) ||
+        panelElement?.contains(e.target as Node)
       ) {
         return
       }
@@ -49,16 +35,6 @@ export function usePanel(options?: any) {
     }
   }, [handleMouseDown])
 
-  useEffect(() => {
-    if (!update) {
-      return
-    }
-
-    if (open) {
-      update()
-    }
-  }, [update, open])
-
   return {
     open,
     setOpen,
@@ -68,8 +44,7 @@ export function usePanel(options?: any) {
     },
     panelAttributes: {
       ref: setPanelElement,
-      style: { ...styles.popper, zIndex: 100 },
-      ...attributes.popper,
+      style: { zIndex: 100 },
     },
   }
 }

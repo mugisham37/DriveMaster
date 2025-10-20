@@ -1,5 +1,5 @@
 // namespace: components/profile/avatar-selector/cropping-modal
-export default {
+const translations = {
   'croppingStep.cropYourPhoto': 'Crop your photo',
   'croppingStep.cancel': 'Cancel',
   'croppingStep.crop': 'Crop',
@@ -7,3 +7,5 @@ export default {
   'cropFinishedStep.recrop': 'Recrop',
   'cropFinishedStep.saveImage': 'Save image',
 }
+
+export default translations

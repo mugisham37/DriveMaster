@@ -37,16 +37,19 @@ export interface Track {
   tags?: string[]
 }
 
+export type ExerciseStatus = 'available' | 'started' | 'completed' | 'published' | 'locked' | 'iterated'
+
 export interface Exercise {
   id: number
   slug: string
   title: string
   iconUrl: string
   difficulty: number
-  status: 'available' | 'started' | 'completed' | 'published'
+  status: ExerciseStatus
   type: 'concept' | 'practice'
   blurb?: string
   deepDiveBlurb?: string
+  isUnlocked?: boolean
 }
 
 export interface Iteration {
@@ -69,9 +72,32 @@ export interface Iteration {
   }
 }
 
+export interface Solution {
+  uuid: string
+  status: 'started' | 'published' | 'completed' | 'iterated'
+  exercise: Exercise
+  unlockedHelp?: boolean
+  iterated?: boolean
+  iterations?: Array<{
+    idx: number
+    uuid: string
+  }>
+  mentorDiscussions?: Array<{
+    uuid: string
+  }>
+  mentorRequests?: {
+    pending?: Array<{
+      uuid: string
+    }>
+  }
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface SolutionForStudent {
   uuid: string
   status: 'started' | 'published' | 'completed' | 'iterated'
+  exercise: Exercise
   unlockedHelp?: boolean
   iterated?: boolean
   iterations?: Array<{
@@ -191,7 +217,7 @@ export interface Metric {
   }
   createdAt: string
   value?: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Mentoring types
@@ -403,9 +429,9 @@ export interface Concept {
 }
 
 // Request types for API calls
-export interface Request<T = any> {
+export interface Request<T = Record<string, unknown>> {
   endpoint: string
-  query?: Record<string, any>
+  query?: Record<string, unknown>
   options?: {
     initialData?: T[]
     staleTime?: number
@@ -413,33 +439,17 @@ export interface Request<T = any> {
   }
 }
 
-export default {
-  User,
-  Track,
-  Exercise,
-  Iteration,
-  SolutionForStudent,
-  CommunitySolution,
-  Testimonial,
-  SiteUpdate,
-  SharePlatform,
-  Metric,
-  MentorSessionRequest,
-  MentorSessionTrack,
-  MentorSessionExercise,
-  MentorDiscussion,
-  MentoredTrack,
-  MentoredTrackExercise,
-  CommunicationPreferences,
-  MentoringSessionExemplarFile,
-  CompleteRepresentationData,
-  Guidance,
-  MentoringSessionDonation,
-  Badge,
-  StudentTrack,
-  LiveEvent,
-  ScheduledEvent,
-  TrackProgressChart,
-  Concept,
-  Request,
+// Additional types for mentoring
+export interface SolutionMentoringStatus {
+  status: 'none' | 'requested' | 'in_progress' | 'finished'
+  hasUnreadPosts?: boolean
 }
+
+export interface MentoringSessionLinks {
+  self: string
+  finish?: string
+  markAsNothingToDo?: string
+}
+
+// Export all types individually instead of as default object
+// This prevents the "only refers to a type, but is being used as a value" errors

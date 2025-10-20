@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
-import { debounce } from '@/utils/debounce'
-import resolveConfig from 'tailwindcss/resolveConfig'
-import tailwindConfig from '../../../tailwind.config'
 
-// @ts-ignore
-const twConfig = resolveConfig(tailwindConfig)
-// @ts-ignore
-const lgBreakpoint = Number(twConfig?.theme?.screens?.lg.replace('px', ''))
+// Default Tailwind lg breakpoint
+const lgBreakpoint = 1024
+
+function debounce<T extends (...args: unknown[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
 
 export type UseWindowSizeResult = {
   isBelowLgWidth: boolean
@@ -15,11 +21,13 @@ export type UseWindowSizeResult = {
 
 export function useWindowSize(): UseWindowSizeResult {
   const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    height: typeof window !== 'undefined' ? window.innerHeight : 768,
   })
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleResize = debounce(() => {
       setWindowSize({
         width: window.innerWidth,

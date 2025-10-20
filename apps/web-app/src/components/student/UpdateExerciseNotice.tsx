@@ -11,7 +11,7 @@ export default function UpdateExerciseNotice({
   links,
 }: {
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/student/UpdateExerciseNotice.tsx')
   const [open, setOpen] = useState(false)
   return (
@@ -28,9 +28,10 @@ export default function UpdateExerciseNotice({
         </div>
       </button>
       <ExerciseUpdateModal
-        endpoint={links.diff}
-        open={open}
+        isOpen={open}
         onClose={() => setOpen(false)}
+        exerciseTitle="Exercise"
+        updateDetails={`View changes at ${links.diff}`}
       />
     </React.Fragment>
   )

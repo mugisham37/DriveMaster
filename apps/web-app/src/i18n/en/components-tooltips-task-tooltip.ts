@@ -1,5 +1,5 @@
 // namespace: components/tooltips/task-tooltip
-export default {
+const translations = {
   'knowledgeInfo.noExistingKnowledge':
     'This task requires <strong>no</strong> existing Exercism knowledge.',
   'knowledgeInfo.perfectForFirstContribution':
@@ -110,3 +110,5 @@ export default {
   'summary.workingOn':
     'For this task you will be {{verb}} {{module}} {{type}}{{trackSuffix}}.',
 }
+
+export default translations

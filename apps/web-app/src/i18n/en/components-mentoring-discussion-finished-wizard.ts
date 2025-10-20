@@ -1,5 +1,5 @@
 // namespace: components/mentoring/discussion/finished-wizard
-export default {
+const translations = {
   'favoriteStep.addToFavorites': 'Add to favorites',
   'favoriteStep.addStudentToFavorites':
     'Add {{studentHandle}} to your favorites?',
@@ -15,3 +15,5 @@ export default {
   'mentorAgainStep.yes': 'Yes',
   'mentorAgainStep.no': 'No',
 }
+
+export default translations

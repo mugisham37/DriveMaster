@@ -1,5 +1,5 @@
 // namespace: components/common/Pronouns.tsx
-export default {
+const translations = {
   'pronouns.ratherThanUsingPronouns':
     "Rather than using pronouns (he, her's, etc) please always refer to {{handle}} as {{handle}}.",
   'pronouns.doNotUsePronouns': 'Do not use pronouns',
@@ -10,3 +10,5 @@ export default {
   'pronouns.wasGreat':
     "{{handle}} was great. {{pronoun1}} answered all my questions. I'll recommend {{pronoun2}} to others because {{pronoun3}} advice was very helpful.",
 }
+
+export default translations

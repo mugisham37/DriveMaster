@@ -1,4 +1,6 @@
 // namespace: components/settings/ShowOnSupportersPageButton.tsx
-export default {
+const translations = {
   appearOnSupportersPage: 'Appear on supporters page?',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/mentoring/request/locked-solution-mentoring-note
-export default {
+const translations = {
   'lockedSolutionMentoringNote.mentoringDocs': 'mentoring docs',
   'lockedSolutionMentoringNote.solutionLocked':
     'This solution is locked until {{lockedUntil}} ({{diffMins}} from now).',
@@ -16,3 +16,5 @@ export default {
   'locked.unlocked':
     'Check out our <a>mentoring docs</a> for more information. This solution is no longer locked and another mentor may pick it up.',
 }
+
+export default translations

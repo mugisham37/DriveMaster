@@ -1,5 +1,5 @@
 // namespace: components/modals/ChangePublishedIterationModal.tsx
-export default {
+const translations = {
   'changePublishedIterationsModal.changePublishedIterations':
     'Change published iterations',
   'changePublishedIterationsModal.recommendPublishing':
@@ -10,3 +10,5 @@ export default {
   'changePublishedIterationsModal.unableToChangePublishedIteration':
     'Unable to change published iteration',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/mentoring/session/iteration-view
-export default {
+const translations = {
   'iterationHeader.downloadButton.downloadThisSolutionViaCli':
     'Download this solution via the CLI',
   'iterationHeader.downloadButton.solutionDownloadedIntoSubdirectory':
@@ -10,3 +10,5 @@ export default {
   'iterationHeader.downloadButton.downloadSolution': 'Download solution',
   'iterationHeader.copyButton.copySolution': 'Copy solution',
 }
+
+export default translations

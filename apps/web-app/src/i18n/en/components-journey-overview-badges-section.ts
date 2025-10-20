@@ -1,5 +1,5 @@
 // namespace: components/journey/overview/badges-section
-export default {
+const translations = {
   'badgeSummary.none': 'You have no badges.',
   'badgeSummary.summary': 'You have {{list}}.',
 
@@ -15,3 +15,5 @@ export default {
   'badgeSummary.rarity.common_one': '{{count}} common badge',
   'badgeSummary.rarity.common_other': '{{count}} common badges',
 }
+
+export default translations

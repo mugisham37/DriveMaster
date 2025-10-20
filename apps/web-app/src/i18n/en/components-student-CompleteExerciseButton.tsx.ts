@@ -1,4 +1,6 @@
 // namespace: components/student/CompleteExerciseButton.tsx
-export default {
+const translations = {
   markAsComplete: 'Mark as complete',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/settings/BootcampAffiliateCouponForm.tsx
-export default {
+const translations = {
   'bootcampAffiliateCouponForm.bootcampAffiliateCoupon':
     'Bootcamp Affiliate Coupon',
   'bootcampAffiliateCouponForm.generateYourAffiliateDiscountCode':
@@ -24,3 +24,5 @@ export default {
   'bootcampAffiliateCouponForm.insidersCanAccessDiscount':
     "Exercism Insiders can access 20% off Exercism's <link>Learn to Code Bootcamp</link>, and receive 20% of all sales when someone uses their voucher code.",
 }
+
+export default translations

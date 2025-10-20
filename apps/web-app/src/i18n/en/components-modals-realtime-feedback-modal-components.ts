@@ -1,5 +1,7 @@
 // namespace: components/modals/realtime-feedback-modal/components
-export default {
+const translations = {
   'feedbackContentButtons.goBackToEditor': 'Go back to editor',
   'feedbackContentButtons.continue': 'Continue',
 }
+
+export default translations

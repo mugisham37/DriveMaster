@@ -1,8 +1,18 @@
 import React, { useState, useCallback } from 'react'
 import { GraphicalIcon } from '../common'
 import { CompleteExerciseModal } from '../modals/CompleteExerciseModal'
-import { Iteration } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+
+interface Iteration {
+  idx: number
+  uuid: string
+  submissionUuid: string
+  createdAt: string
+  testsStatus: string
+  representationStatus: string
+  analysisStatus: string
+  isPublished: boolean
+}
 
 export default function CompleteExerciseButton({
   endpoint,
@@ -10,7 +20,7 @@ export default function CompleteExerciseButton({
 }: {
   endpoint: string
   iterations: readonly Iteration[]
-}): JSX.Element {
+}): React.JSX.Element {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { t } = useAppTranslation(
     'components/student/CompleteExerciseButton.tsx'

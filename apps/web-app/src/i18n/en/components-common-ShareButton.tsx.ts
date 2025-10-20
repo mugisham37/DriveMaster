@@ -1,4 +1,6 @@
 // namespace: components/common/ShareButton.tsx
-export default {
+const translations = {
   'shareButton.share': 'Share',
 }
+
+export default translations

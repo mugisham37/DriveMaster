@@ -7,7 +7,7 @@ interface TrackConceptsProps {
   concepts: Concept[]
 }
 
-export function TrackConcepts({ track, concepts }: TrackConceptsProps) {
+export function TrackConcepts({ concepts }: TrackConceptsProps) {
   return (
     <section className="track-concepts">
       <h2>Concepts</h2>

@@ -1,5 +1,5 @@
 // namespace: components/community-solutions
-export default {
+const translations = {
   'commentsList.reminder.rememberComments':
     'Remember! Comments are for asking questions or applauding a solution. <0>Do not use them</0> for mentoring or giving feedback.',
   'commentsList.commentView.edit': 'Edit',
@@ -14,3 +14,5 @@ export default {
   'commentsList.listDisabled.disabledComments': 'Comments have been disabled',
   'commentsList.header.writeAComment': 'Write a comment',
 }
+
+export default translations

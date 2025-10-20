@@ -1,5 +1,5 @@
 // namespace: components/settings/ProfileForm.tsx
-export default {
+const translations = {
   'profileForm.profile': 'Profile',
   'profileForm.name': 'Name',
   'profileForm.location': 'Location',
@@ -22,3 +22,5 @@ export default {
   'profileForm.midLevelDeveloper': 'Mid-level Developer',
   'profileForm.seniorDeveloper': 'Senior Developer',
 }
+
+export default translations

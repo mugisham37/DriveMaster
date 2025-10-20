@@ -1,5 +1,5 @@
 // namespace: components/student/ExerciseList.tsx
-export default {
+const translations = {
   allExercises: 'All Exercises',
   completed: 'Completed',
   inProgress: 'In Progress',
@@ -8,3 +8,5 @@ export default {
   searchByTitle: 'Search by title',
   noExercisesFound: 'No exercises found',
 }
+
+export default translations

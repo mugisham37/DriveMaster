@@ -1,5 +1,5 @@
 // namespace: components/editor/header
-export default {
+const translations = {
   'settings.theme': 'Theme',
   'settings.keybindings': 'Keybindings',
   'settings.wrap': 'Wrap',
@@ -17,3 +17,5 @@ export default {
   'more.reportABug': 'Report a bug',
   backToExercise: 'Back to Exercise',
 }
+
+export default translations

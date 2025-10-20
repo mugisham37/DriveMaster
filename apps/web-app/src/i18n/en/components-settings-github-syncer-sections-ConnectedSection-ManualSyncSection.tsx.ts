@@ -1,5 +1,5 @@
 // namespace: components/settings/github-syncer/sections/ConnectedSection/ManualSyncSection.tsx
-export default {
+const translations = {
   backupATrack: 'Backup a track',
   syncingIsPausedEnableItToBackUpThisTrack:
     'Syncing is paused. Enable it to back up this track.',
@@ -28,3 +28,5 @@ export default {
   somethingWentWrongWhileQueuingTheBackupForAllTracksPleaseTryAgain:
     'Something went wrong while queuing the backup for all tracks. Please try again.',
 }
+
+export default translations

@@ -1,4 +1,6 @@
 // namespace: components/tooltips/ExerciseTooltip.tsx
-export default {
+const translations = {
   'exerciseTooltip.unableToLoadInformation': 'Unable to load information',
 }
+
+export default translations

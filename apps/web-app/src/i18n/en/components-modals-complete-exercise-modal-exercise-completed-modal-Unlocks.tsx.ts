@@ -1,5 +1,5 @@
 // namespace: components/modals/complete-exercise-modal/exercise-completed-modal/Unlocks.tsx
-export default {
+const translations = {
   'unlocks.conceptsUnlocked_one': "You've unlocked <icon/> 1 concept",
   'unlocks.conceptsUnlocked_other':
     "You've unlocked <icon/> {{count}} concepts",
@@ -8,3 +8,5 @@ export default {
   'unlocks.exercisesUnlocked_other':
     "You've unlocked <icon/> {{count}} exercises",
 }
+
+export default translations

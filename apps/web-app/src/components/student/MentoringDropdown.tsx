@@ -15,7 +15,7 @@ export const MentoringDropdown = ({
   mentoringStatus: SolutionMentoringStatus
   discussions: readonly MentorDiscussion[]
   links: Links
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <div className="c-request-mentoring-dropdown">
       <Header mentoringStatus={mentoringStatus} shareLink={links.share} />

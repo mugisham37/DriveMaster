@@ -3,11 +3,12 @@ import React from 'react'
 interface ComboButtonProps {
   enabled?: boolean
   children: React.ReactNode
+  className?: string
 }
 
-export function ComboButton({ enabled = true, children }: ComboButtonProps) {
+export function ComboButton({ enabled = true, children, className = '' }: ComboButtonProps) {
   return (
-    <div className={`combo-button ${enabled ? 'enabled' : 'disabled'}`}>
+    <div className={`combo-button ${enabled ? 'enabled' : 'disabled'} ${className}`}>
       {children}
     </div>
   )

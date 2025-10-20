@@ -1,5 +1,5 @@
 // namespace: components/mentoring/inbox
-export default {
+const translations = {
   'discussionList.somethingWentWrong': 'Something went wrong',
   'discussionList.retry': 'Retry',
   'discussionList.noMentoringDiscussions': 'No mentoring discussions',
@@ -8,3 +8,5 @@ export default {
   'discussion.comments': '{{postsCount}} comments',
   'trackFilter.somethingWentWrong': 'Something went wrong',
 }
+
+export default translations

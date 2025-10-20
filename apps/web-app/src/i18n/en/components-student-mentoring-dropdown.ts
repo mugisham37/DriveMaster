@@ -1,5 +1,5 @@
 // namespace: components/student/mentoring-dropdown
-export default {
+const translations = {
   'discussionList.codeReviewSessions': 'Code Review Sessions',
   'discussionList.appearHereOnceStarted':
     'Your code review discussions with mentors for this exercise will appear here once started.',
@@ -11,3 +11,5 @@ export default {
   'header.inviteFriendsColleagues':
     'Use this share link to invite friends, colleagues or personal mentors directly to mentor your solution.',
 }
+
+export default translations

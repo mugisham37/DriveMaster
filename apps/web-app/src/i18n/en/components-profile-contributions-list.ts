@@ -1,6 +1,8 @@
 // namespace: components/profile/contributions-list
-export default {
+const translations = {
   'otherContributionsList.generic': 'Generic',
   'maintainingContributionsList.generic': 'Generic',
   'buildingContributionsList.generic': 'Generic',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/mentoring/automation/AutomationListElement.tsx
-export default {
+const translations = {
   'adminTab.lastShown': 'Last shown',
   'adminTab.lastOccurence': 'Last occurence',
   'automationListElement.shownTime': 'Shown {{number}} time',
@@ -8,3 +8,5 @@ export default {
   'automationListElement.occurenceTimes': 'occurrence {{number}} times',
   'automationListElement.inTrackId': 'in {{trackTitle}} (#{{id}})',
 }
+
+export default translations

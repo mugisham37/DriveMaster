@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 // History hooks to preserve exact behavior from Rails implementation
-export function useHistory({ pushOn }: { pushOn: any }) {
+export function useHistory({ pushOn }: { pushOn: Record<string, unknown> }) {
   const router = useRouter()
 
   useEffect(() => {
@@ -22,10 +22,10 @@ export function useHistory({ pushOn }: { pushOn: any }) {
   }, [pushOn, router])
 }
 
-export function removeEmpty(obj: any): any {
+export function removeEmpty(obj: Record<string, unknown>): Record<string, unknown> {
   if (!obj) return {}
   
-  const result: any = {}
+  const result: Record<string, unknown> = {}
   Object.entries(obj).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       result[key] = value

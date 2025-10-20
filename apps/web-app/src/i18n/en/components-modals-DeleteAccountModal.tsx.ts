@@ -1,5 +1,5 @@
 // namespace: components/modals/DeleteAccountModal.tsx
-export default {
+const translations = {
   'deleteAccount.title': "You're about to delete your Exercism account",
   'deleteAccount.readCarefully':
     'Please read this carefully before continuing.',
@@ -18,3 +18,5 @@ export default {
   'deleteAccount.deleteAccount': 'Delete account',
   'deleteAccount.unableToDeleteAccount': 'Unable to delete account',
 }
+
+export default translations

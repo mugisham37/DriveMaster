@@ -1,5 +1,5 @@
 // namespace: components/insiders
-export default {
+const translations = {
   'insidersStatus.eligibleText':
     "You're currently eligible for Insiders. Thank you for being part of Exercism. We're excited to continue with you on our journey!",
   'insidersStatus.ineligibleText':
@@ -27,3 +27,5 @@ export default {
     'Exercism is an independent not-for-profit organisation. All donations are used to run and improve the platform. All payments are securely handled by Stripe.',
   'paymentPending.errorFetchingStatus': 'Error fetching paypal status',
 }
+
+export default translations

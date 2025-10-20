@@ -1,5 +1,5 @@
 // namespace: components/modals/upload-video/elements
-export default {
+const translations = {
   'uploadVideoForm.useDifferentVideo': 'Use different video',
   'uploadVideoForm.submitVideo': 'Submit video',
   'uploadVideoTextInput.pasteYourVideoUrlYoutube':
@@ -21,3 +21,5 @@ export default {
   'uploadVideoModalHeader.producedAVideoOfWorkingThroughThisExerciseYourselfWantToShareItWithTheExercismCommunity':
     'Produced a video of working through this exercise yourself? Want to share it with the Exercism community? <strong className="font-medium text">Submit the form below and Jeremy will review and approve it.</strong>',
 }
+
+export default translations

@@ -1,5 +1,5 @@
 // namespace: components/modals/PublishSolutionModal.tsx
-export default {
+const translations = {
   'publishSolutionModal.publishYourSolution': 'Publish your solution',
   'publishSolutionModal.recommendPublishing':
     'We recommend publishing all iterations to help others learn from your journey, but you can also choose just your favourite iteration to showcase instead.',
@@ -7,3 +7,5 @@ export default {
   'publishSolutionModal.cancel': 'Cancel',
   'publishSolutionModal.unableToPublishSolution': 'Unable to publish solution',
 }
+
+export default translations

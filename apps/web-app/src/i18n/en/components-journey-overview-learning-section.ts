@@ -1,5 +1,5 @@
 // namespace: components/journey/overview/learning-section
-export default {
+const translations = {
   'exercisesCompletedSummary.exerciseCompleted': 'Exercise completed',
   'exercisesCompletedSummary.exercisesCompleted': 'Exercises completed',
   'conceptsLearntSummary.conceptLearnt': 'Concept learnt',
@@ -39,3 +39,5 @@ export default {
   'learningOverview.exercisesCompleted':
     '{{completed}} / {{total}} exercises completed',
 }
+
+export default translations

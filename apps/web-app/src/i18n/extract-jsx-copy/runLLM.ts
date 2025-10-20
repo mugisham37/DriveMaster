@@ -1,18 +1,14 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function runLLM(prompt: string): Promise<string | undefined> {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY
-  const ai = new GoogleGenAI({ apiKey })
+  if (!apiKey) {
+    throw new Error('GOOGLE_GENAI_API_KEY environment variable is not set')
+  }
+  const ai = new GoogleGenerativeAI(apiKey)
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      thinkingConfig: {
-        thinkingBudget: 0,
-      },
-    },
-  })
+  const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const response = await model.generateContent(prompt)
 
-  return response.text
+  return response.response.text()
 }
