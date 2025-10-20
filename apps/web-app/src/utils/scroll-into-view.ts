@@ -50,18 +50,18 @@ function scrollElementsIntoView(
 
 const axisProps = {
   X: {
-    size: 'clientWidth',
-    scroll: 'scrollLeft',
-    start: 'left',
-    end: 'right',
+    size: 'clientWidth' as const,
+    scroll: 'scrollLeft' as const,
+    start: 'left' as const,
+    end: 'right' as const,
   },
   Y: {
-    size: 'clientHeight',
-    scroll: 'scrollTop',
-    start: 'top',
-    end: 'bottom',
+    size: 'clientHeight' as const,
+    scroll: 'scrollTop' as const,
+    start: 'top' as const,
+    end: 'bottom' as const,
   },
-}
+} as const
 
 function scrollToElementWithinContainer(
   element: HTMLElement,
@@ -78,8 +78,9 @@ function scrollToElementWithinContainer(
     elementRect[end] <= containerRect[end]
 
   if (!isElementVisible) {
-    const position =
-      elementRect[start] - containerRect[start] + container[scroll]
-    container[scroll] = position - container[size] / 2
+    const containerScrollValue = (container as unknown as Record<string, number>)[scroll] || 0
+    const containerSizeValue = (container as unknown as Record<string, number>)[size] || 0
+    const position = elementRect[start] - containerRect[start] + containerScrollValue
+    ;(container as unknown as Record<string, number>)[scroll] = position - containerSizeValue / 2
   }
 }

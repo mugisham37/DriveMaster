@@ -1,6 +1,6 @@
 import { camelizeKeys } from 'humps'
 
-export async function fetchJSON<T extends any>(
+export async function fetchJSON<T>(
   input: RequestInfo,
   options: RequestInit
 ): Promise<T> {

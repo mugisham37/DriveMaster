@@ -16,8 +16,9 @@ export class ConditionTextManager {
 
   getLastTrueText(): string | null {
     for (let i = this.conditions.length - 1; i >= 0; i--) {
-      if (this.conditions[i].condition) {
-        return this.conditions[i].text
+      const condition = this.conditions[i]
+      if (condition && condition.condition) {
+        return condition.text
       }
     }
 

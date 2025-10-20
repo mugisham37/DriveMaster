@@ -5,7 +5,7 @@ export type APIError = {
   message: string
 }
 
-export const sendRequest = <T extends any = any>({
+export const sendRequest = <T = unknown>({
   endpoint,
   body,
   method,

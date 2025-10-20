@@ -1,10 +1,6 @@
 import UAParser from 'ua-parser-js'
 
-declare global {
-  interface RegExpMatchArray {
-    indices?: number[][]
-  }
-}
+// Remove the conflicting global declaration as it's already defined in lib.es2022.regexp.d.ts
 
 export function areAllRegExpFeaturesSupported(): boolean {
   try {
@@ -37,50 +33,51 @@ function compareVersions(versionA: string, versionB: string): number {
 }
 
 export function isLookbehindSupported(): boolean {
-  const parser = new UAParser().getBrowser()
+  const parser = new (UAParser as unknown as { new(): { getBrowser(): { name?: string; version?: string } } })()
+  const browser = parser.getBrowser()
 
-  switch (parser.name) {
+  switch (browser.name) {
     case 'IE':
     case 'Opera mini':
       return false
     case 'Chrome': {
-      if (parser.version) return compareVersions(parser.version, '62') >= 0
+      if (browser.version) return compareVersions(browser.version, '62') >= 0
     }
     case 'Edge': {
-      if (parser.version) return compareVersions(parser.version, '79') >= 0
+      if (browser.version) return compareVersions(browser.version, '79') >= 0
     }
     case 'Firefox': {
-      if (parser.version) return compareVersions(parser.version, '78') >= 0
+      if (browser.version) return compareVersions(browser.version, '78') >= 0
     }
     case 'Safari': {
-      if (parser.version) return compareVersions(parser.version, '16.4') >= 0
+      if (browser.version) return compareVersions(browser.version, '16.4') >= 0
     }
     case 'Mobile Safari': {
-      if (parser.version) return compareVersions(parser.version, '16.4') >= 0
+      if (browser.version) return compareVersions(browser.version, '16.4') >= 0
     }
     case 'Opera': {
-      if (parser.version) return compareVersions(parser.version, '49') >= 0
+      if (browser.version) return compareVersions(browser.version, '49') >= 0
     }
     case 'Opera Mobile': {
-      if (parser.version) return compareVersions(parser.version, '80') >= 0
+      if (browser.version) return compareVersions(browser.version, '80') >= 0
     }
     case 'Samsung Internet': {
-      if (parser.version) return compareVersions(parser.version, '8.2') >= 0
+      if (browser.version) return compareVersions(browser.version, '8.2') >= 0
     }
     case 'UCBrowser': {
-      if (parser.version) return compareVersions(parser.version, '15.5') >= 0
+      if (browser.version) return compareVersions(browser.version, '15.5') >= 0
     }
     case 'Android Browser': {
-      if (parser.version) return compareVersions(parser.version, '124') >= 0
+      if (browser.version) return compareVersions(browser.version, '124') >= 0
     }
     case 'QQ Browser': {
-      if (parser.version) return compareVersions(parser.version, '14.9') >= 0
+      if (browser.version) return compareVersions(browser.version, '14.9') >= 0
     }
     case 'Baidu Browser': {
-      if (parser.version) return compareVersions(parser.version, '13.52') >= 0
+      if (browser.version) return compareVersions(browser.version, '13.52') >= 0
     }
     case 'KaiOS Browser': {
-      if (parser.version) return compareVersions(parser.version, '3.1') >= 0
+      if (browser.version) return compareVersions(browser.version, '3.1') >= 0
     }
     default:
       return true

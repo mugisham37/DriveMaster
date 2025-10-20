@@ -3,10 +3,13 @@ export function toSentence(arr: string[]): string {
     return ''
   }
   if (arr.length === 1) {
-    return arr[0]
+    return arr[0] || ''
   }
 
   const last = arr.pop()
+  if (!last) {
+    return arr.join(', ')
+  }
 
   return `${arr.join(', ')} and ${last}`
 }

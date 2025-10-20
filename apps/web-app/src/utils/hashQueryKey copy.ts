@@ -7,7 +7,7 @@ export function hashQueryKey({
   data,
 }: {
   prefix: string
-  data: Object
+  data: object
 }) {
   const queryKey = `${prefix}:${xxhash
     .h64(JSON.stringify(data), seed)

@@ -3,15 +3,15 @@
  * This is used throughout the component registry for data transformation
  */
 
-import { camelizeKeys } from 'humps'
+import { camelizeKeys } from "humps";
 
 /**
  * Camelizes object keys and provides type safety
  * @param obj - Object to camelize
  * @returns Camelized object with proper typing
  */
-export function camelizeKeysAs<T>(obj: any): T {
-  return camelizeKeys(obj) as T
+export function camelizeKeysAs<T>(obj: Record<string, unknown>): T {
+  return camelizeKeys(obj) as T;
 }
 
-export default camelizeKeysAs
+export default camelizeKeysAs;

@@ -19,7 +19,7 @@ export function sendRequest({
   const fetch = window.fetch(endpoint, {
     method,
     headers: defaultHeaders,
-    body,
+    body: body || null,
     credentials: 'same-origin',
   }).then(response => {
     if (!response.ok) {

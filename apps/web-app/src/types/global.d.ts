@@ -1,6 +1,6 @@
 declare module 'reconnecting-websocket' {
   interface ReconnectingWebsocket extends WebSocket {
-    [key: string]: any
+    [key: string]: unknown
     // eslint-disable-next-line @typescript-eslint/no-misused-new
     new (
       url: string | (() => string),
@@ -40,6 +40,9 @@ interface Document {
 
 interface Window {
   turboLoaded: boolean
+  Turbo: {
+    visit: (url: string) => void
+  }
 }
 
 declare module 'nim-codemirror-mode' {
@@ -59,8 +62,8 @@ declare module 'codemirror-lang-jq' {
 
 declare module '@exercism/twine2-story-format/src/story' {
   export default class Story {
-    constructor(params: any)
-    start: (params: any) => any
+    constructor(params: Record<string, unknown>)
+    start: (params: Record<string, unknown>) => unknown
   }
 }
 
@@ -124,11 +127,51 @@ declare module 'highlightjs-jq' {
   export default setup
 }
 
+declare module '@exercism/highlightjs-arturo' {
+  import { LanguageFn } from 'highlight.js'
+  const setup: LanguageFn
+  export default setup
+}
+
+declare module 'highlightjs-roc' {
+  import { LanguageFn } from 'highlight.js'
+  const setup: LanguageFn
+  export default setup
+}
+
+declare module '@exercism/highlightjs-uiua' {
+  import { LanguageFn } from 'highlight.js'
+  const setup: LanguageFn
+  export default setup
+}
+
+declare module '@exercism/highlightjs-jikiscript' {
+  import { LanguageFn } from 'highlight.js'
+  const setup: LanguageFn
+  export default setup
+}
+
+declare module '@exercism/highlightjs-futhark' {
+  import { LanguageFn } from 'highlight.js'
+  const setup: LanguageFn
+  export default setup
+}
+
 // Config interfaces
 interface Config {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface Manifest {
   [key: string]: string
+}
+
+declare module 'copy-to-clipboard' {
+  function copy(text: string, options?: { debug?: boolean; message?: string }): boolean
+  export = copy
+}
+
+declare module '*.json' {
+  const value: Record<string, string>
+  export default value
 }

@@ -13,7 +13,8 @@ export function showSiteFooter(): void {
     // If this elem is hydrated, move onto the next one...
     if (
       elem.childElementCount > 0 &&
-      elem.children[0].classList != 'c-loading-suspense'
+      elem.children[0] &&
+      !elem.children[0].classList.contains('c-loading-suspense')
     ) {
       continue
     }

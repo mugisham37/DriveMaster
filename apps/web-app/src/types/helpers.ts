@@ -52,7 +52,7 @@ export interface ExternalLinkProps {
   iconClassName?: string
   target?: string
   rel?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // Helper function types

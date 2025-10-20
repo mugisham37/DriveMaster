@@ -36,7 +36,7 @@ export function shortFromNow(dateTime: ConfigType) {
 
       break
     default:
-      unit = time[1][0]
+      unit = time[1]?.[0] || ''
   }
 
   return inFuture ? `in ${val}${unit}` : `${val}${unit} ago`
@@ -60,7 +60,8 @@ export function durationFromSeconds(seconds: number): string {
     duration(SECONDS_PER_HOUR, SECONDS_PER_MINUTE, 'minute') ||
     duration(SECONDS_PER_DAY, SECONDS_PER_HOUR, 'hour') ||
     duration(SECONDS_PER_MONTH, SECONDS_PER_DAY, 'day') ||
-    duration(Number.MAX_VALUE, SECONDS_PER_MONTH, 'month'))!
+    duration(Number.MAX_VALUE, SECONDS_PER_MONTH, 'month') ||
+    '0 seconds')!
 }
 
 export function durationTimeElementFromSeconds(seconds: number) {

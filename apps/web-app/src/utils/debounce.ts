@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // any is descriptive here
-// using unknown would make thigs very hard to read
+// using unknown would make things very hard to read
 export function debounce<F extends (...args: any[]) => any>(
   func: F,
   delay: number

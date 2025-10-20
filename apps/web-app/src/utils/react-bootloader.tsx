@@ -10,15 +10,15 @@ import { componentMappings } from '@/lib/component-registry'
 
 declare global {
   interface Window {
-    Turbo?: any
+    Turbo?: unknown
     queryClient?: QueryClient
-    turboLoaded?: boolean
+    turboLoaded: boolean
   }
 }
 
-type ErrorBoundaryType = React.ComponentType<any>
+type ErrorBoundaryType = React.ComponentType<{ children?: React.ReactNode }>
 
-type GeneratorFunc = (data: any, elem?: HTMLElement) => React.JSX.Element
+type GeneratorFunc = (data: unknown, elem?: HTMLElement) => React.JSX.Element
 type Mappings = Record<string, GeneratorFunc>
 
 type TurboFrameRenderDetail = {
@@ -31,7 +31,7 @@ type TurboFrameRenderDetail = {
   }
 }
 
-let ErrorBoundary: ErrorBoundaryType = () => <></>
+let ErrorBoundary: ErrorBoundaryType = ({ children }) => <>{children}</>
 
 if (process.env.BUGSNAG_API_KEY) {
   Bugsnag.start({
@@ -50,11 +50,12 @@ if (process.env.BUGSNAG_API_KEY) {
       }
 
       event.setUser(tag.content)
+      return true
     },
   })
   const reactPlugin = Bugsnag.getPlugin('react')
   if (reactPlugin) {
-    ErrorBoundary = reactPlugin.createErrorBoundary(React)
+    ErrorBoundary = reactPlugin.createErrorBoundary(React) as ErrorBoundaryType
   } else {
     throw new Error("Failed to load Bugsnag's react plugin")
   }
@@ -62,15 +63,18 @@ if (process.env.BUGSNAG_API_KEY) {
 
 // Asynchronously appends a stylesheet to the head and resolves
 // the promise when it's finished loading.
-let loadStylesheet = function (url) {
-  return new Promise((resolve, reject) => {
-    let link = document.createElement('link')
+const loadStylesheet = function (url: string): Promise<void> {
+  return new Promise((resolve) => {
+    const link = document.createElement('link')
     link.type = 'text/css'
     link.rel = 'stylesheet'
-    link.onload = resolve
+    link.onload = () => resolve()
     link.href = url
 
-    document.getElementsByTagName('head')[0].appendChild(link)
+    const head = document.getElementsByTagName('head')[0]
+    if (head) {
+      head.appendChild(link)
+    }
   })
 }
 
@@ -78,7 +82,7 @@ function initEventListeners() {
   // As we have conditional stylesheets per page, we need to extract and
   // render those when the frame changes. We want the CSS to load BEFORE
   // then HTML renders, so we get any stylesheets downloaded and THEN render
-  // continnue processing the frame render.
+  // continue processing the frame render.
   document.addEventListener('turbo:before-frame-render', (e: Event) => {
     if (!(e instanceof CustomEvent)) return
 
@@ -95,7 +99,7 @@ function initEventListeners() {
     e.preventDefault()
 
     // Load stylesheets in parallel asynchronously
-    const promises = hrefs.map((href) => loadStylesheet(href))
+    const promises = hrefs.map((href) => href ? loadStylesheet(href) : Promise.resolve())
 
     // When they're all loaded, resume
     Promise.all(promises).then(() => e.detail.resume())
@@ -145,7 +149,7 @@ export function initReact(mappings?: Mappings): void {
   // Use provided mappings or default to component registry
   const componentMap = mappings || componentMappings
   
-  const renderThings = () => {
+  const renderThings = (): void => {
     renderComponents(document.body, componentMap)
     renderTooltips(document.body, componentMap)
   }

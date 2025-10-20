@@ -1,5 +1,47 @@
 import { useState } from 'react'
-import { StoredMemoryValue, useMutableMemoryValue } from 'use-memory-value'
+
+// Simple replacement for StoredMemoryValue functionality
+class StoredMemoryValue<T> {
+  constructor(
+    private key: string,
+    private persistent: boolean,
+    private defaultValue: T
+  ) {}
+
+  get(): T {
+    if (this.persistent && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(this.key)
+        return stored ? JSON.parse(stored) : this.defaultValue
+      } catch {
+        return this.defaultValue
+      }
+    }
+    return this.defaultValue
+  }
+
+  set(value: T): void {
+    if (this.persistent && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(this.key, JSON.stringify(value))
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  }
+}
+
+// Simple replacement for useMutableMemoryValue
+function useMutableMemoryValue<T>(memoryValue: StoredMemoryValue<T>): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(() => memoryValue.get())
+
+  const setValueAndStore = (newValue: T) => {
+    setValue(newValue)
+    memoryValue.set(newValue)
+  }
+
+  return [value, setValueAndStore]
+}
 
 export function useStorage<T>(key: string, initialValue: T) {
   const memoryValue = new StoredMemoryValue<T>(key, true, initialValue)
@@ -16,7 +58,7 @@ export function useLocalStorage<T>(
       const item = JSON.parse(localStorage.getItem(key) || '') as T
 
       return item
-    } catch (error) {
+    } catch {
       return initialValue
     }
   })
