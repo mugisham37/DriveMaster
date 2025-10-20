@@ -1,4 +1,5 @@
-import { Flair } from "../components/common/HandleWithFlair";
+// Flair type definition
+export type Flair = 'insider' | 'lifetime_insider' | 'founder' | 'staff'
 
 export type Size = "small" | "large";
 
@@ -1004,5 +1005,114 @@ export interface ProgressDataPoint {
   timestamp: string;
   label?: string;
 }
+// API Response Types
+export interface DashboardData {
+  tracks: Track[]
+  numTracks: number
+  trackIconUrls: string[]
+  recentActivity: Array<{
+    type: string
+    track: Track
+    exercise?: Exercise
+    createdAt: string
+  }>
+  featuredBadges: Badge[]
+  reputation: number
+}
+
+export interface APIResponse<T = unknown> {
+  data?: T
+  tracks?: Track[]
+  numTracks?: number
+  trackIconUrls?: string[]
+  exercises?: Exercise[]
+  numExercises?: number
+  discussions?: MentorDiscussion[]
+  requests?: MentorSessionRequest[]
+  results?: T[]
+  meta?: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    unscopedTotal?: number
+  }
+  error?: string
+  message?: string
+}
+
+// Specific response types for better type safety
+export interface TracksResponse extends APIResponse {
+  tracks: Track[]
+  numTracks: number
+  trackIconUrls: string[]
+}
+
+export interface TrackExercisesResponse extends APIResponse {
+  exercises: Exercise[]
+  numExercises: number
+}
+
+export interface MentoringDiscussionsResponse extends APIResponse {
+  discussions: MentorDiscussion[]
+  meta: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    unscopedTotal?: number
+  }
+}
+
+export interface MentoringRequestsResponse extends APIResponse {
+  requests: MentorSessionRequest[]
+  meta: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    unscopedTotal?: number
+  }
+}
+
+export interface MentoringTestimonialsResponse extends APIResponse {
+  results: Testimonial[]
+  meta: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    unscopedTotal?: number
+  }
+}
+
+export interface MentoringRepresentationsResponse extends APIResponse {
+  results: Representation[]
+  meta: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    unscopedTotal?: number
+  }
+}
+
+export interface MentoringTracksResponse extends Omit<APIResponse, 'tracks'> {
+  tracks: MentoredTrack[]
+}
+
+export interface CacheKey extends Array<unknown> {
+  0: string
+  [index: number]: unknown
+}
+
+export interface MutateFunction {
+  (key?: CacheKey | ((key: CacheKey) => boolean), data?: unknown, shouldRevalidate?: boolean): Promise<unknown>
+}
+
+// Window interface extensions
+export interface WindowConfetti {
+  (options?: {
+    particleCount?: number
+    spread?: number
+    origin?: { y: number }
+  }): void
+}
+
 // Migrated Ruby Helper Types
 export * from "./helpers";

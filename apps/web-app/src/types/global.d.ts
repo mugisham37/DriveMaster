@@ -43,6 +43,15 @@ interface Window {
   Turbo: {
     visit: (url: string) => void
   }
+  confetti?: WindowConfetti
+}
+
+interface WindowConfetti {
+  (options?: {
+    particleCount?: number
+    spread?: number
+    origin?: { y: number }
+  }): void
 }
 
 declare module 'nim-codemirror-mode' {
