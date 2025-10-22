@@ -1,162 +1,191 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { Icon } from '@/lib/assets';
+import React, { useEffect, useState } from 'react'
+import { ReputationIcon } from './reputation/ReputationIcon'
+import { ReputationMenu } from './reputation/ReputationMenu'
+import { ReputationChannel } from '../../lib/realtime/channels/reputation-channel'
+import { useDropdown, DropdownAttributes } from '../../hooks/useAdvancedDropdown'
+import { QueryKey, QueryStatus } from '@tanstack/react-query'
+import { useErrorHandler, ErrorBoundary } from '../ErrorBoundary'
+import { Loading } from '../common/Loading'
+import { usePaginatedRequestQuery } from '../../hooks/request-query'
 
-interface ReputationToken {
-  id: string;
-  type: string;
-  value: number;
-  reason: string;
-  createdAt: string;
-  exercise?: {
-    title: string;
-    track: string;
-  };
+
+export type Links = {
+  tokens: string
 }
 
-interface ReputationDropdownProps {
-  user: {
-    reputation?: string;
-    handle?: string;
-  };
-}
-
-export function ReputationDropdown({ user }: ReputationDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [reputationTokens, setReputationTokens] = useState<ReputationToken[]>([]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // TODO: Fetch reputation tokens from API
-  useEffect(() => {
-    if (isOpen) {
-      // This would be replaced with actual API call
-      // fetchReputationTokens().then(setReputationTokens);
-    }
-  }, [isOpen]);
-
-  const reputation = user.reputation || '0';
-
-  return (
-    <div className="reputation-dropdown" ref={dropdownRef}>
-      <button
-        className="reputation-trigger"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-      >
-        <Icon icon="reputation" alt="Reputation" />
-        <span className="reputation-value">{reputation}</span>
-        <Icon icon="chevron-down" alt="" />
-      </button>
-
-      {isOpen && (
-        <div className="reputation-dropdown-content">
-          <div className="reputation-header">
-            <div className="reputation-summary">
-              <Icon icon="reputation" alt="" />
-              <div>
-                <h3>Reputation</h3>
-                <p className="total-reputation">{reputation} total</p>
-              </div>
-            </div>
-            <Link 
-              href={`/profiles/${user.handle}/reputation`}
-              className="view-all-link"
-              onClick={() => setIsOpen(false)}
-            >
-              View all
-            </Link>
-          </div>
-
-          <div className="reputation-tokens">
-            {reputationTokens.length === 0 ? (
-              <div className="no-tokens">
-                <Icon icon="reputation-empty" alt="" />
-                <p>No recent reputation changes</p>
-              </div>
-            ) : (
-              reputationTokens.slice(0, 5).map((token) => (
-                <div key={token.id} className="reputation-token">
-                  <div className="token-icon">
-                    <Icon icon={getTokenIcon(token.type)} alt="" />
-                  </div>
-                  <div className="token-content">
-                    <p className="token-reason">{token.reason}</p>
-                    {token.exercise && (
-                      <p className="token-exercise">
-                        {token.exercise.title} in {token.exercise.track}
-                      </p>
-                    )}
-                    <time className="token-time">
-                      {formatTime(token.createdAt)}
-                    </time>
-                  </div>
-                  <div className={`token-value ${token.value > 0 ? 'positive' : 'negative'}`}>
-                    {token.value > 0 ? '+' : ''}{token.value}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="reputation-footer">
-            <Link 
-              href="/docs/using/product/reputation"
-              className="learn-more-link"
-              onClick={() => setIsOpen(false)}
-            >
-              Learn about reputation
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function getTokenIcon(type: string): string {
-  switch (type) {
-    case 'exercise_completion':
-      return 'completed-check-circle';
-    case 'solution_published':
-      return 'publish';
-    case 'mentoring_received':
-      return 'mentoring';
-    case 'mentoring_given':
-      return 'mentoring';
-    default:
-      return 'reputation';
+export type ReputationToken = {
+  uuid: string
+  internalUrl?: string
+  externalUrl?: string
+  iconUrl: string
+  text: string
+  createdAt: string
+  value: string
+  isSeen: boolean
+  links: {
+    markAsSeen: string
   }
 }
 
-function formatTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+export type APIResponse = {
+  results: ReputationToken[]
+  meta: {
+    links: {
+      tokens: string
+    }
+    totalReputation: number
+    unseenTotal: number
+  }
+}
 
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}d ago`;
-  
-  return date.toLocaleDateString();
+const ErrorMessage = ({ error }: { error: unknown }) => {
+  const handleError = useErrorHandler()
+  handleError(error as Error)
+
+  return null
+}
+
+const ErrorFallback = ({ error }: { error: Error }) => {
+  return <p>{error.message}</p>
+}
+
+const DropdownContent = ({
+  data,
+  cacheKey,
+  status,
+  error,
+  listAttributes,
+  itemAttributes,
+}: {
+  data: APIResponse | undefined
+  cacheKey: QueryKey
+  status: QueryStatus
+  error: unknown
+} & Pick<DropdownAttributes, 'listAttributes' | 'itemAttributes'>) => {
+  if (data) {
+    return (
+      <ReputationMenu
+        tokens={data.results}
+        links={data.meta.links}
+        listAttributes={listAttributes}
+        itemAttributes={itemAttributes}
+        cacheKey={cacheKey}
+      />
+    )
+  } else {
+    const { id, hidden } = listAttributes
+
+    return (
+      <div id={id} hidden={hidden}>
+        {status === 'pending' ? <Loading /> : null}
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <ErrorMessage error={error} />
+        </ErrorBoundary>
+      </div>
+    )
+  }
+}
+
+const MAX_TOKENS = 5
+export const REPUTATION_CACHE_KEY = 'reputations'
+
+export function ReputationDropdown({
+  defaultReputation,
+  defaultIsSeen,
+  endpoint,
+}: {
+  defaultReputation: number
+  defaultIsSeen: boolean
+  endpoint: string
+}): JSX.Element {
+  const [isStale, setIsStale] = useState(false)
+  const [reputation, setReputation] = useState(defaultReputation)
+  const [isSeen, setIsSeen] = useState(defaultIsSeen)
+
+  const {
+    data: resolvedData,
+    error,
+    status,
+    refetch,
+  } = usePaginatedRequestQuery<{ per_page: number }>([REPUTATION_CACHE_KEY], {
+    endpoint: endpoint,
+    query: { per_page: MAX_TOKENS },
+    options: {
+      staleTime: 30,
+      refetchOnMount: true,
+    },
+  })
+
+  const {
+    buttonAttributes,
+    panelAttributes,
+    listAttributes,
+    itemAttributes,
+    open,
+  } = useDropdown((resolvedData?.results.length || 0) + 1, undefined, {
+    placement: 'bottom-start',
+    modifiers: [
+      {
+        name: 'offset',
+        options: {
+          offset: [0, 8],
+        },
+      },
+    ],
+  })
+
+  useEffect(() => {
+    const connection = new ReputationChannel(() => setIsStale(true))
+
+    return () => connection.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!resolvedData) {
+      return
+    }
+
+    setReputation(resolvedData.meta.totalReputation)
+  }, [resolvedData])
+
+  useEffect(() => {
+    if (!resolvedData) {
+      return
+    }
+
+    setIsSeen(resolvedData.meta.unseenTotal === 0)
+  }, [resolvedData])
+
+  useEffect(() => {
+    if (!listAttributes.hidden || !isStale) {
+      return
+    }
+
+    refetch()
+    setIsStale(false)
+  }, [isStale, listAttributes.hidden, refetch])
+
+  return (
+    <React.Fragment>
+      <ReputationIcon
+        reputation={reputation}
+        isSeen={isSeen}
+        {...buttonAttributes}
+      />
+      {open ? (
+        <div className="c-reputation-dropdown" {...panelAttributes}>
+          <DropdownContent
+            data={resolvedData}
+            cacheKey={[REPUTATION_CACHE_KEY]}
+            status={status}
+            error={error}
+            itemAttributes={itemAttributes}
+            listAttributes={listAttributes}
+          />
+        </div>
+      ) : null}
+    </React.Fragment>
+  )
 }

@@ -1,25 +1,77 @@
-import { IterationStatus } from '@/types'
-import { Icon } from './Icon'
+import React from 'react'
+import { IterationStatus } from '../../types/index'
+import { GraphicalIcon } from '.'
+import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-interface ProcessingStatusSummaryProps {
-  iterationStatus: IterationStatus
+function Content({ status }: { status: string }) {
+  const { t } = useAppTranslation(
+    'components/common/ProcessingStatusSummary.tsx'
+  )
+
+  switch (status) {
+    case 'processing':
+      return (
+        <>
+          <GraphicalIcon
+            icon="spinner"
+            className="animate-spin-slow filter-textColor6"
+          />
+          <div className="--status">{t('processing')}</div>
+        </>
+      )
+    case 'failed':
+      return (
+        <>
+          <div role="presentation" className="--dot"></div>
+          <div className="--status">{t('failed')}</div>
+        </>
+      )
+    default:
+      return (
+        <>
+          <div role="presentation" className="--dot"></div>
+          <div className="--status">{t('passed')}</div>
+        </>
+      )
+  }
 }
 
-export function ProcessingStatusSummary({ iterationStatus }: ProcessingStatusSummaryProps) {
+function transformStatus(iterationStatus: IterationStatus): string {
   switch (iterationStatus) {
     case IterationStatus.TESTING:
-      return <Icon icon="spinner" alt="Testing" className="processing" />
     case IterationStatus.ANALYZING:
-      return <Icon icon="spinner" alt="Analyzing" className="processing" />
-    case IterationStatus.ESSENTIAL_AUTOMATED_FEEDBACK:
-      return <Icon icon="warning" alt="Essential feedback" className="feedback essential" />
-    case IterationStatus.ACTIONABLE_AUTOMATED_FEEDBACK:
-      return <Icon icon="info" alt="Actionable feedback" className="feedback actionable" />
-    case IterationStatus.CELEBRATORY_AUTOMATED_FEEDBACK:
-      return <Icon icon="celebration" alt="Celebratory feedback" className="feedback celebratory" />
-    case IterationStatus.NO_AUTOMATED_FEEDBACK:
-      return <Icon icon="check" alt="No feedback" className="no-feedback" />
+      return 'processing'
+    case IterationStatus.TESTS_FAILED:
+      return 'failed'
     default:
-      return null
+      return 'passed'
   }
+}
+
+export function ProcessingStatusSummary({
+  iterationStatus,
+}: {
+  iterationStatus: IterationStatus
+}): JSX.Element {
+  const { t } = useAppTranslation(
+    'components/common/ProcessingStatusSummary.tsx'
+  )
+
+  if (
+    iterationStatus == IterationStatus.DELETED ||
+    iterationStatus == IterationStatus.UNTESTED
+  ) {
+    return <></>
+  }
+  const status = transformStatus(iterationStatus)
+
+  return (
+    <div
+      className={`c-iteration-processing-status --${status}`}
+      role="status"
+      aria-label={t('processingStatus')}
+    >
+      <Content status={status} />
+    </div>
+  )
 }

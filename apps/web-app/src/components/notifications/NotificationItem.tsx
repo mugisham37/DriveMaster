@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Avatar } from '@/components/common/Avatar'
-import { ExerciseIcon } from '@/components/common/ExerciseIcon'
+
 import { TrackIcon } from '@/components/common/TrackIcon'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 
@@ -47,9 +47,9 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
       case 'avatar':
         return <Avatar src={notification.imageUrl} {...commonProps} />
       case 'exercise':
-        return <ExerciseIcon iconUrl={notification.imageUrl} {...commonProps} />
+        return <img src={notification.imageUrl} {...commonProps} />
       case 'track':
-        return <TrackIcon iconUrl={notification.imageUrl} {...commonProps} />
+        return <TrackIcon iconUrl={notification.imageUrl} title="Track" {...commonProps} />
       case 'icon':
       default:
         return <GraphicalIcon icon={notification.imageUrl} {...commonProps} />

@@ -92,29 +92,7 @@ const MetricPoint = ({ metric }: { metric: Metric }) => {
 }
 
 export function ImpactMap({ initialMetrics, trackTitle }: ImpactMapProps) {
-  const [metrics, setMetrics] = useState(initialMetrics)
-
-  useEffect(() => {
-    // In a real implementation, this would connect to MetricsChannel WebSocket
-    // For now, we'll just use the initial metrics
-    // trackTitle would be used to filter metrics in real implementation
-    setMetrics(initialMetrics)
-  }, [initialMetrics, trackTitle])
-
-  return (
-    <div className="impact-map">
-      <div className="relative">
-        <GraphicalIcon
-          icon="world-map"
-          category="graphics"
-          width={680}
-          height={400}
-          className="w-full mb-36"
-        />
-        {metrics.map((metric) => (
-          <MetricPoint key={metric.id} metric={metric} />
-        ))}
-      </div>
-    </div>
-  )
+  // Use the sophisticated Map component with real-time WebSocket updates
+  const { default: ImpactMap } = require('./map')
+  return <ImpactMap initialMetrics={initialMetrics} trackTitle={trackTitle} />
 }

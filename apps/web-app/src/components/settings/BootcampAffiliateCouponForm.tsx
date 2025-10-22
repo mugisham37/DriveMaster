@@ -27,8 +27,7 @@ export default function BootcampAffiliateCouponForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.bootcamp_affiliate_coupon_code,
-    method: 'PATCH',
-    successMessage: 'Affiliate coupon code updated successfully!'
+    method: 'PATCH'
   })
 
   const isInsider = insiders_status === 'active' || insiders_status === 'active_lifetime'
@@ -130,7 +129,7 @@ export default function BootcampAffiliateCouponForm({
             </div>
           </div>
           <p className="text-textColor6 text-sm mt-2">
-            Share this link with your audience. They'll get a discount, and you'll earn a commission!
+            Share this link with your audience. They&apos;ll get a discount, and you&apos;ll earn a commission!
           </p>
         </div>
       )}

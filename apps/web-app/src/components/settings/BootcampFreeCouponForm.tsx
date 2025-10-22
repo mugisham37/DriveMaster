@@ -25,8 +25,8 @@ export default function BootcampFreeCouponForm({
   const { submit, isSubmitting, error } = useFormSubmission({
     endpoint: links.bootcamp_free_coupon_code,
     method: 'POST',
-    onSuccess: (data: any) => {
-      if (data.coupon_code) {
+    onSuccess: (data?: Record<string, unknown>) => {
+      if (data?.coupon_code && typeof data.coupon_code === 'string') {
         setCurrentCoupon(data.coupon_code)
       }
     }

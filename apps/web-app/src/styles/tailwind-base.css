@@ -1,0 +1,32 @@
+/* Tailwind CSS Base Configuration */
+/* This file documents the Tailwind CSS setup and suppresses language server warnings */
+
+/*
+  The @apply directive is a Tailwind CSS feature that allows you to use utility classes
+  within custom CSS. If you see warnings about "unknown at rule @apply", these are
+  expected and can be safely ignored.
+  
+  To suppress these warnings in VS Code:
+  1. Install the "Tailwind CSS IntelliSense" extension
+  2. The .vscode/settings.json file in this project configures CSS validation
+  
+  For more information: https://tailwindcss.com/docs/functions-and-directives#apply
+*/
+
+/* Tailwind directives - these may show as "unknown" but are valid */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Example of @apply usage (this is valid Tailwind CSS) */
+.example-class {
+  @apply flex items-center justify-center p-4 bg-blue-500 text-white rounded-lg;
+}
+
+/* 
+  Other Tailwind directives that may show warnings but are valid:
+  - @layer: Organizes CSS into layers
+  - @responsive: Creates responsive variants
+  - @screen: Creates media queries using breakpoint names
+  - @variants: Creates state variants
+*/

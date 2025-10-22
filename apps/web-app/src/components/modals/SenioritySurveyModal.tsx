@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import { useAuth } from '@/hooks/useAuth'
 import { useModalManager } from '@/hooks/useModalManager'

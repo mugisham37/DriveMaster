@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loading } from '../common'
-import { Iteration } from '../../types'
+import { Iteration } from '../types'
 import { IterationReport } from './iterations-list/IterationReport'
 import { EmptyIterations } from './iterations-list/EmptyIterations'
 import { usePaginatedRequestQuery } from '../../hooks/request-query'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { useModalManager } from '@/hooks/useModalManager'
 import Link from 'next/link'
@@ -97,13 +97,13 @@ export function DonationConfirmationModal({ donation }: DonationConfirmationModa
 
         <div className="text-p-base text-gray-700 dark:text-gray-300 mb-6">
           Your generous contribution helps us keep Exercism free for everyone. 
-          We'll send you a receipt via email shortly.
+          We&apos;ll send you a receipt via email shortly.
         </div>
 
         {donation.isRecurring && (
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
             <div className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Recurring Donation:</strong> You'll be charged {formatAmount(donation.amount, donation.currency)} 
+              <strong>Recurring Donation:</strong> You&apos;ll be charged {formatAmount(donation.amount, donation.currency)} 
               {' '}{donation.frequency}. You can manage or cancel this anytime in your settings.
             </div>
           </div>

@@ -16,7 +16,9 @@ interface User {
 }
 
 interface AvatarProps {
-  user: User;
+  user?: User;
+  src?: string;
+  handle?: string;
   size?: 'small' | 'medium' | 'large' | 'extra-large';
   className?: string;
 }
@@ -30,24 +32,27 @@ const SIZE_CLASSES = {
 
 export function Avatar({ 
   user, 
+  src,
+  handle,
   size = 'medium', 
   className = '' 
 }: AvatarProps) {
   const sizeClass = SIZE_CLASSES[size];
-  const avatarUrl = user.avatarUrl || '/assets/graphics/avatar-placeholder.svg';
+  const avatarUrl = src || user?.avatarUrl || '/assets/graphics/avatar-placeholder.svg';
+  const displayHandle = handle || user?.handle || 'User';
   
   return (
     <div className={`c-avatar ${sizeClass} ${className} relative`}>
       <Image
         src={avatarUrl}
-        alt={`${user.handle}'s avatar`}
+        alt={`${displayHandle}'s avatar`}
         width={size === 'small' ? 32 : size === 'medium' ? 48 : size === 'large' ? 64 : 96}
         height={size === 'small' ? 32 : size === 'medium' ? 48 : size === 'large' ? 64 : 96}
         className="rounded-full object-cover"
         unoptimized={avatarUrl.includes('gravatar') || avatarUrl.includes('github')}
       />
       
-      {user.flair && (
+      {user?.flair && (
         <div className="absolute -bottom-1 -right-1">
           <Image
             src={user.flair.iconUrl}

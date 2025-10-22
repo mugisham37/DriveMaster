@@ -16,6 +16,9 @@ export * from "./profile";
 // Community components
 export * from "./community";
 
+// Community Solutions components
+export * from "./community-solutions";
+
 // Cohorts components
 export * from "./cohorts";
 
@@ -49,6 +52,9 @@ export * from "./modals";
 // Partner components
 export * from "./partner";
 
+// Perks components
+export * from "./perks";
+
 // Training Data components
 export * from "./training-data";
 
@@ -57,3 +63,17 @@ export * from "./about";
 
 // Docs components
 export * from "./docs";
+
+// Journey components
+export * from "./journey";
+
+// Maintaining components
+export * from "./maintaining";
+
+// Misc components
+export * from "./misc";
+
+// Other Components
+export * from './favorites-list'
+export * from './github-syncer-widget'
+export * from './impact'

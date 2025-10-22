@@ -17,7 +17,7 @@ import {
   MentorSessionExercise as Exercise,
   MentoringSessionDonation,
   MentoringSessionLinks,
-} from '../../types'
+} from '../types'
 import { MentoringRequest } from './mentoring-session/MentoringRequest'
 import { SplitPane } from '../common/SplitPane'
 import { Flair } from '../common/HandleWithFlair'

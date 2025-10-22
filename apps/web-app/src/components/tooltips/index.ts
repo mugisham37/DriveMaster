@@ -1,4 +1,6 @@
+export { default as StudentTooltip } from './StudentTooltip'
 export { ExerciseTooltip } from './ExerciseTooltip'
+export { default as ConceptTooltip } from './ConceptTooltip'
+export { default as UserTooltip } from './UserTooltip'
+export { default as TaskTooltip } from './TaskTooltip'
 export { TooltipBase } from './TooltipBase'
-export { default as ExerciseTooltip } from './ExerciseTooltip'
-export { default as TooltipBase } from './TooltipBase'

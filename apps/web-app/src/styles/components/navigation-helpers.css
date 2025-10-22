@@ -140,7 +140,7 @@
 
 /* Icon filters */
 .filter-none {
-  /* No filter applied */
+  filter: none;
 }
 
 .filter-textColor6 {

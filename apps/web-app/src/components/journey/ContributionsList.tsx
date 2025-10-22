@@ -1,139 +1,127 @@
-import React from 'react'
-import { usePaginatedRequestQuery, Request } from '../../hooks/request-query'
-import { ResultsZone } from '../common/ResultsZone'
-import { FetchingBoundary } from '../common/FetchingBoundary'
+import React, { useState, useCallback, useEffect } from "react";
+import { scrollToTop } from "@/utils/scroll-to-top";
+import { ContributionResults } from "./ContributionResults";
+import { type Request, usePaginatedRequestQuery } from "@/hooks/request-query";
+import { removeEmpty, useHistory } from "@/hooks/use-history";
+import { useDeepMemo } from "@/hooks/use-deep-memo";
+import { useList } from "@/hooks/use-list";
+import { ResultsZone } from "@/components/common/ResultsZone";
+import { Pagination } from "@/components/common";
+import { FetchingBoundary } from "@/components/common/FetchingBoundary";
+import type { Contribution } from "@/types";
+import { CategorySelect } from "./contributions-list/CategorySelect";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
-interface ReputationToken {
-  id: number
-  uuid: string
-  type: string
-  value: number
-  reason: string
-  earnedOn: string
-  track: {
-    title: string
-    slug: string
-    iconUrl: string
-  }
-  exercise?: {
-    title: string
-    slug: string
-    iconUrl: string
-  }
-}
+const DEFAULT_ERROR = new Error("Unable to load contributions list");
 
-interface ContributionsListProps {
-  request: Request
-  isEnabled: boolean
-}
+export type APIResult = {
+  results: Contribution[];
+  meta: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    links: {
+      markAllAsSeen: string;
+    };
+    unseenTotal: number;
+  };
+};
 
-const DEFAULT_ERROR = new Error('Unable to load reputation')
-
-export const ContributionsList: React.FC<ContributionsListProps> = ({
-  request,
+export function ContributionsList({
+  request: initialRequest,
   isEnabled,
-}) => {
+}: {
+  request: Request;
+  isEnabled: boolean;
+}): JSX.Element {
+  const { t } = useAppTranslation("components/journey");
+  const {
+    request,
+    setPage,
+    setCriteria: setRequestCriteria,
+    setQuery,
+  } = useList(initialRequest);
+  const [criteria, setCriteria] = useState(request.query?.criteria);
+  const cacheKey = [
+    "contributions-list",
+    request.endpoint,
+    removeEmpty(request.query),
+  ];
   const {
     status,
-    data,
+    data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<{
-    results: ReputationToken[]
-    meta: {
-      currentPage: number
-      totalCount: number
-      totalPages: number
-      totalReputation: number
-    }
-  }>(['journey-reputation'], {
+  } = usePaginatedRequestQuery<APIResult>(cacheKey, {
     ...request,
+    query: removeEmpty(request.query),
     options: { ...request.options, enabled: isEnabled },
-  })
+  });
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'exercise_contribution': return '📝'
-      case 'mentoring_session': return '👨‍🏫'
-      case 'solution_star': return '⭐'
-      case 'code_review': return '🔍'
-      case 'publishing_solution': return '📤'
-      default: return '🏆'
-    }
-  }
+  const requestQuery = useDeepMemo(request.query);
+  const setCategory = useCallback(
+    (category) => {
+      setQuery({ ...requestQuery, category: category, page: undefined });
+    },
+    [requestQuery, setQuery]
+  );
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'exercise_contribution': return '#10B981'
-      case 'mentoring_session': return '#3B82F6'
-      case 'solution_star': return '#F59E0B'
-      case 'code_review': return '#8B5CF6'
-      case 'publishing_solution': return '#6B7280'
-      default: return '#EF4444'
-    }
-  }
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (criteria === undefined || criteria === null) return;
+      setRequestCriteria(criteria);
+    }, 200);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [setRequestCriteria, criteria]);
+
+  useHistory({ pushOn: removeEmpty(request.query) });
 
   return (
-    <article className="reputation-tab theme-dark">
-      <ResultsZone isFetching={isFetching}>
-        <FetchingBoundary
-          status={status}
-          error={error}
-          defaultError={DEFAULT_ERROR}
-        >
-          {data ? (
-            <div className="reputation-list">
-              <div className="reputation-header">
-                <h2>Your Reputation</h2>
-                <div className="total-reputation">
-                  Total: {data.meta.totalReputation} points
-                </div>
-              </div>
-              <div className="reputation-tokens">
-                {data.results.map((token) => (
-                  <div key={token.uuid} className="reputation-token">
-                    <div className="token-icon">
-                      <span className="type-emoji">{getTypeIcon(token.type)}</span>
-                      <div 
-                        className="value-badge"
-                        style={{ backgroundColor: getTypeColor(token.type) }}
-                      >
-                        +{token.value}
-                      </div>
-                    </div>
-                    <div className="token-info">
-                      <h3>{token.reason}</h3>
-                      <div className="token-details">
-                        <div className="track-info">
-                          <img 
-                            src={token.track.iconUrl} 
-                            alt={token.track.title}
-                            className="track-icon"
-                          />
-                          <span>{token.track.title}</span>
-                        </div>
-                        {token.exercise && (
-                          <div className="exercise-info">
-                            <img 
-                              src={token.exercise.iconUrl} 
-                              alt={token.exercise.title}
-                              className="exercise-icon"
-                            />
-                            <span>{token.exercise.title}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="earned-date">
-                        {new Date(token.earnedOn).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </FetchingBoundary>
-      </ResultsZone>
+    <article
+      data-scroll-top-anchor="contributions-list"
+      className="reputation-tab theme-dark"
+    >
+      <div className="md-container container">
+        <div className="c-search-bar">
+          <input
+            className="--search"
+            onChange={(e) => {
+              setCriteria(e.target.value);
+            }}
+            value={criteria || ""}
+            placeholder={t("contributionsList.searchByContributionName")}
+          />
+          <CategorySelect
+            value={request.query.category}
+            setValue={setCategory}
+          />
+        </div>
+        <ResultsZone isFetching={isFetching}>
+          <FetchingBoundary
+            status={status}
+            error={error}
+            defaultError={DEFAULT_ERROR}
+          >
+            {resolvedData ? (
+              <React.Fragment>
+                <ContributionResults data={resolvedData} cacheKey={cacheKey} />
+                <Pagination
+                  disabled={resolvedData === undefined}
+                  current={request.query.page || 1}
+                  total={resolvedData.meta.totalPages}
+                  setPage={(p) => {
+                    setPage(p);
+                    scrollToTop("contributions-list");
+                  }}
+                />
+              </React.Fragment>
+            ) : null}
+          </FetchingBoundary>
+        </ResultsZone>
+      </div>
     </article>
-  )
+  );
 }

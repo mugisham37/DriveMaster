@@ -28,7 +28,7 @@ export default function InsiderBenefitsForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const submit = async (data: any) => {
+  const submit = async (data: Record<string, unknown>) => {
     setIsSubmitting(true)
     setIsSuccess(false)
     
@@ -120,7 +120,7 @@ export function InfoMessage({
     case 'eligible_lifetime':
       return (
         <p className="text-p-base mb-16">
-          You're eligible for Insiders! 
+          You&apos;re eligible for Insiders! 
           <a href={insidersPath} className="text-linkColor ml-1">
             Activate your benefits
           </a>

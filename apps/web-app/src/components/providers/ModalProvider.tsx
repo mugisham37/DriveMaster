@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useModalManager } from '@/hooks/useModalManager'
 import { BegModal } from '@/components/modals/BegModal'
 import { SenioritySurveyModal } from '@/components/modals/SenioritySurveyModal'
 import { WelcomeModal } from '@/components/modals/WelcomeModal'
@@ -26,7 +25,6 @@ export function ModalProvider({
   numTracks = 67 
 }: ModalProviderProps): JSX.Element {
   const { user, isAuthenticated } = useAuth()
-  const modalManager = useModalManager()
 
   // Calculate user joined days ago
   const userJoinedDaysAgo = user?.createdAt 
@@ -42,14 +40,14 @@ export function ModalProvider({
         <>
           <WelcomeModal numTracks={numTracks} />
           <SenioritySurveyModal />
-          <BegModal previousDonor={user?.totalDonatedInDollars > 0} />
+          <BegModal previousDonor={user?.totalDonatedInDollars ? user.totalDonatedInDollars > 0 : false} />
           <WelcomeToInsidersModal />
           
           {/* Track-specific modal */}
           {trackData && (
             <TrackWelcomeModal 
               track={trackData}
-              userSeniority={user?.seniority}
+              userSeniority={user?.seniority || 'beginner'}
               userJoinedDaysAgo={userJoinedDaysAgo}
             />
           )}

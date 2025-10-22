@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { DrawingPage } from '@/components/bootcamp/exercises'
+import { AdvancedDrawingPage } from '@/components/bootcamp/exercises'
 
 interface DrawingPageProps {
   params: { uuid: string }
@@ -38,7 +38,7 @@ export default async function Drawing({ params }: DrawingPageProps) {
 
     const drawingData = await response.json()
 
-    return <DrawingPage {...drawingData} />
+    return <AdvancedDrawingPage {...drawingData} />
   } catch (error) {
     console.error('Error loading drawing:', error)
     return notFound()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { TrackIcon } from '@/components/common/TrackIcon'
 import { useFormSubmission } from '@/hooks/useFormSubmission'
 import { FormButton } from '@/components/common/forms/FormButton'
@@ -78,7 +78,7 @@ export function TrackLeaveModal({ track, isOpen, onClose, onSuccess }: TrackLeav
 
         <div className="mb-6">
           <label htmlFor="confirm-text" className="block text-sm font-medium mb-2">
-            Type "<strong>{track.title}</strong>" to confirm:
+            Type &quot;<strong>{track.title}</strong>&quot; to confirm:
           </label>
           <input
             type="text"

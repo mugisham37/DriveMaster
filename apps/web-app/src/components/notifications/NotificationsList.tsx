@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Pagination } from "@/components/common/Pagination";
+
 import { NotificationItem } from "./NotificationItem";
 import { NotificationFilters } from "./NotificationFilters";
 import { Loading } from "@/components/common/Loading";
@@ -52,7 +52,7 @@ interface NotificationsListProps {
       type?: string;
       page?: number;
     };
-    options: any;
+    options: Record<string, unknown>;
   };
   defaultStatus: string;
 }
@@ -194,12 +194,24 @@ export function NotificationsList({
           </div>
 
           {meta.totalPages > 1 && (
-            <div className="mt-8">
-              <Pagination
-                current={meta.currentPage}
-                total={meta.totalPages}
-                setPage={setCurrentPage}
-              />
+            <div className="mt-8 flex justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 text-sm">
+                Page {meta.currentPage} of {meta.totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(Math.min(meta.totalPages, currentPage + 1))}
+                disabled={currentPage === meta.totalPages}
+                className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           )}
         </>

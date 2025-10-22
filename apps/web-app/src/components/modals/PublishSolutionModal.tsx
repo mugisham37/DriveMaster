@@ -1,22 +1,20 @@
 import React, { useState } from 'react'
-import { Modal } from './Modal'
-import { Iteration } from '../../types'
+import Modal from './Modal'
+import { Iteration } from '../types'
 
 interface PublishSolutionModalProps {
   isOpen: boolean
   onClose: () => void
-  endpoint: string
   iterations: readonly Iteration[]
 }
 
 export function PublishSolutionModal({
   isOpen,
   onClose,
-  endpoint,
   iterations,
 }: PublishSolutionModalProps): React.JSX.Element {
   const [selectedIteration, setSelectedIteration] = useState<number>(
-    iterations.length > 0 ? iterations[iterations.length - 1].idx : 1
+    iterations.length > 0 ? iterations[iterations.length - 1]?.idx || 1 : 1
   )
 
   const handlePublish = async () => {
@@ -30,7 +28,7 @@ export function PublishSolutionModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal open={isOpen} onClose={onClose}>
       <div className="publish-solution-modal">
         <h2>Publish Solution</h2>
         <p>Select which iteration you want to publish:</p>

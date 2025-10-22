@@ -1,3 +1,5 @@
+/* Global Styles - Uses Tailwind CSS */
+/* Note: @apply directives in component files may show as "unknown" but are valid Tailwind CSS */
 @import "tailwindcss";
 @import "../styles/bootcamp-exercises.css";
 @import "../styles/components/common.css";

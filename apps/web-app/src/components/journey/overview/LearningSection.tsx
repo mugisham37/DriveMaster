@@ -1,27 +1,36 @@
 import React from 'react'
-import { TrackProgressList } from '../types'
 import { GraphicalIcon } from '../../common'
+import { TrackProgressList } from '../types'
+import { HeaderSummary } from './learning-section/HeaderSummary'
+import { TracksEnrolledSummary } from './learning-section/TracksEnrolledSummary'
+import { ExercisesCompletedSummary } from './learning-section/ExercisesCompletedSummary'
+import { ConceptsLearntSummary } from './learning-section/ConceptsLearntSummary'
+import { LearningOverview } from './learning-section/LearningOverview'
+import { TrackSummary } from './learning-section/TrackSummary'
+import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export interface Props {
+export type Props = {
   tracks: TrackProgressList
-  links: {
-    tracks: string
-  }
+  links: Links
 }
 
-export const LearningSection: React.FC<Props> = ({ tracks, links }) => {
+type Links = {
+  solutions: string
+  fable: string
+}
+
+export const LearningSection = ({ tracks, links }: Props): JSX.Element => {
+  const { t } = useAppTranslation('components/journey/overview')
   if (tracks.length === 0) {
     return (
       <section className="empty-section">
-        <GraphicalIcon icon="exercises" />
+        <GraphicalIcon icon="exercises" hex />
         <h3 className="journey-h3 mb-24">
-          You haven't joined any tracks yet
+          {t('learningSection.youHaventJoinedTracks')}
         </h3>
-        <p>
-          Join a track to start your learning journey and track your progress.
-        </p>
-        <a href="/tracks" className="btn-primary">
-          Browse Tracks
+        {/* TODO get link from rails */}
+        <a href="/tracks" className="btn-l btn-primary">
+          {t('learningSection.chooseTrackToGetStarted')}
         </a>
       </section>
     )
@@ -30,52 +39,27 @@ export const LearningSection: React.FC<Props> = ({ tracks, links }) => {
   return (
     <section className="learning-section">
       <header className="section-header">
-        <GraphicalIcon icon="exercises" />
-        <h2 className="journey-h2">Your Learning</h2>
-        <div className="header-summary">
-          <div className="stat">
-            <span className="value">{tracks.numCompletedExercises}</span>
-            <span className="label">Exercises Completed</span>
-          </div>
-          <div className="stat">
-            <span className="value">{tracks.numConceptsLearnt}</span>
-            <span className="label">Concepts Learnt</span>
-          </div>
-          <div className="stat">
-            <span className="value">{tracks.completion.toFixed(1)}%</span>
-            <span className="label">Overall Progress</span>
-          </div>
-        </div>
+        <GraphicalIcon icon="exercises" hex />
+        <h2 className="journey-h2">{t('learningSection.yourLearning')}</h2>
+        <HeaderSummary tracks={tracks} />
       </header>
-      
-      <div className="tracks-progress">
-        {tracks.sort().items.slice(0, 5).map((track) => (
-          <div key={track.slug} className="track-progress">
-            <div className="track-info">
-              <img src={track.iconUrl} alt={track.title} className="track-icon" />
-              <div className="track-details">
-                <h4>{track.title}</h4>
-                <p>{track.numCompletedExercises} / {track.numExercises} exercises</p>
-              </div>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ width: `${track.completion}%` }}
-              />
-            </div>
-            <span className="completion-percentage">
-              {track.completion.toFixed(1)}%
-            </span>
-          </div>
+      <div className="summary-boxes">
+        <TracksEnrolledSummary tracks={tracks} />
+        <ExercisesCompletedSummary tracks={tracks} />
+        <ConceptsLearntSummary tracks={tracks} />
+      </div>
+      <LearningOverview tracks={tracks} />
+      <div className="tracks">
+        {tracks.sort().items.map((track, idx) => (
+          <TrackSummary
+            key={track.slug}
+            track={track}
+            avgVelocity={null}
+            expanded={idx == 0}
+          />
         ))}
       </div>
-      
-      <div className="section-footer">
-        <a href={links.tracks} className="btn-secondary">
-          View All Tracks
-        </a>
-      </div>
+      {/*<LearningStats tracks={tracks} links={links} />*/}
     </section>
   )
 }

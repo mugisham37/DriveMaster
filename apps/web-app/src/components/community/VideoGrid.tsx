@@ -1,77 +1,208 @@
 'use client'
 
-import React from 'react'
-import { YoutubePlayer } from '@/components/common/YoutubePlayer'
+import React, { useCallback, useRef, useState } from 'react'
+import { ResultsZone } from '@/components/ResultsZone'
+import {
+  Avatar,
+  FilterFallback,
+  GraphicalIcon,
+  Pagination,
+} from '@/components/common'
+import { TrackFilterList } from './TrackFilterList'
+import { type HandleTrackChangeType, useVideoGrid } from './useVideoGrid'
+import { type Request } from '@/hooks/request-query'
+import type { VideoTrack } from '@/types'
+import type { CommunityVideoType } from '@/types'
+import { scrollToTop } from '@/utils/scroll-to-top'
+import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-interface VideoGridProps {
-  itemsPerRow?: number
-  videos?: Array<{
-    id: string
-    title: string
-    youtubeId: string
-  }>
+export type VideoGridProps = {
+  tracks: VideoTrack[]
+  itemsPerRow: number
+  request: Request
 }
 
-// Mock data - in real implementation, this would come from props or API
-const mockVideos = [
-  {
-    id: '1',
-    title: 'Introduction to Functional Programming',
-    youtubeId: 'dQw4w9WgXcQ'
-  },
-  {
-    id: '2',
-    title: 'Building REST APIs with Go',
-    youtubeId: 'oHg5SJYRHA0'
-  },
-  {
-    id: '3',
-    title: 'JavaScript Testing Strategies',
-    youtubeId: 'kJQP7kiw5Fk'
-  },
-  {
-    id: '4',
-    title: 'Python Data Structures',
-    youtubeId: 'ScMzIvxBSi4'
-  },
-  {
-    id: '5',
-    title: 'Ruby Metaprogramming',
-    youtubeId: 'y8Kyi0WNg40'
-  },
-  {
-    id: '6',
-    title: 'Rust Memory Management',
-    youtubeId: 'Ks-_Mh1QhMc'
-  }
-]
+export function VideoGrid({
+  tracks,
+  itemsPerRow,
+  request,
+}: VideoGridProps): JSX.Element {
+  const { t } = useAppTranslation('components/community')
+  const {
+    resolvedData,
+    page,
+    setPage,
+    handleTrackChange,
+    isFetching,
+    selectedTrack,
+    criteria,
+    setCriteria,
+  } = useVideoGrid(request, tracks)
 
-export function VideoGrid({ 
-  itemsPerRow = 2, 
-  videos = mockVideos 
-}: VideoGridProps): React.JSX.Element {
-  const gridCols = itemsPerRow === 3 
-    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-    : 'grid-cols-1 md:grid-cols-2'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const timer = useRef<any>()
+
+  const handlePageResetOnInputChange = useCallback(
+    (input: string) => {
+      //clears it on any input
+      clearTimeout(timer.current)
+      if (criteria && (input.length > 2 || input.length === 0)) {
+        timer.current = setTimeout(() => setPage(1), 500)
+      }
+    },
+
+    [criteria, setPage]
+  )
 
   return (
-    <div className="video-grid">
-      <h2 className="text-h2 mb-8">Community Videos</h2>
-      <p className="text-p-large text-textColor5 mb-24">
-        Watch programming tutorials, live coding sessions, and interviews from our community.
-      </p>
-      
-      <div className={`grid ${gridCols} gap-24`}>
-        {videos.map((video) => (
-          <div key={video.id} className="video-item">
-            <YoutubePlayer 
-              videoId={video.youtubeId} 
-              context="community" 
-            />
-            <h3 className="text-h5 mt-12">{video.title}</h3>
-          </div>
-        ))}
+    <>
+      <VideoGridHeader
+        tracks={tracks}
+        handleTrackChange={handleTrackChange}
+        selectedTrack={selectedTrack}
+        t={t}
+      />
+
+      <div className="flex mb-32 c-search-bar">
+        <input
+          className="grow --search --right"
+          placeholder={t('videoGrid.index.searchCommunity')}
+          value={criteria || ''}
+          onChange={(e) => {
+            setCriteria(e.target.value)
+            handlePageResetOnInputChange(e.target.value)
+          }}
+        />
       </div>
+
+      <ResultsZone isFetching={isFetching}>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-${itemsPerRow} gap-16`}
+        >
+          {resolvedData && resolvedData.results.length > 0 ? (
+            resolvedData.results.map((video) => (
+              <Video key={video.id} video={video} />
+            ))
+          ) : resolvedData?.meta.unscopedTotal === 0 ? (
+            <NoResultsYet />
+          ) : (
+            <NoResultsOfQuery />
+          )}
+        </div>
+        {resolvedData && (
+          <Pagination
+            current={page}
+            total={resolvedData.meta.totalPages}
+            setPage={(p) => {
+              setPage(p)
+              scrollToTop('video-grid')
+            }}
+          />
+        )}
+      </ResultsZone>
+    </>
+  )
+}
+
+function VideoGridHeader({
+  tracks,
+  handleTrackChange,
+  selectedTrack,
+  t,
+}: {
+  tracks: VideoTrack[]
+  handleTrackChange: HandleTrackChangeType
+  selectedTrack: VideoTrack
+  t: any
+}): JSX.Element {
+  return (
+    <div className="flex mb-24 sm:flex-row flex-col">
+      <GraphicalIcon
+        icon="community-video-gradient"
+        height={48}
+        width={48}
+        className="mr-24 self-start"
+      />
+      <div className="mr-auto sm:mb-0 mb-24">
+        <h2 className="text-h2 mb-4">
+          {t('videoGrid.index.learnWithCommunity')}
+        </h2>
+        <p className="text-p-large">
+          {t('videoGrid.index.walkthroughsTutorials')}
+        </p>
+      </div>
+
+      <TrackFilterList
+        isFetching={false}
+        value={selectedTrack}
+        tracks={tracks}
+        setValue={handleTrackChange}
+        sizeVariant="automation"
+        status={'success'}
+        error={undefined}
+        countText={'video'}
+      />
+    </div>
+  )
+}
+
+type VideoProps = {
+  video: CommunityVideoType
+}
+function Video({ video }: VideoProps): JSX.Element {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="flex flex-col shadow-smZ1 p-16 bg-backgroundColorA rounded-8 text-left"
+      >
+        <img
+          style={{ objectFit: 'cover', width: '100%', height: '150px' }}
+          className="rounded-8 self-center mb-12"
+          src={video.thumbnailUrl}
+          alt="thumbnail"
+        />
+        <h5 className="text-h5">{video.title}</h5>
+        {video.author && (
+          <div className="mt-auto pt-8 flex items-center text-left text-textColor6 font-semibold">
+            <Avatar
+              className="h-[24px] w-[24px] mr-8"
+              src={video.author && video.author.avatarUrl}
+            />
+            {video.author && video.author.name}
+          </div>
+        )}
+      </button>
+      {/* CommunityVideoModal would be implemented here */}
+    </>
+  )
+}
+
+function NoResultsOfQuery() {
+  const { t } = useAppTranslation('components/community')
+  return (
+    <div className="col-span-4">
+      <FilterFallback
+        icon="no-result-magnifier"
+        title={t('videoGrid.index.noVideosFound')}
+        description={t('videoGrid.index.tryChangingFilters')}
+      />
+    </div>
+  )
+}
+
+function NoResultsYet() {
+  const { t } = useAppTranslation('components/community')
+  return (
+    <div className="col-span-4">
+      <FilterFallback
+        icon="automation"
+        svgFilter="filter-textColor6"
+        title={t('videoGrid.index.thereAreNoVideos')}
+        description={t('videoGrid.index.checkBackLater')}
+      />
     </div>
   )
 }

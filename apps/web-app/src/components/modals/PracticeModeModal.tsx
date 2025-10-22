@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { TrackIcon } from '@/components/common/TrackIcon'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { useFormSubmission } from '@/hooks/useFormSubmission'

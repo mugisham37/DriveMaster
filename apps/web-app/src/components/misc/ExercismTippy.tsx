@@ -1,70 +1,32 @@
-'use client'
-
 import React from 'react'
-import Tippy, { TippyProps } from '@tippyjs/react'
-import 'tippy.js/dist/tippy.css'
+import { LazyTippy, LazyTippyProps } from './LazyTippy'
+import { followCursor, roundArrow } from 'tippy.js'
 
-interface ExercismTippyProps extends Omit<TippyProps, 'children'> {
-  interactive?: boolean
-  renderReactComponents?: boolean
-  content: React.ReactNode
-  reference: HTMLElement
-}
+export type ExercismTippyProps = LazyTippyProps
 
-/**
- * Exercism-specific Tippy wrapper component
- * Provides consistent tooltip behavior across the application
- */
-export function ExercismTippy({
-  interactive = false,
-  renderReactComponents = false,
-  content,
-  reference,
-  ...props
-}: ExercismTippyProps): JSX.Element {
+export const ExercismTippy = (props: ExercismTippyProps): JSX.Element => {
   return (
-    <Tippy
-      content={content}
-      interactive={interactive}
-      allowHTML={true}
-      placement="top"
-      theme="exercism"
+    <LazyTippy
+      animation="shift-away-subtle"
+      followCursor="horizontal"
+      maxWidth="none"
+      plugins={[followCursor]}
+      delay={100}
       {...props}
-    >
-      <span ref={(ref) => {
-        if (ref && reference) {
-          // Attach tippy to the reference element
-          reference.setAttribute('data-tippy-content', 'true')
-        }
-      }} />
-    </Tippy>
+    />
   )
 }
 
-/**
- * Generic tooltip component for general use
- * Alias for ExercismTippy with simplified props
- */
-export function GenericTooltip({
-  content,
-  children,
-  ...props
-}: {
-  content: React.ReactNode
-  children: React.ReactElement
-} & Omit<ExercismTippyProps, 'reference'>): JSX.Element {
+export const GenericTooltip = (props: ExercismTippyProps): JSX.Element => {
   return (
-    <Tippy
-      content={content}
-      interactive={false}
-      allowHTML={true}
-      placement="top"
-      theme="exercism"
+    <ExercismTippy
+      arrow={roundArrow}
       {...props}
-    >
-      {children}
-    </Tippy>
+      content={
+        <div className={`c-generic-tooltip ${props.className}`}>
+          {props.content}
+        </div>
+      }
+    />
   )
 }
-
-export default ExercismTippy

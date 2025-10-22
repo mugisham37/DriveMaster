@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { FrontendExercisePage } from '@/components/bootcamp/exercises'
+import { AdvancedFrontendExercisePage } from '@/components/bootcamp/exercises'
 
 interface FrontendExercisePageProps {
   params: { exerciseSlug: string }
@@ -38,7 +38,7 @@ export default async function FrontendExercise({ params }: FrontendExercisePageP
 
     const exerciseData = await response.json()
 
-    return <FrontendExercisePage {...exerciseData} />
+    return <AdvancedFrontendExercisePage {...exerciseData} />
   } catch (error) {
     console.error('Error loading frontend exercise:', error)
     return notFound()

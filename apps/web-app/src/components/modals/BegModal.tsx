@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import { useAuth } from '@/hooks/useAuth'
 import { useModalManager } from '@/hooks/useModalManager'
@@ -26,45 +26,6 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
     })
   }, [registerModal])
 
-  useEffect(() => {
-    const checkShouldShow = async () => {
-      if (!isAuthenticated || !user) return
-      if (!canShowModal('beg-modal')) return
-
-      try {
-        // Check all conditions from Ruby version
-        const conditions = await Promise.all([
-          checkSubscriptionStatus(),
-          checkDonationHistory(),
-          checkSolutionCount(),
-          checkIntroducerDismissal(),
-          checkSeniorityModalRecent()
-        ])
-
-        const [
-          hasSubscription,
-          donatedRecently,
-          hasSufficientSolutions,
-          isIntroducerDismissed,
-          recentlySawSeniorityModal
-        ] = conditions
-
-        // Show modal if all conditions are met (matching Ruby logic)
-        if (!hasSubscription && 
-            !donatedRecently && 
-            hasSufficientSolutions && 
-            !isIntroducerDismissed &&
-            !recentlySawSeniorityModal) {
-          setIsOpen(true)
-        }
-      } catch (error) {
-        console.error('Error checking beg modal conditions:', error)
-      }
-    }
-
-    checkShouldShow()
-  }, [isAuthenticated, user, canShowModal])
-
   const checkSubscriptionStatus = async (): Promise<boolean> => {
     try {
       const response = await fetch('/api/payments/subscriptions')
@@ -72,8 +33,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
         const data = await response.json()
         return data.currentSubscription !== null
       }
-    } catch (error) {
-      console.error('Error checking subscription status:', error)
+    } catch (err) {
+      console.error('Error checking subscription status:', err)
     }
     return false
   }
@@ -86,8 +47,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
         const data = await response.json()
         return data.donatedInLast35Days
       }
-    } catch (error) {
-      console.error('Error checking donation history:', error)
+    } catch (err) {
+      console.error('Error checking donation history:', err)
     }
     return false
   }
@@ -99,8 +60,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
         const data = await response.json()
         return data.solutions.length >= 5
       }
-    } catch (error) {
-      console.error('Error checking solution count:', error)
+    } catch (err) {
+      console.error('Error checking solution count:', err)
     }
     return false
   }
@@ -133,8 +94,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
           }
         }
       }
-    } catch (error) {
-      console.error('Error checking introducer dismissal:', error)
+    } catch (err) {
+      console.error('Error checking introducer dismissal:', err)
     }
     
     return true
@@ -151,10 +112,49 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
       fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5)
       
       return shownDate > fiveMinutesAgo
-    } catch (error) {
+    } catch (err) {
       return false
     }
   }
+
+  useEffect(() => {
+    const checkShouldShow = async () => {
+      if (!isAuthenticated || !user) return
+      if (!canShowModal('beg-modal')) return
+
+      try {
+        // Check all conditions from Ruby version
+        const conditions = await Promise.all([
+          checkSubscriptionStatus(),
+          checkDonationHistory(),
+          checkSolutionCount(),
+          checkIntroducerDismissal(),
+          Promise.resolve(checkSeniorityModalRecent())
+        ])
+
+        const [
+          hasSubscription,
+          donatedRecently,
+          hasSufficientSolutions,
+          isIntroducerDismissed,
+          recentlySawSeniorityModal
+        ] = conditions
+
+        // Show modal if all conditions are met (matching Ruby logic)
+        if (!hasSubscription && 
+            !donatedRecently && 
+            hasSufficientSolutions && 
+            !isIntroducerDismissed &&
+            !recentlySawSeniorityModal) {
+          setIsOpen(true)
+        }
+      } catch (err) {
+        console.error('Error checking beg modal conditions:', err)
+      }
+    }
+
+    checkShouldShow()
+  }, [isAuthenticated, user, canShowModal])
 
   const handleDismiss = async () => {
     const introducerSlug = 'beg-modal'
@@ -166,8 +166,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
         body: JSON.stringify({ dismissed: true })
       })
       setIsOpen(false)
-    } catch (error) {
-      console.error('Error dismissing beg modal:', error)
+    } catch (err) {
+      console.error('Error dismissing beg modal:', err)
       setIsOpen(false)
     }
   }
@@ -177,8 +177,8 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
     try {
       // Redirect to donations page
       window.location.href = '/settings/donations'
-    } catch (error) {
-      console.error('Error navigating to donations:', error)
+    } catch (err) {
+      console.error('Error navigating to donations:', err)
     } finally {
       setIsLoading(false)
     }

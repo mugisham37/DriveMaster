@@ -1,5 +1,5 @@
 import React from 'react'
-import { Iteration } from '../../../types'
+import { Iteration } from '../../../components/types'
 
 interface IterationReportProps {
   iteration: Iteration
@@ -14,12 +14,16 @@ export function IterationReport({ iteration }: IterationReportProps): React.JSX.
           <span className={`badge ${iteration.testsStatus}`}>
             Tests: {iteration.testsStatus}
           </span>
-          <span className={`badge ${iteration.representationStatus}`}>
-            Representation: {iteration.representationStatus}
-          </span>
-          <span className={`badge ${iteration.analysisStatus}`}>
-            Analysis: {iteration.analysisStatus}
-          </span>
+          {iteration.representationStatus && (
+            <span className={`badge ${iteration.representationStatus}`}>
+              Representation: {iteration.representationStatus}
+            </span>
+          )}
+          {iteration.analysisStatus && (
+            <span className={`badge ${iteration.analysisStatus}`}>
+              Analysis: {iteration.analysisStatus}
+            </span>
+          )}
         </div>
       </div>
       
@@ -29,7 +33,7 @@ export function IterationReport({ iteration }: IterationReportProps): React.JSX.
       </div>
 
       <div className="iteration-files">
-        {iteration.files.map((file) => (
+        {iteration.files?.map((file) => (
           <div key={file.filename} className="file-preview">
             <h5>{file.filename}</h5>
             <pre className="code-preview">

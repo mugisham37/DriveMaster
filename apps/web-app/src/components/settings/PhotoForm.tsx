@@ -28,14 +28,12 @@ export default function PhotoForm({
 
   const { submit: uploadPhoto, isSubmitting: isUploading, error: uploadError } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Profile photo updated successfully!'
+    method: 'PATCH'
   })
 
   const { submit: deletePhoto, isSubmitting: isDeleting, error: deleteError } = useFormSubmission({
     endpoint: links.delete,
-    method: 'DELETE',
-    successMessage: 'Profile photo removed successfully!'
+    method: 'DELETE'
   })
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

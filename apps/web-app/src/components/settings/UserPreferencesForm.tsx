@@ -9,8 +9,8 @@ interface UserPreference {
   label: string
   description: string
   type: 'boolean' | 'select' | 'text'
-  value: any
-  options?: Array<{ value: any; label: string }>
+  value: unknown
+  options?: Array<{ value: unknown; label: string }>
 }
 
 interface UserPreferencesFormProps {
@@ -28,8 +28,7 @@ export default function UserPreferencesForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Preferences updated successfully!'
+    method: 'PATCH'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,12 +37,12 @@ export default function UserPreferencesForm({
     const preferencesData = preferences.reduce((acc, pref) => {
       acc[pref.key] = pref.value
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, unknown>)
 
     await submit({ user_preferences: preferencesData })
   }
 
-  const handlePreferenceChange = (key: string, value: any) => {
+  const handlePreferenceChange = (key: string, value: unknown) => {
     setPreferences(prev => 
       prev.map(pref => 
         pref.key === key ? { ...pref, value } : pref
@@ -74,7 +73,7 @@ export default function UserPreferencesForm({
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={pref.value}
+                    checked={Boolean(pref.value)}
                     onChange={(e) => handlePreferenceChange(pref.key, e.target.checked)}
                     className="form-checkbox"
                   />
@@ -84,12 +83,12 @@ export default function UserPreferencesForm({
               
               {pref.type === 'select' && pref.options && (
                 <select
-                  value={pref.value}
+                  value={String(pref.value || '')}
                   onChange={(e) => handlePreferenceChange(pref.key, e.target.value)}
                   className="form-select"
                 >
                   {pref.options.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={String(option.value)} value={String(option.value)}>
                       {option.label}
                     </option>
                   ))}
@@ -99,7 +98,7 @@ export default function UserPreferencesForm({
               {pref.type === 'text' && (
                 <input
                   type="text"
-                  value={pref.value}
+                  value={String(pref.value || '')}
                   onChange={(e) => handlePreferenceChange(pref.key, e.target.value)}
                   className="form-input"
                 />

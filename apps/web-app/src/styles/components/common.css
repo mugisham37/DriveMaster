@@ -1,4 +1,5 @@
 /* Common Components Styles */
+/* This file uses Tailwind CSS @apply directive - warnings about unknown @apply are expected */
 
 /* Copy to Clipboard Button */
 .copy-to-clipboard-button {

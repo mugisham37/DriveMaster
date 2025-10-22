@@ -28,20 +28,17 @@ export default function CommentsPreferenceForm({
 
   const { submit: updatePreference, isSubmitting: isUpdatingPreference } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Comment preference updated successfully!'
+    method: 'PATCH'
   })
 
   const { submit: enableAllComments, isSubmitting: isEnablingAll } = useFormSubmission({
     endpoint: links.enable_comments_on_all_solutions,
-    method: 'PATCH',
-    successMessage: 'Comments enabled on all published solutions!'
+    method: 'PATCH'
   })
 
   const { submit: disableAllComments, isSubmitting: isDisablingAll } = useFormSubmission({
     endpoint: links.disable_comments_on_all_solutions,
-    method: 'PATCH',
-    successMessage: 'Comments disabled on all published solutions!'
+    method: 'PATCH'
   })
 
   const handlePreferenceSubmit = async (e: React.FormEvent) => {
@@ -161,7 +158,7 @@ export default function CommentsPreferenceForm({
           <li>• You can moderate comments on your solutions (edit, delete inappropriate ones)</li>
           <li>• Comments are public and visible to all Exercism users</li>
           <li>• You can change this setting for individual solutions at any time</li>
-          <li>• Disabling comments won't delete existing comments, just prevent new ones</li>
+          <li>• Disabling comments won&apos;t delete existing comments, just prevent new ones</li>
         </ul>
       </div>
     </div>

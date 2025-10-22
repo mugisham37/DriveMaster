@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Tab } from '@/components/common/Tab'
+
 
 interface NotificationFiltersProps {
   status: string
@@ -41,13 +41,17 @@ export function NotificationFilters({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             {statusOptions.map((option) => (
-              <Tab
+              <button
                 key={option.value}
-                active={status === option.value}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  status === option.value
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+                }`}
                 onClick={() => onStatusChange(option.value)}
               >
                 {option.label}
-              </Tab>
+              </button>
             ))}
           </div>
         </div>

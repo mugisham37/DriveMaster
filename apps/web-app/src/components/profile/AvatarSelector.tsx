@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { Photo } from './avatar-selector/Photo'
 import { CroppingModal } from './avatar-selector/CroppingModal'
 import { useImageCrop } from './avatar-selector/use-image-crop'
-import { User } from '../../types'
+import { User } from '../types'
 
 type Links = {
   update: string
@@ -31,7 +31,13 @@ export default function AvatarSelector({
         onDelete={handleUpdate}
         links={links}
       />
-      <CroppingModal links={links} onUpload={handleUpdate} {...modalProps} />
+      <CroppingModal 
+        links={links} 
+        onUpload={handleUpdate} 
+        isOpen={modalProps.isOpen}
+        onClose={modalProps.onClose}
+        imageFile={modalProps.imageFile}
+      />
     </React.Fragment>
   )
 }

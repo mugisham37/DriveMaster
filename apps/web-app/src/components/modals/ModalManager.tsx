@@ -30,7 +30,7 @@ export function ModalManager({
     <>
       <WelcomeModal numTracks={numTracks} />
       <SenioritySurveyModal />
-      <BegModal previousDonor={(user as any)?.totalDonatedInDollars > 0} />
+      <BegModal previousDonor={user?.totalDonatedInDollars ? user.totalDonatedInDollars > 0 : false} />
       <WelcomeToInsidersModal />
     </>
   )

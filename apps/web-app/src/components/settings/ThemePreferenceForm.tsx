@@ -23,8 +23,7 @@ export default function ThemePreferenceForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Theme preference updated successfully!'
+    method: 'PATCH'
   })
 
   const isInsider = insiders_status === 'active' || insiders_status === 'active_lifetime'
@@ -197,7 +196,7 @@ export default function ThemePreferenceForm({
         <ul className="text-sm text-textColor6 space-y-1">
           <li>• <strong>Light:</strong> The default Exercism experience with bright backgrounds</li>
           <li>• <strong>Dark:</strong> Easier on the eyes in low-light environments (Insider feature)</li>
-          <li>• <strong>System:</strong> Automatically switches based on your device's theme setting</li>
+          <li>• <strong>System:</strong> Automatically switches based on your device&apos;s theme setting</li>
         </ul>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Modal } from './Modal'
+import Modal from './Modal'
 
 interface ExerciseUpdateModalProps {
   isOpen: boolean
@@ -15,7 +15,7 @@ export function ExerciseUpdateModal({
   updateDetails,
 }: ExerciseUpdateModalProps): React.JSX.Element {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal open={isOpen} onClose={onClose}>
       <div className="exercise-update-modal">
         <h2>Exercise Update Available</h2>
         <p>The exercise <strong>{exerciseTitle}</strong> has been updated.</p>

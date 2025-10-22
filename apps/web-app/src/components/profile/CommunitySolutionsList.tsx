@@ -2,17 +2,19 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Request, usePaginatedRequestQuery } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
-import { Pagination } from '../common'
+// import { Pagination } from '../common' // Component doesn't exist
 import CommunitySolution from '../common/CommunitySolution'
 import { FetchingBoundary } from '../FetchingBoundary'
 import { ResultsZone } from '../ResultsZone'
-import { TrackDropdown, OrderSelect } from './community-solutions-list'
+// import { TrackDropdown, OrderSelect } from './community-solutions-list' // Components don't exist
 import type {
   CommunitySolution as CommunitySolutionProps,
   PaginatedResult,
 } from '../../types'
 import { scrollToTop } from '@/utils/scroll-to-top'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+import { Pagination } from '../common/Pagination'
+import { OrderSelect } from '../student/tracks-list/OrderSelect'
 
 // i18n-key-prefix: communitySolutionsList
 // i18n-namespace: components/profile

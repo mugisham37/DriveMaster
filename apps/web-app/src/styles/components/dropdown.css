@@ -63,8 +63,7 @@
 
 .track-menu-trigger:focus {
   outline: none;
-  ring: 2px solid #3b82f6;
-  ring-offset: 2px;
+  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .track-menu-content {

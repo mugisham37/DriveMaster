@@ -4,27 +4,30 @@ import React, { useState, useCallback } from 'react'
 import { GraphicalIcon } from './GraphicalIcon'
 
 interface CopyToClipboardButtonProps {
-  textToCopy: string
+  textToCopy?: string
+  text?: string
   className?: string
   children?: React.ReactNode
 }
 
 export function CopyToClipboardButton({
   textToCopy,
+  text,
   className = '',
   children
-}: CopyToClipboardButtonProps): React.React.JSX.Element {
+}: CopyToClipboardButtonProps): React.JSX.Element {
   const [copied, setCopied] = useState(false)
+  const copyText = text || textToCopy || ''
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(textToCopy)
+      await navigator.clipboard.writeText(copyText)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy text: ', err)
     }
-  }, [textToCopy])
+  }, [copyText])
 
   return (
     <button

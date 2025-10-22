@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import { useAuth } from '@/hooks/useAuth'
 
-interface TrackWelcomModalProps {
+interface TrackWelcomeModalProps {
   track: {
     slug: string
     title: string
@@ -19,7 +19,7 @@ export default function TrackWelcomeModal({
   track, 
   userSeniority, 
   userJoinedDaysAgo 
-}: TrackWelcomModalProps): JSX.Element {
+}: TrackWelcomeModalProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { user, isAuthenticated } = useAuth()
@@ -116,7 +116,7 @@ export default function TrackWelcomeModal({
             Welcome to {track.title}!
           </h2>
           <p className="text-p-large text-textColor6">
-            Let's get you started on your {track.title} journey
+            Let&apos;s get you started on your {track.title} journey
           </p>
         </div>
 
@@ -213,7 +213,7 @@ export default function TrackWelcomeModal({
             onClick={handleDismiss}
             className="text-textColor6 hover:text-textColor2 text-p-small"
           >
-            I'll decide later
+            I&apos;ll decide later
           </button>
         </div>
       </div>

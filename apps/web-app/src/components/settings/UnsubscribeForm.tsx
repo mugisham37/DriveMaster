@@ -19,7 +19,7 @@ interface EmailPreference {
   required: boolean
 }
 
-export function UnsubscribeForm({ email, token, type }: UnsubscribeFormProps) {
+export function UnsubscribeForm({ email, token }: UnsubscribeFormProps) {
   const [preferences, setPreferences] = useState<EmailPreference[]>([
     {
       id: 'marketing',

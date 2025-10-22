@@ -27,8 +27,7 @@ export default function CommunicationPreferencesForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Communication preferences updated successfully!'
+    method: 'PATCH'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,13 +57,18 @@ export default function CommunicationPreferencesForm({
     )
   }
 
-  const groupedPreferences = preferences.reduce((acc, pref) => {
-    if (!acc[pref.category]) {
-      acc[pref.category] = []
-    }
-    acc[pref.category].push(pref)
-    return acc
-  }, {} as Record<string, CommunicationPreference[]>)
+  const groupedPreferences: Record<string, CommunicationPreference[]> = React.useMemo(() => {
+    if (!preferences) return {}
+    
+    return preferences.reduce((acc, pref) => {
+      const category = pref.category
+      if (!acc[category]) {
+        acc[category] = []
+      }
+      acc[category]!.push(pref)
+      return acc
+    }, {} as Record<string, CommunicationPreference[]>)
+  }, [preferences])
 
   const categoryLabels = {
     email: 'Email Notifications',
@@ -84,7 +88,7 @@ export default function CommunicationPreferencesForm({
       
       <div className="preferences-intro mb-8 p-4 bg-backgroundColorA border border-borderColor6 rounded-8">
         <p className="text-textColor2">
-          Choose how you'd like to receive communications from Exercism. 
+          Choose how you&apos;d like to receive communications from Exercism. 
           You can customize notifications for different types of activities.
         </p>
       </div>
@@ -174,7 +178,7 @@ export default function CommunicationPreferencesForm({
           <li>• Some critical notifications (like security alerts) cannot be disabled</li>
           <li>• Email preferences may take up to 24 hours to take effect</li>
           <li>• You can unsubscribe from marketing emails using the link in any marketing email</li>
-          <li>• Disabling notifications won't affect your ability to use Exercism features</li>
+          <li>• Disabling notifications won&apos;t affect your ability to use Exercism features</li>
         </ul>
       </div>
     </form>

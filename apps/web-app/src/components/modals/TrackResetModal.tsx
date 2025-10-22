@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { TrackIcon } from '@/components/common/TrackIcon'
 import { useFormSubmission } from '@/hooks/useFormSubmission'
 import { FormButton } from '@/components/common/forms/FormButton'
@@ -95,7 +95,7 @@ export function TrackResetModal({ track, isOpen, onClose, onSuccess }: TrackRese
               <div>
                 <div className="font-medium">Exercise Progress</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Reset completion status for all exercises (you'll keep your solutions)
+                  Reset completion status for all exercises (you&apos;ll keep your solutions)
                 </div>
               </div>
             </label>
@@ -140,7 +140,7 @@ export function TrackResetModal({ track, isOpen, onClose, onSuccess }: TrackRese
 
         <div className="mb-6">
           <label htmlFor="confirm-text" className="block text-sm font-medium mb-2">
-            Type "<strong>reset</strong>" to confirm:
+            Type &quot;<strong>reset</strong>&quot; to confirm:
           </label>
           <input
             type="text"

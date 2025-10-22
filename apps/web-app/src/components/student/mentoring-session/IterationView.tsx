@@ -21,8 +21,7 @@ export function IterationView({
   indentSize, 
   isOutOfDate, 
   isLinked, 
-  setIsLinked, 
-  discussion 
+  setIsLinked 
 }: IterationViewProps): React.JSX.Element {
   return (
     <div className="iteration-view-container">
@@ -55,7 +54,7 @@ export function IterationView({
               <span className="status">{iteration.testsStatus}</span>
             </div>
             <div className="iteration-files">
-              {iteration.files.map((file) => (
+              {iteration.files?.map((file) => (
                 <div key={file.filename} className="file">
                   <h5>{file.filename}</h5>
                   <pre style={{ tabSize: indentSize }}>

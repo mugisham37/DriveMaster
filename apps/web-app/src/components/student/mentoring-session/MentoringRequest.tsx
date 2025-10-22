@@ -5,7 +5,7 @@ import {
   MentorSessionRequest, 
   Iteration, 
   MentoringSessionLinks 
-} from '../../../types'
+} from '../../../components/types'
 
 interface Video {
   url: string
@@ -32,18 +32,17 @@ export function MentoringRequest({
   request,
   latestIteration,
   videos,
-  links,
   onCreate
 }: MentoringRequestProps): React.JSX.Element {
   const handleCreateRequest = () => {
     // Create a new mentoring request
     const newRequest: MentorSessionRequest = {
-      id: Date.now(),
+      uuid: `request-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      comment: '',
-      exercise: exercise,
-      track: track
+      trackSlug: track.slug,
+      exerciseSlug: exercise.slug,
+      studentHandle: ''
     }
     onCreate(newRequest)
   }
@@ -52,13 +51,17 @@ export function MentoringRequest({
     return (
       <div className="mentoring-request">
         <div className="request-status">
-          <span className={`status-badge ${request.status}`}>
-            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-          </span>
+          {request.status && (
+            <span className={`status-badge ${request.status}`}>
+              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+            </span>
+          )}
         </div>
         
         <div className="request-info">
-          <p>Mentoring request created on {new Date(request.createdAt).toLocaleDateString()}</p>
+          {request.createdAt && (
+            <p>Mentoring request created on {new Date(request.createdAt).toLocaleDateString()}</p>
+          )}
           
           {request.status === 'pending' && (
             <div className="pending-info">

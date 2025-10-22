@@ -1,0 +1,6 @@
+export { GithubSyncerWidget } from './GithubSyncerWidget'
+export { ActiveAutomaticSync } from './ActiveAutomaticSync'
+export { ActiveManualSync } from './ActiveManualSync'
+export { MiniAdvert } from './MiniAdvert'
+export { PausedSync } from './PausedSync'
+export type { GithubSyncerWidgetProps, SyncObj } from './GithubSyncerWidget'

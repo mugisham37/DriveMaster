@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
+import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { Avatar } from '@/components/common/Avatar'
 import { useModalManager } from '@/hooks/useModalManager'

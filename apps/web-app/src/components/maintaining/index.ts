@@ -1,0 +1,1 @@
+export { SubmissionsSummaryTable } from './SubmissionsSummaryTable'

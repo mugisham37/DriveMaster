@@ -40,8 +40,7 @@ export default function ProfileForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Profile updated successfully!'
+    method: 'PATCH'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +83,7 @@ export default function ProfileForm({
           className="form-input"
         />
         <div className="form-note text-textColor6 text-sm mt-1">
-          Exercism is made up of people from all over the world. Share where you're from!
+          Exercism is made up of people from all over the world. Share where you&apos;re from!
         </div>
       </div>
 

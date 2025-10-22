@@ -39,11 +39,13 @@ export function IntegrationsSettings({ integrations, links }: IntegrationsSettin
   const { submit: connectGithub, isSubmitting: isConnectingGithub } = useFormSubmission({
     endpoint: links.connectGithub,
     method: 'POST',
-    onSuccess: (data) => {
-      setCurrentIntegrations(prev => ({
-        ...prev,
-        github: { ...prev.github, connected: true, username: data.username }
-      }))
+    onSuccess: (data?: Record<string, unknown>) => {
+      if (data?.username && typeof data.username === 'string') {
+        setCurrentIntegrations(prev => ({
+          ...prev,
+          github: { ...prev.github, connected: true, username: data.username }
+        }))
+      }
     }
   })
 
@@ -106,7 +108,7 @@ export function IntegrationsSettings({ integrations, links }: IntegrationsSettin
                 <div>
                   <span className="font-medium">Last Sync:</span>
                   <div className="text-gray-600 dark:text-gray-300">
-                    {formatDate(currentIntegrations.github.lastSync)}
+                    {currentIntegrations.github.lastSync ? formatDate(currentIntegrations.github.lastSync) : 'Never'}
                   </div>
                 </div>
               </div>

@@ -28,8 +28,10 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
   const { submit: resetToken, isSubmitting } = useFormSubmission({
     endpoint: links.resetToken,
     method: 'POST',
-    onSuccess: (data) => {
-      setCurrentToken(data.token)
+    onSuccess: (data?: Record<string, unknown>) => {
+      if (data?.token && typeof data.token === 'string') {
+        setCurrentToken(data.token)
+      }
     },
     successMessage: 'API token has been reset successfully'
   })
@@ -80,7 +82,7 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
           
           {showToken && (
             <div className="mt-3">
-              <CopyToClipboardButton text={currentToken} />
+              <CopyToClipboardButton textToCopy={currentToken} />
             </div>
           )}
         </div>

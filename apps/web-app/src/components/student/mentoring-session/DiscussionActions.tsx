@@ -21,7 +21,6 @@ interface DiscussionActionsProps {
 export function DiscussionActions({ 
   discussion,
   links,
-  donation,
   onFinish, 
   onMarkAsNothingToDo
 }: DiscussionActionsProps): React.JSX.Element {

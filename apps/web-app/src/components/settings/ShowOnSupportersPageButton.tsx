@@ -20,8 +20,7 @@ export default function ShowOnSupportersPageButton({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Supporters page preference updated successfully!'
+    method: 'PATCH'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +38,7 @@ export default function ShowOnSupportersPageButton({
           <div>
             <h3 className="text-h4 mb-2">Show Your Support</h3>
             <p className="text-textColor2 mb-3">
-              If you've donated to Exercism, you can choose to be featured on our 
+              If you&apos;ve donated to Exercism, you can choose to be featured on our 
               public supporters page to show your commitment to free coding education.
             </p>
             <p className="text-textColor6 text-sm">

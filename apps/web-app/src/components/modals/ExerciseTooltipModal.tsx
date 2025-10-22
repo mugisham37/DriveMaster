@@ -1,10 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Modal } from '@/components/common/Modal'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
-import { ExerciseIcon } from '@/components/common/ExerciseIcon'
-import { ConceptIcon } from '@/components/common/ConceptIcon'
+import { Modal } from '@/components/common'
+import { GraphicalIcon } from '@/components/common'
 import Link from 'next/link'
 
 interface Exercise {
@@ -33,14 +30,13 @@ interface ExerciseTooltipModalProps {
   exercise?: Exercise
   isOpen: boolean
   onClose: () => void
-  position?: { x: number; y: number }
+
 }
 
 export function ExerciseTooltipModal({ 
   exercise, 
   isOpen, 
   onClose, 
-  position 
 }: ExerciseTooltipModalProps) {
   if (!exercise) return null
 
@@ -80,13 +76,7 @@ export function ExerciseTooltipModal({
     ))
   }
 
-  const modalStyle = position ? {
-    position: 'fixed' as const,
-    top: position.y + 10,
-    left: position.x,
-    transform: 'translateX(-50%)',
-    zIndex: 1000
-  } : {}
+
 
   return (
     <Modal
@@ -97,10 +87,10 @@ export function ExerciseTooltipModal({
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-start gap-4 mb-4">
-          <ExerciseIcon 
-            iconUrl={exercise.iconUrl}
-            title={exercise.title}
-            className="w-12 h-12 flex-shrink-0"
+          <img 
+            src={exercise.iconUrl}
+            alt={exercise.title}
+            className="w-12 h-12 flex-shrink-0 rounded"
           />
           
           <div className="flex-1 min-w-0">
@@ -139,7 +129,7 @@ export function ExerciseTooltipModal({
                   key={concept.slug}
                   className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1 text-xs"
                 >
-                  <ConceptIcon className="w-3 h-3" />
+                  <GraphicalIcon icon="concept" className="w-3 h-3" />
                   <span>{concept.name}</span>
                 </div>
               ))}
@@ -158,7 +148,7 @@ export function ExerciseTooltipModal({
                   key={concept.slug}
                   className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/20 rounded-full px-2 py-1 text-xs"
                 >
-                  <ConceptIcon className="w-3 h-3" />
+                  <GraphicalIcon icon="concept" className="w-3 h-3" />
                   <span>{concept.name}</span>
                 </div>
               ))}

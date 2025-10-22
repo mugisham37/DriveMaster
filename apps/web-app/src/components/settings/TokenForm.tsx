@@ -25,9 +25,8 @@ export default function TokenForm({
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.reset,
     method: 'POST',
-    successMessage: 'API token reset successfully!',
-    onSuccess: (data: any) => {
-      if (data.token) {
+    onSuccess: (data?: Record<string, unknown>) => {
+      if (data?.token) {
         setCurrentToken(data.token)
         setShowToken(true)
       }
@@ -163,7 +162,7 @@ export default function TokenForm({
       <div className="security-warning p-4 bg-red-50 border border-red-200 rounded-8">
         <h4 className="text-red-800 font-semibold mb-2">Security Important:</h4>
         <ul className="text-red-800 text-sm space-y-1">
-          <li>• Keep your API token secret - don't share it or commit it to version control</li>
+          <li>• Keep your API token secret - don&apos;t share it or commit it to version control</li>
           <li>• If you suspect your token has been compromised, reset it immediately</li>
           <li>• The token provides full access to your Exercism account via the CLI</li>
           <li>• Resetting your token will invalidate the old one immediately</li>

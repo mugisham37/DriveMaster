@@ -6,7 +6,7 @@ export interface InputWithValidationProps extends Omit<InputHTMLAttributes<HTMLI
   value: string
   onChange: (e: ChangeEvent<HTMLInputElement>) => void
   onValidate?: (value: string) => void
-  error?: string
+  error?: string | undefined
   showError?: boolean
 }
 
@@ -25,7 +25,7 @@ export function InputWithValidation({
 }: InputWithValidationProps): JSX.Element {
   const [hasBeenBlurred, setHasBeenBlurred] = useState(false)
   
-  const hasError = error && error.length > 0
+  const hasError = Boolean(error && error.length > 0)
   const shouldShowError = hasError && showError && hasBeenBlurred
 
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {

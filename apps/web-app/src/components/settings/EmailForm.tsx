@@ -21,8 +21,7 @@ export default function EmailForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Email updated successfully!'
+    method: 'PATCH'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +105,7 @@ export default function EmailForm({
       {isEmailChanged && (
         <div className="warning-box mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-8">
           <p className="text-yellow-800 text-sm">
-            <strong>Important:</strong> After updating your email, you'll need to verify 
+            <strong>Important:</strong> After updating your email, you&apos;ll need to verify 
             your new email address before you can sign in with it.
           </p>
         </div>

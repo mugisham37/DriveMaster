@@ -21,7 +21,6 @@ export default function DeleteProfileForm({
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.delete,
     method: 'DELETE',
-    successMessage: 'Profile deleted successfully!',
     onSuccess: () => {
       setIsModalOpen(false)
       setConfirmationChecked(false)

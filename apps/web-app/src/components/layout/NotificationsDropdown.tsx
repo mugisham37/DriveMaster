@@ -1,42 +1,141 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { Icon } from '@/lib/assets';
+import React, { useEffect, useRef, useState } from 'react'
+import consumer from '../../utils/action-cable-consumer'
+import { GraphicalIcon } from '../common/GraphicalIcon'
+import { NotificationsIcon } from './notifications/NotificationsIcon'
+import { NotificationItem } from '../notifications/NotificationItem'
+import { Notification as NotificationType } from '../../types'
+import { useNotificationDropdown } from './notifications/useNotificationDropdown'
+import { DropdownAttributes } from '../../hooks/useAdvancedDropdown'
+import { usePaginatedRequestQuery } from '../../hooks/request-query'
+import { useErrorHandler, ErrorBoundary } from '../ErrorBoundary'
+import { Loading } from '../common/Loading'
+import { QueryStatus, useQueryClient } from '@tanstack/react-query'
+import { NotificationsChannel } from '../../lib/realtime/channels/notifications-channel'
+import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-interface Notification {
-  id: string;
-  type: string;
-  text: string;
-  url: string;
-  isRead: boolean;
-  createdAt: string;
+export type APIResponse = {
+  results: NotificationType[]
+  meta: {
+    total: number
+    unreadCount: number
+    links: {
+      all: string
+    }
+  }
 }
 
-export function NotificationsDropdown() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+const DEFAULT_ERROR = new Error('Unable to load notifications')
+
+const ErrorMessage = ({ error }: { error: unknown }) => {
+  useErrorHandler(error, { defaultError: DEFAULT_ERROR })
+
+  return null
+}
+
+const ErrorFallback = ({ error }: { error: Error }) => {
+  return <p>{error.message}</p>
+}
+
+const DropdownContent = ({
+  data,
+  status,
+  error,
+  listAttributes,
+  itemAttributes,
+}: {
+  data: APIResponse | undefined
+  status: QueryStatus
+  error: unknown
+} & Pick<DropdownAttributes, 'listAttributes' | 'itemAttributes'>) => {
+  const { t } = useAppTranslation('components/dropdowns')
+  if (data) {
+    return (
+      <ul {...listAttributes}>
+        {data.results.map((notification, i) => {
+          return (
+            <li {...itemAttributes(i)} key={i}>
+              <NotificationItem notification={notification} onMarkAsRead={() => {}} />
+            </li>
+          )
+        })}
+        <li {...itemAttributes(data.results.length)}>
+          <a href={data.meta.links.all} className="c-prominent-link">
+            <span>{t('notifications.seeAllYourNotifications')}</span>
+            <GraphicalIcon icon="arrow-right" />
+          </a>
+        </li>
+      </ul>
+    )
+  } else {
+    const { id, hidden } = listAttributes
+
+    return (
+      <div id={id} hidden={hidden}>
+        {status === 'pending' ? <Loading /> : null}
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <ErrorMessage error={error} />
+        </ErrorBoundary>
+      </div>
+    )
+  }
+}
+
+const MAX_NOTIFICATIONS = 5
+export const NOTIFICATIONS_CACHE_KEY = 'notifications'
+
+export function NotificationsDropdown({
+  endpoint,
+}: {
+  endpoint: string
+}): JSX.Element {
+  const queryClient = useQueryClient()
+  const {
+    data: resolvedData,
+    error,
+    status,
+  } = usePaginatedRequestQuery<APIResponse, unknown>(
+    [NOTIFICATIONS_CACHE_KEY],
+    {
+      endpoint: endpoint,
+      query: { per_page: MAX_NOTIFICATIONS },
+      options: {
+        staleTime: 30 * 1000,
+        refetchOnMount: true,
+      },
+    }
+  )
+  const {
+    buttonAttributes,
+    panelAttributes,
+    listAttributes,
+    itemAttributes,
+    open,
+  } = useNotificationDropdown(resolvedData)
+
+  const connectionRef = useRef<NotificationsChannel | null>(null)
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+    if (!connectionRef.current) {
+      connectionRef.current = new NotificationsChannel((message) => {
+        if (!message) return
+
+        if (message.type === 'notifications.changed' && listAttributes.hidden) {
+          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+        }
+      })
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    if (!listAttributes.hidden) {
+      queryClient.refetchQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+    }
 
-  // TODO: Fetch notifications from API
-  useEffect(() => {
-    // This would be replaced with actual API call
-    // fetchNotifications().then(setNotifications);
-  }, []);
+    return () => {
+      connectionRef.current?.disconnect()
+      connectionRef.current = null
+    }
+  }, [listAttributes.hidden, queryClient])
 
   return (
     <div className="notifications-dropdown" ref={dropdownRef}>

@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { JikiscriptExercisePage } from '@/components/bootcamp/exercises'
+import { AdvancedJikiscriptExercisePage } from '@/components/bootcamp/exercises'
 
 interface JikiscriptExercisePageProps {
   params: { exerciseSlug: string }
@@ -51,7 +51,7 @@ export default async function JikiscriptExercise({ params }: JikiscriptExerciseP
       }
     ]
 
-    return <JikiscriptExercisePage {...exerciseData} custom_functions={customFunctions} />
+    return <AdvancedJikiscriptExercisePage {...exerciseData} customFunctions={customFunctions} />
   } catch (error) {
     console.error('Error loading Jikiscript exercise:', error)
     return notFound()

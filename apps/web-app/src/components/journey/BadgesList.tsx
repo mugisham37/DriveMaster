@@ -1,120 +1,111 @@
-import React from 'react'
-import { usePaginatedRequestQuery, Request } from '../../hooks/request-query'
-import { ResultsZone } from '../common/ResultsZone'
-import { FetchingBoundary } from '../common/FetchingBoundary'
+import React, { useState, useEffect } from 'react'
+import { scrollToTop } from '@/utils/scroll-to-top'
+import { usePaginatedRequestQuery, type Request } from '@/hooks/request-query'
+import { useHistory, removeEmpty } from '@/hooks/use-history'
+import { useList } from '@/hooks/use-list'
+import { ResultsZone } from '@/components/common/ResultsZone'
+import { Pagination } from '@/components/common'
+import { FetchingBoundary } from '@/components/common/FetchingBoundary'
+import { BadgeResults } from './BadgeResults'
+import { OrderSwitcher } from './badges-list/OrderSwitcher'
+import type { PaginatedResult, Badge } from '@/types'
+import type { QueryKey } from '@tanstack/react-query'
+import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-interface Badge {
-  id: number
-  uuid: string
-  name: string
-  description: string
-  iconUrl: string
-  rarity: string
-  unlockedAt: string
-  track?: {
-    title: string
-    slug: string
-    iconUrl: string
-  }
-  percentageAwardedTo: number
-}
+const DEFAULT_ORDER = 'unrevealed_first'
+const DEFAULT_ERROR = new Error('Unable to load badge list')
 
-interface BadgesListProps {
+export const BadgesList = ({
+  request: initialRequest,
+  isEnabled,
+}: {
   request: Request
   isEnabled: boolean
-}
-
-const DEFAULT_ERROR = new Error('Unable to load badges')
-
-export const BadgesList: React.FC<BadgesListProps> = ({
-  request,
-  isEnabled,
-}) => {
+}): JSX.Element => {
+  const { t } = useAppTranslation('components/journey')
+  const {
+    request,
+    setPage,
+    setCriteria: setRequestCriteria,
+    setOrder,
+  } = useList(initialRequest)
+  const [criteria, setCriteria] = useState(request.query?.criteria || '')
+  const cacheKey: QueryKey = [
+    'badges-list',
+    request.endpoint,
+    removeEmpty(request.query),
+  ]
   const {
     status,
-    data,
+    data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<{
-    results: Badge[]
-    meta: {
-      currentPage: number
-      totalCount: number
-      totalPages: number
-    }
-  }>(['journey-badges'], {
+  } = usePaginatedRequestQuery<PaginatedResult<Badge[]>>(cacheKey, {
     ...request,
+    query: removeEmpty(request.query),
     options: { ...request.options, enabled: isEnabled },
   })
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return '#6B7280'
-      case 'rare': return '#3B82F6'
-      case 'ultimate': return '#8B5CF6'
-      case 'legendary': return '#F59E0B'
-      default: return '#6B7280'
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (criteria === undefined || criteria === null) return
+      setRequestCriteria(criteria)
+    }, 200)
+
+    return () => {
+      clearTimeout(handler)
     }
-  }
+  }, [setRequestCriteria, criteria])
+
+  useHistory({ pushOn: removeEmpty(request.query) })
+
+  useEffect(() => {
+    scrollToTop('badges-list', 0, 'smooth')
+  }, [])
 
   return (
-    <article className="badges-tab theme-dark">
-      <ResultsZone isFetching={isFetching}>
-        <FetchingBoundary
-          status={status}
-          error={error}
-          defaultError={DEFAULT_ERROR}
-        >
-          {data ? (
-            <div className="badges-list">
-              <div className="badges-header">
-                <h2>Your Badges ({data.meta.totalCount})</h2>
-              </div>
-              <div className="badges-grid">
-                {data.results.map((badge) => (
-                  <div key={badge.uuid} className="badge-card">
-                    <div className="badge-icon-container">
-                      <img 
-                        src={badge.iconUrl} 
-                        alt={badge.name}
-                        className="badge-icon"
-                      />
-                      <div 
-                        className="rarity-indicator"
-                        style={{ backgroundColor: getRarityColor(badge.rarity) }}
-                      >
-                        {badge.rarity}
-                      </div>
-                    </div>
-                    <div className="badge-info">
-                      <h3>{badge.name}</h3>
-                      <p className="badge-description">{badge.description}</p>
-                      {badge.track && (
-                        <div className="badge-track">
-                          <img 
-                            src={badge.track.iconUrl} 
-                            alt={badge.track.title}
-                            className="track-icon"
-                          />
-                          <span>{badge.track.title}</span>
-                        </div>
-                      )}
-                      <div className="badge-stats">
-                        <span className="unlock-date">
-                          Unlocked: {new Date(badge.unlockedAt).toLocaleDateString()}
-                        </span>
-                        <span className="percentage">
-                          {badge.percentageAwardedTo.toFixed(1)}% of users have this
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </FetchingBoundary>
-      </ResultsZone>
+    <article
+      data-scroll-top-anchor="badges-list"
+      className="badges-tab theme-dark"
+    >
+      <div className="md-container container">
+        <div className="c-search-bar">
+          <input
+            className="--search"
+            onChange={(e) => {
+              setCriteria(e.target.value)
+            }}
+            value={criteria}
+            placeholder={t('badgesList.searchByBadgeNameOrDescription')}
+          />
+          <OrderSwitcher
+            value={request.query.order || DEFAULT_ORDER}
+            setValue={setOrder}
+          />
+        </div>
+        <ResultsZone isFetching={isFetching}>
+          <FetchingBoundary
+            status={status}
+            error={error}
+            defaultError={DEFAULT_ERROR}
+          >
+            {resolvedData ? (
+              <React.Fragment>
+                <BadgeResults data={resolvedData} cacheKey={cacheKey} />
+                <Pagination
+                  disabled={resolvedData === undefined}
+                  current={request.query.page || 1}
+                  total={resolvedData.meta.totalPages}
+                  setPage={(p) => {
+                    setPage(p)
+                    scrollToTop('badges-list')
+                  }}
+                />
+              </React.Fragment>
+            ) : null}
+          </FetchingBoundary>
+        </ResultsZone>
+      </div>
     </article>
   )
 }

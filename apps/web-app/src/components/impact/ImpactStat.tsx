@@ -6,17 +6,7 @@ interface ImpactStatProps {
 }
 
 export function ImpactStat({ metricType, initialValue }: ImpactStatProps) {
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    // In a real implementation, this would connect to a WebSocket
-    // For now, we'll just use the initial value
-    setValue(initialValue)
-  }, [initialValue])
-
-  return (
-    <span className="impact-stat" data-metric-type={metricType}>
-      {value.toLocaleString()}
-    </span>
-  )
+  // Use the sophisticated Stat component with real-time WebSocket updates
+  const { default: ImpactStat } = require('./stat')
+  return <ImpactStat metricType={metricType} initialValue={initialValue} />
 }

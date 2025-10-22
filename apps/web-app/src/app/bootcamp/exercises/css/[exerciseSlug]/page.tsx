@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { CSSExercisePage } from '@/components/bootcamp/exercises'
+import { AdvancedCSSExercisePage } from '@/components/bootcamp/exercises'
 
 interface CSSExercisePageProps {
   params: { exerciseSlug: string }
@@ -38,7 +38,7 @@ export default async function CSSExercise({ params }: CSSExercisePageProps) {
 
     const exerciseData = await response.json()
 
-    return <CSSExercisePage {...exerciseData} />
+    return <AdvancedCSSExercisePage {...exerciseData} />
   } catch (error) {
     console.error('Error loading CSS exercise:', error)
     return notFound()

@@ -25,7 +25,6 @@ export default function ResetAccountButton({
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.reset,
     method: 'POST',
-    successMessage: 'Account reset successfully!',
     onSuccess: () => {
       setIsModalOpen(false)
       setConfirmationText('')

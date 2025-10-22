@@ -6,11 +6,28 @@ interface ModalProps {
   html?: string
   children?: React.ReactNode
   isOpen?: boolean
-  onClose?: () => void
+  open?: boolean
+  onClose?: () => void | Promise<void>
   className?: string
+  theme?: 'light' | 'dark'
+  cover?: boolean
+  closeButton?: boolean
+  ReactModalClassName?: string
 }
 
-export function Modal({ html, children, isOpen = true, onClose, className = '' }: ModalProps): JSX.Element | null {
+export function Modal({ 
+  html, 
+  children, 
+  isOpen = true, 
+  open, 
+  onClose, 
+  className = '',
+  theme = 'light',
+  cover = false,
+  closeButton = false,
+  ReactModalClassName = ''
+}: ModalProps): JSX.Element | null {
+  const modalIsOpen = open !== undefined ? open : isOpen
   const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -19,15 +36,19 @@ export function Modal({ html, children, isOpen = true, onClose, className = '' }
     }
   }, [html])
 
-  if (!isOpen) return null
+  if (!modalIsOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-white rounded-lg max-w-2xl max-h-[90vh] overflow-auto ${className}`}>
-        {onClose && (
+    <div className={`fixed inset-0 flex items-center justify-center z-50 ${
+      theme === 'dark' ? 'bg-black bg-opacity-75' : 'bg-black bg-opacity-50'
+    } ${cover ? 'bg-opacity-90' : ''}`}>
+      <div className={`rounded-lg max-w-2xl max-h-[90vh] overflow-auto ${
+        theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+      } ${ReactModalClassName} ${className}`}>
+        {(onClose && closeButton) && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
           >
             ×
           </button>

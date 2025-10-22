@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
-import { Modal } from './Modal'
+import Modal from './Modal'
 
 interface RequestMentoringModalProps {
   isOpen: boolean
   onClose: () => void
-  endpoint: string
 }
 
 export function RequestMentoringModal({
   isOpen,
   onClose,
-  endpoint,
 }: RequestMentoringModalProps): React.JSX.Element {
   const [comment, setComment] = useState('')
 
@@ -25,7 +23,7 @@ export function RequestMentoringModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal open={isOpen} onClose={onClose}>
       <div className="request-mentoring-modal">
         <h2>Request Mentoring</h2>
         <p>Add a comment to help your mentor understand what you need help with:</p>

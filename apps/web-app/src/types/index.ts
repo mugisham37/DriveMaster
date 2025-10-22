@@ -1116,3 +1116,6 @@ export interface WindowConfetti {
 
 // Migrated Ruby Helper Types
 export * from "./helpers";
+
+// Advanced bootcamp types
+export * from "./bootcamp-advanced";

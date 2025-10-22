@@ -58,10 +58,10 @@ export interface Iteration {
   submissionUuid: string
   createdAt: string
   testsStatus: string
-  representationStatus: string
-  analysisStatus: string
+  representationStatus?: string
+  analysisStatus?: string
   isPublished: boolean
-  files: Array<{
+  files?: Array<{
     filename: string
     content: string
   }>
@@ -222,13 +222,14 @@ export interface Metric {
 
 // Mentoring types
 export interface MentorSessionRequest {
+  id?: string
   uuid: string
-  status: 'cancelled' | 'pending' | 'fulfilled'
+  status?: 'cancelled' | 'pending' | 'fulfilled'
   trackSlug: string
   exerciseSlug: string
   studentHandle: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface MentorSessionTrack {

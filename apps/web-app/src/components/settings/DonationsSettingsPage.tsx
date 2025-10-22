@@ -32,7 +32,6 @@ interface DonationsSettingsPageProps {
 }
 
 export function DonationsSettingsPage({
-  user,
   payments,
   currentSubscription,
   totals

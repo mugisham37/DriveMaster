@@ -1,10 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 
-interface PanelOptions {
-  placement?: string
-}
-
-export function usePanel(_options?: PanelOptions) {
+export function usePanel() {
   const [open, setOpen] = useState(false)
   const [buttonElement, setButtonElement] = useState<HTMLElement | null>(null)
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null)

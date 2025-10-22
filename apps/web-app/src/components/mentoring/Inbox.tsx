@@ -11,7 +11,7 @@ import {
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
 import { ResultsZone } from '../ResultsZone'
-import { MentorDiscussion, DiscussionStatus } from '../../types'
+import type { Discussion, DiscussionStatus, MentorRequest } from '../../types/mentoring'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export type SortOption = {
@@ -30,13 +30,15 @@ export type APIResponse = {
   }
 }
 
-export type Request = BaseRequest<{
+export type RequestQuery = {
   status: DiscussionStatus
-  order?: string
-  criteria?: string
-  page?: number
-  trackSlug?: string
-}>
+  order?: string | undefined
+  criteria?: string | undefined
+  page?: number | undefined
+  trackSlug?: string | undefined
+}
+
+export type Request = BaseRequest<RequestQuery>
 
 type Links = {
   queue: string
@@ -54,7 +56,7 @@ export default function Inbox({
   links: Links
 }): JSX.Element {
   const { t } = useAppTranslation('components/mentoring/Inboxtsx')
-  const [criteria, setCriteria] = useState(discussionsRequest.query?.criteria)
+  const [criteria, setCriteria] = useState<string | undefined>(discussionsRequest.query?.criteria)
   const {
     request,
     setCriteria: setRequestCriteria,
@@ -68,7 +70,7 @@ export default function Inbox({
     isFetching,
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
-    ['mentor-discussion-list', request.endpoint, request.query],
+    ['mentor-discussion-list', request.endpoint, JSON.stringify(request.query)],
     request
   )
 
@@ -83,14 +85,25 @@ export default function Inbox({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const setTrack = (trackSlug: string | null) => {
-    setQuery({ ...request.query, trackSlug: trackSlug, page: undefined })
+    const query: Request['query'] = {
+      ...request.query,
+      trackSlug: trackSlug || undefined,
+      page: undefined,
+      status: request.query?.status || 'awaiting_mentor'
+    }
+    setQuery(query)
   }
 
-  const setStatus = (status: string) => {
-    setQuery({ ...request.query, status: status, page: undefined })
+  const setStatus = (status: DiscussionStatus) => {
+    const query: Request['query'] = {
+      ...request.query,
+      status,
+      page: undefined
+    }
+    setQuery(query)
   }
 
   return (

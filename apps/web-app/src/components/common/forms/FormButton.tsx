@@ -6,6 +6,7 @@ export interface FormButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   status?: SubmissionStatus
   children: React.ReactNode
   loadingText?: string
+  isLoading?: boolean
 }
 
 export function FormButton({
@@ -14,9 +15,10 @@ export function FormButton({
   loadingText = 'Submitting...',
   className = '',
   disabled,
+  isLoading,
   ...buttonProps
 }: FormButtonProps): JSX.Element {
-  const isSubmitting = status === 'submitting'
+  const isSubmitting = status === 'submitting' || isLoading || false
   const isDisabled = disabled || isSubmitting
 
   return (

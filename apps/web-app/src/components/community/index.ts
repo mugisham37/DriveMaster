@@ -1,3 +1,5 @@
 export { VideoLength } from './VideoLength'
 export { VideoGrid } from './VideoGrid'
 export { VideosSidebar } from './VideosSidebar'
+export { TrackFilterList } from './TrackFilterList'
+export { useVideoGrid } from './useVideoGrid'

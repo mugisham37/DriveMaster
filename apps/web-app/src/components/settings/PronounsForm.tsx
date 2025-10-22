@@ -35,8 +35,7 @@ export default function PronounsForm({
 
   const { submit, isSubmitting, isSuccess, error } = useFormSubmission({
     endpoint: links.update,
-    method: 'PATCH',
-    successMessage: 'Pronouns updated successfully!'
+    method: 'PATCH'
   })
 
   const presetPronouns = [
@@ -153,7 +152,7 @@ export default function PronounsForm({
                 className="form-input"
               />
               <div className="form-note text-textColor6 text-sm mt-1">
-                Used as: "{pronouns.subject || '[subject]'} wrote some code"
+                Used as: &quot;{pronouns.subject || '[subject]'} wrote some code&quot;
               </div>
             </div>
 
@@ -170,7 +169,7 @@ export default function PronounsForm({
                 className="form-input"
               />
               <div className="form-note text-textColor6 text-sm mt-1">
-                Used as: "I sent {pronouns.object || '[object]'} a message"
+                Used as: &quot;I sent {pronouns.object || '[object]'} a message&quot;
               </div>
             </div>
 
@@ -187,7 +186,7 @@ export default function PronounsForm({
                 className="form-input"
               />
               <div className="form-note text-textColor6 text-sm mt-1">
-                Used as: "The solution is {pronouns.possessive || '[possessive]'}"
+                Used as: &quot;The solution is {pronouns.possessive || '[possessive]'}&quot;
               </div>
             </div>
           </div>
