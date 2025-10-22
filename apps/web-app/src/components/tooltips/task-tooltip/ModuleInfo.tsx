@@ -4,7 +4,7 @@ import { TaskModule } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const ModuleInfo = ({ module }: { module: TaskModule }): JSX.Element => {
+export const ModuleInfo = ({ module }: { module: TaskModule }): React.JSX.Element => {
   return (
     <section>
       <div className="icon">
@@ -17,7 +17,7 @@ export const ModuleInfo = ({ module }: { module: TaskModule }): JSX.Element => {
   )
 }
 
-const ModuleDetails = ({ module }: { module: TaskModule }): JSX.Element => {
+const ModuleDetails = ({ module }: { module: TaskModule }): React.JSX.Element => {
   const { t } = useAppTranslation('components/tooltips/task-tooltip')
 
   const transComponents = { strong: <strong /> }
@@ -115,5 +115,7 @@ const ModuleDetails = ({ module }: { module: TaskModule }): JSX.Element => {
           <p>{t('moduleInfo.testRunnersDescription')}</p>
         </>
       )
+    default:
+      return <div>Unknown module</div>
   }
 }

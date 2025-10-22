@@ -4,7 +4,7 @@ import { TaskSize } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const SizeInfo = ({ size }: { size: TaskSize }): JSX.Element => {
+export const SizeInfo = ({ size }: { size: TaskSize }): React.JSX.Element => {
   return (
     <section>
       <div className="icon">
@@ -17,7 +17,7 @@ export const SizeInfo = ({ size }: { size: TaskSize }): JSX.Element => {
   )
 }
 
-const SizeDetails = ({ size }: { size: TaskSize }): JSX.Element => {
+const SizeDetails = ({ size }: { size: TaskSize }): React.JSX.Element => {
   const { t } = useAppTranslation('components/tooltips/task-tooltip')
 
   const transComponents = { strong: <strong /> }
@@ -89,5 +89,7 @@ const SizeDetails = ({ size }: { size: TaskSize }): JSX.Element => {
           <p>{t('sizeInfo.daysToComplete')}</p>
         </>
       )
+    default:
+      return <div>Unknown size</div>
   }
 }

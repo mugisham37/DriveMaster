@@ -5,12 +5,14 @@ import { Iteration } from '../types'
 interface PublishSolutionModalProps {
   isOpen: boolean
   onClose: () => void
+  endpoint: string
   iterations: readonly Iteration[]
 }
 
 export function PublishSolutionModal({
   isOpen,
   onClose,
+  endpoint,
   iterations,
 }: PublishSolutionModalProps): React.JSX.Element {
   const [selectedIteration, setSelectedIteration] = useState<number>(

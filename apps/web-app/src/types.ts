@@ -25,11 +25,53 @@ export type TrackContribution = {
   contributionType: string
 }
 
+export enum IterationStatus {
+  DELETED = 'deleted',
+  TESTS_FAILED = 'tests_failed',
+  ESSENTIAL_AUTOMATED_FEEDBACK = 'essential_automated_feedback',
+  ACTIONABLE_AUTOMATED_FEEDBACK = 'actionable_automated_feedback',
+  NON_ACTIONABLE_AUTOMATED_FEEDBACK = 'non_actionable_automated_feedback',
+  CELEBRATORY_AUTOMATED_FEEDBACK = 'celebratory_automated_feedback',
+  NO_AUTOMATED_FEEDBACK = 'no_automated_feedback',
+  PROCESSING = 'processing',
+  QUEUED = 'queued',
+  TESTING = 'testing',
+  ANALYZING = 'analyzing',
+  UNTESTED = 'untested'
+}
+
+export enum SubmissionMethod {
+  CLI = 'cli',
+  API = 'api'
+}
+
 export type Iteration = {
   id: string
+  idx: number
+  uuid: string
   submissionUuid: string
   solutionUuid: string
-  status: string
+  createdAt: string
+  testsStatus: string
+  representationStatus?: string
+  analysisStatus?: string
+  isPublished: boolean
+  isLatest?: boolean
+  status?: IterationStatus
+  submissionMethod?: SubmissionMethod
+  numEssentialAutomatedComments?: number
+  numActionableAutomatedComments?: number
+  numNonActionableAutomatedComments?: number
+  files?: Array<{
+    filename: string
+    content: string
+  }>
+  links: {
+    self: string
+    tests: string
+    testRun?: string
+    delete?: string
+  }
 }
 
 export type DiscussionStatus = 'awaiting_mentor' | 'awaiting_student' | 'finished'
@@ -78,10 +120,19 @@ export type ExerciseRepresentation = {
 }
 
 export type MentorSessionRequest = {
-  id: string
-  status: string
-  student: Student
+  id?: string
+  uuid: string
+  status?: 'cancelled' | 'pending' | 'fulfilled'
+  trackSlug: string
+  exerciseSlug: string
+  studentHandle: string
+  student: {
+    handle: string
+    avatarUrl: string
+  }
   exercise: MentorSessionExercise
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type MentorSessionTrack = {
@@ -89,12 +140,19 @@ export type MentorSessionTrack = {
   slug: string
   title: string
   iconUrl: string
+  highlightjsLanguage: string
+  indentSize: number
 }
 
 export type MentorSessionExercise = {
   id: string
   title: string
   slug: string
+  iconUrl: string
+  difficulty: number
+  links: {
+    self: string
+  }
 }
 
 export type CompleteRepresentationData = {

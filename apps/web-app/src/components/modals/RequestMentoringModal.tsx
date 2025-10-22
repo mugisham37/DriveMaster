@@ -4,11 +4,13 @@ import Modal from './Modal'
 interface RequestMentoringModalProps {
   isOpen: boolean
   onClose: () => void
+  endpoint: string
 }
 
 export function RequestMentoringModal({
   isOpen,
   onClose,
+  endpoint,
 }: RequestMentoringModalProps): React.JSX.Element {
   const [comment, setComment] = useState('')
 

@@ -269,6 +269,11 @@ export interface MentorSessionRequest {
   trackSlug: string
   exerciseSlug: string
   studentHandle: string
+  student: {
+    handle: string
+    avatarUrl: string
+  }
+  exercise: MentorSessionExercise
   createdAt?: string
   updatedAt?: string
 }
@@ -278,16 +283,23 @@ export interface MentorSessionTrack {
   title: string
   iconUrl: string
   medianWaitTime?: string
+  highlightjsLanguage: string
+  indentSize: number
 }
 
 export interface MentorSessionExercise {
+  id: string
   slug: string
   title: string
   iconUrl: string
   difficulty: number
+  links: {
+    self: string
+  }
 }
 
 export interface MentorDiscussion {
+  id: string
   uuid: string
   status: 'awaiting_student' | 'awaiting_mentor' | 'mentor_finished' | 'finished'
   isFinished: boolean
@@ -309,6 +321,7 @@ export interface MentorDiscussion {
     title: string
     iconUrl: string
   }
+  iterations: Iteration[]
   createdAt: string
   updatedAt: string
   links: {
@@ -492,6 +505,59 @@ export interface MentoringSessionLinks {
   finish?: string
   markAsNothingToDo?: string
 }
+
+// Additional types for compatibility
+export interface Student {
+  id: number
+  avatarUrl: string
+  name?: string
+  bio?: string
+  location?: string
+  languagesSpoken?: string[]
+  handle: string
+  flair?: Flair
+  reputation: string
+  isFavorited: boolean
+  isBlocked?: boolean
+  trackObjectives?: string
+  numTotalDiscussions: number
+  numDiscussionsWithMentor: number
+  pronouns?: string[]
+  links?: {
+    block?: string
+    favorite?: string
+    previousSessions?: string
+  }
+}
+
+// Task-related types
+export interface Task {
+  uuid: string
+  title: string
+  tags: TaskTags
+  track?: {
+    title: string
+    iconUrl: string
+  }
+  isNew?: boolean
+  links?: {
+    githubUrl?: string
+  }
+}
+
+export interface TaskTags {
+  action?: TaskAction
+  knowledge?: TaskKnowledge
+  module?: TaskModule
+  size?: TaskSize
+  type?: TaskType
+}
+
+export type TaskAction = 'create' | 'fix' | 'improve' | 'proofread' | 'sync'
+export type TaskKnowledge = 'none' | 'elementary' | 'intermediate' | 'advanced'
+export type TaskModule = 'analyzer' | 'concept-exercise' | 'concept' | 'generator' | 'practice-exercise' | 'representer' | 'test-runner'
+export type TaskSize = 'tiny' | 'small' | 'medium' | 'large' | 'massive'
+export type TaskType = 'ci' | 'coding' | 'content' | 'docker' | 'docs'
 
 // Export all types individually instead of as default object
 // This prevents the "only refers to a type, but is being used as a value" errors

@@ -11,7 +11,7 @@ const DEFAULT_ERROR = new Error('Unable to load information')
 const StudentTooltip = React.forwardRef<
   HTMLDivElement,
   React.HTMLProps<HTMLDivElement> & { endpoint: string }
->(({ endpoint, ...props }, ref) => {
+>(function StudentTooltip({ endpoint, ...props }, ref) {
   const { t } = useTranslation('components/tooltips/student-tooltip')
   const { data, error, status } = useRequestQuery<{ student: Student }>(
     [endpoint],
@@ -24,7 +24,7 @@ const StudentTooltip = React.forwardRef<
         status={status}
         error={error}
         defaultError={DEFAULT_ERROR}
-        LoadingComponent={() => <StudentTooltipSkeleton />}
+        fallback={<StudentTooltipSkeleton />}
       >
         {data ? (
           <>

@@ -1,10 +1,9 @@
 import React from 'react'
 import { TypeIcon } from '../../contributing/tasks-list/task/TypeIcon'
 import { TaskType } from '../../types'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const TypeInfo = ({ type }: { type: TaskType }): JSX.Element => {
+export const TypeInfo = ({ type }: { type: TaskType }): React.JSX.Element => {
   return (
     <section>
       <div className="icon">
@@ -17,9 +16,7 @@ export const TypeInfo = ({ type }: { type: TaskType }): JSX.Element => {
   )
 }
 
-const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
-  const { t } = useAppTranslation('components/tooltips/task-tooltip')
-
+const TypeDetails = ({ type }: { type: TaskType }): React.JSX.Element => {
   switch (type) {
     case 'ci':
       return (
@@ -28,7 +25,7 @@ const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
             <Trans
               ns="components/tooltips/task-tooltip"
               i18nKey="typeInfo.continuousIntegration"
-              components={{ storng: <strong /> }}
+              components={{ strong: <strong /> }}
             />
           </h3>
           <p>
@@ -46,7 +43,7 @@ const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
             <Trans
               ns="components/tooltips/task-tooltip"
               i18nKey="typeInfo.codingTask"
-              components={{ storng: <strong /> }}
+              components={{ strong: <strong /> }}
             />
           </h3>
           <p>
@@ -82,7 +79,7 @@ const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
             <Trans
               ns="components/tooltips/task-tooltip"
               i18nKey="typeInfo.writingDockerfiles"
-              components={{ storng: <strong /> }}
+              components={{ strong: <strong /> }}
             />
           </h3>
           <p>
@@ -100,7 +97,7 @@ const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
             <Trans
               ns="components/tooltips/task-tooltip"
               i18nKey="typeInfo.writingDocs"
-              components={{ storng: <strong /> }}
+              components={{ strong: <strong /> }}
             />
           </h3>
           <p>
@@ -111,5 +108,7 @@ const TypeDetails = ({ type }: { type: TaskType }): JSX.Element => {
           </p>
         </>
       )
+    default:
+      return <div>Unknown type</div>
   }
 }

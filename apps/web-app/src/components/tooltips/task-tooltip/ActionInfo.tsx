@@ -4,7 +4,7 @@ import { TaskAction } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const ActionInfo = ({ action }: { action: TaskAction }): JSX.Element => {
+export const ActionInfo = ({ action }: { action: TaskAction }): React.JSX.Element => {
   return (
     <section>
       <div className="icon">
@@ -17,7 +17,7 @@ export const ActionInfo = ({ action }: { action: TaskAction }): JSX.Element => {
   )
 }
 
-const ActionDetails = ({ action }: { action: TaskAction }): JSX.Element => {
+const ActionDetails = ({ action }: { action: TaskAction }): React.JSX.Element => {
   const { t } = useAppTranslation('components/tooltips/task-tooltip')
 
   const transComponents = { strong: <strong /> }
@@ -89,5 +89,7 @@ const ActionDetails = ({ action }: { action: TaskAction }): JSX.Element => {
           <p>{t('actionInfo.updateTrackImplementation')}</p>
         </>
       )
+    default:
+      return <div>Unknown action</div>
   }
 }

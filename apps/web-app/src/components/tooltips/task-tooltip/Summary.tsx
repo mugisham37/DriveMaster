@@ -3,7 +3,7 @@ import { Task, TaskAction, TaskModule } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const Summary = ({ task }: { task: Task }): JSX.Element => {
+export const Summary = ({ task }: { task: Task }): React.JSX.Element => {
   return (
     <section className="summary">
       <div className="icon">
@@ -21,7 +21,8 @@ const SummaryTag = () => {
   return <div className="task-icon">{t('summary.task')}</div>
 }
 
-export function verbForAction(action?: TaskAction) {
+// Helper functions moved to component context to avoid hook violations
+const useVerbForAction = (action?: TaskAction) => {
   const { t } = useAppTranslation('components/tooltips/task-tooltip')
 
   switch (action) {
@@ -40,7 +41,7 @@ export function verbForAction(action?: TaskAction) {
   }
 }
 
-export function descriptionForModule(module?: TaskModule) {
+const useDescriptionForModule = (module?: TaskModule) => {
   const { t } = useAppTranslation('components/tooltips/task-tooltip')
 
   switch (module) {
@@ -64,11 +65,10 @@ export function descriptionForModule(module?: TaskModule) {
 }
 
 export const SummaryDetails = ({ task }: { task: Task }) => {
-  const { t } = useAppTranslation('components/tooltips/task-tooltip')
+  const moduleDescription = useDescriptionForModule(task.tags.module)
+  const verb = useVerbForAction(task.tags.action)
 
-  let module = descriptionForModule(task.tags.module)
-  module = module ? module.replace(/s$/, '') : 'Exercism'
-  const verb = verbForAction(task.tags.action)
+  const moduleText = moduleDescription ? moduleDescription.replace(/s$/, '') : 'Exercism'
 
   return (
     <h3>
@@ -77,7 +77,7 @@ export const SummaryDetails = ({ task }: { task: Task }) => {
         ns="components/tooltips/task-tooltip"
         values={{
           verb: verb || 'working on',
-          module,
+          module: moduleText,
           type: task.tags.type || 'changes',
           trackSuffix: task.track ? ` for the ${task.track.title} Track` : '',
         }}

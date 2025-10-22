@@ -1,13 +1,13 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState } from "react";
 
-import { CloseButton } from '../mentoring/session/CloseButton'
-import { IterationView } from './mentoring-session/IterationView'
-import { useIterationScrolling } from '../mentoring/session/useIterationScrolling'
-import { SessionInfo } from './mentoring-session/SessionInfo'
-import { DiscussionInfo } from './mentoring-session/DiscussionInfo'
-import { DiscussionActions } from './mentoring-session/DiscussionActions'
+import { CloseButton } from "../mentoring/session/CloseButton";
+import { IterationView } from "./mentoring-session/IterationView";
+import { useIterationScrolling } from "../mentoring/session/useIterationScrolling";
+import { SessionInfo } from "./mentoring-session/SessionInfo";
+import { DiscussionInfo } from "./mentoring-session/DiscussionInfo";
+import { DiscussionActions } from "./mentoring-session/DiscussionActions";
 
-import { useDiscussionIterations } from '../mentoring/discussion/use-discussion-iterations'
+import { useDiscussionIterations } from "../mentoring/discussion/use-discussion-iterations";
 
 import {
   Iteration,
@@ -17,39 +17,39 @@ import {
   MentorSessionExercise as Exercise,
   MentoringSessionDonation,
   MentoringSessionLinks,
-} from '../types'
-import { MentoringRequest } from './mentoring-session/MentoringRequest'
-import { SplitPane } from '../common/SplitPane'
-import { Flair } from '../common/HandleWithFlair'
+} from "../../types";
+import { MentoringRequest } from "./mentoring-session/MentoringRequest";
+import { SplitPane } from "../common/SplitPane";
+import { Flair } from "../common/HandleWithFlair";
 
 export type Links = {
-  exercise: string
-  learnMoreAboutPrivateMentoring: string
-  privateMentoring: string
-  mentoringGuide: string
-  createMentorRequest: string
-  donationsSettings: string
-  donate: string
-}
+  exercise: string;
+  learnMoreAboutPrivateMentoring: string;
+  privateMentoring: string;
+  mentoringGuide: string;
+  createMentorRequest: string;
+  donationsSettings: string;
+  donate: string;
+};
 
 export type Video = {
-  url: string
-  thumb: string
-  title: string
-  date: string
-}
+  url: string;
+  thumb: string;
+  title: string;
+  date: string;
+};
 
 export type Mentor = {
-  id: number
-  avatarUrl: string
-  name: string
-  bio: string
-  handle: string
-  flair: Flair
-  reputation: number
-  numDiscussions: number
-  pronouns?: string[]
-}
+  id: number;
+  avatarUrl: string;
+  name: string;
+  bio: string;
+  handle: string;
+  flair: Flair;
+  reputation: number;
+  numDiscussions: number;
+  pronouns?: string[];
+};
 
 export default function MentoringSession({
   userHandle,
@@ -65,39 +65,39 @@ export default function MentoringSession({
   outOfDate,
   donation,
 }: {
-  userHandle: string
-  discussion?: MentorDiscussion
-  mentor?: Mentor
-  iterations: readonly Iteration[]
-  exercise: Exercise
-  trackObjectives: string
-  videos: Video[]
-  track: Track
-  request?: Request
-  links: MentoringSessionLinks
-  outOfDate: boolean
-  donation: MentoringSessionDonation
+  userHandle: string;
+  discussion?: MentorDiscussion;
+  mentor?: Mentor;
+  iterations: readonly Iteration[];
+  exercise: Exercise;
+  trackObjectives: string;
+  videos: Video[];
+  track: Track;
+  request?: Request;
+  links: MentoringSessionLinks;
+  outOfDate: boolean;
+  donation: MentoringSessionDonation;
 }): React.JSX.Element {
-  const [mentorRequest, setMentorRequest] = useState(initialRequest)
+  const [mentorRequest, setMentorRequest] = useState(initialRequest);
 
   const handleCreateMentorRequest = useCallback(
     (mentorRequest: typeof initialRequest) => {
-      setMentorRequest(mentorRequest)
+      setMentorRequest(mentorRequest);
     },
     []
-  )
+  );
 
   const { iterations, status } = useDiscussionIterations({
     discussion: discussion,
     iterations: initialIterations,
-  })
+  });
 
-  const [isLinked, setIsLinked] = useState(false)
+  const [isLinked, setIsLinked] = useState(false);
   const { currentIteration, handleIterationClick, handleIterationScroll } =
     useIterationScrolling({
       iterations: iterations,
       on: isLinked,
-    })
+    });
 
   return (
     <div className="c-mentor-discussion">
@@ -169,5 +169,5 @@ export default function MentoringSession({
         }
       />
     </div>
-  )
+  );
 }

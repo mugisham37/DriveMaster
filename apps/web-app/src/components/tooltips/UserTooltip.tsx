@@ -8,7 +8,7 @@ export default function UserTooltip({
   endpoint,
 }: {
   endpoint: string
-}): JSX.Element | null {
+}): React.JSX.Element {
   return (
     <FetchedTooltip
       endpoint={endpoint}

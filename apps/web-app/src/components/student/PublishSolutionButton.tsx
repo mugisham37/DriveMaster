@@ -2,7 +2,7 @@
 // i18n-namespace: components/student/PublishSolutionButton.tsx
 import React, { useState } from 'react'
 import { PublishSolutionModal } from '../modals/PublishSolutionModal'
-import { Iteration } from '../../types'
+import { Iteration } from '../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export default function PublishSolutionButton({

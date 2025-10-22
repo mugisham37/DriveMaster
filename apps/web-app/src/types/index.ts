@@ -485,12 +485,16 @@ export type MentoringSessionDonation = {
 
 export type MentoringSessionLinks = {
   exercise: string;
+  exerciseMentorDiscussionUrl: string;
   learnMoreAboutPrivateMentoring: string;
   privateMentoring: string;
   mentoringGuide: string;
   createMentorRequest: string;
   donationsSettings: string;
   donate: string;
+  self: string;
+  finish?: string;
+  markAsNothingToDo?: string;
 };
 
 export type MentoredTrack = {

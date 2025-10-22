@@ -39,3 +39,6 @@ export function usePaginatedRequestQuery<T = Record<string, unknown>>(
     ...request.options,
   })
 }
+
+// Alias for backward compatibility
+export const useRequestQuery = usePaginatedRequestQuery

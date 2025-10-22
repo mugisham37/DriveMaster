@@ -144,7 +144,21 @@ export default function GithubSolutionSyncerWidget({
   links,
   sync,
 }: GithubSolutionSyncerWidgetProps): React.JSX.Element {
-  // Use the sophisticated GitHub syncer widget
-  const { GithubSyncerWidget } = require('../github-syncer-widget')
-  return <GithubSyncerWidget syncer={syncer} links={links} sync={sync} />
+  // If no syncer is configured, show the mini advert
+  if (!syncer) {
+    return <MiniAdvert settingsLink={links.githubSyncerSettings} />
+  }
+
+  // If syncer is disabled, show paused sync
+  if (!syncer.enabled) {
+    return <PausedSync settingsLink={links.githubSyncerSettings} />
+  }
+
+  // If automatic sync is enabled, show active automatic sync
+  if (syncer.syncOnIterationCreation) {
+    return <ActiveAutomaticSync sync={sync} />
+  }
+
+  // Otherwise show manual sync
+  return <ActiveManualSync sync={sync} />
 }

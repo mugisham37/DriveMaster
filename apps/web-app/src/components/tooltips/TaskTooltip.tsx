@@ -7,7 +7,7 @@ import { SizeInfo } from './task-tooltip/SizeInfo'
 import { KnowledgeInfo } from './task-tooltip/KnowledgeInfo'
 import { ModuleInfo } from './task-tooltip/ModuleInfo'
 
-export const TaskTooltip = ({ task }: { task: Task }): JSX.Element | null => {
+export const TaskTooltip = ({ task }: { task: Task }): React.JSX.Element => {
   return (
     <div className="c-task-tooltip">
       <Summary task={task} />
@@ -17,10 +17,12 @@ export const TaskTooltip = ({ task }: { task: Task }): JSX.Element | null => {
       {task.tags.knowledge ? (
         <KnowledgeInfo
           knowledge={task.tags.knowledge}
-          module={task.tags.module}
+          {...(task.tags.module && { module: task.tags.module })}
         />
       ) : null}
       {task.tags.module ? <ModuleInfo module={task.tags.module} /> : null}
     </div>
   )
 }
+
+export default TaskTooltip
