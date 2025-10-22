@@ -1,5 +1,5 @@
 import React from 'react'
-import { Iteration, IterationStatus } from '../../types'
+import { Iteration, IterationStatus } from '@/components/types'
 import { ProcessingStatusSummary } from '../../common/ProcessingStatusSummary'
 import { TestRunStatusButton } from './TestRunStatusButton'
 
@@ -7,8 +7,9 @@ export const ProcessingStatusButton = ({
   iteration,
 }: {
   iteration: Iteration
-}): JSX.Element => {
-  switch (iteration.status) {
+}): React.JSX.Element => {
+  const status = iteration.status || IterationStatus.PROCESSING
+  switch (status) {
     case IterationStatus.DELETED:
       return <></>
     case IterationStatus.TESTS_FAILED:
@@ -18,11 +19,11 @@ export const ProcessingStatusButton = ({
     case IterationStatus.CELEBRATORY_AUTOMATED_FEEDBACK:
     case IterationStatus.NO_AUTOMATED_FEEDBACK:
       return (
-        <TestRunStatusButton endpoint={iteration.links.testRun}>
-          <ProcessingStatusSummary iterationStatus={iteration.status} />
+        <TestRunStatusButton endpoint={iteration.links.testRun || iteration.links.tests}>
+          <ProcessingStatusSummary iterationStatus={status} />
         </TestRunStatusButton>
       )
     default:
-      return <ProcessingStatusSummary iterationStatus={iteration.status} />
+      return <ProcessingStatusSummary iterationStatus={status} />
   }
 }

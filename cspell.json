@@ -456,7 +456,14 @@
     "xlarge",
     "dedented",
     "initialises",
-    "contenteditable"
+    "contenteditable",
+    "rgba",
+    "Menlo",
+    "Multiselector",
+    "multiselector",
+    "nowrap",
+    "minmax",
+    "focusable"
   ],
   "ignorePaths": [
     "node_modules/**",

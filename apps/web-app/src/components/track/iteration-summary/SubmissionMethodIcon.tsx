@@ -1,7 +1,7 @@
 // i18n-key-prefix: submissionMethodIcon
 // i18n-namespace: components/track/iteration-summary
 import React from 'react'
-import { SubmissionMethod } from '../../types'
+import { SubmissionMethod } from '@/components/types'
 import { Icon } from '../../common/Icon'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 

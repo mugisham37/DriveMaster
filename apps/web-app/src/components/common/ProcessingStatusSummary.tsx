@@ -1,5 +1,5 @@
 import React from 'react'
-import { IterationStatus } from '../../types/index'
+import { IterationStatus } from '@/components/types'
 import { GraphicalIcon } from '.'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -52,7 +52,7 @@ export function ProcessingStatusSummary({
   iterationStatus,
 }: {
   iterationStatus: IterationStatus
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/common/ProcessingStatusSummary.tsx'
   )

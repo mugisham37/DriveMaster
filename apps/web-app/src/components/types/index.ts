@@ -52,6 +52,26 @@ export interface Exercise {
   isUnlocked?: boolean
 }
 
+export enum IterationStatus {
+  DELETED = 'deleted',
+  TESTS_FAILED = 'tests_failed',
+  ESSENTIAL_AUTOMATED_FEEDBACK = 'essential_automated_feedback',
+  ACTIONABLE_AUTOMATED_FEEDBACK = 'actionable_automated_feedback',
+  NON_ACTIONABLE_AUTOMATED_FEEDBACK = 'non_actionable_automated_feedback',
+  CELEBRATORY_AUTOMATED_FEEDBACK = 'celebratory_automated_feedback',
+  NO_AUTOMATED_FEEDBACK = 'no_automated_feedback',
+  PROCESSING = 'processing',
+  QUEUED = 'queued',
+  TESTING = 'testing',
+  ANALYZING = 'analyzing',
+  UNTESTED = 'untested'
+}
+
+export enum SubmissionMethod {
+  CLI = 'cli',
+  API = 'api'
+}
+
 export interface Iteration {
   idx: number
   uuid: string
@@ -61,6 +81,12 @@ export interface Iteration {
   representationStatus?: string
   analysisStatus?: string
   isPublished: boolean
+  isLatest?: boolean
+  status?: IterationStatus
+  submissionMethod?: SubmissionMethod
+  numEssentialAutomatedComments?: number
+  numActionableAutomatedComments?: number
+  numNonActionableAutomatedComments?: number
   files?: Array<{
     filename: string
     content: string
@@ -68,6 +94,7 @@ export interface Iteration {
   links: {
     self: string
     tests: string
+    testRun?: string
     delete?: string
   }
 }
@@ -196,9 +223,18 @@ export interface SharePlatform {
   color: string
 }
 
+export interface MetricUser {
+  handle: string
+  avatarUrl: string
+  flair?: string
+  links?: {
+    self?: string
+  }
+}
+
 export interface Metric {
   id: string
-  type: 'start_solution_metric' | 'publish_solution_metric' | 'complete_exercise_metric' | 'user_activity_metric'
+  type: 'start_solution_metric' | 'publish_solution_metric' | 'complete_exercise_metric' | 'user_activity_metric' | 'open_pull_request_metric' | 'merge_pull_request_metric' | 'submit_submission_metric' | 'complete_solution_metric'
   coordinates?: [number, number] // [latitude, longitude]
   track?: {
     slug: string
@@ -209,13 +245,18 @@ export interface Metric {
     slug: string
     title: string
     iconUrl: string
+    exerciseUrl?: string
   }
-  user?: {
-    handle: string
-    avatarUrl: string
-    flair?: string
-  }
+  user?: MetricUser
   createdAt: string
+  occurredAt: string
+  countryCode?: string
+  countryName?: string
+  publishedSolutionUrl?: string
+  pullRequest?: {
+    url: string
+    title: string
+  }
   value?: number
   metadata?: Record<string, unknown>
 }

@@ -16,15 +16,15 @@ export default function ActivityTicker({
   return (
     <div className={assembleClassNames('flex items-start', animation)}>
       {metric.user || !metric.countryCode ? (
-        <Elements.UserAvatar user={metric.user} />
+        <Elements.UserAvatar {...(metric.user ? { user: metric.user } : {})} />
       ) : (
-        <Elements.Flag countryCode={metric.countryCode} />
+        <Elements.Flag {...(metric.countryCode ? { countryCode: metric.countryCode } : {})} />
       )}
       <div className="flex flex-col">
         <div className="text-16 leading-160 mb-4 ">
           <Elements.Handle
-            user={metric.user}
-            countryName={metric.countryName}
+            {...(metric.user ? { user: metric.user } : {})}
+            countryName={metric.countryName || ''}
           />
           &nbsp;
           {Elements.METRIC_TEXT[metric.type]}{' '}
@@ -34,10 +34,19 @@ export default function ActivityTicker({
             />
           )}
           {metric.exercise && (
-            <Elements.ExerciseWidget exercise={metric.exercise} />
+            <Elements.ExerciseWidget 
+              exercise={{
+                ...metric.exercise,
+                exerciseUrl: metric.exercise.exerciseUrl || `/tracks/${metric.track?.slug}/exercises/${metric.exercise.slug}`
+              }} 
+            />
           )}
           {metric.pullRequest && (
-            <Elements.PullRequestLink pullRequest={metric.pullRequest} />
+            <Elements.PullRequestLink 
+              pullRequest={{
+                htmlUrl: metric.pullRequest.url
+              }} 
+            />
           )}
         </div>
         <div className="text-14 text-textColor7">

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Modal, ModalProps } from '../../modals/Modal'
+import Modal, { ModalProps } from '../../modals/Modal'
 import { useMutation } from '@tanstack/react-query'
 import { sendRequest } from '../../../utils/send-request'
 import { typecheck } from '../../../utils/typecheck'
@@ -26,7 +26,7 @@ export const ResetTrackModal = ({
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
   track: Track
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const confirmation = `reset ${track.slug}`
   const {
@@ -38,7 +38,7 @@ export const ResetTrackModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: '',
       })
 
       return fetch.then((json) => {
@@ -61,7 +61,7 @@ export const ResetTrackModal = ({
   const { attempt, setAttempt, isAttemptPass } = useConfirmation(confirmation)
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()
@@ -117,7 +117,7 @@ export const ResetTrackModal = ({
           type="text"
           autoComplete="off"
           value={attempt}
-          onChange={(e) => setAttempt(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAttempt(e.target.value)}
         />
         <hr />
         <div className="btns">

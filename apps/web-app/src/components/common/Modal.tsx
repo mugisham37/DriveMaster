@@ -26,7 +26,7 @@ export function Modal({
   cover = false,
   closeButton = false,
   ReactModalClassName = ''
-}: ModalProps): JSX.Element | null {
+}: ModalProps): React.ReactElement | null {
   const modalIsOpen = open !== undefined ? open : isOpen
   const modalRef = useRef<HTMLDivElement>(null)
 

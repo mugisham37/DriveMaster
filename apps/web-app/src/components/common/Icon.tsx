@@ -8,7 +8,7 @@ interface IconProps {
   className?: string
 }
 
-export function Icon({ icon, alt, className = '' }: IconProps): JSX.Element {
+export function Icon({ icon, alt, className = '' }: IconProps): React.ReactElement {
   return (
     <i 
       className={`c-icon ${className}`}

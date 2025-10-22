@@ -4,7 +4,7 @@ import { sendRequest } from '@/utils/send-request'
 import { typecheck } from '@/utils/typecheck'
 import { redirectTo } from '@/utils/redirect-to'
 import { GraphicalIcon } from '@/components/common'
-import { Modal, ModalProps } from '@/components/modals/Modal'
+import Modal, { ModalProps } from '@/components/modals/Modal'
 import { FormButton } from '@/components/common/FormButton'
 import { ErrorBoundary, ErrorMessage } from '@/components/ErrorBoundary'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
@@ -21,7 +21,7 @@ export const ActivateLearningModeModal = ({
   endpoint,
   onClose,
   ...props
-}: Omit<ModalProps, 'className'> & { endpoint: string }): JSX.Element => {
+}: Omit<ModalProps, 'className'> & { endpoint: string }): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const {
     mutate: mutation,
@@ -32,7 +32,7 @@ export const ActivateLearningModeModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: '',
       })
       return fetch.then((json) => {
         if (!json) {

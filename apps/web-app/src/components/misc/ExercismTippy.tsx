@@ -4,7 +4,7 @@ import { followCursor, roundArrow } from 'tippy.js'
 
 export type ExercismTippyProps = LazyTippyProps
 
-export const ExercismTippy = (props: ExercismTippyProps): JSX.Element => {
+export const ExercismTippy = (props: ExercismTippyProps): React.ReactElement => {
   return (
     <LazyTippy
       animation="shift-away-subtle"
@@ -17,7 +17,7 @@ export const ExercismTippy = (props: ExercismTippyProps): JSX.Element => {
   )
 }
 
-export const GenericTooltip = (props: ExercismTippyProps): JSX.Element => {
+export const GenericTooltip = (props: ExercismTippyProps): React.ReactElement => {
   return (
     <ExercismTippy
       arrow={roundArrow}

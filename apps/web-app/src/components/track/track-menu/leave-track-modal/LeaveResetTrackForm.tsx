@@ -20,7 +20,7 @@ export const LeaveResetTrackForm = ({
   endpoint: string
   track: Track
   onCancel: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const confirmation = `reset ${track.slug}`
   const {
@@ -56,7 +56,7 @@ export const LeaveResetTrackForm = ({
   const { attempt, setAttempt, isAttemptPass } = useConfirmation(confirmation)
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()
@@ -107,7 +107,7 @@ export const LeaveResetTrackForm = ({
         type="text"
         autoComplete="off"
         value={attempt}
-        onChange={(e) => setAttempt(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAttempt(e.target.value)}
       />
       <hr />
       <div className="btns">

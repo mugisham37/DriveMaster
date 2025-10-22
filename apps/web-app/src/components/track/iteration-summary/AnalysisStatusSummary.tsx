@@ -12,7 +12,7 @@ export function AnalysisStatusSummary({
   numEssentialAutomatedComments: number
   numActionableAutomatedComments: number
   numNonActionableAutomatedComments: number
-}): JSX.Element | null {
+}): React.JSX.Element | null {
   const { t } = useAppTranslation('components/track/iteration-summary')
   if (
     numEssentialAutomatedComments === 0 &&

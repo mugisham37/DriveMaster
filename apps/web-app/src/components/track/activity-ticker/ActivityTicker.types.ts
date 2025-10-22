@@ -9,6 +9,8 @@ export const METRIC_TYPES = [
   'start_solution_metric',
   'submit_submission_metric',
   'complete_solution_metric',
+  'complete_exercise_metric',
+  'user_activity_metric',
 ] as const
 
 export type allowedMetricTypes = typeof METRIC_TYPES[number]

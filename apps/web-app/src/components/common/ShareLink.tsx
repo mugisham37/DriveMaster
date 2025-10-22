@@ -10,7 +10,7 @@ interface ShareLinkProps {
   platforms: readonly SharePlatform[]
 }
 
-export function ShareLink({ title, shareTitle, shareLink, platforms }: ShareLinkProps): JSX.Element {
+export function ShareLink({ title, shareTitle, shareLink, platforms }: ShareLinkProps): React.ReactElement {
   const handleShare = (platform: SharePlatform) => {
     const url = platform.url
       .replace('{url}', encodeURIComponent(shareLink))

@@ -7,7 +7,7 @@ export const TestRunStatusButton = ({
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   endpoint: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -19,7 +19,9 @@ export const TestRunStatusButton = ({
         open={open}
         onClose={() => setOpen(false)}
         endpoint={endpoint}
-      />
+      >
+        {/* Modal content will be handled internally */}
+      </TestRunModal>
     </React.Fragment>
   )
 }

@@ -1,8 +1,16 @@
 export interface Badge {
-  id: string
+  uuid: string
+  rarity: 'common' | 'rare' | 'ultimate' | 'legendary'
+  iconName: string
   name: string
   description: string
-  iconUrl: string
+  isRevealed: boolean
+  unlockedAt: string
+  numAwardees: number
+  percentageAwardees: number
+  links: {
+    reveal: string
+  }
 }
 
 export interface BadgeList {
@@ -96,4 +104,65 @@ export type CompleteRepresentationData = {
   student: Student
 }
 
-// Add other types here
+// Re-export all types from types/index.ts to maintain compatibility
+export * from './types/index'
+
+// Additional types that might be missing
+export interface SiteUpdate {
+  track: {
+    title: string
+    iconUrl: string
+  }
+  text: string
+  publishedAt: string
+  icon: {
+    type: 'concept' | 'image'
+    data?: string
+    url?: string
+  }
+  expanded?: {
+    author: {
+      rank: number
+      avatarUrl: string
+      handle: string
+      flair: string
+      activity: string
+      reputation: string
+      links: {
+        profile?: string
+      }
+    }
+    title: string
+    descriptionHtml: string
+  }
+  pullRequest?: {
+    url: string
+    title: string
+    number: string
+    mergedAt: string
+    mergedBy: string
+  }
+  conceptWidget?: Record<string, unknown>
+  exerciseWidget?: Record<string, unknown>
+  makers: readonly {
+    handle: string
+    avatarUrl: string
+  }[]
+}
+
+export interface StudentTrack {
+  course: boolean
+  slug: string
+  webUrl: string
+  iconUrl: string
+  title: string
+  numConcepts: number
+  numCompletedConcepts: number
+  tags: readonly string[]
+  isNew: boolean
+  hasNotifications: boolean
+  numCompletedExercises: number
+  numExercises: number
+  lastTouchedAt: string
+  isJoined: boolean
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 import { TestRunSummary } from '@/components/editor/testComponents/TestRunSummary'
 import { FetchingBoundary } from '@/components/FetchingBoundary'
-import { Modal, ModalProps } from './Modal'
+import Modal, { ModalProps } from './Modal'
 import { usePaginatedRequestQuery } from '@/hooks/request-query'
 import { TestRun, TestRunner } from '@/components/editor/types'
 import { ResultsZone } from '@/components/ResultsZone'
@@ -16,7 +16,7 @@ const DEFAULT_ERROR = new Error('Unable to fetch test run')
 export const TestRunModal = ({
   endpoint,
   ...props
-}: Omit<ModalProps, 'className'> & { endpoint: string }): JSX.Element => {
+}: Omit<ModalProps, 'className'> & { endpoint: string }): React.JSX.Element => {
   const {
     data: resolvedData,
     status,

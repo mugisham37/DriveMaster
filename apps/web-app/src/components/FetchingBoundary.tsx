@@ -17,7 +17,7 @@ export function FetchingBoundary({
   fallback = <div>Loading...</div>,
   errorFallback = <div>Something went wrong</div>,
   status,
-  defaultError
+  // defaultError is available in props but not used in current implementation
 }: FetchingBoundaryProps): React.JSX.Element {
   if (error || status === 'error') {
     return <>{errorFallback}</>

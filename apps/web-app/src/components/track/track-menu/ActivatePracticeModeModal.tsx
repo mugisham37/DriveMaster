@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { sendRequest } from '@/utils/send-request'
 import { typecheck } from '@/utils/typecheck'
 import { redirectTo } from '@/utils/redirect-to'
-import { Modal, ModalProps } from '@/components/modals/Modal'
+import Modal, { ModalProps } from '@/components/modals/Modal'
 import { GraphicalIcon } from '@/components/common'
 import { ErrorBoundary, ErrorMessage } from '@/components/ErrorBoundary'
 import { FormButton } from '@/components/common/FormButton'
@@ -25,7 +25,7 @@ export const ActivatePracticeModeModal = ({
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
   redirectToOnSuccessUrl?: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const {
     mutate: mutation,
@@ -36,7 +36,7 @@ export const ActivatePracticeModeModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: '',
       })
       return fetch.then((json) => {
         if (!json) {

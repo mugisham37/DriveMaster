@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { GraphicalIcon } from '@/components/common'
 
-interface ModalProps {
+export interface ModalProps {
   open: boolean
   onClose: () => void
   children: React.ReactNode
@@ -92,3 +92,6 @@ export default function Modal({
 
   return null
 }
+
+export { Modal }
+export type { ModalProps }

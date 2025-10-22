@@ -1,5 +1,5 @@
 import React, { createContext, useState } from 'react'
-import { Modal, ModalProps } from '../../modals/Modal'
+import Modal, { ModalProps } from '../../modals/Modal'
 import { Track } from '../../types'
 import { LeaveTrackForm } from './leave-track-modal/LeaveTrackForm'
 import { LeaveResetTrackForm } from './leave-track-modal/LeaveResetTrackForm'
@@ -27,7 +27,7 @@ export const LeaveTrackModal = ({
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
   track: Track
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const [tab, setTab] = useState<TabIndex>('leave')
 

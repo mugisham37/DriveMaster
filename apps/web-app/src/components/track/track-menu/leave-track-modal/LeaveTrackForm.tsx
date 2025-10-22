@@ -20,7 +20,7 @@ export const LeaveTrackForm = ({
   endpoint: string
   track: Track
   onCancel: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/dropdowns/track-menu')
   const {
     mutate: mutation,
@@ -31,7 +31,7 @@ export const LeaveTrackForm = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: '',
       })
       return fetch.then((json) => {
         if (!json) {
@@ -54,7 +54,7 @@ export const LeaveTrackForm = ({
   }, [onCancel])
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

@@ -8,4 +8,6 @@ export const METRIC_TEXT: Record<allowedMetricTypes, string> = {
   complete_solution_metric: 'completed',
   start_solution_metric: 'started',
   submit_submission_metric: 'attempted',
+  complete_exercise_metric: 'completed',
+  user_activity_metric: 'was active on',
 }

@@ -4,7 +4,7 @@ import React from 'react'
 import { GraphicalIcon } from '../../common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export const OutOfDateNotice = (): JSX.Element => {
+export const OutOfDateNotice = (): React.JSX.Element => {
   const { t } = useAppTranslation('components/track/iteration-summary')
   return (
     <div className="--out-of-date">

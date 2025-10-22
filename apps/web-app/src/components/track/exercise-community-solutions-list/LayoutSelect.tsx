@@ -32,7 +32,15 @@ export function LayoutSelect({
   )
 }
 
-function LayoutButton({ currentLayout, layout, setLayout }) {
+function LayoutButton({ 
+  currentLayout, 
+  layout, 
+  setLayout 
+}: { 
+  currentLayout: `${'grid' | 'lines'}-layout`
+  layout: `${'grid' | 'lines'}-layout`
+  setLayout: (layout: `${'grid' | 'lines'}-layout`) => void 
+}) {
   const selected = currentLayout === layout
   return (
     <button
@@ -43,8 +51,6 @@ function LayoutButton({ currentLayout, layout, setLayout }) {
       )}
     >
       <Icon
-        width={18}
-        height={18}
         icon={layout}
         alt={`${layout}-button`}
         className={assembleClassNames(

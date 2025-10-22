@@ -64,8 +64,21 @@ export * from "./about";
 // Docs components
 export * from "./docs";
 
-// Journey components
-export * from "./journey";
+// Journey components - explicitly re-export to avoid conflicts
+export { 
+  JourneyPageWrapper,
+  JourneyPage,
+  Overview,
+  SolutionsList,
+  BadgesList,
+  ContributionsList as JourneyContributionsList,
+  BadgeResults,
+  ContributionResults,
+  Contribution,
+  Solution,
+  RevealedBadge,
+  UnrevealedBadge
+} from "./journey";
 
 // Maintaining components
 export * from "./maintaining";
@@ -73,7 +86,7 @@ export * from "./maintaining";
 // Misc components
 export * from "./misc";
 
-// Other Components
-export * from './favorites-list'
+// Other Components - explicitly re-export to avoid conflicts
+export { FavoritesList as ComponentFavoritesList, type FavoritesListProps } from './favorites-list'
 export * from './github-syncer-widget'
 export * from './impact'

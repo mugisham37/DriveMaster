@@ -21,11 +21,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
   }
 
-  componentDidUpdate(prevProps: Props) {
+  override componentDidUpdate(prevProps: Props) {
     const { resetKeys } = this.props
     const { hasError } = this.state
 
@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  render() {
+  override render() {
     const { hasError, error } = this.state
     const { children, FallbackComponent } = this.props
 
@@ -62,7 +62,7 @@ export interface ErrorMessageProps {
   defaultError: Error
 }
 
-export function ErrorMessage({ error, defaultError }: ErrorMessageProps): JSX.Element | null {
+export function ErrorMessage({ error, defaultError }: ErrorMessageProps): React.JSX.Element | null {
   const displayError = error || defaultError
   
   if (!displayError) return null
