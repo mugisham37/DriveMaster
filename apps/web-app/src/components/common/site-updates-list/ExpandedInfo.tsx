@@ -34,7 +34,7 @@ export function ExpandedInfo({
               <strong>
                 <HandleWithFlair
                   handle={expanded.author.handle}
-                  flair={expanded.author.flair as any}
+                  flair={expanded.author.flair}
                 />
               </strong>
             </div>
@@ -61,7 +61,10 @@ export function ExpandedInfo({
         />
       ) : null}
       {exerciseWidget ? (
-        <ExerciseWidget exercise={exerciseWidget as any} renderBlurb={false} />
+        <ExerciseWidget 
+          exercise={exerciseWidget as unknown as Parameters<typeof ExerciseWidget>[0]['exercise']} 
+          renderBlurb={false} 
+        />
       ) : null}
     </div>
   );

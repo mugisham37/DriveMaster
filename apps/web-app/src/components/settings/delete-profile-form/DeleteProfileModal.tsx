@@ -15,7 +15,7 @@ export const DeleteProfileModal = ({
   ...props
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/settings/delete-profile-form')
   const {
     mutate: mutation,
@@ -26,7 +26,7 @@ export const DeleteProfileModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'DELETE',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -35,7 +35,7 @@ export const DeleteProfileModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

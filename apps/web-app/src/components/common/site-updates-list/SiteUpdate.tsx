@@ -3,6 +3,7 @@ import { fromNow } from '@/utils/date'
 import {
   SiteUpdate as SiteUpdateProps,
   SiteUpdateContext,
+  Flair,
 } from '@/types'
 import { Avatar } from '../Avatar'
 import { SiteUpdateIcon } from './SiteUpdateIcon'
@@ -59,7 +60,7 @@ export function SiteUpdate({
               ...update.expanded,
               author: {
                 ...update.expanded.author,
-                flair: update.expanded.author.flair as any
+                flair: (update.expanded.author.flair as string) as Flair
               }
             }}
             pullRequest={update.pullRequest}

@@ -9,7 +9,7 @@ export function InputWithValidation(
     title: string
     onChange: (e: ChangeEvent<HTMLInputElement>) => void
   }
-): JSX.Element {
+): React.JSX.Element {
   const {
     handleInvalid,
     ValidationErrorMessage,
@@ -23,7 +23,7 @@ export function InputWithValidation(
 
       clearInvalidMessage()
     },
-    [inputProps.onChange, clearInvalidMessage]
+    [inputProps, clearInvalidMessage]
   )
 
   return (

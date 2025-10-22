@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { assembleClassNames } from '@/utils/assemble-classnames'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
 import { SectionHeader } from '../../common/SectionHeader'
 import { GraphicalIcon } from '@/components/common'
@@ -11,7 +11,7 @@ export function IterationFilesSection() {
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectedSection'
   )
-  const { links, isUserInsider, syncer } = React.useContext(GitHubSyncerContext)
+  const { links, isUserInsider, syncer } = useGitHubSyncerContext()
   const [shouldSyncExerciseFiles, setShouldSyncExerciseFiles] =
     useState<boolean>(syncer?.syncExerciseFiles ?? true)
 
@@ -36,7 +36,7 @@ export function IterationFilesSection() {
           'Something went wrong while saving changes. Please try again.'
         )
       })
-  }, [shouldSyncExerciseFiles, links.settings])
+  }, [shouldSyncExerciseFiles, links.settings, isUserInsider])
 
   return (
     <section className={isUserInsider ? '' : 'disabled'}>

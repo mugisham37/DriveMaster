@@ -1,6 +1,6 @@
 // i18n-key-prefix: insiderBubble
 // i18n-namespace: components/settings/github-syncer/common
-import GraphicalIcon from '@/components/common/GraphicalIcon'
+import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import React from 'react'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 

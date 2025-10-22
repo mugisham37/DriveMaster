@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { GraphicalIcon } from '@/components/common'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { SectionHeader } from '../../common/SectionHeader'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -13,7 +13,7 @@ export function ProcessingMethodSection() {
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectedSection'
   )
-  const { links, isUserInsider, syncer } = React.useContext(GitHubSyncerContext)
+  const { links, isUserInsider, syncer } = useGitHubSyncerContext()
   const [selectedProcessingMethod, setSelectedProcessingMethod] = useState<
     'commit' | 'pull_request'
   >(syncer?.processingMethod || 'commit')
@@ -44,7 +44,7 @@ export function ProcessingMethodSection() {
           'Something went wrong while saving changes. Please try again.'
         )
       })
-  }, [selectedProcessingMethod, links.settings, mainBranchName])
+  }, [selectedProcessingMethod, links.settings, mainBranchName, isUserInsider])
 
   return (
     <section className={isUserInsider ? '' : 'disabled'}>

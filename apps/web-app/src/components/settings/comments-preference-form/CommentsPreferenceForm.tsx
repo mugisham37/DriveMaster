@@ -28,7 +28,7 @@ export default function CommentsPreferenceForm({
   label,
   numPublishedSolutions,
   numSolutionsWithCommentsEnabled,
-}: CommentsPreferenceFormProps): JSX.Element {
+}: CommentsPreferenceFormProps): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/settings/comments-preference-form'
   )
@@ -61,7 +61,7 @@ export default function CommentsPreferenceForm({
           <Trans
             i18nKey="commentsPreferenceForm.settingToControlComments"
             ns="components/settings/comments-preference-form"
-            components={[<span className="font-medium" />]}
+            components={[<span key="bold" className="font-medium" />]}
           />
         </p>
         <label className="c-checkbox-wrapper">

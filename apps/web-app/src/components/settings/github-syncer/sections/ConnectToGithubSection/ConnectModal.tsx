@@ -1,9 +1,9 @@
 // i18n-key-prefix: connectModal
 // i18n-namespace: components/settings/github-syncer/sections/ConnectToGithubSection
-import React, { useContext } from 'react'
+import React from 'react'
 import Modal, { ModalProps } from '@/components/modals/Modal'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
-import { GraphicalIcon, Icon } from '@/components/common'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
+import { Icon } from '@/components/common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
@@ -14,8 +14,8 @@ type ConfirmationModalProps = Omit<ModalProps, 'className'> & {
 export function ConnectModal({
   onClose,
   ...props
-}: ConfirmationModalProps): JSX.Element {
-  const { links } = useContext(GitHubSyncerContext)
+}: ConfirmationModalProps): React.JSX.Element {
+  const { links } = useGitHubSyncerContext()
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectToGithubSection'
   )
@@ -26,19 +26,16 @@ export function ConnectModal({
         <div className="flex gap-20 items-center mb-8">
           <Icon
             icon="exercism-face"
-            category="icons"
             alt="Exercism"
             className="mb-16 h-[64px]"
           />
           <Icon
             icon="sync"
-            category="graphics"
             alt="Sync with"
             className="mb-16 h-[64px]"
           />
           <Icon
             icon="external-site-github"
-            category="icons"
             alt="Github"
             className="mb-16 h-[64px]"
           />

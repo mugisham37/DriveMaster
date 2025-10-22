@@ -1,15 +1,53 @@
-import React, { useState } from 'react'
+import React, { useState, createContext, useContext } from 'react'
 
 export interface GithubSyncerSettings {
   enabled: boolean
   syncOnIterationCreation: boolean
   repositoryName?: string
   repositoryUrl?: string
+  commitMessageTemplate?: string
+  pathTemplate?: string
+  processingMethod?: 'commit' | 'pull_request'
+  mainBranchName?: string
+  syncExerciseFiles?: boolean
+  repoFullName?: string
 }
 
 interface GitHubSyncerFormProps {
   settings: GithubSyncerSettings
   onSave: (settings: GithubSyncerSettings) => void
+}
+
+interface GitHubSyncerContextType {
+  links: {
+    self: string
+    update: string
+    disconnect: string
+    enableCommentsOnAllSolutions: string
+    disableCommentsOnAllSolutions: string
+    settings: string
+    syncTrack: string
+    syncEverything: string
+    connectToGithub: string
+  }
+  isUserInsider: boolean
+  syncer: GithubSyncerSettings
+  defaultCommitMessageTemplate: string
+  defaultPathTemplate: string
+  tracks: Array<{ slug: string; title: string }>
+  isSyncingEnabled: boolean
+  setIsSyncingEnabled: (enabled: boolean) => void
+  setIsUserConnected: (connected: boolean) => void
+}
+
+export const GitHubSyncerContext = createContext<GitHubSyncerContextType | undefined>(undefined)
+
+export const useGitHubSyncerContext = () => {
+  const context = useContext(GitHubSyncerContext)
+  if (!context) {
+    throw new Error('useGitHubSyncerContext must be used within a GitHubSyncerProvider')
+  }
+  return context
 }
 
 export function GitHubSyncerForm({ settings, onSave }: GitHubSyncerFormProps): React.JSX.Element {

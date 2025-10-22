@@ -5,6 +5,18 @@ import { useFormSubmission } from '@/hooks/useFormSubmission'
 import { FormButton } from '@/components/common/forms/FormButton'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 
+export interface Theme {
+  label: string
+  value: string
+  background: string
+  icon: string
+}
+
+export interface ThemePreferenceLinks {
+  update: string
+  insidersPath: string
+}
+
 interface ThemePreferenceFormProps {
   default_theme_preference: string
   insiders_status: string

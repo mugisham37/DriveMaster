@@ -2,7 +2,7 @@
 // i18n-namespace: components/settings/github-syncer/sections/ConnectedSection
 import React, { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { fetchWithParams } from '../../fetchWithParams'
 import { ConfirmationModal } from '../../common/ConfirmationModal'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
@@ -13,10 +13,9 @@ export function StatusSection() {
     'components/settings/github-syncer/sections/ConnectedSection'
   )
   const { links, isSyncingEnabled, setIsSyncingEnabled, syncer } =
-    React.useContext(GitHubSyncerContext)
+    useGitHubSyncerContext()
 
   const borderColor = isSyncingEnabled ? 'var(--successColor)' : '#F69605'
-  const textColor = isSyncingEnabled ? '#2E8C70' : 'rgb(229, 138, 0)'
   const bgColor = isSyncingEnabled
     ? 'rgba(61, 181, 145, 0.1)'
     : 'rgba(246, 150, 5, 0.1)'
@@ -49,7 +48,7 @@ export function StatusSection() {
         console.error('Error:', error)
         setActivityChangeConfirmationModalOpen(false)
       })
-  }, [links.settings])
+  }, [links.settings, setIsSyncingEnabled])
 
   return (
     <section
@@ -86,7 +85,9 @@ export function StatusSection() {
             onConfirm={handleEnableSyncing}
             open={isActivityChangeConfirmationModalOpen}
             onClose={handleActivityChangeConfirmationModalClose}
-          />
+          >
+            <p>This will resume syncing your solutions to GitHub.</p>
+          </ConfirmationModal>
         </>
       )}
     </section>

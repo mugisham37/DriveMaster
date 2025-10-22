@@ -4,14 +4,14 @@ import React, { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ConfirmationModal } from '../../common/ConfirmationModal'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { SectionHeader } from '../../common/SectionHeader'
 import { flushSync } from 'react-dom'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export function CommitMessageTemplateSection() {
   const { links, isUserInsider, syncer, defaultCommitMessageTemplate } =
-    React.useContext(GitHubSyncerContext)
+    useGitHubSyncerContext()
 
   const [commitMessageTemplate, setCommitMessageTemplate] = useState<string>(
     syncer?.commitMessageTemplate || defaultCommitMessageTemplate
@@ -139,7 +139,9 @@ export function CommitMessageTemplateSection() {
         onConfirm={handleRevertCommitMessageTemplate}
         open={isRevertCommitMessageTemplateModalOpen}
         onClose={() => setIsRevertCommitMessageTemplateModalOpen(false)}
-      />
+      >
+        <p>{t('commitMessageTemplateSection.confirm_modal.description')}</p>
+      </ConfirmationModal>
     </section>
   )
 }

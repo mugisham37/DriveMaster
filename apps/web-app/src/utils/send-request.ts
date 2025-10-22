@@ -7,7 +7,7 @@ export function sendRequest({
 }: {
   endpoint: string
   method?: string
-  body?: string
+  body?: string | undefined
   headers?: Record<string, string>
 }) {
   const defaultHeaders = {

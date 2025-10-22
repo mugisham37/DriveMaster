@@ -23,7 +23,7 @@ export function FauxInputWithValidation(
 
       clearInvalidMessage()
     },
-    [inputProps.onChange, clearInvalidMessage]
+    [inputProps, clearInvalidMessage]
   )
   return (
     <>

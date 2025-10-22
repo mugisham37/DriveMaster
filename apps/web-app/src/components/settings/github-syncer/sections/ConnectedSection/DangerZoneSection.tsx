@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { ConfirmationModal } from '../../common/ConfirmationModal'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { GraphicalIcon } from '@/components/common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -13,7 +13,7 @@ export function DangerZoneSection() {
     'components/settings/github-syncer/sections/ConnectedSection'
   )
   const { links, isSyncingEnabled, setIsSyncingEnabled, setIsUserConnected } =
-    React.useContext(GitHubSyncerContext)
+    useGitHubSyncerContext()
 
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -50,7 +50,7 @@ export function DangerZoneSection() {
         console.error('Error:', error)
         setActivityChangeConfirmationModalOpen(false)
       })
-  }, [links.settings])
+  }, [links.settings, setIsSyncingEnabled])
 
   const handleDelete = useCallback(() => {
     setIsDeleting(true)
@@ -71,7 +71,7 @@ export function DangerZoneSection() {
         console.error('Error:', error)
       })
       .finally(() => setIsDeleting(false))
-  }, [links.settings])
+  }, [links.settings, setIsUserConnected])
 
   return (
     <section className="danger-zone">
@@ -100,7 +100,9 @@ export function DangerZoneSection() {
                 onConfirm={handlePauseSyncer}
                 open={isActivityChangeConfirmationModalOpen}
                 onClose={handleActivityChangeConfirmationModalClose}
-              />
+              >
+                <p>This will stop syncing your solutions to GitHub until you re-enable it.</p>
+              </ConfirmationModal>
               <div className="border-t-1 border-borderColor6 my-32" />
             </>
           )}
@@ -134,7 +136,9 @@ export function DangerZoneSection() {
             onConfirm={handleDelete}
             open={isDeleteConfirmationModalOpen}
             onClose={handleDeleteConfirmationModalClose}
-          />
+          >
+            <p>{t('dangerZoneSection.thisActionCannotUndone')}</p>
+          </ConfirmationModal>
         </div>
         <GraphicalIcon
           icon="github-syncer-danger"

@@ -18,7 +18,7 @@ export function ThemeButton({
   currentTheme: string
   disabledInfo: isButtonDisabled
   links: ThemePreferenceLinks
-}): JSX.Element {
+}): React.JSX.Element {
   const selected = theme.value === currentTheme
 
   const nonInsider = disabledInfo.level === 'non-insider'

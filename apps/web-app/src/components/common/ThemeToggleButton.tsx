@@ -5,6 +5,27 @@ import { Icon } from '@/lib/assets';
 
 type Theme = 'light' | 'dark' | 'system';
 
+export function DisabledThemeSelectorTooltip({ insidersLink }: { insidersLink: string }) {
+  return (
+    <div className="disabled-theme-tooltip p-3 max-w-xs">
+      <p className="text-sm mb-2">
+        <strong>Dark theme is an Insider feature</strong>
+      </p>
+      <p className="text-xs text-textColor6 mb-3">
+        Become an Insider to unlock dark theme and other exclusive features.
+      </p>
+      <a
+        href={insidersLink}
+        className="btn-primary btn-xs"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Learn about Insiders
+      </a>
+    </div>
+  )
+}
+
 export function ThemeToggleButton() {
   const [theme, setTheme] = useState<Theme>('system');
   const [mounted, setMounted] = useState(false);

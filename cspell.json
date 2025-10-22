@@ -463,7 +463,12 @@
     "multiselector",
     "nowrap",
     "minmax",
-    "focusable"
+    "focusable",
+    "rhodri",
+    "lottiefiles",
+    "Idxs",
+    "zirs",
+    "Prefs"
   ],
   "ignorePaths": [
     "node_modules/**",

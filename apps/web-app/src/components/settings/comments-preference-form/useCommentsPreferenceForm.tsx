@@ -14,7 +14,7 @@ type useCommentPreferencesFormReturns = {
   numPublished: number
   numCommentsEnabled: number
   handleSubmit: (e: React.FormEvent) => void
-  handleCommentsPreferenceChange: (e: React.FormEvent) => void
+  handleCommentsPreferenceChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   enableAllMutation: () => void
   disableAllMutation: () => void
 }
@@ -104,7 +104,7 @@ export function useCommentsPreferenceForm({
   }, [numPublished, numCommentsEnabled, t])
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()
@@ -112,7 +112,7 @@ export function useCommentsPreferenceForm({
     [mutation]
   )
 
-  const handleCommentsPreferenceChange = useCallback((e) => {
+  const handleCommentsPreferenceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setAllowCommentsByDefault(e.target.checked)
   }, [])
 

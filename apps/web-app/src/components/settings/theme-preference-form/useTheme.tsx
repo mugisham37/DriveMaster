@@ -40,7 +40,7 @@ export function useTheme(
     if (hasFiveMinElapsed(storedTheme.time)) {
       setStoredTheme({ theme: defaultThemePreference, time: Date.now() })
     }
-  }, [])
+  }, [defaultThemePreference, setStoredTheme, storedTheme.time])
 
   const { mutation, status, error } = useSettingsMutation<RequestBody>({
     endpoint: links.update,
@@ -59,12 +59,12 @@ export function useTheme(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedTheme])
 
-  const handleThemeUpdate = useCallback((t, e) => {
+  const handleThemeUpdate = useCallback((t: Pick<Theme, 'value'>, e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     setTheme(t.value)
     setStoredTheme({ theme: t.value, time: Date.now() })
     setThemeClassName(t.value)
-  }, [])
+  }, [setStoredTheme])
 
   return { handleThemeUpdate, status, error, theme }
 }

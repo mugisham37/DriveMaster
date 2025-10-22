@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom'
 import toast from 'react-hot-toast'
 import { ConfirmationModal } from '../../common/ConfirmationModal'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { SectionHeader } from '../../common/SectionHeader'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
@@ -16,7 +16,7 @@ export function FileStructureSection() {
     'components/settings/github-syncer/sections/ConnectedSection'
   )
   const { links, isUserInsider, syncer, defaultPathTemplate } =
-    React.useContext(GitHubSyncerContext)
+    useGitHubSyncerContext()
 
   const [pathTemplate, setPathTemplate] = useState<string>(
     syncer?.pathTemplate || defaultPathTemplate
@@ -179,7 +179,9 @@ export function FileStructureSection() {
         onConfirm={handleRevertPathTemplate}
         open={isRevertPathTemplateModalOpen}
         onClose={() => setIsRevertPathTemplateModalOpen(false)}
-      />
+      >
+        <p>This will reset your file structure template to the default setting.</p>
+      </ConfirmationModal>
     </section>
   )
 }

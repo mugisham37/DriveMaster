@@ -1,30 +1,36 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { GraphicalIcon } from './GraphicalIcon'
-import { Modal } from './Modal'
-import { CLIWalkthrough } from './CLIWalkthrough'
-import { useAuth } from '@/hooks/useAuth'
+import React, { useState } from "react";
+import { GraphicalIcon } from "./GraphicalIcon";
+import { Modal } from "./Modal";
+import { CLIWalkthrough } from "./CLIWalkthrough";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CLIUser {
-  apiToken?: string
+  apiToken?: string | undefined;
 }
 
 interface CLIWalkthroughButtonProps {
-  user?: CLIUser | null
-  className?: string
-  buttonText?: string
+  user?: CLIUser | null;
+  className?: string;
+  buttonText?: string;
 }
 
 export function CLIWalkthroughButton({
   user,
-  className = '',
-  buttonText = 'CLI Setup Guide'
+  className = "",
+  buttonText = "CLI Setup Guide",
 }: CLIWalkthroughButtonProps): React.JSX.Element {
-  const { user: currentUser } = useAuth()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { user: currentUser } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const userToUse: CLIUser | null = user || (currentUser ? { apiToken: (currentUser as any).apiToken } : null)
+  const userToUse: CLIUser | null =
+    user ||
+    (currentUser
+      ? {
+          apiToken: (currentUser as { apiToken?: string | undefined }).apiToken,
+        }
+      : null);
 
   return (
     <>
@@ -44,7 +50,7 @@ export function CLIWalkthroughButton({
         </Modal>
       )}
     </>
-  )
+  );
 }
 
-export default CLIWalkthroughButton
+export default CLIWalkthroughButton;

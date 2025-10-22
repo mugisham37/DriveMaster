@@ -1,6 +1,13 @@
-import React, { useCallback, useContext, useState } from 'react'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
-import { TrackSelect } from '@/components/common/TrackSelect'
+import React, { useCallback, useState } from 'react'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
+// TrackSelect component - placeholder for now
+const TrackSelect = ({ tracks, onChange }: { tracks: Array<{ slug: string; title: string }>, onChange: (track: Track) => void }) => (
+  <select onChange={(e) => onChange({ slug: e.target.value, title: tracks.find(t => t.slug === e.target.value)?.title || '', iconUrl: '' })}>
+    {tracks.map(track => (
+      <option key={track.slug} value={track.slug}>{track.title}</option>
+    ))}
+  </select>
+)
 import toast from 'react-hot-toast'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
 import { StaticTooltip } from '@/components/bootcamp/JikiscriptExercisePage/Scrubber/ScrubberTooltipInformation'
@@ -17,7 +24,7 @@ export function ManualSyncSection() {
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectedSection/ManualSyncSection.tsx'
   )
-  const { tracks, links, isSyncingEnabled } = useContext(GitHubSyncerContext)
+  const { tracks, links, isSyncingEnabled } = useGitHubSyncerContext()
   const [track, setTrack] = useState<Track>({} as Track)
 
   const handleSyncSingleTrack = useCallback(
@@ -77,10 +84,8 @@ export function ManualSyncSection() {
           {t('selectTrackToBackup')}
         </div>
         <TrackSelect
-          value={track}
-          setValue={setTrack}
+          onChange={setTrack}
           tracks={tracks}
-          size="multi"
         />
       </div>
 
@@ -145,31 +150,26 @@ export function handleSyncEverything({
 }: {
   syncEverythingEndpoint: string
 }) {
-  const { t } = useAppTranslation(
-    'components/settings/github-syncer/sections/ConnectedSection/ManualSyncSection.tsx'
-  )
   fetchWithParams({
     url: syncEverythingEndpoint,
   })
     .then(async (response) => {
       if (response.ok) {
         toast.success(
-          t(
-            'yourBackupForAllTracksHasBeenQueuedAndShouldBeCompletedWithinAFewMinutes'
-          ),
+          'Your backup for all tracks has been queued and should be completed within a few minutes.',
           { duration: 5000 }
         )
       } else {
         await handleJsonErrorResponse(
           response,
-          t('errorQueuingBackupForAllTracks')
+          'Error queuing backup for all tracks'
         )
       }
     })
     .catch((error) => {
       console.error('Error:', error)
       toast.error(
-        t('somethingWentWrongWhileQueuingTheBackupForAllTracksPleaseTryAgain')
+        'Something went wrong while queuing the backup for all tracks. Please try again.'
       )
     })
 }

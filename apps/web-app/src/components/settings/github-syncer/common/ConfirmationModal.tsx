@@ -24,7 +24,7 @@ export const ConfirmationModal = ({
   confirmButtonClass = 'btn-warning',
   isConfirmButtonDisabled = false,
   ...props
-}: ConfirmationModalProps): JSX.Element => {
+}: ConfirmationModalProps): React.JSX.Element => {
   const handleClose = useCallback(() => {
     onDecline?.()
     onClose()

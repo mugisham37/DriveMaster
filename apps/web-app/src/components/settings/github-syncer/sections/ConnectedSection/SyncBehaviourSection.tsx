@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { assembleClassNames } from '@/utils/assemble-classnames'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { fetchWithParams, handleJsonErrorResponse } from '../../fetchWithParams'
 import { SectionHeader } from '../../common/SectionHeader'
 import { GraphicalIcon } from '@/components/common'
@@ -12,9 +12,9 @@ export function SyncBehaviourSection() {
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectedSection/SyncBehaviourSection.tsx'
   )
-  const { links, isUserInsider, syncer } = React.useContext(GitHubSyncerContext)
+  const { links, isUserInsider, syncer } = useGitHubSyncerContext()
 
-  const [shouldSyncOnIterationCreation, setShouldSyncOnInterationCreation] =
+  const [shouldSyncOnIterationCreation, setShouldSyncOnIterationCreation] =
     useState(syncer?.syncOnIterationCreation ?? true)
 
   const handleSaveChanges = useCallback(() => {
@@ -39,7 +39,7 @@ export function SyncBehaviourSection() {
         console.error('Error:', error)
         toast.error(t('syncBehaviour.somethingWentWrongWhileSaving'))
       })
-  }, [shouldSyncOnIterationCreation, links.settings, t])
+  }, [shouldSyncOnIterationCreation, links.settings, t, isUserInsider])
 
   return (
     <section className={isUserInsider ? '' : 'disabled'}>
@@ -57,7 +57,7 @@ export function SyncBehaviourSection() {
           </p>
           <div className="flex gap-8 mb-16">
             <button
-              onClick={() => setShouldSyncOnInterationCreation(true)}
+              onClick={() => setShouldSyncOnIterationCreation(true)}
               className={assembleClassNames(
                 'toggle-button',
                 shouldSyncOnIterationCreation ? 'selected' : ''
@@ -66,7 +66,7 @@ export function SyncBehaviourSection() {
               {t('syncBehaviour.automatic')}
             </button>
             <button
-              onClick={() => setShouldSyncOnInterationCreation(false)}
+              onClick={() => setShouldSyncOnIterationCreation(false)}
               className={assembleClassNames(
                 'toggle-button',
                 !shouldSyncOnIterationCreation ? 'selected' : ''

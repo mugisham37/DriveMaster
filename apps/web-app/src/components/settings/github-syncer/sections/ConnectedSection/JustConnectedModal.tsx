@@ -1,15 +1,15 @@
 import React from 'react'
 import Modal from '@/components/modals/Modal'
-import { GitHubSyncerContext } from '../../GitHubSyncerForm'
+import { useGitHubSyncerContext } from '../../GitHubSyncerForm'
 import { Icon } from '@/components/common'
 import { handleSyncEverything } from './ManualSyncSection'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export function JustConnectedModal(): JSX.Element {
+export function JustConnectedModal(): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/settings/github-syncer/sections/ConnectedSection'
   )
-  const { links } = React.useContext(GitHubSyncerContext)
+  const { links } = useGitHubSyncerContext()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
 
   React.useEffect(() => {
@@ -29,12 +29,12 @@ export function JustConnectedModal(): JSX.Element {
   const handleSync = React.useCallback(() => {
     handleSyncEverything({ syncEverythingEndpoint: links.syncEverything })
     handleRemoveParam()
-  }, [links.syncEverything])
+  }, [links.syncEverything, handleRemoveParam])
 
   const handleCloseModal = React.useCallback(() => {
     handleRemoveParam()
     setIsModalOpen(false)
-  }, [])
+  }, [handleRemoveParam])
 
   return (
     <Modal
@@ -46,19 +46,16 @@ export function JustConnectedModal(): JSX.Element {
         <div className="flex gap-20 items-center mb-8">
           <Icon
             icon="exercism-face"
-            category="icons"
             alt="Exercism"
             className="mb-16 h-[64px]"
           />
           <Icon
             icon="sync"
-            category="graphics"
             alt="Sync with"
             className="mb-16 h-[64px]"
           />
           <Icon
             icon="external-site-github"
-            category="icons"
             alt="Github"
             className="mb-16 h-[64px]"
           />

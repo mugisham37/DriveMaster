@@ -16,7 +16,7 @@ export function ManageExistingSolution({
   disableAllMutation,
   enableAllMutation,
   numCommentsEnabled,
-}: ManageExistingSolutionProps): JSX.Element | null {
+}: ManageExistingSolutionProps): React.JSX.Element | null {
   const { t } = useAppTranslation(
     'components/settings/comments-preference-form'
   )
@@ -32,7 +32,7 @@ export function ManageExistingSolution({
             ns="components/settings/comments-preference-form"
             i18nKey="manageExistingSolutions.canCommentOnPublishedSolutions"
             values={{ commentStatusPhrase }}
-            components={[<span className="font-medium" />]}
+            components={[<span key="bold" className="font-medium" />]}
           />
         </p>
         <div className="flex gap-12">

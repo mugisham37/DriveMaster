@@ -4,7 +4,7 @@ import React from 'react'
 import { GraphicalIcon, Icon } from '@/components/common'
 import { ConnectModal } from './ConnectModal'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
-import { Trans } from 'react-i18next'
+// import { Trans } from 'react-i18next'
 
 export function ConnectToGithubSection() {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -18,19 +18,16 @@ export function ConnectToGithubSection() {
         <div className="flex gap-20 items-center mb-8">
           <Icon
             icon="exercism-face"
-            category="icons"
             alt="Exercism"
             className="mb-16 h-[128px]"
           />
           <Icon
             icon="sync"
-            category="graphics"
             alt="Sync with"
             className="mb-16 h-[90px]"
           />
           <Icon
             icon="external-site-github"
-            category="icons"
             alt="Github"
             className="mb-16 h-[128px]"
           />
@@ -97,7 +94,9 @@ export function ConnectToGithubSection() {
           {t('index.setupBackup')}
         </button>
       </div>
-      <ConnectModal onClose={() => setIsModalOpen(false)} open={isModalOpen} />
+      <ConnectModal onClose={() => setIsModalOpen(false)} open={isModalOpen}>
+        <div>Connect to GitHub to sync your solutions</div>
+      </ConnectModal>
     </section>
   )
 }

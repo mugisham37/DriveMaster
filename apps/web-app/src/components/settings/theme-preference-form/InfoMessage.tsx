@@ -12,7 +12,7 @@ export function InfoMessage({
   insidersStatus: string
   insidersPath: string
   isInsider: boolean
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/settings/theme-preference-form')
   if (isInsider) {
     return (

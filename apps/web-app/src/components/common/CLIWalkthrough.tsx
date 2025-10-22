@@ -1,78 +1,79 @@
-'use client'
+"use client";
 
-import React, { useState, useCallback } from 'react'
-import { GraphicalIcon } from './GraphicalIcon'
-import { CopyToClipboardButton } from './CopyToClipboardButton'
-
+import React, { useState, useCallback } from "react";
+import { GraphicalIcon } from "./GraphicalIcon";
+import { CopyToClipboardButton } from "./CopyToClipboardButton";
 
 interface CLIStep {
-  title: string
-  description: string
-  command?: string
-  note?: string
+  title: string;
+  description: string;
+  command?: string;
+  note?: string;
 }
 
 interface CLIUser {
-  apiToken?: string
+  apiToken?: string | undefined;
 }
 
 interface CLIWalkthroughProps {
-  user?: CLIUser | null
-  className?: string
+  user?: CLIUser | null;
+  className?: string;
 }
 
 export function CLIWalkthrough({
   user,
-  className = ''
+  className = "",
 }: CLIWalkthroughProps): React.JSX.Element {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isCompleted, setIsCompleted] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const steps: CLIStep[] = [
     {
-      title: 'Install the Exercism CLI',
-      description: 'Download and install the Exercism command-line interface.',
-      command: 'brew install exercism',
-      note: 'On macOS with Homebrew. See installation guide for other platforms.'
+      title: "Install the Exercism CLI",
+      description: "Download and install the Exercism command-line interface.",
+      command: "brew install exercism",
+      note: "On macOS with Homebrew. See installation guide for other platforms.",
     },
     {
-      title: 'Configure the CLI',
-      description: 'Set up your API token to authenticate with Exercism.',
-      command: user?.apiToken ? `exercism configure --token=${user.apiToken}` : 'exercism configure --token=YOUR_API_TOKEN',
-      note: 'Your personal API token is shown above.'
+      title: "Configure the CLI",
+      description: "Set up your API token to authenticate with Exercism.",
+      command: user?.apiToken
+        ? `exercism configure --token=${user.apiToken}`
+        : "exercism configure --token=YOUR_API_TOKEN",
+      note: "Your personal API token is shown above.",
     },
     {
-      title: 'Download an exercise',
-      description: 'Download your first exercise to start coding.',
-      command: 'exercism download --exercise=hello-world --track=javascript',
-      note: 'Replace with your preferred track and exercise.'
+      title: "Download an exercise",
+      description: "Download your first exercise to start coding.",
+      command: "exercism download --exercise=hello-world --track=javascript",
+      note: "Replace with your preferred track and exercise.",
     },
     {
-      title: 'Submit your solution',
-      description: 'Submit your solution when you&apos;re ready.',
-      command: 'exercism submit path/to/your/solution.js',
-      note: 'Navigate to the exercise directory first.'
-    }
-  ]
+      title: "Submit your solution",
+      description: "Submit your solution when you&apos;re ready.",
+      command: "exercism submit path/to/your/solution.js",
+      note: "Navigate to the exercise directory first.",
+    },
+  ];
 
   const handleNext = useCallback(() => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
-      setIsCompleted(true)
+      setIsCompleted(true);
     }
-  }, [currentStep, steps.length])
+  }, [currentStep, steps.length]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }, [currentStep])
+  }, [currentStep]);
 
   const handleStepClick = useCallback((stepIndex: number) => {
-    setCurrentStep(stepIndex)
-    setIsCompleted(false)
-  }, [])
+    setCurrentStep(stepIndex);
+    setIsCompleted(false);
+  }, []);
 
   if (isCompleted) {
     return (
@@ -80,12 +81,12 @@ export function CLIWalkthrough({
         <div className="walkthrough-completion">
           <GraphicalIcon icon="check-circle" />
           <h3>CLI Setup Complete!</h3>
-          <p>You're all set to use the Exercism CLI. Happy coding!</p>
+          <p>You&apos;re all set to use the Exercism CLI. Happy coding!</p>
           <button
             type="button"
             onClick={() => {
-              setIsCompleted(false)
-              setCurrentStep(0)
+              setIsCompleted(false);
+              setCurrentStep(0);
             }}
             className="restart-button"
           >
@@ -93,17 +94,17 @@ export function CLIWalkthrough({
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  const currentStepData = steps[currentStep]
+  const currentStepData = steps[currentStep];
 
   if (!currentStepData) {
     return (
       <div className={`cli-walkthrough error ${className}`}>
         <p>Invalid step selected</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -111,9 +112,11 @@ export function CLIWalkthrough({
       <div className="walkthrough-header">
         <h3>CLI Setup Walkthrough</h3>
         <div className="walkthrough-progress">
-          <span>Step {currentStep + 1} of {steps.length}</span>
+          <span>
+            Step {currentStep + 1} of {steps.length}
+          </span>
           <div className="progress-bar">
-            <div 
+            <div
               className="progress-fill"
               style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             />
@@ -127,7 +130,9 @@ export function CLIWalkthrough({
             key={index}
             type="button"
             onClick={() => handleStepClick(index)}
-            className={`step-indicator ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
+            className={`step-indicator ${
+              index === currentStep ? "active" : ""
+            } ${index < currentStep ? "completed" : ""}`}
           >
             <span className="step-number">{index + 1}</span>
             <span className="step-title">{step.title}</span>
@@ -139,7 +144,7 @@ export function CLIWalkthrough({
         <div className="step-content">
           <h4>{currentStepData.title}</h4>
           <p>{currentStepData.description}</p>
-          
+
           {currentStepData.command && (
             <div className="command-section">
               <label>Command:</label>
@@ -176,13 +181,17 @@ export function CLIWalkthrough({
             onClick={handleNext}
             className="nav-button next-button"
           >
-            {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
-            <GraphicalIcon icon={currentStep === steps.length - 1 ? 'check' : 'chevron-right'} />
+            {currentStep === steps.length - 1 ? "Complete" : "Next"}
+            <GraphicalIcon
+              icon={
+                currentStep === steps.length - 1 ? "check" : "chevron-right"
+              }
+            />
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default CLIWalkthrough
+export default CLIWalkthrough;
