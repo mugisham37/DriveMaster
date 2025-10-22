@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react'
 import { GraphicalIcon } from './GraphicalIcon'
 import { CopyToClipboardButton } from './CopyToClipboardButton'
-import { useAuth } from '@/hooks/useAuth'
+
 
 interface CLIStep {
   title: string
@@ -12,8 +12,12 @@ interface CLIStep {
   note?: string
 }
 
+interface CLIUser {
+  apiToken?: string
+}
+
 interface CLIWalkthroughProps {
-  user?: any
+  user?: CLIUser | null
   className?: string
 }
 
@@ -45,7 +49,7 @@ export function CLIWalkthrough({
     },
     {
       title: 'Submit your solution',
-      description: 'Submit your solution when you\'re ready.',
+      description: 'Submit your solution when you&apos;re ready.',
       command: 'exercism submit path/to/your/solution.js',
       note: 'Navigate to the exercise directory first.'
     }
@@ -93,6 +97,14 @@ export function CLIWalkthrough({
   }
 
   const currentStepData = steps[currentStep]
+
+  if (!currentStepData) {
+    return (
+      <div className={`cli-walkthrough error ${className}`}>
+        <p>Invalid step selected</p>
+      </div>
+    )
+  }
 
   return (
     <div className={`cli-walkthrough ${className}`}>

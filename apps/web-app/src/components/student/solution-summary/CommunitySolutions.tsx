@@ -8,7 +8,7 @@ export const CommunitySolutions = ({
 }: {
   link: string
   isTutorial: boolean
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/student/solution-summary')
   return (
     <div className="community-solutions">

@@ -5,7 +5,18 @@ import React, { useEffect, useRef, useState } from 'react'
 declare global {
   interface Window {
     onYoutubeIframeAPIReady: (() => void) | null
-    YT: any
+    YT: {
+      Player: new (element: HTMLElement, config: {
+        videoId: string;
+        playerVars?: Record<string, unknown>;
+        events?: Record<string, (event: { data: number }) => void>;
+      }) => {
+        destroy: () => void;
+      };
+      PlayerState: {
+        PLAYING: number;
+      };
+    }
   }
 }
 
@@ -17,14 +28,11 @@ interface YoutubePlayerProps {
 
 export function YoutubePlayer({
   videoId,
-  context,
   onPlay,
 }: YoutubePlayerProps): React.JSX.Element | null {
   const playerRef = useRef<HTMLDivElement>(null)
-  const [player, setPlayer] = useState<any>(null)
+  const [player, setPlayer] = useState<{ destroy: () => void } | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  if (!videoId || videoId.length !== 11) return null
 
   useEffect(() => {
     if (!window.YT) {
@@ -87,6 +95,8 @@ export function YoutubePlayer({
       }
     }
   }, [videoId, onPlay, player])
+
+  if (!videoId || videoId.length !== 11) return null
 
   return (
     <div className="c-youtube-container">

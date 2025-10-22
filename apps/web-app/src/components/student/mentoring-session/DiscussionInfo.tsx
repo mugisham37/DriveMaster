@@ -3,7 +3,7 @@ import {
   MentorDiscussion,
   Iteration,
   MentoringSessionDonation,
-} from "../../../types";
+} from "../../types";
 
 interface Mentor {
   id: number;
@@ -43,7 +43,7 @@ export function DiscussionInfo({
   iterations,
   onIterationScroll,
   status,
-}: DiscussionInfoProps): React.JSX.Element {
+}: DiscussionInfoProps): React.ReactElement {
   return (
     <div className="discussion-info">
       <div className="status">Status: {status}</div>
@@ -54,6 +54,7 @@ export function DiscussionInfo({
         </span>
       </div>
       <div className="mentor-info">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={mentor.avatarUrl} alt={mentor.name} className="avatar" />
         <div className="details">
           <h4>{mentor.name}</h4>

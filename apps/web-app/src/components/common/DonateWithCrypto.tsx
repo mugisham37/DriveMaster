@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import React from 'react';
 import { useSession } from 'next-auth/react';
 import { GraphicalIcon } from './GraphicalIcon';
 import Script from 'next/script';
@@ -17,7 +17,6 @@ export function DonateWithCrypto({
   const { data: session } = useSession();
 
   const handleDonateClick = () => {
-    const customData = session?.user ? `user-${session.user.id}` : null;
     const url = `https://commerce.coinbase.com/checkout/${checkoutId}`;
     
     // Open Coinbase Commerce checkout

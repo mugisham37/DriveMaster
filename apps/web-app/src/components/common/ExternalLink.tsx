@@ -1,5 +1,4 @@
 import React from 'react'
-import Link from 'next/link'
 
 /**
  * External Link Component
@@ -14,7 +13,7 @@ export interface ExternalLinkProps {
   iconClassName?: string
   target?: string
   rel?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

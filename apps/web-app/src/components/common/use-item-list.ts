@@ -1,12 +1,11 @@
 import { useState, useCallback } from 'react'
-import { QueryKey } from '@tanstack/react-query'
 import { ListItemAction } from './ListItem'
 
 interface ItemWithUuid {
   uuid: string
 }
 
-export function useItemList<T extends ItemWithUuid>(cacheKey: QueryKey) {
+export function useItemList<T extends ItemWithUuid>() {
   const [editingItems, setEditingItems] = useState<Set<string>>(new Set())
 
   const getItemAction = useCallback((item: T): ListItemAction => {

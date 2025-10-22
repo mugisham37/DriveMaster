@@ -22,7 +22,7 @@ export function InputWithValidation({
   className,
   onBlur,
   ...inputProps
-}: InputWithValidationProps): JSX.Element {
+}: InputWithValidationProps): React.ReactElement {
   const [hasBeenBlurred, setHasBeenBlurred] = useState(false)
   
   const hasError = Boolean(error && error.length > 0)

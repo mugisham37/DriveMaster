@@ -11,20 +11,20 @@ interface EmailFormProps {
   onSuccess?: () => void
 }
 
-export function EmailForm({ defaultEmail, endpoint, onSuccess }: EmailFormProps): JSX.Element {
+export function EmailForm({ defaultEmail, endpoint, onSuccess }: EmailFormProps): React.JSX.Element {
   const [formData, setFormData] = useState({
     email: defaultEmail,
     password: ''
   })
 
-  const { submit, status, error } = useFormSubmission({
+  const { submit, status } = useFormSubmission({
     endpoint,
     method: 'PATCH',
-    onSuccess,
+    ...(onSuccess && { onSuccess }),
     successMessage: `Confirmation email sent to ${formData.email}`
   })
 
-  const handleSubmit = async (data: Record<string, any>) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     await submit({
       user: {
         email: data.email,
@@ -34,7 +34,7 @@ export function EmailForm({ defaultEmail, endpoint, onSuccess }: EmailFormProps)
   }
 
   const validationSchema = {
-    ...commonValidations.email,
+    email: commonValidations.email,
     password: { required: true }
   }
 

@@ -19,7 +19,7 @@ export function EditListItemForm<T extends { content?: string; links: { edit?: s
   onDelete,
   onCancel,
   defaultError,
-}: EditListItemFormProps<T>): JSX.Element {
+}: EditListItemFormProps<T>): React.JSX.Element {
   const [content, setContent] = useState(item.content || '')
 
   const {
@@ -54,7 +54,6 @@ export function EditListItemForm<T extends { content?: string; links: { edit?: s
       const { fetch } = sendRequest({
         endpoint: item.links.delete,
         method: 'DELETE',
-        body: null,
       })
 
       return fetch

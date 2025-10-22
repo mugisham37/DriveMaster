@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 export type ListItemAction = 'viewing' | 'editing'
 
@@ -36,7 +36,7 @@ export function ListItem<T>({
   onUpdate,
   onDelete,
   itemRef,
-}: ListItemProps<T>): JSX.Element {
+}: ListItemProps<T>): React.JSX.Element {
   if (action === 'editing') {
     return (
       <div ref={itemRef}>

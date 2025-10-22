@@ -1,10 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Avatar } from './Avatar';
 import { TrackIcon } from './TrackIcon';
 import { ExerciseIcon } from './ExerciseIcon';
 import { HandleWithFlair } from './HandleWithFlair';
 import { fromNow } from '@/utils/date';
+
+// Helper function to convert user for Avatar component
+function convertUserForAvatar(user: { handle: string; avatarUrl: string; flair?: string }) {
+  return {
+    ...user,
+    flair: user.flair ? { id: '1', name: user.flair, iconUrl: '' } : null
+  };
+}
 
 interface BaseActivity {
   id: string;
@@ -127,13 +136,13 @@ function ExerciseCompletedActivity({ activity }: { activity: ExerciseActivity })
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> completed </span>
         <Link href={`/tracks/${activity.track.slug}/exercises/${activity.exercise.slug}`}>
@@ -165,13 +174,13 @@ function ExerciseStartedActivity({ activity }: { activity: ExerciseActivity }) {
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> started </span>
         <Link href={`/tracks/${activity.track.slug}/exercises/${activity.exercise.slug}`}>
@@ -203,13 +212,13 @@ function SolutionPublishedActivity({ activity }: { activity: SolutionActivity })
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> published a solution to </span>
         <Link href={`/tracks/${activity.track.slug}/exercises/${activity.exercise.slug}/solutions/${activity.solution.uuid}`}>
@@ -241,22 +250,24 @@ function BadgeAcquiredActivity({ activity }: { activity: BadgeActivity }) {
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> acquired the </span>
         <strong>{activity.badge.name}</strong>
         <span> badge</span>
       </div>
       <div className="activity-icons">
-        <img 
+        <Image 
           src={activity.badge.iconUrl} 
           alt={activity.badge.name}
+          width={24}
+          height={24}
           className="badge-icon"
         />
       </div>
@@ -271,20 +282,20 @@ function MentoringStartedActivity({ activity }: { activity: MentoringActivity })
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> started mentoring </span>
         {activity.student && (
           <>
             <HandleWithFlair 
               handle={activity.student.handle} 
-              flair={activity.student.flair as any}
+              flair={activity.student.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
             />
             <span> on </span>
           </>
@@ -318,20 +329,20 @@ function MentoringCompletedActivity({ activity }: { activity: MentoringActivity 
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> completed mentoring </span>
         {activity.student && (
           <>
             <HandleWithFlair 
               handle={activity.student.handle} 
-              flair={activity.student.flair as any}
+              flair={activity.student.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
             />
             <span> on </span>
           </>
@@ -365,13 +376,13 @@ function DefaultActivity({ activity }: { activity: BaseActivity }) {
   return (
     <div className="activity-content">
       <Avatar 
-        user={activity.user} 
+        user={convertUserForAvatar(activity.user)} 
         size="small" 
       />
       <div className="activity-text">
         <HandleWithFlair 
           handle={activity.user.handle} 
-          flair={activity.user.flair as any}
+          flair={activity.user.flair as 'insider' | 'lifetime_insider' | 'founder' | 'staff'}
         />
         <span> performed an activity</span>
       </div>

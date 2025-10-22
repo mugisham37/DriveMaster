@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export function ExerciseStatusChartSkeleton(): JSX.Element {
+export function ExerciseStatusChartSkeleton(): React.JSX.Element {
   return (
     <div className="w-full h-64 bg-gray-100 rounded-lg">
       <div className="animate-pulse h-full p-4">

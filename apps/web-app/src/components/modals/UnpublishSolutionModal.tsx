@@ -14,7 +14,7 @@ const DEFAULT_ERROR = new Error('Unable to unpublish solution')
 export const UnpublishSolutionModal = ({
   endpoint,
   ...props
-}: ModalProps & { endpoint: string }): JSX.Element => {
+}: ModalProps & { endpoint: string }): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/UnpublishSolutionModal.tsx'
   )

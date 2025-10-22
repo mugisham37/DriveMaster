@@ -33,7 +33,6 @@ export function DonationsSubscriptionForm({
       setIsEditing(false);
       window.location.reload();
     },
-    showSuccessMessage: true,
     successMessage: 'Subscription updated successfully!'
   });
 
@@ -43,7 +42,6 @@ export function DonationsSubscriptionForm({
     onSuccess: () => {
       window.location.reload();
     },
-    showSuccessMessage: true,
     successMessage: 'Subscription cancelled successfully'
   });
 

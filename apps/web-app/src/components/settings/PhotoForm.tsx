@@ -134,6 +134,7 @@ export default function PhotoForm({
         <div className="photo-preview mb-6">
           <h3 className="text-h4 mb-4">Preview</h3>
           <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt="Preview"

@@ -1,20 +1,20 @@
-import React from 'react'
-import { PullRequestWidget } from './PullRequestWidget'
-import { ExerciseWidget } from '../ExerciseWidget'
-import { ConceptWidget } from '../ConceptWidget'
-import { HandleWithFlair } from '../HandleWithFlair'
+import React from "react";
+import { PullRequestWidget } from "./PullRequestWidget";
+import { ExerciseWidget } from "../ExerciseWidget";
+import { ConceptWidget } from "../ConceptWidget";
+import { HandleWithFlair } from "../HandleWithFlair";
 import type {
   SiteUpdate as SiteUpdateProps,
   SiteUpdateExpandedInfo,
-} from '@/types'
+} from "@/types";
 
 interface ExpandedInfoProps {
-  icon: SiteUpdateProps['icon']
-  track: SiteUpdateProps['track']
-  expanded: SiteUpdateExpandedInfo
-  pullRequest?: SiteUpdateProps['pullRequest']
-  conceptWidget?: SiteUpdateProps['conceptWidget']
-  exerciseWidget?: SiteUpdateProps['exerciseWidget']
+  icon: SiteUpdateProps["icon"];
+  track: SiteUpdateProps["track"];
+  expanded: SiteUpdateExpandedInfo;
+  pullRequest?: SiteUpdateProps["pullRequest"];
+  conceptWidget?: SiteUpdateProps["conceptWidget"];
+  exerciseWidget?: SiteUpdateProps["exerciseWidget"];
 }
 
 export function ExpandedInfo({
@@ -22,7 +22,7 @@ export function ExpandedInfo({
   pullRequest,
   conceptWidget,
   exerciseWidget,
-}: ExpandedInfoProps): JSX.Element {
+}: ExpandedInfoProps): React.JSX.Element {
   return (
     <div className="expanded">
       <div className="header">
@@ -34,8 +34,7 @@ export function ExpandedInfo({
               <strong>
                 <HandleWithFlair
                   handle={expanded.author.handle}
-                  flair={expanded.author.flair}
-                  size="medium"
+                  flair={expanded.author.flair as any}
                 />
               </strong>
             </div>
@@ -49,10 +48,21 @@ export function ExpandedInfo({
         />
       )}
       {pullRequest ? <PullRequestWidget {...pullRequest} /> : null}
-      {conceptWidget ? <ConceptWidget {...conceptWidget} /> : null}
+      {conceptWidget ? (
+        <ConceptWidget
+          concept={
+            conceptWidget as {
+              slug: string;
+              name: string;
+              blurb: string;
+              links: { self: string };
+            }
+          }
+        />
+      ) : null}
       {exerciseWidget ? (
-        <ExerciseWidget {...exerciseWidget} renderBlurb={false} />
+        <ExerciseWidget exercise={exerciseWidget as any} renderBlurb={false} />
       ) : null}
     </div>
-  )
+  );
 }

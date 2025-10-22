@@ -17,7 +17,7 @@ export function FormButton({
   disabled,
   isLoading,
   ...buttonProps
-}: FormButtonProps): JSX.Element {
+}: FormButtonProps): React.ReactElement {
   const isSubmitting = status === 'submitting' || isLoading || false
   const isDisabled = disabled || isSubmitting
 

@@ -7,7 +7,7 @@ export const IterationLink = ({
   iteration,
 }: {
   iteration: Iteration
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <a className="iteration" href={iteration.links.self}>
       <IterationSummary

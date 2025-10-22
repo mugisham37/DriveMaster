@@ -1,18 +1,23 @@
-import React from 'react'
+import React from "react";
 
 interface SelectOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface Props {
-  value: string
-  onChange: (value: string) => void
-  options: SelectOption[]
-  placeholder?: string
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
 }
 
-export function Select({ value, onChange, options, placeholder }: Props): JSX.Element {
+export function Select({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: Props): React.JSX.Element {
   return (
     <select
       className="form-select"
@@ -30,5 +35,5 @@ export function Select({ value, onChange, options, placeholder }: Props): JSX.El
         </option>
       ))}
     </select>
-  )
+  );
 }

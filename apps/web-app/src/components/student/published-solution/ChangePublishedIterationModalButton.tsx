@@ -3,7 +3,7 @@ import {
   ChangePublishedIterationModal,
   RedirectType,
 } from '@/components/modals/ChangePublishedIterationModal'
-import { Iteration } from '@/components/types'
+import { Iteration } from '@/types'
 
 type Links = {
   changeIteration: string
@@ -26,7 +26,7 @@ export default function ChangePublishedIterationModalButton({
   iterations,
   links,
   label,
-}: ChangePublishedIterationModalButtonProps): JSX.Element {
+}: ChangePublishedIterationModalButtonProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -45,7 +45,9 @@ export default function ChangePublishedIterationModalButton({
         open={isOpen}
         onClose={() => setIsOpen(false)}
         className="m-change-published-iteration"
-      />
+      >
+        {/* Modal content will be handled internally */}
+      </ChangePublishedIterationModal>
     </>
   )
 }

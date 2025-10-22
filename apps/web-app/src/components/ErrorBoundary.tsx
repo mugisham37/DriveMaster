@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react'
+import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-boundary'
 
 interface Props {
   children: ReactNode
@@ -62,7 +63,7 @@ export interface ErrorMessageProps {
   defaultError: Error
 }
 
-export function ErrorMessage({ error, defaultError }: ErrorMessageProps): React.JSX.Element | null {
+export function ErrorMessage({ error, defaultError }: ErrorMessageProps): React.ReactElement | null {
   const displayError = error || defaultError
   
   if (!displayError) return null
@@ -74,10 +75,14 @@ export function ErrorMessage({ error, defaultError }: ErrorMessageProps): React.
   )
 }
 
-export function useErrorHandler() {
-  return (error: Error) => {
-    console.error('Error handled:', error)
-  }
+export function useErrorHandler(error?: unknown, options?: { defaultError?: Error }) {
+  return React.useCallback((handledError: unknown) => {
+    const errorToLog = handledError || error || options?.defaultError
+    console.error('Error handled:', errorToLog)
+  }, [error, options?.defaultError])
 }
+
+// Re-export from react-error-boundary for convenience
+export { ReactErrorBoundary, type FallbackProps }
 
 export default ErrorBoundary

@@ -22,7 +22,7 @@ export function TextAreaWithValidation({
   className,
   onBlur,
   ...textareaProps
-}: TextAreaWithValidationProps): JSX.Element {
+}: TextAreaWithValidationProps): React.ReactElement {
   const [hasBeenBlurred, setHasBeenBlurred] = useState(false)
   
   const hasError = error && error.length > 0

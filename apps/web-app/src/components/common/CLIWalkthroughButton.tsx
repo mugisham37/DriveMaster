@@ -6,8 +6,12 @@ import { Modal } from './Modal'
 import { CLIWalkthrough } from './CLIWalkthrough'
 import { useAuth } from '@/hooks/useAuth'
 
+interface CLIUser {
+  apiToken?: string
+}
+
 interface CLIWalkthroughButtonProps {
-  user?: any
+  user?: CLIUser | null
   className?: string
   buttonText?: string
 }
@@ -20,7 +24,7 @@ export function CLIWalkthroughButton({
   const { user: currentUser } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const userToUse = user || currentUser
+  const userToUse: CLIUser | null = user || (currentUser ? { apiToken: (currentUser as any).apiToken } : null)
 
   return (
     <>

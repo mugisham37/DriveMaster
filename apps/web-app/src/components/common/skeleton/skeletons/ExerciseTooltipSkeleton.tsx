@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export function ExerciseTooltipSkeleton(): JSX.Element {
+export function ExerciseTooltipSkeleton(): React.JSX.Element {
   return (
     <div className="p-4 w-full max-w-md">
       <div className="animate-pulse">

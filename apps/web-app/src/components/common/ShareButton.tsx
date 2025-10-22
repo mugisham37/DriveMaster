@@ -25,7 +25,7 @@ export function ShareButton({
   shareLink,
   platforms,
   className = ''
-}: ShareButtonProps): React.React.JSX.Element {
+}: ShareButtonProps): React.JSX.Element {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleShare = useCallback(() => {

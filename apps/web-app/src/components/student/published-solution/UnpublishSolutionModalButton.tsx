@@ -13,7 +13,7 @@ export type UnpublishSolutionModalButtonProps = {
 export default function UnpublishSolutionModalButton({
   links,
   label,
-}: UnpublishSolutionModalButtonProps): JSX.Element {
+}: UnpublishSolutionModalButtonProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -29,7 +29,9 @@ export default function UnpublishSolutionModalButton({
         open={isOpen}
         onClose={() => setIsOpen(false)}
         className="m-unpublish-solution"
-      />
+      >
+        {/* Modal content will be handled internally */}
+      </UnpublishSolutionModal>
     </>
   )
 }

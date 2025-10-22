@@ -25,7 +25,7 @@ export const ChangePublishedIterationModal = ({
   redirectType: RedirectType
   defaultIterationIdx: number | null
   iterations: readonly Iteration[]
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/ChangePublishedIterationModal.tsx'
   )

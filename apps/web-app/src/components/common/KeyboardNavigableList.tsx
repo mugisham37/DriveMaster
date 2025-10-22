@@ -37,7 +37,7 @@ export function KeyboardNavigableList<T>({
 }: KeyboardNavigableListProps<T>): React.JSX.Element {
   const [activeIndex, setActiveIndex] = useState(0)
   const itemRefs = useRef<(HTMLElement | null)[]>([])
-  const containerRef = useRef<HTMLElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const { announce } = useLiveRegion()
 
   // Update item refs when items change
@@ -57,8 +57,8 @@ export function KeyboardNavigableList<T>({
       setRovingIndex(newIndex)
       
       // Announce selection if enabled
-      if (announceSelection && getItemLabel) {
-        const label = getItemLabel(items[newIndex], newIndex)
+      if (announceSelection && getItemLabel && items[newIndex]) {
+        const label = getItemLabel(items[newIndex]!, newIndex)
         announce(`${label}, ${newIndex + 1} of ${items.length}`)
       }
     }
@@ -91,17 +91,13 @@ export function KeyboardNavigableList<T>({
   }, [items.length, moveToIndex])
 
   const selectCurrent = useCallback(() => {
-    if (onSelect && activeIndex >= 0 && activeIndex < items.length) {
-      onSelect(items[activeIndex], activeIndex)
+    if (onSelect && activeIndex >= 0 && activeIndex < items.length && items[activeIndex]) {
+      onSelect(items[activeIndex]!, activeIndex)
     }
   }, [onSelect, items, activeIndex])
 
   // Set up keyboard navigation
-  useKeyboardNavigation({
-    onArrowDown: orientation === 'vertical' ? moveNext : undefined,
-    onArrowUp: orientation === 'vertical' ? movePrevious : undefined,
-    onArrowRight: orientation === 'horizontal' ? moveNext : undefined,
-    onArrowLeft: orientation === 'horizontal' ? movePrevious : undefined,
+  const keyboardOptions: Parameters<typeof useKeyboardNavigation>[0] = {
     onHome: moveFirst,
     onEnd: moveLast,
     onEnter: selectCurrent,
@@ -111,7 +107,17 @@ export function KeyboardNavigableList<T>({
         itemRefs.current[activeIndex]?.blur()
       }
     }
-  }, [activeIndex, items])
+  }
+
+  if (orientation === 'vertical') {
+    keyboardOptions.onArrowDown = moveNext
+    keyboardOptions.onArrowUp = movePrevious
+  } else {
+    keyboardOptions.onArrowRight = moveNext
+    keyboardOptions.onArrowLeft = movePrevious
+  }
+
+  useKeyboardNavigation(keyboardOptions)
 
   const handleItemClick = useCallback((item: T, index: number) => {
     moveToIndex(index)

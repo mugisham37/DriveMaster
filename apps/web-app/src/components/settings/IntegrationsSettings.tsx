@@ -43,7 +43,7 @@ export function IntegrationsSettings({ integrations, links }: IntegrationsSettin
       if (data?.username && typeof data.username === 'string') {
         setCurrentIntegrations(prev => ({
           ...prev,
-          github: { ...prev.github, connected: true, username: data.username }
+          github: { ...prev.github, connected: true, username: data.username as string }
         }))
       }
     }

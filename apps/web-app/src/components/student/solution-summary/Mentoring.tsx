@@ -1,6 +1,6 @@
 import React from 'react'
 import { GraphicalIcon, Icon } from '../../common'
-import { MentorDiscussion, SolutionMentoringStatus } from '../../types'
+import { MentorDiscussion, SolutionMentoringStatus } from '@/types'
 import { MentoringComboButton } from '../MentoringComboButton'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -24,7 +24,7 @@ export const Mentoring = ({
   links: Links
   isTutorial: boolean
   trackTitle: string
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/student/solution-summary')
   return (
     <div className="mentoring">

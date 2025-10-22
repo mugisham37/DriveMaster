@@ -6,7 +6,7 @@ interface ReputationDropdownSkeletonProps {
   reputation?: string
 }
 
-export function ReputationDropdownSkeleton({ reputation }: ReputationDropdownSkeletonProps): JSX.Element {
+export function ReputationDropdownSkeleton({ reputation }: ReputationDropdownSkeletonProps): React.JSX.Element {
   return (
     <div className="animate-pulse flex items-center space-x-2">
       <div className="h-6 w-16 bg-gray-300 rounded"></div>

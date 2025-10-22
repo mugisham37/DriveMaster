@@ -48,7 +48,6 @@ export function DonationsFooterForm({
     onSuccess: () => {
       window.location.href = links.success;
     },
-    showSuccessMessage: true,
     successMessage: 'Thank you for your donation!'
   });
 

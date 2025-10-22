@@ -16,7 +16,7 @@ interface SiteUpdateComponentProps {
 export function SiteUpdate({
   update,
   context,
-}: SiteUpdateComponentProps): JSX.Element {
+}: SiteUpdateComponentProps): React.JSX.Element {
   return (
     <div className="c-site-update">
       <SiteUpdateIcon
@@ -55,7 +55,13 @@ export function SiteUpdate({
           <ExpandedInfo
             icon={update.icon}
             track={update.track}
-            expanded={update.expanded}
+            expanded={{
+              ...update.expanded,
+              author: {
+                ...update.expanded.author,
+                flair: update.expanded.author.flair as any
+              }
+            }}
             pullRequest={update.pullRequest}
             conceptWidget={update.conceptWidget}
             exerciseWidget={update.exerciseWidget}

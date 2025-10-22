@@ -16,24 +16,14 @@ const FLAIRS: Flairs = {
   staff: 'exercism-face-gradient',
 }
 
-const FLAIR_SIZE = {
-  small: 10,
-  base: 13,
-  medium: 15,
-  large: 17,
-  xlarge: 28,
-}
-
 export function HandleWithFlair({
   handle,
   flair,
-  size = 'base',
   iconClassName,
   className,
 }: {
   handle: string
   flair: Flair
-  size?: keyof typeof FLAIR_SIZE
   iconClassName?: string
   className?: string
 }): React.JSX.Element | null {
@@ -46,11 +36,8 @@ export function HandleWithFlair({
         <>
           &nbsp;
           <Icon
-            className={'handle-with-flair-icon ' + iconClassName}
-            height={FLAIR_SIZE[size]}
-            width={FLAIR_SIZE[size]}
+            className={`handle-with-flair-icon ${iconClassName || ''}`}
             icon={FLAIRS[flair]}
-            title={t(`flair.${flair}`)}
             alt={t('flair.alt', { title: t(`flair.${flair}`) })}
           />
         </>

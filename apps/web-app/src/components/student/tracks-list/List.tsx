@@ -16,6 +16,7 @@ export function List({ tracks }: ListProps) {
     <div className="tracks-list">
       {tracks.map(track => (
         <div key={track.id} className="track-item">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={track.iconUrl} alt={track.title} />
           <h3>{track.title}</h3>
         </div>

@@ -14,7 +14,7 @@ export function FormField({
   id,
   error,
   ...inputProps
-}: FormFieldProps): JSX.Element {
+}: FormFieldProps): React.JSX.Element {
   return (
     <div className="field">
       <label htmlFor={id} className="label">

@@ -1,35 +1,29 @@
 import { useEffect, useCallback } from 'react'
 import { sendRequest } from '@/utils/send-request'
-import { MutationStatus, useMutation } from '@tanstack/react-query'
+import { MutationStatus, useMutation, UseMutationOptions } from '@tanstack/react-query'
 
-export const useSettingsMutation = <
-  T extends unknown,
-  U extends unknown = void
->({
+export interface UseSettingsMutationOptions<T, U> {
+  endpoint: string
+  method: 'POST' | 'PATCH'
+  body: T
+  timeout?: number
+  onSuccess?: (params: U) => void
+  onError?: (error: Error) => void
+}
+
+export const useSettingsMutation = <T, U = void>({
   endpoint,
   method,
   body,
   timeout = 4000,
   onSuccess = () => null,
   onError,
-}: {
-  endpoint: string
-  method: 'POST' | 'PATCH'
-  body: T
-  timeout?: number
-  onSuccess?: (params: U) => void
-  onError?: (error: unknown) => void
-}): {
+}: UseSettingsMutationOptions<T, U>): {
   status: MutationStatus
   mutation: () => void
   error: unknown
 } => {
-  const {
-    mutate: baseMutation,
-    status,
-    error,
-    reset,
-  } = useMutation<U>({
+  const mutationOptions: UseMutationOptions<U, Error, void, unknown> = {
     mutationFn: async () => {
       const { fetch } = sendRequest({
         endpoint: endpoint,
@@ -40,8 +34,18 @@ export const useSettingsMutation = <
       return fetch
     },
     onSuccess,
-    onError,
-  })
+  }
+
+  if (onError) {
+    mutationOptions.onError = onError
+  }
+
+  const {
+    mutate: baseMutation,
+    status,
+    error,
+    reset,
+  } = useMutation<U, Error, void, unknown>(mutationOptions)
 
   const mutation = useCallback(() => {
     reset()

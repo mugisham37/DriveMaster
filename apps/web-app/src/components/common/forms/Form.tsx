@@ -10,11 +10,11 @@ export interface FormProps {
   validationSchema?: FormValidationSchema
   className?: string
   validateOnChange?: boolean
-  validateOnBlur?: boolean
+
   showFormMessage?: boolean
   successMessage?: string
-  SuccessComponent?: React.ComponentType
-  ErrorComponent?: React.ComponentType<{ error: Error }>
+  SuccessComponent?: React.ComponentType | undefined
+  ErrorComponent?: React.ComponentType<{ error: Error }> | undefined
 }
 
 export interface FormContextValue {
@@ -35,7 +35,6 @@ export function Form({
   validationSchema,
   className = '',
   validateOnChange = true,
-  validateOnBlur = true,
   showFormMessage = true,
   successMessage,
   SuccessComponent,
@@ -44,8 +43,7 @@ export function Form({
   // Always call hooks in the same order
   const validation = useFormValidation({
     schema: validationSchema || {},
-    validateOnChange,
-    validateOnBlur
+    validateOnChange
   })
 
   const submission = useFormSubmission({
@@ -101,9 +99,9 @@ export function Form({
           <FormMessage
             status={submission.status}
             error={submission.error}
-            successMessage={successMessage}
-            SuccessComponent={SuccessComponent}
-            ErrorComponent={ErrorComponent}
+            {...(successMessage !== undefined && { successMessage })}
+            {...(SuccessComponent !== undefined && { SuccessComponent })}
+            {...(ErrorComponent !== undefined && { ErrorComponent })}
           />
         )}
       </form>

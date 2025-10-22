@@ -1,7 +1,8 @@
 import React from 'react'
 import { GraphicalIcon, Icon } from '../../common'
 import { toSentence } from '../../../utils/toSentence'
-import { ExerciseType, Iteration, IterationStatus } from '../../types'
+import { Iteration, IterationStatus } from '../../types'
+import { ExerciseType } from '@/types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
@@ -13,7 +14,7 @@ export type Exercise = {
   title: string
   type: ExerciseType
 }
-const TutorialHeader = ({ exercise }: { exercise: Exercise }) => {
+const TutorialHeader = ({ exercise }: { exercise: Exercise }): React.ReactElement => {
   const { t } = useAppTranslation('components/student/solution-summary')
 
   return (
@@ -42,7 +43,7 @@ export const Header = ({
   iteration: Iteration
   exercise: Exercise
   links: SolutionSummaryLinks
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/student/solution-summary')
 
   switch (iteration.status) {
@@ -94,17 +95,17 @@ export const Header = ({
       }
 
       const essential = t('comments.essentialImprovements', {
-        count: iteration.numEssentialAutomatedComments,
+        count: iteration.numEssentialAutomatedComments || 0,
       })
       const actionable =
-        iteration.numActionableAutomatedComments > 0
+        (iteration.numActionableAutomatedComments || 0) > 0
           ? t('comments.recommendations', {
-              count: iteration.numActionableAutomatedComments,
+              count: iteration.numActionableAutomatedComments || 0,
             })
           : ''
       const additionalCount =
-        iteration.numNonActionableAutomatedComments +
-        iteration.numCelebratoryAutomatedComments
+        (iteration.numNonActionableAutomatedComments || 0) +
+        (iteration.numCelebratoryAutomatedComments || 0)
       const additional =
         additionalCount > 0
           ? t('comments.additionalComments', { count: additionalCount })
@@ -159,8 +160,8 @@ export const Header = ({
         return <TutorialHeader exercise={exercise} />
 
       const count =
-        iteration.numNonActionableAutomatedComments +
-        iteration.numCelebratoryAutomatedComments
+        (iteration.numNonActionableAutomatedComments || 0) +
+        (iteration.numCelebratoryAutomatedComments || 0)
       const mentorOffer =
         exercise.type === 'practice'
           ? t('header.considerWorkingWithAMentor')
@@ -189,11 +190,11 @@ export const Header = ({
         return <TutorialHeader exercise={exercise} />
 
       const actionable = t('comments.recommendations', {
-        count: iteration.numActionableAutomatedComments,
+        count: iteration.numActionableAutomatedComments || 0,
       })
       const additionalCount =
-        iteration.numNonActionableAutomatedComments +
-        iteration.numCelebratoryAutomatedComments
+        (iteration.numNonActionableAutomatedComments || 0) +
+        (iteration.numCelebratoryAutomatedComments || 0)
       const additional =
         additionalCount > 0
           ? t('comments.additionalComments', { count: additionalCount })
@@ -209,7 +210,7 @@ export const Header = ({
                 <p>
                   {t('header.weveAnalysedYourSolutionAndHaveComments', {
                     comments: toSentence(comments),
-                    count: iteration.numActionableAutomatedComments,
+                    count: iteration.numActionableAutomatedComments || 0,
                   })}
                 </p>
               </div>
@@ -224,14 +225,36 @@ export const Header = ({
                 <h2>{t('header.yourSolutionWorkedButYouCanTakeItFurther')}</h2>
                 <p>
                   {t('header.weSuggestAddressingTheRecommendations', {
-                    count: iteration.numActionableAutomatedComments,
+                    count: iteration.numActionableAutomatedComments || 0,
                   })}
                 </p>
               </div>
               <div className="status passed">{t('status.testsPassed')}</div>
             </header>
           )
+
+        default:
+          return (
+            <header>
+              <div className="info">
+                <h2>{t('header.yourSolutionLooksGreat')}</h2>
+                <p>{t('header.yourSolutionPassedTheTests')}</p>
+              </div>
+              <div className="status passed">{t('status.testsPassed')}</div>
+            </header>
+          )
       }
     }
+
+    default:
+      return (
+        <header>
+          <div className="info">
+            <h2>{t('header.yourSolutionLooksGreat')}</h2>
+            <p>{t('header.yourSolutionPassedTheTests')}</p>
+          </div>
+          <div className="status passed">{t('status.testsPassed')}</div>
+        </header>
+      )
   }
 }

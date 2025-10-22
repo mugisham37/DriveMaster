@@ -19,7 +19,7 @@ export function NewListItemForm<T>({
   contextId,
   onSuccess,
   defaultError,
-}: NewListItemFormProps<T>): JSX.Element {
+}: NewListItemFormProps<T>): React.JSX.Element {
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 

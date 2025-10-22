@@ -6,9 +6,9 @@ import { JSX } from 'react/jsx-runtime'
 export interface FormMessageProps {
   status: SubmissionStatus
   error?: Error | null
-  successMessage?: string | undefined
-  SuccessComponent?: React.ComponentType
-  ErrorComponent?: React.ComponentType<{ error: Error }>
+  successMessage?: string
+  SuccessComponent?: React.ComponentType | undefined
+  ErrorComponent?: React.ComponentType<{ error: Error }> | undefined
 }
 
 const DefaultSuccessMessage: React.FC<{ message?: string }> = ({ message = 'Success!' }) => (
@@ -37,7 +37,7 @@ export function FormMessage({
       if (SuccessComponent) {
         return <SuccessComponent />
       }
-      return <DefaultSuccessMessage message={successMessage} />
+      return <DefaultSuccessMessage {...(successMessage !== undefined && { message: successMessage })} />
       
     case 'error':
       if (error) {

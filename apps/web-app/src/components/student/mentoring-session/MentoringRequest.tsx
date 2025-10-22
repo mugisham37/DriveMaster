@@ -5,7 +5,7 @@ import {
   MentorSessionRequest, 
   Iteration, 
   MentoringSessionLinks 
-} from '../../../components/types'
+} from '@/types'
 
 interface Video {
   url: string
@@ -33,7 +33,7 @@ export function MentoringRequest({
   latestIteration,
   videos,
   onCreate
-}: MentoringRequestProps): React.JSX.Element {
+}: MentoringRequestProps): React.ReactElement {
   const handleCreateRequest = () => {
     // Create a new mentoring request
     const newRequest: MentorSessionRequest = {
@@ -42,7 +42,19 @@ export function MentoringRequest({
       createdAt: new Date().toISOString(),
       trackSlug: track.slug,
       exerciseSlug: exercise.slug,
-      studentHandle: ''
+      studentHandle: '',
+      student: {
+        handle: '',
+        avatarUrl: ''
+      },
+      exercise: {
+        id: exercise.id || '',
+        slug: exercise.slug,
+        title: exercise.title,
+        iconUrl: exercise.iconUrl,
+        difficulty: exercise.difficulty || 1,
+        links: exercise.links
+      }
     }
     onCreate(newRequest)
   }
@@ -103,6 +115,7 @@ export function MentoringRequest({
           {videos.map((video, idx) => (
             <div key={idx} className="video">
               <a href={video.url} target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={video.thumb} alt={video.title} />
                 <span>{video.title}</span>
               </a>

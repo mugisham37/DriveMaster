@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export function ConceptMapSkeleton(): JSX.Element {
+export function ConceptMapSkeleton(): React.JSX.Element {
   return (
     <div className="w-full h-96 bg-gray-100 rounded-lg">
       <div className="animate-pulse h-full flex items-center justify-center">

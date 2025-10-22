@@ -14,7 +14,7 @@ export function SiteUpdateIcon({
   context,
   track,
   icon,
-}: SiteUpdateIconProps): JSX.Element {
+}: SiteUpdateIconProps): React.JSX.Element {
   switch (context) {
     case 'track':
       return <TrackIcon iconUrl={track.iconUrl} title={track.title} />
@@ -30,7 +30,7 @@ export function SiteUpdateIcon({
             />
           )
         case 'concept':
-          return <ConceptIcon size="large" name={icon.data} />
+          return <ConceptIcon size="large" name={icon.data || ''} />
       }
   }
 }

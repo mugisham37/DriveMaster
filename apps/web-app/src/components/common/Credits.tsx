@@ -3,21 +3,21 @@
 import React from 'react'
 import { Avatar } from './Avatar'
 
-interface User {
+interface CreditUser {
   id: number
   handle: string
   name?: string
   avatarUrl: string
   reputation?: string
   flair?: {
-    id: number
+    id: string
     name: string
     iconUrl: string
   }
 }
 
 interface CreditsProps {
-  users: User[]
+  users: CreditUser[]
   topCount: number
   topLabel: string
   bottomCount: number

@@ -1,11 +1,11 @@
 import React from 'react'
-import { MentorDiscussion } from '../../../types'
+import { MentorDiscussion } from '../../types'
 
 interface DiscussionListProps {
   discussions: readonly MentorDiscussion[]
 }
 
-export function DiscussionList({ discussions }: DiscussionListProps): React.JSX.Element {
+export function DiscussionList({ discussions }: DiscussionListProps): React.ReactElement {
   return (
     <div className="mentoring-discussion-list">
       {discussions.map((discussion) => (

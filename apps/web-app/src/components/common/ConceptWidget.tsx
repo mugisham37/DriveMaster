@@ -13,7 +13,7 @@ interface ConceptWidgetProps {
   }
 }
 
-export function ConceptWidget({ concept }: ConceptWidgetProps): JSX.Element {
+export function ConceptWidget({ concept }: ConceptWidgetProps): React.JSX.Element {
   return (
     <div className="concept-widget border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <h4 className="font-semibold text-lg mb-2">{concept.name}</h4>

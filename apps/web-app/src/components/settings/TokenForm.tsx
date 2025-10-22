@@ -18,7 +18,7 @@ interface TokenFormProps {
 export default function TokenForm({
   token,
   links
-}: TokenFormProps): React.JSX.Element {
+}: TokenFormProps): React.ReactElement {
   const [showToken, setShowToken] = useState(false)
   const [currentToken, setCurrentToken] = useState(token)
 
@@ -26,7 +26,7 @@ export default function TokenForm({
     endpoint: links.reset,
     method: 'POST',
     onSuccess: (data?: Record<string, unknown>) => {
-      if (data?.token) {
+      if (data?.token && typeof data.token === 'string') {
         setCurrentToken(data.token)
         setShowToken(true)
       }

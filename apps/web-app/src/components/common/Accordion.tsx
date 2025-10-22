@@ -9,7 +9,7 @@ export type AccordionContext = {
 const Context = React.createContext<AccordionContext>({
   id: '',
   isOpen: false,
-  onClick: (id: string) => null,
+  onClick: () => null,
 })
 
 export const Accordion = ({
@@ -22,7 +22,7 @@ export const Accordion = ({
   isOpen: boolean
   onClick: (id: string) => void
   children?: React.ReactNode
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <Context.Provider value={{ isOpen, id, onClick }}>
       <div className="c-accordion-section">{children}</div>
@@ -36,7 +36,7 @@ const AccordionHeader = ({
 }: {
   label?: string
   children?: React.ReactNode
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { isOpen, id, onClick } = React.useContext(Context)
 
   return (

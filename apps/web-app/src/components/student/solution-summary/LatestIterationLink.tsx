@@ -6,7 +6,7 @@ export default function LatestIterationLink({
   iteration,
 }: {
   iteration: Iteration
-}): JSX.Element {
+}): React.ReactElement {
   return (
     <a className="latest-iteration-link" href={iteration.links.self}>
       <IterationSummaryWithWebsockets

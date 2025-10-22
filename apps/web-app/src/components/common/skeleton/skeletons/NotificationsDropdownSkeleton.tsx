@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export function NotificationsDropdownSkeleton(): JSX.Element {
+export function NotificationsDropdownSkeleton(): React.JSX.Element {
   return (
     <div className="animate-pulse">
       <div className="h-8 w-8 bg-gray-300 rounded-full"></div>

@@ -161,6 +161,7 @@ export type SolutionMentoringStatus =
 export type DiscussionStatus =
   | "awaiting_mentor"
   | "awaiting_student"
+  | "mentor_finished"
   | "finished";
 
 export type AutomationStatus = "with_feedback" | "without_feedback" | "admin";
@@ -312,10 +313,10 @@ export type Iteration = {
   idx: number;
   status: IterationStatus;
   unread: boolean;
-  numEssentialAutomatedComments: number;
-  numActionableAutomatedComments: number;
-  numNonActionableAutomatedComments: number;
-  numCelebratoryAutomatedComments: number;
+  numEssentialAutomatedComments?: number;
+  numActionableAutomatedComments?: number;
+  numNonActionableAutomatedComments?: number;
+  numCelebratoryAutomatedComments?: number;
   submissionMethod: SubmissionMethod;
   representerFeedback?: RepresenterFeedback;
   analyzerFeedback?: AnalyzerFeedback;
@@ -326,6 +327,8 @@ export type Iteration = {
   files?: File[];
   posts?: Array<Record<string, unknown>>;
   new?: boolean;
+  id?: string;
+  solutionUuid?: string;
   links: {
     self: string;
     delete: string;

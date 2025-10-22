@@ -15,7 +15,6 @@ interface GraphicalIconProps {
  */
 export function GraphicalIcon({ 
   icon, 
-  category = 'icons', 
   className = '', 
   width, 
   height,

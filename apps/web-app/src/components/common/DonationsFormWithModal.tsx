@@ -12,12 +12,12 @@ interface DonationsFormWithModalProps {
   request: {
     endpoint: string;
     options: {
-      initialData?: any;
+      initialData?: unknown;
     };
   };
   userSignedIn: boolean;
-  captchaRequired: boolean;
-  recaptchaSiteKey: string;
+  captchaRequired?: boolean;
+  recaptchaSiteKey?: string;
   links: {
     settings: string;
     success: string;
@@ -27,8 +27,6 @@ interface DonationsFormWithModalProps {
 export function DonationsFormWithModal({
   request,
   userSignedIn,
-  captchaRequired,
-  recaptchaSiteKey,
   links
 }: DonationsFormWithModalProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,7 +44,6 @@ export function DonationsFormWithModal({
       setIsModalOpen(false);
       window.location.href = links.success;
     },
-    showSuccessMessage: true,
     successMessage: 'Thank you for your donation!'
   });
 

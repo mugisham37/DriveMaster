@@ -1,68 +1,72 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { CopyToClipboardButton } from '@/components/common/CopyToClipboardButton'
-import { useFormSubmission } from '@/hooks/useFormSubmission'
-import { FormButton } from '@/components/common/forms/FormButton'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
-import Link from 'next/link'
+import { useState } from "react";
+import { CopyToClipboardButton } from "@/components/common/CopyToClipboardButton";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { FormButton } from "@/components/common/forms/FormButton";
+import { GraphicalIcon } from "@/components/common/GraphicalIcon";
+import Link from "next/link";
 
 interface APISettings {
-  apiToken: string
-  cliVersion: string
-  lastUsed: string
-  downloadUrl: string
+  apiToken: string;
+  cliVersion: string;
+  lastUsed: string;
+  downloadUrl: string;
 }
 
 interface APICliSettingsProps {
-  apiSettings: APISettings
+  apiSettings: APISettings;
   links: {
-    resetToken: string
-  }
+    resetToken: string;
+  };
 }
 
 export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
-  const [showToken, setShowToken] = useState(false)
-  const [currentToken, setCurrentToken] = useState(apiSettings.apiToken)
+  const [showToken, setShowToken] = useState(false);
+  const [currentToken, setCurrentToken] = useState(apiSettings.apiToken);
 
   const { submit: resetToken, isSubmitting } = useFormSubmission({
     endpoint: links.resetToken,
-    method: 'POST',
+    method: "POST",
     onSuccess: (data?: Record<string, unknown>) => {
-      if (data?.token && typeof data.token === 'string') {
-        setCurrentToken(data.token)
+      if (data?.token && typeof data.token === "string") {
+        setCurrentToken(data.token);
       }
     },
-    successMessage: 'API token has been reset successfully'
-  })
+    successMessage: "API token has been reset successfully",
+  });
 
   const handleResetToken = async () => {
-    if (confirm('Are you sure you want to reset your API token? This will invalidate your current token and you\'ll need to reconfigure the CLI.')) {
-      await resetToken({})
+    if (
+      confirm(
+        "Are you sure you want to reset your API token? This will invalidate your current token and you&apos;ll need to reconfigure the CLI."
+      )
+    ) {
+      await resetToken({});
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  const maskedToken = currentToken.replace(/(.{8}).*(.{4})/, '$1....$2')
+  const maskedToken = currentToken.replace(/(.{8}).*(.{4})/, "$1....$2");
 
   return (
     <div className="space-y-8">
       {/* API Token Section */}
       <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-h2 mb-4">API Token</h2>
-        
+
         <p className="text-p-base text-gray-600 dark:text-gray-300 mb-6">
-          Your API token is used to authenticate with the Exercism CLI and API. 
-          Keep this token secure and don't share it with others.
+          Your API token is used to authenticate with the Exercism CLI and API.
+          Keep this token secure and don&apos;t share it with others.
         </p>
 
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
@@ -72,14 +76,14 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
               onClick={() => setShowToken(!showToken)}
               className="text-sm text-linkColor hover:underline"
             >
-              {showToken ? 'Hide' : 'Show'}
+              {showToken ? "Hide" : "Show"}
             </button>
           </div>
-          
+
           <div className="font-mono text-sm bg-white dark:bg-gray-800 p-3 rounded border">
             {showToken ? currentToken : maskedToken}
           </div>
-          
+
           {showToken && (
             <div className="mt-3">
               <CopyToClipboardButton textToCopy={currentToken} />
@@ -103,9 +107,10 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
       {/* CLI Section */}
       <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-h2 mb-4">Exercism CLI</h2>
-        
+
         <p className="text-p-base text-gray-600 dark:text-gray-300 mb-6">
-          The Exercism CLI allows you to download exercises, submit solutions, and interact with Exercism from your terminal.
+          The Exercism CLI allows you to download exercises, submit solutions,
+          and interact with Exercism from your terminal.
         </p>
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -113,7 +118,7 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
             <h3 className="font-semibold mb-2">Current Version</h3>
             <div className="font-mono text-lg">{apiSettings.cliVersion}</div>
           </div>
-          
+
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
             <h3 className="font-semibold mb-2">Status</h3>
             <div className="flex items-center gap-2">
@@ -128,7 +133,7 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
             <GraphicalIcon icon="terminal" className="w-5 h-5" />
             Quick Setup
           </h3>
-          
+
           <div className="space-y-3 text-sm">
             <div>
               <strong>1. Download the CLI:</strong>
@@ -143,14 +148,15 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
                 </Link>
               </div>
             </div>
-            
+
             <div>
               <strong>2. Configure with your token:</strong>
               <div className="mt-1 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                exercism configure --token={showToken ? currentToken : maskedToken}
+                exercism configure --token=
+                {showToken ? currentToken : maskedToken}
               </div>
             </div>
-            
+
             <div>
               <strong>3. Download an exercise:</strong>
               <div className="mt-1 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
@@ -169,7 +175,7 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
           >
             Download CLI
           </Link>
-          
+
           <Link
             href="https://exercism.org/docs/using/solving-exercises/working-locally"
             target="_blank"
@@ -184,9 +190,10 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
       {/* API Documentation */}
       <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-h2 mb-4">API Documentation</h2>
-        
+
         <p className="text-p-base text-gray-600 dark:text-gray-300 mb-4">
-          Use the Exercism API to build integrations and tools. All API requests require authentication using your API token.
+          Use the Exercism API to build integrations and tools. All API requests
+          require authentication using your API token.
         </p>
 
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
@@ -196,7 +203,9 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
 
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
           <h3 className="font-semibold mb-2">Authentication</h3>
-          <div className="font-mono text-sm">Authorization: Bearer {showToken ? currentToken : maskedToken}</div>
+          <div className="font-mono text-sm">
+            Authorization: Bearer {showToken ? currentToken : maskedToken}
+          </div>
         </div>
 
         <Link
@@ -209,5 +218,5 @@ export function APICliSettings({ apiSettings, links }: APICliSettingsProps) {
         </Link>
       </section>
     </div>
-  )
+  );
 }

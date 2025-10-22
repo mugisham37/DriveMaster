@@ -61,7 +61,7 @@ export function FlashMessages({
     <div className={`c-flash ${className}`}>
       {finalMessages.map((flashMessage, index) => (
         <FlashMessageItem
-          key={flashMessage.id || `flash-${index}`}
+          key={('id' in flashMessage && flashMessage.id) || `flash-${index}`}
           message={flashMessage}
           htmlMessages={htmlMessages}
         />

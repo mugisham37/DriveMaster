@@ -16,7 +16,7 @@ export function Pagination({
   total,
   setPage,
   around = 2,
-}: PaginationProps): JSX.Element | null {
+}: PaginationProps): React.JSX.Element | null {
   const { t } = useAppTranslation('components/common/Pagination.tsx')
 
   const {

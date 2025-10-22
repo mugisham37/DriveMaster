@@ -44,9 +44,9 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
   const isDisabled = disabled || loading
 
   const ariaAttributes = getAriaAttributes({
-    label: ariaLabel,
-    describedBy: ariaDescribedBy,
-    expanded: ariaExpanded,
+    ...(ariaLabel && { label: ariaLabel }),
+    ...(ariaDescribedBy && { describedBy: ariaDescribedBy }),
+    ...(ariaExpanded !== undefined && { expanded: ariaExpanded }),
     disabled: isDisabled,
     busy: loading
   })

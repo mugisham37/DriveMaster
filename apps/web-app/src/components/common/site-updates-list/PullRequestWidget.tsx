@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { PullRequest } from '@/types'
 
-export function PullRequestWidget(pullRequest: PullRequest): JSX.Element {
+export function PullRequestWidget(pullRequest: PullRequest): React.JSX.Element {
   return (
     <div className="pull-request-widget">
       <Link href={pullRequest.url} className="flex items-center">

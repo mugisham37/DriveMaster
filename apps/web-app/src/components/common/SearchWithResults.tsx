@@ -52,7 +52,7 @@ export function SearchWithResults({
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<NodeJS.Timeout>()
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // Debounced search function
   const performSearch = useCallback(async (searchQuery: string) => {
@@ -97,6 +97,16 @@ export function SearchWithResults({
     }, debounceMs)
   }, [performSearch, debounceMs])
 
+  // Handle result selection
+  const handleSelect = useCallback((result: SearchResult) => {
+    onSelect(result)
+    setQuery('')
+    setResults([])
+    setShowResults(false)
+    setHighlightedIndex(-1)
+    setHasSearched(false)
+  }, [onSelect])
+
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showResults || results.length === 0) return
@@ -129,17 +139,7 @@ export function SearchWithResults({
         searchInputRef.current?.blur()
         break
     }
-  }, [showResults, results, highlightedIndex])
-
-  // Handle result selection
-  const handleSelect = useCallback((result: SearchResult) => {
-    onSelect(result)
-    setQuery('')
-    setResults([])
-    setShowResults(false)
-    setHighlightedIndex(-1)
-    setHasSearched(false)
-  }, [onSelect])
+  }, [showResults, results, highlightedIndex, handleSelect])
 
   // Handle focus events
   const handleFocus = useCallback(() => {

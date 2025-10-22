@@ -105,7 +105,7 @@ export function ProgressGraph({
     }
 
     // Draw area under curve
-    if (values.length > 1) {
+    if (values.length > 1 && values[0] !== undefined) {
       ctx.fillStyle = color + '20' // Add transparency
       ctx.beginPath()
       

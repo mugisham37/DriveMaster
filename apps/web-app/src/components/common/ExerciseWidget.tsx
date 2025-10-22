@@ -66,7 +66,7 @@ export function ExerciseWidget({
   recommended = false,
   skinny = false,
   className = ''
-}: ExerciseWidgetProps): React.React.JSX.Element {
+}: ExerciseWidgetProps): React.JSX.Element {
   const isLocked = exercise.status === 'locked'
   const isRecommended = recommended || exercise.isRecommended
 
@@ -115,7 +115,7 @@ export function ExerciseWidget({
 
         <div className="exercise-status">
           <ExerciseStatusDot
-            exerciseStatus={exercise.status as any}
+            exerciseStatus={exercise.status}
             type="exercise"
             links={{
               tooltip: exercise.links.tooltip || '',

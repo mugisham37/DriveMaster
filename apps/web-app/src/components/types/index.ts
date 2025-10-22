@@ -87,6 +87,7 @@ export interface Iteration {
   numEssentialAutomatedComments?: number
   numActionableAutomatedComments?: number
   numNonActionableAutomatedComments?: number
+  numCelebratoryAutomatedComments?: number
   files?: Array<{
     filename: string
     content: string

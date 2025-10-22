@@ -8,7 +8,7 @@ export default function AccordionHeader({
 }: {
   isOpen: boolean
   title: string
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <Accordion.Header>
       {isOpen ? (

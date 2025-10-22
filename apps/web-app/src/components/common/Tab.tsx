@@ -1,5 +1,5 @@
 import React, { forwardRef, useContext } from 'react'
-import { ScreenSizeContext } from '../mentoring/session/ScreenSizeContext'
+import { useScreenSize } from '../mentoring/session/ScreenSizeContext'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 
 export type TabContext = {
@@ -56,7 +56,8 @@ const TabPanel = forwardRef<HTMLDivElement, PanelProps>(
     ref
   ): React.JSX.Element | null => {
     const { current } = useContext(context)
-    const { isBelowLgWidth = false } = useContext(ScreenSizeContext) || {}
+    const { isMobile, isTablet } = useScreenSize()
+    const isBelowLgWidth = isMobile || isTablet
 
     const style = id !== current ? { display: 'none' } : undefined
 

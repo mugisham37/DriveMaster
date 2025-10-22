@@ -37,7 +37,7 @@ interface CommunitySolutionProps {
   context: 'exercise' | 'profile' | 'track'
 }
 
-export function CommunitySolution({ solution, context }: CommunitySolutionProps) {
+export function CommunitySolution({ solution }: CommunitySolutionProps) {
   return (
     <div className="community-solution">
       <div className="solution-header">

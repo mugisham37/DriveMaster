@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export function ExerciseListSkeleton(): JSX.Element {
+export function ExerciseListSkeleton(): React.JSX.Element {
   return (
     <div className="space-y-4">
       {[...Array(5)].map((_, i) => (
