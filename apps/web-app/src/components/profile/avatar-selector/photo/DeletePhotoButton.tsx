@@ -13,7 +13,7 @@ export const DeletePhotoButton = ({
 }: {
   onDelete: (user: User) => void
   links: Links
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/avatar-selector/photo')
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -35,7 +35,9 @@ export const DeletePhotoButton = ({
         open={modalOpen}
         onClose={handleModalClose}
         onSuccess={onDelete}
-      />
+      >
+        {/* Modal content is handled internally */}
+      </DeletePhotoModal>
     </React.Fragment>
   )
 }

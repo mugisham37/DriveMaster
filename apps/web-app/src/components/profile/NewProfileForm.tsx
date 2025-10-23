@@ -39,7 +39,7 @@ export default function NewProfileForm({
   user: User
   defaultFields: Fields
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/profile')
   const [fields, setFields] = useState<Fields>(defaultFields)
   const {
@@ -62,7 +62,7 @@ export default function NewProfileForm({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

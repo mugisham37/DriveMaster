@@ -16,7 +16,7 @@ const ProfileTestimonial = ({
   open: boolean
   onClick: () => void
   onClose: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/testimonials-list')
 
   return (
@@ -38,12 +38,13 @@ const ProfileTestimonial = ({
               trackTitle: testimonial.track.title,
             }}
             components={[
-              <strong />,
+              <strong key="strong" />,
               <TrackIcon
+                key="track-icon"
                 iconUrl={testimonial.track.iconUrl}
                 title={testimonial.track.title}
               />,
-              <div className="track-title">{testimonial.track.title}</div>,
+              <div key="track-title" className="track-title">{testimonial.track.title}</div>,
             ]}
           />
         </div>
@@ -55,7 +56,9 @@ const ProfileTestimonial = ({
         testimonial={testimonial}
         open={open}
         onClose={onClose}
-      />
+      >
+        <div />
+      </TestimonialModal>
     </React.Fragment>
   )
 }

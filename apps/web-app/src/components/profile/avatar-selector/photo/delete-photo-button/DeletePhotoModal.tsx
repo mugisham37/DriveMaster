@@ -18,7 +18,7 @@ export const DeletePhotoModal = ({
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
   onSuccess: (user: User) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/avatar-selector/photo')
   const {
     mutate: mutation,
@@ -29,7 +29,7 @@ export const DeletePhotoModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'DELETE',
-        body: null,
+        body: undefined,
       })
 
       return fetch.then((json) => typecheck<User>(json, 'user'))
@@ -40,7 +40,7 @@ export const DeletePhotoModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

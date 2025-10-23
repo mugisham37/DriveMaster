@@ -30,9 +30,9 @@ export const OrderSelect = ({
 }: {
   value: Order
   setValue: (value: Order) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
-    <SingleSelect<Order>
+    <SingleSelect
       options={['most_starred', 'newest_first', 'oldest_first']}
       value={value}
       setValue={setValue}

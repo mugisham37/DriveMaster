@@ -32,7 +32,7 @@ export default function TestimonialsList({
       onClose: () => void
     }>
   >
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/profile')
   const [selected, setSelected] = useState<string | null>(defaultSelected)
 
@@ -60,7 +60,7 @@ export default function TestimonialsList({
     setSelected(null)
   }, [setSelected])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   return (
     <ResultsZone isFetching={isFetching}>
@@ -72,7 +72,7 @@ export default function TestimonialsList({
         {resolvedData ? (
           <>
             <div className="testimonials">
-              {resolvedData.results.map((t) => {
+              {resolvedData.results.map((t: TestimonialProps) => {
                 return cloneElement(children, {
                   testimonial: t,
                   open: t.uuid === selected,
@@ -84,7 +84,7 @@ export default function TestimonialsList({
             </div>
             <Pagination
               disabled={resolvedData === undefined}
-              current={request.query.page || 1}
+              current={(request.query?.page as number) || 1}
               total={resolvedData.meta.totalPages}
               setPage={(p) => {
                 setPage(p)

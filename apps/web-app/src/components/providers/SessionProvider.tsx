@@ -5,7 +5,7 @@ import { ReactNode } from 'react'
 
 interface SessionProviderProps {
   children: ReactNode
-  session?: any
+  session?: Record<string, unknown> | null
 }
 
 /**

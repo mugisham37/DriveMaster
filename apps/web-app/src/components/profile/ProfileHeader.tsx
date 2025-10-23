@@ -74,8 +74,7 @@ export function ProfileHeader({ user, profile, tab }: ProfileHeaderProps) {
             <div className="name-section">
               <HandleWithFlair 
                 handle={user.handle} 
-                flair={user.flair || null} 
-                size="large" 
+                flair={user.flair || null}
               />
               {user.name && (
                 <h1 className="name">{user.name}</h1>

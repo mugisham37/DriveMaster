@@ -15,7 +15,7 @@ export default function PerksModalButton({
   data,
 }: {
   data: PerksModalButtonProps
-}): JSX.Element {
+}): React.JSX.Element {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const closeModal = useCallback(() => {

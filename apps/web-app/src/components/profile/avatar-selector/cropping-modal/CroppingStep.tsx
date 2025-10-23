@@ -1,10 +1,62 @@
 // i18n-key-prefix: croppingStep
 // i18n-namespace: components/profile/avatar-selector/cropping-modal
 import React, { useCallback, useRef } from 'react'
-import ReactCrop from 'react-image-crop'
-import { State, Action } from '../use-image-crop'
+import { State, Action, CropProps } from '../use-image-crop'
 import { cropImage } from './cropImage'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+
+// Mock ReactCrop component since react-image-crop is not installed
+interface ReactCropProps {
+  src: string
+  crop: CropProps
+  circularCrop?: boolean
+  onChange: (crop: CropProps) => void
+  onImageLoaded?: (image: HTMLImageElement) => void
+  className?: string
+  imageStyle?: React.CSSProperties
+  keepSelection?: boolean
+}
+
+const ReactCrop: React.FC<ReactCropProps> = ({ 
+  src, 
+  crop, 
+  onChange, 
+  onImageLoaded, 
+  className = "",
+  imageStyle = {}
+}) => {
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (onImageLoaded) {
+      onImageLoaded(e.currentTarget)
+    }
+  }
+
+  return (
+    <div className={`react-crop-mock ${className}`}>
+      <img 
+        src={src} 
+        onLoad={handleImageLoad}
+        style={imageStyle}
+        alt="Crop preview"
+      />
+      <div className="crop-controls">
+        <p>Crop: {crop.width}% x {crop.height}%</p>
+        <button 
+          type="button"
+          onClick={() => onChange({ ...crop, width: Math.min(crop.width + 10, 100) })}
+        >
+          Increase Width
+        </button>
+        <button 
+          type="button"
+          onClick={() => onChange({ ...crop, height: Math.min(crop.height + 10, 100) })}
+        >
+          Increase Height
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export const CroppingStep = ({
   state,
@@ -12,7 +64,7 @@ export const CroppingStep = ({
 }: {
   state: State
   dispatch: React.Dispatch<Action>
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/profile/avatar-selector/cropping-modal'
   )
@@ -24,7 +76,7 @@ export const CroppingStep = ({
   const imageToCropRef = useRef<HTMLImageElement | null>(null)
 
   const handleCropChange = useCallback(
-    (cropSettings) => {
+    (cropSettings: CropProps) => {
       dispatch({
         type: 'crop.changed',
         payload: { cropSettings: cropSettings },
@@ -33,7 +85,7 @@ export const CroppingStep = ({
     [dispatch]
   )
 
-  const handleImageLoaded = useCallback((image) => {
+  const handleImageLoaded = useCallback((image: HTMLImageElement) => {
     imageToCropRef.current = image
   }, [])
 

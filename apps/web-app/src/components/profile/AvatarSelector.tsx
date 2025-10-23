@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { Photo } from './avatar-selector/Photo'
 import { CroppingModal } from './avatar-selector/CroppingModal'
 import { useImageCrop } from './avatar-selector/use-image-crop'
-import { User } from '../types'
+import { User } from '@/types'
 
 type Links = {
   update: string
@@ -15,7 +15,7 @@ export default function AvatarSelector({
 }: {
   defaultUser: User
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const [user, setUser] = useState(defaultUser)
   const { handleAttach, ...modalProps } = useImageCrop()
 

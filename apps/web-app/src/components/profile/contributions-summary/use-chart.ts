@@ -3,7 +3,7 @@ import Chart from 'chart.js/auto'
 import { ChartConfiguration, ChartDataset } from 'chart.js'
 
 const createBluePurpleGradient = (
-  chart: Chart<'radar'>,
+  chart: Chart,
   opacity: number
 ): CanvasGradient | string => {
   const { ctx, chartArea } = chart
@@ -69,8 +69,8 @@ export const useChart = (
   canvas: HTMLCanvasElement | null,
   reputation: number[],
   trackColor?: string
-): Chart<'radar'> => {
-  const [chart, setChart] = useState<Chart<'radar'> | null>(null)
+): { chart: Chart | null } => {
+  const [chart, setChart] = useState<Chart | null>(null)
   const paddedReputation = padReputation(reputation)
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export const useChart = (
       return
     }
 
-    const chart = new Chart<'radar'>(canvas, generateConfig(canvas))
+    const chart = new Chart(canvas, generateConfig(canvas))
 
     setChart(chart)
 
@@ -122,7 +122,7 @@ export const useChart = (
     chart.data.datasets = [dataset]
 
     chart.update()
-  }, [chart, JSON.stringify(paddedReputation), trackColor])
+  }, [chart, paddedReputation, trackColor])
 
   return { chart }
 }

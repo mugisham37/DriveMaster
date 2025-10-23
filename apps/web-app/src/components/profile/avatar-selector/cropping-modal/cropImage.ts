@@ -32,8 +32,6 @@ export function cropImage(
     crop.height
   )
 
-  const reader = new FileReader()
-
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob))
   })

@@ -14,17 +14,17 @@ export const AuthoringContributionsList = ({
   request: initialRequest,
 }: {
   request: Request
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { request, setPage } = useList(initialRequest)
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<
-    PaginatedResult<ExerciseAuthorship[]>,
-    Error | Response
-  >([request.endpoint, request.query], request)
+  } = usePaginatedRequestQuery<PaginatedResult<ExerciseAuthorship[]>>(
+    [request.endpoint, request.query || {}], 
+    request
+  )
 
   return (
     <ResultsZone isFetching={isFetching}>
@@ -37,13 +37,16 @@ export const AuthoringContributionsList = ({
           <React.Fragment>
             <div className="authoring">
               <div className="exercises">
-                {resolvedData.results.map((authorship) => {
+                {resolvedData.results.map((authorship: ExerciseAuthorship) => {
                   return (
                     /*large*/
                     <ExerciseWidget
                       key={authorship.exercise.slug}
-                      exercise={authorship.exercise}
-                      track={authorship.track}
+                      exercise={{
+                        ...authorship.exercise,
+                        isRecommended: false,
+                        links: { self: '' }
+                      }}
                     />
                   )
                 })}
@@ -51,7 +54,7 @@ export const AuthoringContributionsList = ({
             </div>
             <Pagination
               disabled={resolvedData === undefined}
-              current={request.query.page || 1}
+              current={(request.query?.page as number) || 1}
               total={resolvedData.meta.totalPages}
               setPage={(p) => {
                 setPage(p)

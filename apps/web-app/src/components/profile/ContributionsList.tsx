@@ -21,9 +21,9 @@ export default function ContributionsList({
   categories,
 }: {
   categories: readonly Category[]
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/profile')
-  const [currentCategory, setCurrentCategory] = useState(categories[0])
+  const [currentCategory, setCurrentCategory] = useState<Category | undefined>(categories[0])
 
   return (
     <React.Fragment>
@@ -40,14 +40,14 @@ export default function ContributionsList({
               onClick={() => setCurrentCategory(category)}
               className={classNames.join(' ')}
             >
-              <GraphicalIcon icon={category.icon} hex />
+              <GraphicalIcon icon={category.icon} />
               {t(`contributionsList.${category.title.toLowerCase()}`)}
               <div className="count">{category.count.toLocaleString()}</div>
             </button>
           )
         })}
       </div>
-      <ContributionsContent category={currentCategory} />
+      {currentCategory && <ContributionsContent category={currentCategory} />}
     </React.Fragment>
   )
 }

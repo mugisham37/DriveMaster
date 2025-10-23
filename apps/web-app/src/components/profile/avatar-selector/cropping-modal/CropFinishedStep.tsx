@@ -28,7 +28,7 @@ export const CropFinishedStep = ({
   dispatch: React.Dispatch<Action>
   links: Links
   onUpload: (user: User) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/profile/avatar-selector/cropping-modal'
   )
@@ -78,10 +78,9 @@ export const CropFinishedStep = ({
       <h3>{t('cropFinishedStep.happyWithResult')}</h3>
       <ResultsZone isFetching={status === 'pending'}>
         <img
-          // @ts-expect-error URL.createObjectURL expect File or Blob meanwhile croppedImage can be null
-          // TODO: fix this
-          src={URL.createObjectURL(state.croppedImage)}
+          src={state.croppedImage ? URL.createObjectURL(state.croppedImage) : ''}
           className="cropped-image"
+          alt="Cropped avatar preview"
         />
       </ResultsZone>
       <div className="btns">

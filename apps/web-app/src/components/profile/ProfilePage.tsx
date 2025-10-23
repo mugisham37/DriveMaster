@@ -3,9 +3,9 @@
 import { ProfileData } from '@/lib/api/profile'
 import { Layout } from '@/components/layout/Layout'
 import { ProfileHeader } from './ProfileHeader'
-import { ContributionsSummary } from './ContributionsSummary'
+import ContributionsSummary from './ContributionsSummary'
 import { PublishedSolutionsSection } from './PublishedSolutionsSection'
-import { TestimonialsSummary } from './TestimonialsSummary'
+import TestimonialsSummary from './TestimonialsSummary'
 import { FirstTimeModal } from './FirstTimeModal'
 
 interface ProfilePageProps extends ProfileData {
@@ -21,7 +21,7 @@ export function ProfilePage({
   return (
     <Layout>
       <div id="page-profile">
-        {isFirstTime && <FirstTimeModal profile={profile} />}
+        {isFirstTime && <FirstTimeModal profile={profile} links={{ profile: `/profiles/${user.handle}` }} />}
         
         <ProfileHeader 
           user={user} 

@@ -8,7 +8,7 @@ export const TotalReputation = ({
 }: {
   handle?: string
   reputation: number
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/contributions-summary')
   const address = handle
     ? t('totalReputation.addressHas', { handle })

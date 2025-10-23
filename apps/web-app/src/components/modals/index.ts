@@ -11,6 +11,10 @@ export { TrackLeaveModal } from './TrackLeaveModal'
 export { TrackResetModal } from './TrackResetModal'
 export { PracticeModeModal } from './PracticeModeModal'
 
+// Base Modal component
+export { default as Modal } from './Modal'
+export type { ModalProps } from './Modal'
+
 // Newly migrated modals
 export { ChangePublishedIterationModal } from './ChangePublishedIterationModal'
 export { CLIWalkthroughModal } from './CLIWalkthroughModal'

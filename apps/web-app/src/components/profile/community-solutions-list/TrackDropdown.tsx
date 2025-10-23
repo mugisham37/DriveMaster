@@ -6,7 +6,7 @@ const OptionComponent = ({
   option: track,
 }: {
   option: TrackData
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <React.Fragment>
       <TrackLogo track={track} />
@@ -20,7 +20,7 @@ const SelectedComponent = ({
   option: track,
 }: {
   option: TrackData
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <React.Fragment>
       <TrackLogo track={track} />
@@ -40,7 +40,7 @@ export const TrackDropdown = ({
   value: string
   setValue: (slug: string | null) => void
   disabled?: boolean
-}): JSX.Element | null => {
+}): React.JSX.Element | null => {
   const track = tracks.find((track) => track.slug === value) || tracks[0]
   const handleSet = useCallback(
     (track: TrackData) => {
@@ -49,15 +49,16 @@ export const TrackDropdown = ({
     [setValue]
   )
 
+  if (!track) return null
+
   return (
-    <TrackSelect<TrackData>
+    <TrackSelect
       tracks={tracks}
       value={track}
       setValue={handleSet}
       disabled={disabled}
       OptionComponent={OptionComponent}
       SelectedComponent={SelectedComponent}
-      size="single"
     />
   )
 }

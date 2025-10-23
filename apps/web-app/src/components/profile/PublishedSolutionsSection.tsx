@@ -1,9 +1,8 @@
-import Link from 'next/link'
 import { User, CommunitySolution } from '@/types'
 import { Profile } from '@/lib/api/profile'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { ProminentLink } from '@/components/common/ProminentLink'
-import { CommunitySolutionComponent } from '@/components/common/CommunitySolution'
+import CommunitySolutionComponent from '@/components/common/CommunitySolution'
 
 interface PublishedSolutionsSectionProps {
   user: User & { numPublishedSolutions: number }
@@ -20,7 +19,7 @@ export function PublishedSolutionsSection({
     <section className="published-solutions-section">
       <div className="lg-container container">
         <header className="section-header">
-          <GraphicalIcon icon="community-solutions" hex />
+          <GraphicalIcon icon="community-solutions" />
           <h2 
             className="published-solutions" 
             data-total-count={user.numPublishedSolutions}
@@ -41,9 +40,10 @@ export function PublishedSolutionsSection({
         </div>
 
         {profile.solutionsTab && (
-          <ProminentLink href={`/profiles/${profile.handle}/solutions`}>
-            See all solutions by {user.name || user.handle}
-          </ProminentLink>
+          <ProminentLink 
+            link={`/profiles/${profile.handle}/solutions`}
+            text={`See all solutions by ${user.name || user.handle}`}
+          />
         )}
       </div>
     </section>

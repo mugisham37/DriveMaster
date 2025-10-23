@@ -560,5 +560,50 @@ export type TaskModule = 'analyzer' | 'concept-exercise' | 'concept' | 'generato
 export type TaskSize = 'tiny' | 'small' | 'medium' | 'large' | 'massive'
 export type TaskType = 'ci' | 'coding' | 'content' | 'docker' | 'docs'
 
+// Additional missing types
+export interface ExerciseAuthorship {
+  exercise: Exercise
+  track: Track
+}
+
+export interface PaginatedResult<T> {
+  results: T[]
+  meta: {
+    currentPage: number
+    totalCount: number
+    totalPages: number
+    unscopedTotal?: number
+  }
+}
+
+export interface Contribution {
+  uuid: string
+  value: number
+  text: string
+  iconUrl: string
+  internalUrl?: string
+  externalUrl?: string
+  createdAt: string
+  track?: {
+    title: string
+    iconUrl: string
+  }
+}
+
+export interface ContributionCategory {
+  id: 'publishing' | 'mentoring' | 'authoring' | 'building' | 'maintaining' | 'other'
+  reputation: number
+  metricFull?: string
+  metricShort?: string
+}
+
+export interface TrackContribution {
+  slug: string | null
+  title: string
+  iconUrl: string
+  categories: readonly ContributionCategory[]
+  totalReputation: number
+}
+
 // Export all types individually instead of as default object
 // This prevents the "only refers to a type, but is being used as a value" errors

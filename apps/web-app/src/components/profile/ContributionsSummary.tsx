@@ -10,7 +10,7 @@ import { useChart } from './contributions-summary/use-chart'
 import { TotalReputation } from './contributions-summary/TotalReputation'
 import { CategorySummary } from './contributions-summary/CategorySummary'
 import { TrackSelect } from './contributions-summary/TrackSelect'
-import { TrackContribution, ContributionCategory } from '../../types'
+import { TrackContribution, ContributionCategory } from '@/components/types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 // i18n-key-prefix: contributionsSummary
@@ -52,7 +52,7 @@ export default function ContributionsSummary({
   handle?: string
   links: Links
   showHeader?: boolean
-}): JSX.Element | null {
+}): React.JSX.Element | null {
   const { t } = useAppTranslation('components/profile')
   const allTrack = tracks.find((track) => track.slug === null)
 
@@ -61,20 +61,20 @@ export default function ContributionsSummary({
   }
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
-  const [currentTrack, setCurrentTrack] = useState(tracks[0])
+  const [currentTrack, setCurrentTrack] = useState<TrackContribution | undefined>(tracks[0])
   const labelRefs = useRef(
-    currentTrack.categories.map(() => createRef<HTMLDivElement>())
+    currentTrack?.categories?.map(() => createRef<HTMLDivElement>()) || []
   )
   const trackColor =
-    currentTrack.slug !== 'all'
+    currentTrack?.slug !== 'all'
       ? getComputedStyle(document.documentElement).getPropertyValue(
-          `--track-color-${currentTrack.slug}`
+          `--track-color-${currentTrack?.slug}`
         )
       : undefined
 
   const { chart } = useChart(
     canvas,
-    currentTrack.categories.map((category) => category.reputation),
+    currentTrack?.categories?.map((category: ContributionCategory) => category.reputation) || [],
     trackColor
   )
 
@@ -85,8 +85,9 @@ export default function ContributionsSummary({
     const timeout = setTimeout(() => {
       const containerHeight = (canvas.parentNode as HTMLElement).offsetHeight
 
-      const point0 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(0)
-      const label0 = labelRefs.current[0].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point0 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(0)
+      const label0 = labelRefs.current[0]?.current
       if (!label0) {
         return
       }
@@ -95,8 +96,9 @@ export default function ContributionsSummary({
       label0.style.bottom = `${containerHeight - point0.bottom + topMargin}px`
       label0.style.visibility = 'visible'
 
-      const point1 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(1)
-      const label1 = labelRefs.current[1].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point1 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(1)
+      const label1 = labelRefs.current[1]?.current
       if (!label1) {
         return
       }
@@ -106,8 +108,9 @@ export default function ContributionsSummary({
       }px`
       label1.style.visibility = 'visible'
 
-      const point2 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(2)
-      const label2 = labelRefs.current[2].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point2 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(2)
+      const label2 = labelRefs.current[2]?.current
       if (!label2) {
         return
       }
@@ -117,8 +120,9 @@ export default function ContributionsSummary({
       }px`
       label2.style.visibility = 'visible'
 
-      const point3 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(3)
-      const label3 = labelRefs.current[3].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point3 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(3)
+      const label3 = labelRefs.current[3]?.current
       if (!label3) {
         return
       }
@@ -129,8 +133,9 @@ export default function ContributionsSummary({
       }px`
       label3.style.visibility = 'visible'
 
-      const point4 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(4)
-      const label4 = labelRefs.current[4].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point4 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(4)
+      const label4 = labelRefs.current[4]?.current
       if (!label4) {
         return
       }
@@ -142,8 +147,9 @@ export default function ContributionsSummary({
       }px`
       label4.style.visibility = 'visible'
 
-      const point5 = chart.getDatasetMeta(0).iScale.getPointLabelPosition(5)
-      const label5 = labelRefs.current[5].current
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const point5 = (chart as any).getDatasetMeta(0).iScale.getPointLabelPosition(5)
+      const label5 = labelRefs.current[5]?.current
       if (!label5) {
         return
       }
@@ -165,21 +171,23 @@ export default function ContributionsSummary({
         <div className="summary">
           {showHeader ? (
             <header className="section-header">
-              <GraphicalIcon icon="contribute" hex={true} />
+              <GraphicalIcon icon="contribute" />
               <h2>{t('contributionsSummary.contributions')}</h2>
             </header>
           ) : null}
           <TotalReputation
-            handle={handle}
+            {...(handle ? { handle } : {})}
             reputation={allTrack.totalReputation}
           />
-          <TrackSelect
-            tracks={tracks}
-            value={currentTrack}
-            setValue={setCurrentTrack}
-          />
+          {currentTrack && (
+            <TrackSelect
+              tracks={tracks}
+              value={currentTrack}
+              setValue={setCurrentTrack}
+            />
+          )}
 
-          {currentTrack.categories.map((category) => (
+          {currentTrack?.categories?.map((category: ContributionCategory) => (
             <CategorySummary key={category.id} category={category} />
           ))}
 
@@ -195,7 +203,7 @@ export default function ContributionsSummary({
         </div>
 
         <div className="chart-container">
-          {currentTrack.categories.map((category, i) => {
+          {currentTrack?.categories?.map((category: ContributionCategory, i: number) => {
             return (
               <CategoryLabel
                 key={category.id}
@@ -219,7 +227,7 @@ const CategoryLabel = forwardRef<
 >(({ category }, ref) => {
   return (
     <div className="label" ref={ref}>
-      <GraphicalIcon icon={CATEGORY_ICONS[category.id]} hex />
+      <GraphicalIcon icon={CATEGORY_ICONS[category.id]} />
       <div className="title">{CATEGORY_TITLES[category.id]}</div>
       {category.metricShort ? (
         <div className="subtitle">{category.metricShort}</div>

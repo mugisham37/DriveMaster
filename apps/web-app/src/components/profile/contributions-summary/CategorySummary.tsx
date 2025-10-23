@@ -8,11 +8,11 @@ export const CategorySummary = ({
   category,
 }: {
   category: ContributionCategory
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/contributions-summary')
   return (
     <div className="category">
-      <GraphicalIcon icon={CATEGORY_ICONS[category.id]} hex />
+      <GraphicalIcon icon={CATEGORY_ICONS[category.id]} />
       <div className="info">
         <div className="title">{CATEGORY_TITLES[category.id]}</div>
         {category.metricFull ? (

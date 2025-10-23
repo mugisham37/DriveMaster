@@ -2,11 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Request, usePaginatedRequestQuery } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
-// import { Pagination } from '../common' // Component doesn't exist
 import CommunitySolution from '../common/CommunitySolution'
 import { FetchingBoundary } from '../FetchingBoundary'
 import { ResultsZone } from '../ResultsZone'
-// import { TrackDropdown, OrderSelect } from './community-solutions-list' // Components don't exist
+import { TrackDropdown } from './community-solutions-list/TrackDropdown'
+import { OrderSelect } from './community-solutions-list/OrderSelect'
 import type {
   CommunitySolution as CommunitySolutionProps,
   PaginatedResult,
@@ -14,7 +14,6 @@ import type {
 import { scrollToTop } from '@/utils/scroll-to-top'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Pagination } from '../common/Pagination'
-import { OrderSelect } from '../student/tracks-list/OrderSelect'
 
 // i18n-key-prefix: communitySolutionsList
 // i18n-namespace: components/profile
@@ -37,7 +36,7 @@ export default function CommunitySolutionsList({
 }: {
   request: Request
   tracks: TrackData[]
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/profile')
   const {
     request,
@@ -51,18 +50,15 @@ export default function CommunitySolutionsList({
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<
-    PaginatedResult<CommunitySolutionProps[]>,
-    Error | Response
-  >(
+  } = usePaginatedRequestQuery<PaginatedResult<CommunitySolutionProps[]>>(
     ['profile-community-solution-list', request.endpoint, request.query],
     request
   )
-  const [criteria, setCriteria] = useState(request.query?.criteria)
+  const [criteria, setCriteria] = useState<string | undefined>(request.query?.criteria as string)
 
   const setTrack = useCallback(
-    (slug) => {
-      setQuery({ ...request.query, trackSlug: slug, page: undefined })
+    (slug: string | null) => {
+      setQuery({ ...(request.query || {}), trackSlug: slug, page: undefined })
     },
     [request.query, setQuery]
   )
@@ -78,7 +74,7 @@ export default function CommunitySolutionsList({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query as Record<string, string | number | boolean | null> || {}) })
 
   return (
     <div
@@ -88,7 +84,7 @@ export default function CommunitySolutionsList({
       <div className="c-search-bar">
         <TrackDropdown
           tracks={tracks}
-          value={request.query.trackSlug || ''}
+          value={(request.query?.trackSlug as string) || ''}
           setValue={setTrack}
         />
         <input
@@ -100,7 +96,7 @@ export default function CommunitySolutionsList({
           placeholder={t('communitySolutionsList.filterByExercise')}
         />
         <OrderSelect
-          value={request.query.order || DEFAULT_ORDER}
+          value={(request.query?.order as Order) || DEFAULT_ORDER}
           setValue={setOrder}
         />
       </div>
@@ -113,11 +109,31 @@ export default function CommunitySolutionsList({
           {resolvedData ? (
             <React.Fragment>
               <div className="solutions">
-                {resolvedData.results.map((solution) => {
+                {resolvedData.results.map((solution: CommunitySolutionProps) => {
                   return (
                     <CommunitySolution
                       key={solution.uuid}
-                      solution={solution}
+                      solution={{
+                        uuid: solution.uuid,
+                        url: solution.links?.publicUrl || '',
+                        user: {
+                          handle: solution.author.handle,
+                          flair: solution.author.flair,
+                          avatarUrl: solution.author.avatarUrl
+                        },
+                        exercise: solution.exercise,
+                        track: {
+                          title: solution.track.title,
+                          iconUrl: solution.track.iconUrl
+                        },
+                        publishedAt: solution.publishedAt,
+                        numStars: parseInt(solution.numStars),
+                        numComments: parseInt(solution.numComments),
+                        numLoc: parseInt(solution.numLoc || '0'),
+                        isStarred: false,
+                        snippet: solution.snippet,
+                        language: solution.language || 'text'
+                      }}
                       context="profile"
                     />
                   )
@@ -125,7 +141,7 @@ export default function CommunitySolutionsList({
               </div>
               <Pagination
                 disabled={resolvedData === undefined}
-                current={request.query.page || 1}
+                current={(request.query?.page as number) || 1}
                 total={resolvedData.meta.totalPages}
                 setPage={(p) => {
                   setPage(p)

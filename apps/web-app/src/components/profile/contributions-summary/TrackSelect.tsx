@@ -9,10 +9,10 @@ const OptionComponent = ({
   option: track,
 }: {
   option: TrackContribution
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <React.Fragment>
-      <TrackLogo track={track} />
+      <TrackLogo track={{ slug: track.slug || '', title: track.title, iconUrl: track.iconUrl }} />
       <div className="title">{track.title}</div>
       <div className="count">{track.totalReputation.toLocaleString()} rep</div>
     </React.Fragment>
@@ -23,10 +23,10 @@ const SelectedComponent = ({
   option: track,
 }: {
   option: TrackContribution
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <React.Fragment>
-      <TrackLogo track={track} />
+      <TrackLogo track={{ slug: track.slug || '', title: track.title, iconUrl: track.iconUrl }} />
       <div className="track-title">{track.title}</div>
       <div className="count">{track.totalReputation.toLocaleString()} rep</div>
     </React.Fragment>
@@ -41,9 +41,9 @@ export const TrackSelect = ({
   tracks: readonly TrackContribution[]
   value: TrackContribution
   setValue: (value: TrackContribution) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const handleSet = useCallback(
-    (track) => {
+    (track: TrackContribution) => {
       const matchingTrack = tracks.find((t) => t.slug === track.slug)
 
       if (!matchingTrack) {
@@ -56,13 +56,12 @@ export const TrackSelect = ({
   )
 
   return (
-    <BaseTrackSelect<TrackContribution>
-      tracks={tracks}
+    <BaseTrackSelect
+      tracks={[...tracks]}
       value={value}
       setValue={handleSet}
       SelectedComponent={SelectedComponent}
       OptionComponent={OptionComponent}
-      size="large"
     />
   )
 }

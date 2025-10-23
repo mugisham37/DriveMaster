@@ -26,17 +26,17 @@ export const BuildingContributionsList = ({
   request: initialRequest,
 }: {
   request: Request
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { request, setPage } = useList(initialRequest)
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<
-    PaginatedResult<ContributionProps[]>,
-    Error | Response
-  >([request.endpoint, request.query], request)
+  } = usePaginatedRequestQuery<PaginatedResult<ContributionProps[]>>(
+    [request.endpoint, request.query], 
+    request
+  )
 
   return (
     <ResultsZone isFetching={isFetching}>
@@ -48,13 +48,13 @@ export const BuildingContributionsList = ({
         {resolvedData ? (
           <React.Fragment>
             <div className="maintaining">
-              {resolvedData.results.map((contribution) => (
+              {resolvedData.results.map((contribution: ContributionProps) => (
                 <Contribution key={contribution.uuid} {...contribution} />
               ))}
             </div>
             <Pagination
               disabled={resolvedData === undefined}
-              current={request.query.page || 1}
+              current={(request.query?.page as number) || 1}
               total={resolvedData.meta.totalPages}
               setPage={(p) => {
                 setPage(p)
@@ -76,7 +76,7 @@ const Contribution = ({
   externalUrl,
   createdAt,
   track,
-}: ContributionProps): JSX.Element => {
+}: ContributionProps): React.JSX.Element => {
   const { t } = useAppTranslation('components/profile/contributions-list')
   const url = internalUrl || externalUrl
   const linkIcon = url === internalUrl ? 'chevron-right' : 'external-link'

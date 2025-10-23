@@ -32,15 +32,15 @@ export default function TestimonialsSummary({
   numTestimonialsReceived,
   testimonials,
   links,
-}: Props): JSX.Element {
+}: Props): React.JSX.Element {
   const { t } = useAppTranslation('components/profile')
-  const [currentTestimonial, setCurrentTestimonial] = useState(testimonials[0])
+  const [currentTestimonial, setCurrentTestimonial] = useState<Testimonial | undefined>(testimonials[0])
 
   return (
     <section className="testimonials-section">
       <div className="md-container container">
         <header className="section-header">
-          <GraphicalIcon icon="testimonials" hex />
+          <GraphicalIcon icon="testimonials" />
           <h2>Testimonials</h2>
           <hr className="c-divider" />
         </header>
@@ -69,7 +69,7 @@ export default function TestimonialsSummary({
               </div>
             </div>
           </div>
-          <div className="testimonial">{currentTestimonial.content}</div>
+          <div className="testimonial">{currentTestimonial?.content}</div>
           <div className="stars">
             <GraphicalIcon icon="gold-star" />
             <GraphicalIcon icon="gold-star" />
@@ -82,7 +82,7 @@ export default function TestimonialsSummary({
             {testimonials.map((testimonial, i) => {
               const classNames = [
                 'byline',
-                testimonial === currentTestimonial ? 'active' : 'unactive',
+                testimonial === currentTestimonial ? 'active' : 'inactive',
               ].filter((className) => className.length > 0)
 
               return (
