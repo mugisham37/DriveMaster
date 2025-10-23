@@ -6,7 +6,7 @@ interface ImpactPageProps {
   discussionsCount: number
   usersPerMonth: string
   milestones: string
-  metrics: any[]
+  metrics: unknown[]
 }
 
 export function ImpactPage({
@@ -24,7 +24,7 @@ export function ImpactPage({
     <div id="page-impact" className="bg-white">
       <div className="lg-container">
         <header className="py-32">
-          <h1 className="text-h2 mb-4">Exercism's Impact</h1>
+          <h1 className="text-h2 mb-4">Exercism&apos;s Impact</h1>
           <p className="text-p-large text-gray-600">
             See how Exercism is making programming education accessible worldwide
           </p>
@@ -140,7 +140,7 @@ export function ImpactPage({
           <section>
             <h2 className="text-h3 mb-6">Key Milestones</h2>
             <div className="space-y-4">
-              {milestonesData.map((milestone: unknown, index: number) => (
+              {milestonesData.map((milestone: any, index: number) => (
                 <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl">{milestone.emoji}</div>
                   <div>

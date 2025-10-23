@@ -10,7 +10,7 @@ export const HeaderSummary = ({
   tracks,
 }: {
   tracks: TrackProgressList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/learning-section'
   )
@@ -27,7 +27,7 @@ export const HeaderSummary = ({
   )
 }
 
-const TrackSummary = ({ track }: { track: TrackProgress }): JSX.Element => {
+const TrackSummary = ({ track }: { track: TrackProgress }): React.JSX.Element => {
   return (
     <TrackHeaderSpan slug={track.slug}>
       {track.title} ({track.completion.toFixed(2)}%)

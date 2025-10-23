@@ -23,7 +23,7 @@ export const OrderSwitcher = ({
 }: {
   value: Order
   setValue: (value: Order) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <SingleSelect<Order>
       options={['newest_first', 'oldest_first']}

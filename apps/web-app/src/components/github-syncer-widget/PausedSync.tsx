@@ -15,7 +15,7 @@ export function PausedSync({
         <Trans
           i18nKey="pausedSync.visitSettingsToResumeSyncing"
           ns="components/github-syncer-widget"
-          components={[<span className="text-orange" />]}
+          components={[<span key="orange-text" className="text-orange" />]}
         />
       </h6>
       <p className="text-center text-balance">
@@ -23,7 +23,7 @@ export function PausedSync({
           i18nKey="pausedSync.visitSettingsToResumeSyncing"
           ns="components/github-syncer-widget"
           components={[
-            <a href={settingsLink} className="text-prominentLinkColor" />,
+            <a key="settings-link" href={settingsLink} className="text-prominentLinkColor" />,
           ]}
         />
       </p>

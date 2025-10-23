@@ -3,7 +3,7 @@ import { Trans } from 'react-i18next'
 import { timeFormat, fromNow } from '@/utils/time'
 import { GraphicalIcon } from '@/components/common'
 import ProgressGraph from '@/components/common/ProgressGraph'
-import { TrackSummaryHeader } from './track-summary/TrackSummaryHeader'
+// import { TrackSummaryHeader } from './track-summary/TrackSummaryHeader'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import type { TrackProgress } from '../../types'
 
@@ -15,7 +15,7 @@ export const TrackSummary = ({
   track: TrackProgress
   expanded: boolean
   avgVelocity: number | null
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/learning-section'
   )
@@ -37,12 +37,13 @@ export const TrackSummary = ({
   return (
     <details className="c-details track" open={expanded}>
       <summary className="--summary">
-        <TrackSummaryHeader track={track} />
+        {/* <TrackSummaryHeader track={track} /> */}
+        <h4>{track.title}</h4>
       </summary>
       <div className="track-details">
         <div className="time-area">
           <ProgressGraph
-            data={track.progressChart.data}
+            values={track.progressChart?.data?.map((d: any) => d.count) || []}
             height={120}
             width={300}
           />
@@ -65,7 +66,7 @@ export const TrackSummary = ({
         <div className="date-area">
           <GraphicalIcon icon="entry" />
           <h4 className="journey-h3">
-            {timeFormat(track.startedAt, 'DD MMM YYYY')}
+            {timeFormat(track.startedAt)}
           </h4>
           <h5 className="text-h6">
             <Trans

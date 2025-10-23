@@ -13,7 +13,7 @@ import { FetchingBoundary } from '../FetchingBoundary'
 import { ResultsZone } from '../ResultsZone'
 import { LayoutSelect } from '../track/exercise-community-solutions-list/LayoutSelect'
 import type {
-  CommunitySolution as CommunitySolutionProps,
+  CommunitySolution as CommunitySolutionType,
   PaginatedResult,
 } from '../types'
 // Using simple div wrappers for tooltip functionality - can be enhanced later
@@ -44,22 +44,22 @@ export default function FavoritesList({
     isFetching,
     error,
   } = usePaginatedRequestQuery<
-    PaginatedResult<CommunitySolutionProps[]>,
-    Error | Response
+    PaginatedResult<CommunitySolutionType>,
+    Error
   >(
     ['favorite-community-solution-list', request.endpoint, request.query],
     request
   )
 
-  const [criteria, setCriteria] = useState(request.query?.criteria ?? '')
+  const [criteria, setCriteria] = useState((request.query?.criteria as string) ?? '')
   const [layout, setLayout] = useLocalStorage<`${'grid' | 'lines'}-layout`>(
     'community-solutions-layout',
     'grid-layout'
   )
 
   const setTrack = useCallback(
-    (slug: string) => {
-      setQuery({ ...request.query, trackSlug: slug, page: undefined })
+    (slug: string | null) => {
+      setQuery({ ...(request.query || {}), trackSlug: slug, page: undefined })
     },
     [request.query, setQuery]
   )
@@ -73,7 +73,7 @@ export default function FavoritesList({
     return () => clearTimeout(handler)
   }, [criteria, setRequestCriteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   if (
     resolvedData?.meta?.unscopedTotal === 0 &&
@@ -101,7 +101,7 @@ export default function FavoritesList({
           {tracks.length > 0 && (
             <TrackDropdown
               tracks={tracks}
-              value={request.query?.trackSlug || ''}
+              value={(request.query?.trackSlug as string) || ''}
               setValue={setTrack}
               disabled={!isUserInsider}
             />
@@ -123,25 +123,46 @@ export default function FavoritesList({
       <ResultsZone isFetching={isFetching}>
         <FetchingBoundary
           status={status}
-          error={error}
+          error={error as Error | null}
           defaultError={DEFAULT_ERROR}
         >
-          {Array.isArray(resolvedData?.results) &&
+          {resolvedData && Array.isArray(resolvedData.results) &&
           resolvedData.results.length > 0 ? (
             <>
               <div className={assembleClassNames('solutions', layout)}>
-                {resolvedData.results.map((solution: CommunitySolutionProps) => (
+                {resolvedData.results.map((solution: CommunitySolutionType) => (
                   <CommunitySolution
                     key={solution.uuid}
-                    solution={solution}
+                    solution={{
+                      uuid: solution.uuid,
+                      url: solution.links?.public || '',
+                      user: {
+                        handle: solution.author.handle,
+                        ...(solution.author.flair?.name && { flair: solution.author.flair.name }),
+                        ...(solution.author.flair?.name && { reputation: solution.author.flair.name }),
+                        avatarUrl: solution.author.avatarUrl
+                      },
+                      exercise: solution.exercise,
+                      track: solution.track,
+                      publishedAt: solution.publishedAt,
+                      numStars: solution.numStars,
+                      numComments: solution.numComments,
+                      numLoc: solution.numLoc,
+                      isStarred: solution.isStarred,
+                      language: {
+                        name: 'text',
+                        indent: 2
+                      },
+                      snippet: solution.snippet
+                    }}
                     context="exercise"
                   />
                 ))}
               </div>
-              {typeof resolvedData.meta?.totalPages === 'number' && (
+              {resolvedData && typeof resolvedData.meta?.totalPages === 'number' && (
                 <Pagination
                   disabled={resolvedData === undefined}
-                  current={request.query?.page || 1}
+                  current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
                     setPage(p)

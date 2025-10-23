@@ -32,10 +32,22 @@ export function useList(initialRequest: Request) {
     }));
   }, []);
 
+  const setOrder = useCallback((order: string) => {
+    setRequest((prev) => ({
+      ...prev,
+      query: {
+        ...prev.query,
+        order,
+        page: undefined, // Reset page when order changes
+      },
+    }));
+  }, []);
+
   return {
     request,
     setCriteria,
     setPage,
     setQuery,
+    setOrder,
   };
 }

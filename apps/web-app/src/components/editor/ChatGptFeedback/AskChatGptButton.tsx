@@ -1,20 +1,20 @@
 // i18n-key-prefix: askChatGptButton
 // i18n-namespace: components/editor/ChatGptFeedback
-import React, { forwardRef } from 'react'
-import { GraphicalIcon } from '@/components/common'
-import { FetchingStatus } from './useChatGptFeedback'
-import { GenericTooltip } from '@/components/misc/ExercismTippy'
-import { ConditionTextManager } from '@/utils/condition-text-manager'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import React, { forwardRef } from "react";
+import { GraphicalIcon } from "@/components/common";
+import { FetchingStatus } from "./useChatGptFeedback";
+import { GenericTooltip } from "@/components/misc/ExercismTippy";
+import { ConditionTextManager } from "@/utils/condition-text-manager";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
 type Props = {
-  isProcessing: boolean
-  sameSubmission: boolean
-  noSubmission: boolean
-  chatGptFetchingStatus: FetchingStatus
-  passingTests: boolean
-  insider: boolean
-} & React.ButtonHTMLAttributes<HTMLButtonElement>
+  isProcessing: boolean;
+  sameSubmission: boolean;
+  noSubmission: boolean;
+  chatGptFetchingStatus: FetchingStatus;
+  passingTests: boolean;
+  insider: boolean;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export const AskChatGptButton = forwardRef<HTMLButtonElement, Props>(
   (
@@ -29,36 +29,36 @@ export const AskChatGptButton = forwardRef<HTMLButtonElement, Props>(
     },
     ref
   ) => {
-    const { t } = useAppTranslation('components/editor/ChatGptFeedback')
+    const { t } = useAppTranslation("components/editor/ChatGptFeedback");
 
     const isDisabled =
       isProcessing ||
       noSubmission ||
-      chatGptFetchingStatus === 'fetching' ||
+      chatGptFetchingStatus === "fetching" ||
       sameSubmission ||
-      passingTests
+      passingTests;
 
-    const tooltipText = new ConditionTextManager()
+    const tooltipText = new ConditionTextManager();
     tooltipText.append(
       noSubmission,
-      t('askChatGptButton.pleaseRunTheTestsFirst')
-    )
+      t("askChatGptButton.pleaseRunTheTestsFirst")
+    );
     tooltipText.append(
       sameSubmission,
-      t('askChatGptButton.pleaseRerunTheTestsToContinue')
-    )
+      t("askChatGptButton.pleaseRerunTheTestsToContinue")
+    );
     tooltipText.append(
       isProcessing,
-      t('askChatGptButton.testsAreCurrentlyRunning')
-    )
+      t("askChatGptButton.testsAreCurrentlyRunning")
+    );
     tooltipText.append(
-      chatGptFetchingStatus === 'fetching',
-      t('askChatGptButton.awaitingResponseFromChatGPTPleaseStandBy')
-    )
+      chatGptFetchingStatus === "fetching",
+      t("askChatGptButton.awaitingResponseFromChatGPTPleaseStandBy")
+    );
     tooltipText.append(
       passingTests,
-      t('askChatGptButton.congratsTheTestsArePassing')
-    )
+      t("askChatGptButton.congratsTheTestsArePassing")
+    );
 
     return (
       <GenericTooltip
@@ -74,10 +74,10 @@ export const AskChatGptButton = forwardRef<HTMLButtonElement, Props>(
             {...props}
           >
             <GraphicalIcon icon="automation" height={16} width={16} />
-            <span>{t('askChatGptButton.stuckAskChatGPT')}</span>
+            <span>{t("askChatGptButton.stuckAskChatGPT")}</span>
           </button>
         </div>
       </GenericTooltip>
-    )
+    );
   }
-)
+);

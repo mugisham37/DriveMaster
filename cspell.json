@@ -1095,7 +1095,13 @@
         "unlockable",
         "Unlockable",
         "Scriptable",
-        "purpleish"
+        "purpleish",
+        "favourites",
+        "favourited",
+        "mentored",
+        "mentoring",
+        "learnt",
+        "enrolled"
       ]
     }
   ]

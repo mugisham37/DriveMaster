@@ -1,4 +1,3 @@
-import pluralize from 'pluralize'
 import React from 'react'
 import { TrackProgressList } from '../../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
@@ -8,7 +7,7 @@ export const LearningOverview = ({
   tracks,
 }: {
   tracks: TrackProgressList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/learning-section'
   )

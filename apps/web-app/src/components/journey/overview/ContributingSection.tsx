@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { TrackContribution } from '../../../types'
 import { GraphicalIcon } from '../../common'
 
@@ -10,15 +11,15 @@ export interface Props {
 }
 
 export const ContributingSection: React.FC<Props> = ({ tracks, links }) => {
-  const allTrack = tracks.find((track) => track.slug === null)
-  const totalContributions = allTrack?.totalReputation || 0
+  const allTrack = tracks.find((track) => (track as any).slug === null)
+  const totalContributions = (allTrack as any)?.totalReputation || 0
 
   if (totalContributions === 0) {
     return (
       <section className="empty-section">
         <GraphicalIcon icon="contribute" />
         <h3 className="journey-h3 mb-24">
-          You haven't contributed yet
+          You haven&apos;t contributed yet
         </h3>
         <p>
           Contribute to Exercism by writing exercises, mentoring, or helping with the platform.
@@ -46,17 +47,17 @@ export const ContributingSection: React.FC<Props> = ({ tracks, links }) => {
       </header>
       
       <div className="contribution-tracks">
-        {tracks.filter(track => track.slug !== null).slice(0, 5).map((track) => (
-          <div key={track.slug} className="contribution-track">
+        {tracks.filter(track => (track as any).slug !== null).slice(0, 5).map((track) => (
+          <div key={(track as any).slug} className="contribution-track">
             <div className="track-info">
-              <img src={track.iconUrl} alt={track.title} className="track-icon" />
+              <Image src={(track as any).iconUrl} alt={(track as any).title} className="track-icon" width={32} height={32} />
               <div className="track-details">
-                <h4>{track.title}</h4>
+                <h4>{(track as any).title}</h4>
                 <p>Contributions to this track</p>
               </div>
             </div>
             <div className="contribution-stats">
-              <span className="reputation">{track.totalReputation} reputation</span>
+              <span className="reputation">{(track as any).totalReputation} reputation</span>
             </div>
           </div>
         ))}

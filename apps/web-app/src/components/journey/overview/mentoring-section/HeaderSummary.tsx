@@ -34,7 +34,7 @@ export const HeaderSummary = ({
   tracks,
 }: {
   tracks: MentoredTrackProgressList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/mentoring-section'
   )
@@ -64,7 +64,7 @@ const TrackSummary = ({
   track,
 }: {
   track: MentoredTrackProgressWithPercentage
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <TrackHeaderSpan slug={track.slug}>
       {track.title} ({track.percentage.toFixed(2)}%)

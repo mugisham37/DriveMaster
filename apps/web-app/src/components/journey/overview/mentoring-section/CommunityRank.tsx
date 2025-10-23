@@ -3,7 +3,7 @@
 import React from 'react'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export const CommunityRank = ({ rank }: { rank: number }): JSX.Element => {
+export const CommunityRank = ({ rank }: { rank: number }): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/mentoring-section'
   )

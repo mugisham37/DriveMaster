@@ -31,6 +31,15 @@ export function shortFromNow(dateString: string): string {
   return `${diffInYears}y ago`
 }
 
+export function timeFormat(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 export function fromNow(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()

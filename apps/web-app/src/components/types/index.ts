@@ -465,6 +465,12 @@ export interface Badge {
   }
 }
 
+export interface BadgeList {
+  filter: (rarity: BadgeRarity) => Badge[]
+  length: number
+  sort(): { items: Badge[] }
+}
+
 // Student track types
 export interface StudentTrack {
   id: number
@@ -499,6 +505,48 @@ export interface TrackProgressChart {
     day: string
     count: number
   }>
+}
+
+export interface TrackProgress {
+  slug: string
+  title: string
+  completion: number
+  numCompletedExercises: number
+  numExercises: number
+  progressChart?: TrackProgressChart
+  startedAt: string
+}
+
+export interface TrackProgressList {
+  items: TrackProgress[]
+  length: number
+  numCompletedExercises: number
+  numExercises: number
+  numConceptsLearnt: number
+  completion: number
+  sort(): TrackProgressList
+}
+
+export interface MentoredTrackProgress {
+  slug: string
+  title: string
+  iconUrl: string
+  numStudents: number
+  numSessions: number
+  numDiscussions: number
+}
+
+export interface MentoredTrackProgressWithPercentage extends MentoredTrackProgress {
+  percentage: number
+}
+
+export interface MentoredTrackProgressList {
+  items: MentoredTrackProgress[]
+  totals: {
+    discussions: number
+    students: number
+  }
+  sort(): MentoredTrackProgressList
 }
 
 // Concept types

@@ -1,39 +1,28 @@
 import React from 'react'
-import { GraphicalIcon, TrackIcon, Avatar } from '@/components/common'
-
-interface Metric {
-  id: string
-  type: string
-  coordinates: [number, number]
-  user?: {
-    handle: string
-    avatarUrl: string
-  }
-  track?: {
-    title: string
-    iconUrl: string
-  }
-}
+import { Metric } from '../types'
 
 interface ImpactMapProps {
   initialMetrics: Metric[]
   trackTitle?: string
 }
 
-const coordinatesToPosition = (latitude: number, longitude: number) => {
-  const map_width = 724
-  const map_height = 421
+// Utility function for coordinate conversion - keeping for future use
+// const coordinatesToPosition = (latitude: number, longitude: number) => {
+//   const map_width = 724
+//   const map_height = 421
 
-  const x = (longitude + 180) * (map_width / 360)
-  const last_rad = (latitude * Math.PI) / 180
-  const merc_north = Math.log(Math.tan(Math.PI / 4 + last_rad / 2))
-  const y = map_height / 2 - (map_width * merc_north) / (2 * Math.PI)
+//   const x = (longitude + 180) * (map_width / 360)
+//   const last_rad = (latitude * Math.PI) / 180
+//   const merc_north = Math.log(Math.tan(Math.PI / 4 + last_rad / 2))
+//   const y = map_height / 2 - (map_width * merc_north) / (2 * Math.PI)
 
-  const left = ((x - 15) / map_width) * 100
-  const top = ((y + 62) / map_height) * 100
-  return [left, top]
-}
+//   const left = ((x - 15) / map_width) * 100
+//   const top = ((y + 62) / map_height) * 100
+//   return [left, top]
+// }
 
+/*
+// Unused component - keeping for future use
 const _MetricPoint = ({ metric }: { metric: Metric }) => {
   const [left, top] = coordinatesToPosition(
     metric.coordinates[0],
@@ -90,9 +79,14 @@ const _MetricPoint = ({ metric }: { metric: Metric }) => {
     </div>
   )
 }
+*/
 
 export function ImpactMap({ initialMetrics, trackTitle }: ImpactMapProps) {
   // Use the sophisticated Map component with real-time WebSocket updates
-  const { default: ImpactMap } = require('./map')
-  return <ImpactMap initialMetrics={initialMetrics} trackTitle={trackTitle} />
+  const Map = React.lazy(() => import('./map'))
+  return (
+    <React.Suspense fallback={<div>Loading map...</div>}>
+      <Map initialMetrics={initialMetrics} {...(trackTitle && { trackTitle })} />
+    </React.Suspense>
+  )
 }

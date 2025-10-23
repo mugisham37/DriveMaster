@@ -6,7 +6,7 @@ export const ExercisesCompletedSummary = ({
   tracks,
 }: {
   tracks: TrackProgressList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/learning-section'
   )

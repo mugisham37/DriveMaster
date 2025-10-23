@@ -3,6 +3,12 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query'
 export interface Request {
   endpoint: string
   query?: Record<string, any>
+  options?: {
+    enabled?: boolean
+    staleTime?: number
+    cacheTime?: number
+    initialData?: any
+  }
 }
 
 export interface PaginatedResult<T> {
@@ -36,5 +42,8 @@ export function usePaginatedRequestQuery<TData, TError = Error>(
       
       return response.json()
     },
+    enabled: request.options?.enabled,
+    staleTime: request.options?.staleTime,
+    initialData: request.options?.initialData,
   })
 }

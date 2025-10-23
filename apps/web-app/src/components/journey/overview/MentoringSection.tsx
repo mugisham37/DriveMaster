@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { MentoredTrackProgressList } from '../types'
 import { GraphicalIcon } from '../../common'
 
@@ -15,7 +16,7 @@ export const MentoringSection: React.FC<Props> = ({ tracks, links }) => {
       <section className="empty-section">
         <GraphicalIcon icon="mentoring" />
         <h3 className="journey-h3 mb-24">
-          You haven't mentored anyone yet
+          You haven&apos;t mentored anyone yet
         </h3>
         <p>
           Start mentoring students to help them learn and earn reputation.
@@ -52,7 +53,7 @@ export const MentoringSection: React.FC<Props> = ({ tracks, links }) => {
         {tracks.sort().items.slice(0, 5).map((track) => (
           <div key={track.slug} className="mentoring-track">
             <div className="track-info">
-              <img src={track.iconUrl} alt={track.title} className="track-icon" />
+              <Image src={track.iconUrl} alt={track.title} className="track-icon" width={32} height={32} />
               <div className="track-details">
                 <h4>{track.title}</h4>
                 <p>{track.numStudents} students mentored</p>

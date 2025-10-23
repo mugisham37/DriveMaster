@@ -32,7 +32,7 @@ export const HeaderSummary = ({
   tracks,
 }: {
   tracks: readonly TrackContribution[]
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/contributing-section'
   )
@@ -66,7 +66,7 @@ const TrackSummary = ({
   track,
 }: {
   track: TrackContributionWithPercentage
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/contributing-section'
   )

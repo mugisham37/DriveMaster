@@ -1,6 +1,6 @@
 import React from 'react'
+import Image from 'next/image'
 import { BadgeList } from '../../../types'
-import { GraphicalIcon } from '../../common'
 
 export interface Props {
   badges: BadgeList
@@ -28,11 +28,13 @@ export const BadgesSection: React.FC<Props> = ({ badges, links }) => {
       
       <div className="badges-grid">
         {badgesToShow.map((badge) => (
-          <div key={badge.id} className="badge-medallion">
-            <img 
-              src={badge.iconUrl} 
+          <div key={badge.uuid} className="badge-medallion">
+            <Image 
+              src={(badge as any).iconUrl ?? (badge as any).iconName ?? '/default-badge.png'} 
               alt={badge.name}
               className="badge-icon"
+              width={48}
+              height={48}
             />
             <div className="badge-info">
               <h4>{badge.name}</h4>

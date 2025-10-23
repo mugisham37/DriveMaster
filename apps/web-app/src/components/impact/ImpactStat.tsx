@@ -1,4 +1,5 @@
 import React from 'react'
+import Stat from './stat'
 
 interface ImpactStatProps {
   metricType: string
@@ -7,6 +8,5 @@ interface ImpactStatProps {
 
 export function ImpactStat({ metricType, initialValue }: ImpactStatProps) {
   // Use the sophisticated Stat component with real-time WebSocket updates
-  const { default: ImpactStat } = require('./stat')
-  return <ImpactStat metricType={metricType} initialValue={initialValue} />
+  return <Stat metricType={metricType} initialValue={initialValue} />
 }

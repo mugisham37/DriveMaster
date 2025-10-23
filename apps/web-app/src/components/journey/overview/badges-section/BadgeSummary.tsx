@@ -15,7 +15,7 @@ export const BadgeSummary = ({
   badges,
 }: {
   badges: BadgeList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t, i18n } = useAppTranslation(
     'components/journey/overview/badges-section'
   )

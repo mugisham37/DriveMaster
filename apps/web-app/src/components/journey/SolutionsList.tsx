@@ -124,7 +124,7 @@ export const SolutionsList = ({
             value={criteria || ""}
             placeholder={t("solutionsList.searchByExerciseOrTrackName")}
           />
-          <SolutionFilter request={request} onApply={handleApply} />
+          <SolutionFilter request={{ ...request, query: request.query || {} }} onApply={handleApply} />
           <OrderSwitcher
             value={(request.query?.order || DEFAULT_ORDER) as Order}
             setValue={setOrder}

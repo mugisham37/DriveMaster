@@ -1,4 +1,5 @@
 import React from 'react'
+import Chart from './Chart'
 
 interface ImpactChartProps {
   usersPerMonth: string
@@ -7,6 +8,5 @@ interface ImpactChartProps {
 
 export function ImpactChart({ usersPerMonth, milestones }: ImpactChartProps) {
   // Use the sophisticated Chart component with Chart.js
-  const { default: ImpactChart } = require('./Chart')
-  return <ImpactChart data={{ usersPerMonth, milestones }} />
+  return <Chart data={{ usersPerMonth, milestones }} />
 }

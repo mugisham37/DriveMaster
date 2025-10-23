@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { fromNow } from '@/utils/date'
 import { GraphicalIcon, TrackIcon, Reputation } from '@/components/common'
 import { missingExerciseIconErrorHandler } from '@/components/common/imageErrorHandler'
@@ -20,11 +21,13 @@ export const Contribution = ({
 
   return (
     <a href={url} className="reputation-token">
-      <img
+      <Image
         alt=""
         src={iconUrl}
         className="c-icon primary-icon"
         onError={missingExerciseIconErrorHandler}
+        width={24}
+        height={24}
       />
       <div className="info">
         <div className="title" dangerouslySetInnerHTML={{ __html: text }} />
