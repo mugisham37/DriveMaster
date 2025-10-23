@@ -70,7 +70,6 @@ export function RepresentationsList({
 
       {resolvedData && resolvedData.meta.totalPages > 1 && (
         <Pagination
-          disabled={false}
           current={resolvedData.meta.currentPage}
           total={resolvedData.meta.totalPages}
           setPage={(p) => {

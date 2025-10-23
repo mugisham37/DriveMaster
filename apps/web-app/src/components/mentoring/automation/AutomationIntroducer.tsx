@@ -6,13 +6,13 @@ export function AutomationIntroducer({
   hideEndpoint,
 }: {
   hideEndpoint: string
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('automation-batch')
 
   return (
     <Introducer
-      endpoint={hideEndpoint}
-      additionalClassNames="mb-24"
+      slug={hideEndpoint}
+      className="mb-24"
       icon="automation"
     >
       <h2>

@@ -27,7 +27,7 @@ export function TrackFilterList({
   return (
     <div className="track-filter-list">
       <h3>Filter by Track</h3>
-      <ErrorBoundary error={error}>
+      <ErrorBoundary>
         {status === 'loading' ? (
           <LoadingSpinner />
         ) : (

@@ -9,7 +9,7 @@ export { default as TestimonialsList } from './TestimonialsList'
 export { default as Representation } from './Representation'
 export { Sorter } from './Sorter'
 export { TextFilter } from './TextFilter'
-export { TrackSelector } from './TrackSelector'
+export { default as TrackSelector } from './TrackSelector'
 export { MentorHeader } from './MentorHeader'
 
 // Representations

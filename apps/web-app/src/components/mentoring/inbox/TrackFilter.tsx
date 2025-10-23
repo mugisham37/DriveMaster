@@ -1,5 +1,5 @@
 import React from 'react'
-import type { MentorRequest, DiscussionStatus } from '../../../types'
+import type { MentorRequest, DiscussionStatus } from '@/components/types'
 import { Select } from '../../common/Select'
 import { useMentorTracks } from '@/hooks/use-mentor-tracks'
 
@@ -13,7 +13,7 @@ export function TrackFilter({ request, value, setTrack }: Props): React.JSX.Elem
   const { data: tracks } = useMentorTracks(request)
 
   const options = React.useMemo(() => {
-    const trackOptions = tracks?.map((track) => ({
+    const trackOptions = (tracks as any[])?.map((track: any) => ({
       value: track.slug,
       label: track.title
     })) || []

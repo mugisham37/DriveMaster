@@ -30,7 +30,11 @@ export function ProfilePage({
         />
 
         <article>
-          <ContributionsSummary user={user} />
+          <ContributionsSummary 
+            tracks={profile.tracks || []}
+            handle={user.handle}
+            links={profile.links}
+          />
 
           <PublishedSolutionsSection 
             user={user}

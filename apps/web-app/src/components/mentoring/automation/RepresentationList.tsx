@@ -22,11 +22,11 @@ export const RepresentationList = ({
   status,
   error,
   ...props
-}: { status: QueryStatus; error: unknown } & Props): JSX.Element => {
+}: { status: QueryStatus; error: unknown } & Props): React.JSX.Element => {
   return (
     <FetchingBoundary
       status={status}
-      error={error}
+      error={error as Error | null}
       defaultError={DEFAULT_ERROR}
     >
       <Component {...props} />

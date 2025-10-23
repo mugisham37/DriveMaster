@@ -13,7 +13,7 @@ export const AutomationListElement = ({
 }: {
   representation: Representation
   selectedTab: SelectedTab
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/mentoring/automation/AutomationListElement.tsx'
   )
@@ -25,7 +25,7 @@ export const AutomationListElement = ({
       representation.numSubmissions
     )
 
-    const dateElement: Record<SelectedTab, JSX.Element> = {
+    const dateElement: Record<SelectedTab, React.JSX.Element> = {
       admin: <>{fromNow(representation.feedbackAddedAt)}</>,
       with_feedback: (
         <>

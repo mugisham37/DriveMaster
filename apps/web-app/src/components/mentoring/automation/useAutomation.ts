@@ -61,7 +61,7 @@ export function useAutomation(
   } = useList(representationsRequest)
 
   const [selectedTrack, setSelectedTrack] = useState<AutomationTrack>(
-    tracks.find((t: AutomationTrack) => t.slug == request.query.trackSlug) ||
+    tracks.find((t: AutomationTrack) => t.slug == request.query?.trackSlug) ||
       tracks[0] ||
       BLANK_TRACK_DATA
   )
@@ -69,7 +69,7 @@ export function useAutomation(
   const CACHE_KEY = [
     'mentor-representations-list',
     selectedTab,
-    ...Object.values(request.query),
+    ...Object.values(request.query || {}),
   ]
 
   const {
@@ -95,7 +95,7 @@ export function useAutomation(
   useHistory({ pushOn: removeEmpty(request.query) })
 
   const handleTrackChange = useCallback(
-    (track) => {
+    (track: AutomationTrack) => {
       setPage(1)
       setCriteria('')
       setSelectedTrack(track)
@@ -107,7 +107,7 @@ export function useAutomation(
 
   // If only_mentored_solutions === null or undefined remove it completely from query obj and query string
   const handleOnlyMentoredSolutions = useCallback(
-    (checked) => {
+    (checked: boolean) => {
       const queryObject = { ...request.query }
       if (checked) {
         queryObject.onlyMentoredSolutions = true
@@ -142,9 +142,9 @@ export function useAutomation(
     resolvedData: currentData,
     criteria,
     setCriteria,
-    order: request.query.order,
+    order: (request.query?.order as string) || '',
     setOrder,
-    page: request.query.page || 1,
+    page: (request.query?.page as number) || 1,
     setPage,
     checked,
     selectedTrack,

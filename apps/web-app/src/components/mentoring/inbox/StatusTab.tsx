@@ -26,3 +26,30 @@ export function StatusTab<T extends DiscussionStatus>({
     </button>
   )
 }
+
+// Link-based version for navigation
+interface LinkProps<T extends string = string> {
+  status: T
+  currentStatus: T
+  href: string
+  children: React.ReactNode
+}
+
+export function StatusTabLink<T extends string>({
+  status,
+  currentStatus,
+  href,
+  children,
+}: LinkProps<T>): React.JSX.Element {
+  const isActive = status === currentStatus
+
+  return (
+    <a
+      href={href}
+      className={`status-tab ${isActive ? 'active' : ''}`}
+      aria-selected={isActive}
+    >
+      {children}
+    </a>
+  )
+}

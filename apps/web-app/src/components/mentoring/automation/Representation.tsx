@@ -9,7 +9,7 @@ import { Sorter } from '../Sorter'
 import { StatusTabLink } from '../inbox/StatusTab'
 import { SortOption } from '../Inbox'
 import type { Request } from '@/hooks/request-query'
-import type { AutomationStatus, AutomationTrack } from '@/components/types'
+import type { AutomationTrack } from '@/components/types'
 import { QueryKey } from '@tanstack/react-query'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -43,7 +43,7 @@ export function Representations({
   selectedTab,
   trackCacheKey,
   isIntroducerHidden,
-}: AutomationProps): JSX.Element {
+}: AutomationProps): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/mentoring/automation/Representation.tsx'
   )
@@ -76,7 +76,7 @@ export function Representations({
       )}
       <div className="flex justify-between items-center">
         <div className="tabs">
-          <StatusTabLink<AutomationStatus>
+          <StatusTabLink<SelectedTab>
             status="without_feedback"
             currentStatus={selectedTab}
             href={links.withoutFeedback!}
@@ -88,7 +88,7 @@ export function Representations({
               </div>
             ) : null}
           </StatusTabLink>
-          <StatusTabLink<AutomationStatus>
+          <StatusTabLink<SelectedTab>
             status="with_feedback"
             currentStatus={selectedTab}
             href={links.withFeedback!}
@@ -100,7 +100,7 @@ export function Representations({
               </div>
             ) : null}
           </StatusTabLink>
-          <StatusTabLink<AutomationStatus>
+          <StatusTabLink<SelectedTab>
             status="admin"
             currentStatus={selectedTab}
             href={links.admin!}

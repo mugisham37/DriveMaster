@@ -6,7 +6,7 @@ export type RepresentationsWithFeedbackProps = {
 }
 export default function RepresentationsAdmin({
   data,
-}: RepresentationsWithFeedbackProps): JSX.Element {
+}: RepresentationsWithFeedbackProps): React.JSX.Element {
   return (
     <Representations
       {...data}

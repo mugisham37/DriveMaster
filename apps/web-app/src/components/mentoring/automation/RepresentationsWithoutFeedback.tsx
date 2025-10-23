@@ -6,7 +6,7 @@ type RepresentationsWithoutFeedbackProps = {
 }
 export default function RepresentationsWithoutFeedback({
   data,
-}: RepresentationsWithoutFeedbackProps): JSX.Element {
+}: RepresentationsWithoutFeedbackProps): React.JSX.Element {
   return (
     <Representations
       {...data}

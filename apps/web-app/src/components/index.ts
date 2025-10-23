@@ -46,8 +46,43 @@ export * from "./settings";
 // Insiders components
 export * from "./insiders";
 
-// Modal components
-export * from "./modals";
+// Modal components - explicitly re-export to avoid conflicts with common Modal
+export { 
+  BadgeModal,
+  BegModal,
+  BugReportModal,
+  ChangePublishedIterationModal,
+  CLIWalkthroughModal,
+  CompletedMentoringModal,
+  CompleteExerciseModal,
+  ConceptMakersModal,
+  DeleteAccountModal,
+  DisableSolutionCommentsModal,
+  DonationConfirmationModal,
+  EnableSolutionCommentsModal,
+  ExerciseMakersModal,
+  ExerciseTooltipModal,
+  ExerciseUpdateModal,
+  MentorChangeTracksModal,
+  MentorRegistrationModal,
+  Modal as ComponentModal,
+  ModalManager,
+  PracticeModeModal,
+  PreviousMentoringSessionsModal,
+  PublishSolutionModal,
+  RequestMentoringModal,
+  ResetAccountModal,
+  SenioritySurveyModal,
+  TaskHintsModal,
+  TestimonialModal,
+  TestRunModal,
+  TrackLeaveModal,
+  TrackResetModal,
+  TrackWelcomeModal,
+  UnpublishSolutionModal,
+  WelcomeModal,
+  WelcomeToInsidersModal
+} from "./modals";
 
 // Partner components
 export * from "./partner";

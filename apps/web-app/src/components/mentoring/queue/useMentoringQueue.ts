@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { MentoredTrack, MentoredTrackExercise } from '../../../types'
 import { Request } from '../../../hooks/request-query'
 
@@ -18,20 +18,18 @@ export function useMentoringQueue({
   const [order, setOrder] = useState('')
   const [page, setPage] = useState(1)
 
-  const { data: resolvedData, status, error, isFetching } = useQuery(
-    ['mentoring-queue', track.slug, exercise?.slug, criteria, order, page],
-    () =>
-      request.endpoint.request({
+  const { data: resolvedData, status, error, isFetching } = useQuery({
+    queryKey: ['mentoring-queue', track.slug, exercise?.slug, criteria, order, page],
+    queryFn: () =>
+      (request as any).endpoint.request({
         trackSlug: track.slug,
         exerciseSlug: exercise?.slug,
         criteria,
         order,
         page,
       }),
-    {
-      keepPreviousData: true,
-    }
-  )
+    placeholderData: (previousData) => previousData,
+  })
 
   return {
     resolvedData,

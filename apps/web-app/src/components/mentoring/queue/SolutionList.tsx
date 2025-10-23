@@ -20,7 +20,7 @@ export function SolutionList({
 }: Props) {
   return (
     <div className="solution-list">
-      <ErrorBoundary error={error}>
+      <ErrorBoundary>
         {status === 'loading' ? (
           <LoadingSpinner />
         ) : (
@@ -33,8 +33,8 @@ export function SolutionList({
               ))}
             </div>
             <Pagination
-              currentPage={page}
-              totalPages={resolvedData.meta.totalPages}
+              current={page}
+              total={resolvedData.meta.totalPages}
               setPage={setPage}
             />
           </>

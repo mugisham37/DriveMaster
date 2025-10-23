@@ -21,7 +21,7 @@ export function ExerciseFilterList({
   return (
     <div className="exercise-filter-list">
       <h3>Filter by Exercise</h3>
-      <ErrorBoundary error={error}>
+      <ErrorBoundary>
         {status === 'loading' ? (
           <LoadingSpinner />
         ) : (

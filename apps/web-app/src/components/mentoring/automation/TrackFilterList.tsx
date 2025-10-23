@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react'
 import { TrackIcon, Icon } from '../../common'
 import { FetchingBoundary } from '../../FetchingBoundary'
-import { AutomationTrack } from '../../types'
+import { AutomationTrack } from '@/components/types'
 import { QueryKey, QueryStatus } from '@tanstack/react-query'
 import { useDropdown } from '../../dropdowns/useDropdown'
 import { ResultsZone } from '../../ResultsZone'
@@ -20,7 +20,7 @@ const TrackFilter = ({
   checked,
   onChange,
   countText,
-}: TrackFilterProps): JSX.Element => {
+}: TrackFilterProps): React.JSX.Element => {
   return (
     <label className="c-radio-wrapper">
       <input
@@ -49,10 +49,10 @@ export const TrackFilterList = ({
   ...props
 }: React.PropsWithChildren<
   Props & { status: QueryStatus; error: unknown }
->): JSX.Element => {
+>): React.JSX.Element => {
   return (
     <FetchingBoundary
-      error={error}
+      error={error as Error | null}
       status={status}
       defaultError={DEFAULT_ERROR}
     >
@@ -78,7 +78,7 @@ const Component = ({
   value,
   setValue,
   countText,
-}: Props): JSX.Element | null => {
+}: Props): React.JSX.Element | null => {
   const changeTracksRef = useRef<HTMLButtonElement>(null)
   const {
     buttonAttributes,

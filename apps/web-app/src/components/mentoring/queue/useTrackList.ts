@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { MentoredTrack } from '../../../types'
 import { Request } from '../../../hooks/request-query'
 
@@ -13,9 +13,10 @@ export function useTrackList({ cacheKey, request }: UseTrackListOptions) {
     status,
     error,
     isFetching,
-  } = useQuery<{ tracks: MentoredTrack[] }>(cacheKey, () =>
-    request.endpoint.request()
-  )
+  } = useQuery<{ tracks: MentoredTrack[] }>({
+    queryKey: cacheKey,
+    queryFn: () => (request as any).endpoint.request()
+  })
 
   return {
     tracks: data?.tracks || [],

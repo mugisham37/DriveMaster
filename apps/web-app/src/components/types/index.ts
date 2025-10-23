@@ -705,8 +705,7 @@ export interface MentorRequest<T = Record<string, unknown>> {
   }
 }
 
-// Alias for backward compatibility
-export type MentorDiscussion = Discussion
+// Remove duplicate - Discussion is already defined above
 
 // Analyzer feedback types
 export interface AnalyzerFeedback {
@@ -730,6 +729,59 @@ export interface RepresenterFeedback {
     name: string
     avatarUrl?: string
   }
+}
+
+// Additional missing types for mentoring automation
+export interface AutomationStatus {
+  status: 'admin' | 'with_feedback' | 'without_feedback'
+}
+
+export interface AutomationTrack {
+  slug: string
+  title: string
+  iconUrl: string
+  numSubmissions: number
+}
+
+export interface Representation {
+  id: number
+  exercise: Exercise
+  track: Track
+  numSubmissions: number
+  appearsFrequently: boolean
+  feedback: {
+    author: User
+    content: string
+    contentHtml: string
+  } | null
+  lastSubmittedAt: string
+  feedbackAddedAt?: string
+}
+
+export interface ExerciseRepresentation {
+  id: number
+  exerciseId: string
+  trackId: string
+  track: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  exercise: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  numSubmissions: number
+  appearsFrequently: boolean
+  feedback: {
+    author: User
+    content: string
+    contentHtml: string
+  } | null
+  feedbackType?: string
+  lastSubmittedAt: string
+  feedbackAddedAt?: string
 }
 
 // Export all types individually instead of as default object
