@@ -19,7 +19,7 @@ export const ChooseTrackStep = ({
   selected: string[]
   setSelected: (selected: string[]) => void
   onContinue: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/mentor-registration-modal')
   return (
     <section className="tracks-section">

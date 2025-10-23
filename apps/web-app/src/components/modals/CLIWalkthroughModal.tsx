@@ -4,9 +4,9 @@ import { CLIWalkthrough } from '@/components/common'
 import { Modal, ModalProps } from './Modal'
 
 export const CLIWalkthroughModal = ({
-  html,
+  user,
   ...props
-}: Omit<ModalProps, 'className'> & { html: string }): JSX.Element => {
+}: Omit<ModalProps, 'className'> & { user?: { apiToken?: string } | null | undefined }): React.JSX.Element => {
   return (
     <Modal {...props} className="m-cli-walkthrough" cover={true}>
       <GraphicalIcon
@@ -14,7 +14,7 @@ export const CLIWalkthroughModal = ({
         category="graphics"
         className="wizard-icon"
       />
-      <CLIWalkthrough html={html} />
+      <CLIWalkthrough user={user || null} />
     </Modal>
   )
 }

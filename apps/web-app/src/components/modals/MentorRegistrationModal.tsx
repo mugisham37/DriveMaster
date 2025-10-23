@@ -34,7 +34,7 @@ const ModalHeader = ({
   children,
 }: {
   children?: React.ReactNode
-}): JSX.Element => {
+}): React.JSX.Element => {
   return <header>{children}</header>
 }
 
@@ -48,11 +48,9 @@ const ModalBody = ({
   links: Links
   onContinue: () => void
   onBack: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const [selected, setSelected] = useState<string[]>([])
-  const { t } = useAppTranslation(
-    'components/modals/MentorRegistrationModal.tsx'
-  )
+  // Remove unused t variable from ModalBody
 
   switch (currentStep) {
     case 'CHOOSE_TRACK':
@@ -82,27 +80,33 @@ export const MentorRegistrationModal = ({
   onClose,
   links,
   ...props
-}: Omit<ModalProps, 'className'> & { links: Links }): JSX.Element => {
+}: Omit<ModalProps, 'className'> & { links: Links }): React.JSX.Element => {
   const [currentStep, setCurrentStep] = useState<ModalStep>('CHOOSE_TRACK')
   const { t } = useAppTranslation(
     'components/modals/MentorRegistrationModal.tsx'
   )
 
   const moveForward = useCallback(() => {
-    const nextStep = STEPS.findIndex((step) => step.id === currentStep) + 1
+    const nextStepIndex = STEPS.findIndex((step) => step.id === currentStep) + 1
+    const nextStep = STEPS[nextStepIndex]
 
-    setCurrentStep(STEPS[nextStep].id)
+    if (nextStep) {
+      setCurrentStep(nextStep.id)
+    }
   }, [currentStep])
 
   const moveBack = useCallback(() => {
-    const prevStep = STEPS.findIndex((step) => step.id === currentStep) - 1
+    const prevStepIndex = STEPS.findIndex((step) => step.id === currentStep) - 1
+    const prevStep = STEPS[prevStepIndex]
 
-    setCurrentStep(STEPS[prevStep].id)
+    if (prevStep) {
+      setCurrentStep(prevStep.id)
+    }
   }, [currentStep])
 
-  STEPS[0].label = t('chooseTrackStep.selectTracks')
-  STEPS[1].label = t('commitStep.commitToBeGoodMentor')
-  STEPS[2].label = t('congratulationsStep.congratulations')
+  if (STEPS[0]) STEPS[0].label = t('chooseTrackStep.selectTracks')
+  if (STEPS[1]) STEPS[1].label = t('commitStep.commitToBeGoodMentor')
+  if (STEPS[2]) STEPS[2].label = t('congratulationsStep.congratulations')
 
   return (
     <Modal

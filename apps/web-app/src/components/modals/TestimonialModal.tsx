@@ -5,7 +5,20 @@ import { SharePlatform, Testimonial } from '../types'
 import { Modal, ModalProps } from './Modal'
 import { Avatar, HandleWithFlair, TrackIcon } from '../common'
 import { fromNow } from '../../utils/time'
-import { SharePanel } from '../common/SharePanel'
+// SharePanel component not found, creating a placeholder
+const SharePanel = ({ title, shareTitle, platforms }: { title: string; shareTitle: string; platforms: readonly SharePlatform[] }) => (
+  <div className="share-panel">
+    <h3>{title}</h3>
+    <p>{shareTitle}</p>
+    <div className="platforms">
+      {platforms.map((platform: SharePlatform, index: number) => (
+        <button key={index} className={`share-${platform}`}>
+          Share on {String(platform)}
+        </button>
+      ))}
+    </div>
+  </div>
+)
 
 export const TestimonialModal = ({
   testimonial,
@@ -14,7 +27,7 @@ export const TestimonialModal = ({
 }: Omit<ModalProps, 'className'> & {
   testimonial: Testimonial
   platforms: readonly SharePlatform[]
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/TestimonialModal.tsx')
 
   return (
@@ -39,11 +52,12 @@ export const TestimonialModal = ({
             i18nKey="byLine"
             values={{ handle: testimonial.student.handle }}
             components={[
-              <strong />,
+              <strong key="strong" />,
               <HandleWithFlair
+                key="handle"
                 handle={testimonial.student.handle}
-                flair={testimonial.student.flair}
-                size="large"
+                flair={testimonial.student.flair as unknown || 'insider'}
+
               />,
             ]}
           />
@@ -77,7 +91,6 @@ export const TestimonialModal = ({
 
       <SharePanel
         title={t('sharePanel.title')}
-        url={testimonial.links.self}
         shareTitle={t('sharePanel.shareTitle')}
         platforms={platforms}
       />

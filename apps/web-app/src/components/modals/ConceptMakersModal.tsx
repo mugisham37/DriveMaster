@@ -22,7 +22,7 @@ const MakerInner = ({
 }: {
   maker: User
   showIcon: boolean
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <>
       <Avatar src={maker.avatarUrl} handle={maker.handle} />
@@ -37,7 +37,7 @@ const MakerInner = ({
   )
 }
 
-const Maker = ({ maker }: { maker: User }): JSX.Element => {
+const Maker = ({ maker }: { maker: User }): React.JSX.Element => {
   return maker.links?.self ? (
     <a className="maker" href={maker.links?.self}>
       <MakerInner maker={maker} showIcon={true} />
@@ -55,7 +55,7 @@ const Content = ({
   authors,
   contributors,
   links,
-}: APIResponse): JSX.Element => {
+}: APIResponse): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/ConceptMakersModal.tsx')
 
   return (
@@ -103,7 +103,7 @@ const Content = ({
 export const ConceptMakersModal = ({
   endpoint,
   ...props
-}: { endpoint: string } & Omit<ModalProps, 'className'>): JSX.Element => {
+}: { endpoint: string } & Omit<ModalProps, 'className'>): React.JSX.Element => {
   const {
     status,
     data: resolvedData,

@@ -36,7 +36,7 @@ export function SeniorView() {
         </FormButton>
         <ErrorBoundary resetKeys={[patchCloseModal.status]}>
           <ErrorMessage
-            error={patchCloseModal.error}
+            error={patchCloseModal.error as Error | null}
             defaultError={DEFAULT_ERROR}
           />
         </ErrorBoundary>

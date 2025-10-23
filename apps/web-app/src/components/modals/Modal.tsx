@@ -14,6 +14,12 @@ export interface ModalProps {
   ReactModalClassName?: string
   className?: string
   appElement?: HTMLElement
+  aria?: {
+    labelledby?: string
+    describedby?: string
+  }
+  celebratory?: boolean
+  style?: React.CSSProperties
 }
 
 export default function Modal({
@@ -25,6 +31,9 @@ export default function Modal({
   closeButton = false,
   ReactModalClassName = '',
   className = '',
+  aria,
+  celebratory = false,
+  style,
 }: ModalProps): React.JSX.Element | null {
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -66,9 +75,12 @@ export default function Modal({
         ref={modalRef}
         className={`modal-content relative bg-white rounded-8 shadow-xl max-h-[90vh] overflow-y-auto ${
           theme === 'dark' ? 'bg-backgroundColorE text-white' : 'bg-white text-textColor2'
-        } ${ReactModalClassName} ${className}`}
+        } ${celebratory ? 'celebratory' : ''} ${ReactModalClassName} ${className}`}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={aria?.labelledby}
+        aria-describedby={aria?.describedby}
+        style={style}
       >
         {closeButton && (
           <button
@@ -94,4 +106,3 @@ export default function Modal({
 }
 
 export { Modal }
-export type { ModalProps }

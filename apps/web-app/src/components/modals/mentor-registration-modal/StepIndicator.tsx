@@ -34,7 +34,7 @@ export const StepIndicator = ({
 }: {
   steps: StepProps[]
   currentStep: ModalStep
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <ul aria-label="Become a mentor progress" className="steps">
       {steps.map((step, i) => {

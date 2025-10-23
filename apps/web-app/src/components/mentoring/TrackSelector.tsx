@@ -29,7 +29,7 @@ export const TrackSelector = ({
   selected: string[]
   setSelected: (selected: string[]) => void
   onContinue: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { request, setCriteria } = useList({
     endpoint: tracksEndpoint,
     options: {},

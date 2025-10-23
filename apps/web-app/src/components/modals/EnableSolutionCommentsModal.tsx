@@ -16,7 +16,7 @@ export const EnableSolutionCommentsModal = ({
 }: Omit<ModalProps, 'className'> & {
   endpoint: string
   onSuccess: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/modals/EnableSolutionCommentsModal.tsx'
   )
@@ -29,7 +29,7 @@ export const EnableSolutionCommentsModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -49,7 +49,7 @@ export const EnableSolutionCommentsModal = ({
         <FormButton
           type="button"
           onClick={() => mutation()}
-          status={status}
+          status={status === 'pending' ? 'submitting' : status === 'success' ? 'success' : status === 'error' ? 'error' : 'idle'}
           className="btn-primary btn-m"
         >
           {t('enableSolutionCommentsModal.enableCommentsButton')}
@@ -57,7 +57,7 @@ export const EnableSolutionCommentsModal = ({
         <FormButton
           type="button"
           onClick={props.onClose}
-          status={status}
+          status={status === 'pending' ? 'submitting' : status === 'success' ? 'success' : status === 'error' ? 'error' : 'idle'}
           className="btn-default btn-m"
         >
           {t('enableSolutionCommentsModal.cancel')}

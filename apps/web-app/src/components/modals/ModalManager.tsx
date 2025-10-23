@@ -17,13 +17,12 @@ interface ModalManagerProps {
 }
 
 export function ModalManager({ 
-  trackData,
   numTracks = 67 
-}: ModalManagerProps): JSX.Element {
+}: Omit<ModalManagerProps, 'trackData'>): React.JSX.Element {
   const { user, isAuthenticated } = useAuth()
 
   if (!isAuthenticated || !user) {
-    return <></>
+    return <></> as React.JSX.Element
   }
 
   return (

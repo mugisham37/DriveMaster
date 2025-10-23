@@ -13,7 +13,7 @@ export const CongratulationsStep = ({
   links,
 }: {
   links: Links
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/mentor-registration-modal')
   return (
     <section className="celebrate-section">

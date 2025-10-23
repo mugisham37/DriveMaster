@@ -24,7 +24,7 @@ export const ResetAccountModal = ({
 }: Omit<ModalProps, 'className'> & {
   handle: string
   endpoint: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/ResetAccountModal.tsx')
   const {
     mutate: mutation,
@@ -46,7 +46,7 @@ export const ResetAccountModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
 
       mutation()

@@ -1,6 +1,6 @@
 export { BegModal } from './BegModal'
 export { SenioritySurveyModal } from './SenioritySurveyModal'
-export { WelcomeModal } from './WelcomeModal'
+// Remove duplicate WelcomeModal export
 export { WelcomeToInsidersModal } from './WelcomeToInsidersModal'
 export { default as TrackWelcomeModal } from './TrackWelcomeModal'
 export { BadgeModal } from './BadgeModal'
@@ -27,13 +27,14 @@ export { ResetAccountModal } from './ResetAccountModal'
 export { TestRunModal } from './TestRunModal'
 export { UnpublishSolutionModal } from './UnpublishSolutionModal'
 
-// Modal subfolders
+// Modal subfolders - using specific exports to avoid conflicts
 export * from './exercise-update-modal'
-export * from './mentor'
 export * from './profile'
-export * from './seniority-survey-modal'
-export * from './student'
 export * from './upload-video'
-export * from './welcome-modal'
 export * from './mentor-registration-modal'
 export * from './track-welcome-modal'
+
+// Specific exports to avoid conflicts
+export { FinishMentorDiscussionModal } from './mentor/FinishMentorDiscussionModal'
+export { InitialView as SenioritySurveyInitialView } from './seniority-survey-modal/InitialView'
+export { WelcomeModal, DeveloperView, JuniorView } from './welcome-modal'

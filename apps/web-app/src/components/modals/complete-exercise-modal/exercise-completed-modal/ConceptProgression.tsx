@@ -1,26 +1,5 @@
 import React from 'react'
-import { Icon } from '../../../common'
 import { ConceptIcon } from '../../../common/ConceptIcon'
-
-const ProgressBar = ({
-  isMastered,
-  from,
-  to,
-  total,
-}: {
-  isMastered: boolean
-  from: number
-  to: number
-  total: number
-}) => {
-  const classNames = ['c-concept-progress-bar']
-
-  if (isMastered) {
-    classNames.push('--completed')
-  }
-
-  return <progress className={classNames.join(' ')} value={to} max={total} />
-}
 
 export const ConceptProgression = ({
   name,
@@ -28,7 +7,7 @@ export const ConceptProgression = ({
 }: {
   name: string
   links: { self: string }
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <a href={links.self} className="concept">
       <ConceptIcon name={name} size="medium" />

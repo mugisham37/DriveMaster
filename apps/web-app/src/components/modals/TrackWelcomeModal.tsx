@@ -17,9 +17,8 @@ interface TrackWelcomeModalProps {
 
 export default function TrackWelcomeModal({ 
   track, 
-  userSeniority, 
-  userJoinedDaysAgo 
-}: TrackWelcomeModalProps): JSX.Element {
+  userSeniority 
+}: Omit<TrackWelcomeModalProps, 'userJoinedDaysAgo'>): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { user, isAuthenticated } = useAuth()
@@ -93,7 +92,7 @@ export default function TrackWelcomeModal({
   }
 
   if (!isAuthenticated || !user || !track) {
-    return <></>
+    return <></> as React.JSX.Element
   }
 
   return (

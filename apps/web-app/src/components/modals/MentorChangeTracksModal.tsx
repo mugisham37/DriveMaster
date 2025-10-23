@@ -5,7 +5,10 @@ import { TrackSelector } from '@/components/mentoring/TrackSelector'
 import { useMutation } from '@tanstack/react-query'
 import { sendRequest } from '@/utils/send-request'
 import { MentoredTrack } from '@/types'
-import { APIResponse as TrackListAPIResponse } from '@/components/mentoring/queue/useTrackList'
+// Remove the problematic import and define the type locally
+type TrackListAPIResponse = {
+  tracks: MentoredTrack[]
+}
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 type Links = {
@@ -25,7 +28,7 @@ export const MentorChangeTracksModal = ({
   tracks: readonly MentoredTrack[]
   cacheKey: QueryKey
   onSuccess: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/modals/MentorChangeTracksModal.tsx'
   )

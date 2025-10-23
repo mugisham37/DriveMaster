@@ -58,7 +58,7 @@ export const ChangePublishedIterationModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
 
       mutation()

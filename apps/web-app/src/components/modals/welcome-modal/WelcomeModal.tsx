@@ -70,7 +70,7 @@ export default function WelcomeModal({
     codingFundamentalsCourse: string
   }
   numTracks: number
-}): JSX.Element {
+}): React.JSX.Element {
   const [open, setOpen] = useState(true)
   const [currentView, setCurrentView] = useState<ViewVariant>('initial')
 
@@ -84,7 +84,7 @@ export default function WelcomeModal({
         // close modal endpoint
         endpoint: links.hideModalEndpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -103,7 +103,7 @@ export default function WelcomeModal({
       const { fetch } = sendRequest({
         endpoint: links.apiUserEndpoint + `?user[seniority]=${seniority}`,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -135,7 +135,7 @@ export default function WelcomeModal({
         cover={true}
         open={open}
         style={
-          currentView === 'initial' ? { content: { maxWidth: '590px' } } : {}
+          currentView === 'initial' ? { maxWidth: '590px' } as React.CSSProperties : {}
         }
         {...props}
         onClose={() => null}

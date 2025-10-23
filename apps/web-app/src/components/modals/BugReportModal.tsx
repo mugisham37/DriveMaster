@@ -26,7 +26,7 @@ export const BugReportModal = ({
   exerciseSlug?: string
   url?: string
   minLength?: number
-}): JSX.Element => {
+}): React.JSX.Element => {
   const [status, setStatus] = useState(BugReportModalStatus.INITIALIZED)
   const [content, setContent] = useState('')
 
@@ -57,7 +57,7 @@ export const BugReportModal = ({
     },
   })
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
 
       if (!url) {
@@ -69,7 +69,7 @@ export const BugReportModal = ({
     [url, mutation]
   )
 
-  const handleChange = useCallback((e) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value)
   }, [])
 

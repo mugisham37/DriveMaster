@@ -28,7 +28,7 @@ export const CommitStep = ({
   selected: string[]
   onContinue: () => void
   onBack: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const {
     mutate: mutation,
     status,

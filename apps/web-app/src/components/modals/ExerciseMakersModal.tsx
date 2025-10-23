@@ -1,77 +1,81 @@
 // i18n-key-prefix: exerciseMakersModal
 // i18n-namespace: components/modals/ExerciseMakersModal.tsx
-import React from 'react'
-import { usePaginatedRequestQuery } from '@/hooks/request-query'
-import { FetchingBoundary } from '../FetchingBoundary'
-import { ResultsZone } from '../ResultsZone'
-import { ModalProps, Modal } from './Modal'
+import React from "react";
+import { usePaginatedRequestQuery } from "@/hooks/request-query";
+import { FetchingBoundary } from "../FetchingBoundary";
+import { ResultsZone } from "../ResultsZone";
+import { ModalProps, Modal } from "./Modal";
 import {
   ProminentLink,
   Avatar,
   GraphicalIcon,
   Reputation,
   HandleWithFlair,
-} from '../common'
-import type { User } from '../types'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+} from "../common";
+import type { User } from "../types";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
-const DEFAULT_ERROR = new Error('Unable to load exercise contributors')
+const DEFAULT_ERROR = new Error("Unable to load exercise contributors");
 
 type Links = {
-  github: string
-}
+  github: string;
+};
 type APIResponse = {
-  authors: readonly User[]
-  contributors: readonly User[]
-  links: Links
-}
+  authors: readonly User[];
+  contributors: readonly User[];
+  links: Links;
+};
 const MakerInner = ({
   maker,
   showIcon,
 }: {
-  maker: User
-  showIcon: boolean
-}): JSX.Element => {
+  maker: User;
+  showIcon: boolean;
+}): React.JSX.Element => {
   return (
     <>
       <Avatar src={maker.avatarUrl} handle={maker.handle} />
       <div className="handle">
-        <HandleWithFlair handle={maker.handle} flair={maker.flair} />
+        <HandleWithFlair
+          handle={maker.handle}
+          flair={(maker.flair || "insider") as unknown}
+        />
       </div>
-      <Reputation value={maker.reputation || '0'} type="primary" size="small" />
+      <Reputation value={maker.reputation || "0"} type="primary" size="small" />
       {showIcon ? (
         <GraphicalIcon icon="chevron-right" className="filter-textColor6" />
       ) : (
         <div className="faux-icon" />
       )}
     </>
-  )
-}
+  );
+};
 
-const Maker = ({ maker }: { maker: User }): JSX.Element => {
-  return maker.links?.self ? (
-    <a className="maker" href={maker.links?.self}>
+const Maker = ({ maker }: { maker: User }): React.JSX.Element => {
+  const userLinks = (maker as any).links as { self?: string } | undefined;
+  return userLinks?.self ? (
+    <a className="maker" href={userLinks.self}>
       <MakerInner maker={maker} showIcon={true} />
     </a>
   ) : (
     <div className="maker">
       <MakerInner maker={maker} showIcon={false} />
     </div>
-  )
-}
+  );
+};
 
 const Content = ({
   authors,
   contributors,
   links,
-}: APIResponse): JSX.Element => {
-  const { t } = useAppTranslation('components/modals/ExerciseMakersModal.tsx')
+}: APIResponse): React.JSX.Element => {
+  const { t } = useAppTranslation("components/modals/ExerciseMakersModal.tsx");
 
   return (
     <>
       <ProminentLink
         link={links.github}
-        text={t('exerciseMakersModal.seeFullHistoryOnGithub')}
+        text={t("exerciseMakersModal.seeFullHistoryOnGithub")}
         withBg={true}
         external
       />
@@ -79,11 +83,11 @@ const Content = ({
         <div className="authors">
           <div className="heading">
             <h3>
-              {t('exerciseMakersModal.authors')}{' '}
+              {t("exerciseMakersModal.authors")}{" "}
               <span className="count">{authors.length}</span>
             </h3>
             <div className="subtitle">
-              {t('exerciseMakersModal.peopleWhoWroteExercise')}
+              {t("exerciseMakersModal.peopleWhoWroteExercise")}
             </div>
           </div>
 
@@ -97,11 +101,11 @@ const Content = ({
         <div className="contributors">
           <div className="heading">
             <h3>
-              {t('exerciseMakersModal.contributors')}{' '}
+              {t("exerciseMakersModal.contributors")}{" "}
               <span className="count">{contributors.length}</span>
             </h3>
             <div className="subtitle">
-              {t('exerciseMakersModal.peopleWhoUpdatedExercise')}
+              {t("exerciseMakersModal.peopleWhoUpdatedExercise")}
             </div>
           </div>
           {contributors.map((contributor) => (
@@ -110,22 +114,22 @@ const Content = ({
         </div>
       ) : null}
     </>
-  )
-}
+  );
+};
 
 export const ExerciseMakersModal = ({
   endpoint,
   ...props
-}: { endpoint: string } & Omit<ModalProps, 'className'>): JSX.Element => {
+}: { endpoint: string } & Omit<ModalProps, "className">): React.JSX.Element => {
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<APIResponse>(['exercise-makers', endpoint], {
+  } = usePaginatedRequestQuery<APIResponse>(["exercise-makers", endpoint], {
     endpoint: endpoint,
     options: { enabled: props.open },
-  })
+  });
 
   return (
     <Modal {...props} className="m-makers">
@@ -139,5 +143,5 @@ export const ExerciseMakersModal = ({
         </FetchingBoundary>
       </ResultsZone>
     </Modal>
-  )
-}
+  );
+};

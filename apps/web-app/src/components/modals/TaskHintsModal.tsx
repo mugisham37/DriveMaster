@@ -15,7 +15,7 @@ export const TaskHintsModal = ({
   task: AssignmentTask
   open: boolean
   onClose: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/TaskHintsModal.tsx')
   return (
     <Modal

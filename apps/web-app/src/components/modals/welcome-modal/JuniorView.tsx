@@ -4,7 +4,19 @@ import { FormButton } from '@/components/common/FormButton'
 import { WelcomeModalContext } from './WelcomeModal'
 import { ErrorBoundary, ErrorMessage } from '@/components/ErrorBoundary'
 import { redirectTo } from '@/utils'
-import VimeoEmbed from '@/components/common/VimeoEmbed'
+// VimeoEmbed component not found, creating a placeholder
+const VimeoEmbed = ({ className, id }: { className?: string; id: string }) => (
+  <div className={`vimeo-embed ${className || ''}`}>
+    <iframe
+      src={`https://player.vimeo.com/video/${id}`}
+      width="100%"
+      height="315"
+      frameBorder="0"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+    />
+  </div>
+)
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
@@ -35,25 +47,21 @@ export function JuniorView() {
           </p>
           <div className="grid grid-cols-4 gap-10 mb-12">
             <Icon
-              category="bootcamp"
               alt="Image of a space invaders game"
               icon="space-invaders.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a tic-tac-toe game"
               icon="tic-tac-toe.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a breakout game"
               icon="breakout.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a maze game"
               icon="maze.gif"
               className="w-full"
@@ -103,7 +111,7 @@ export function JuniorView() {
         </div>
         <ErrorBoundary resetKeys={[patchCloseModal.status]}>
           <ErrorMessage
-            error={patchCloseModal.error}
+            error={patchCloseModal.error as Error | null}
             defaultError={DEFAULT_ERROR}
           />
         </ErrorBoundary>
@@ -115,8 +123,6 @@ export function JuniorView() {
               icon="exercism-face"
               className="filter-textColor1"
               alt="exercism-face"
-              height={16}
-              width={16}
             />
             <div>
               {' '}
@@ -143,7 +149,7 @@ export function JuniorView() {
               <li className="flex items-start">
                 <GraphicalIcon
                   icon="wave"
-                  category="bootcamp"
+                  category="graphics"
                   className="mr-8 w-[20px]"
                 />
                 <span>
@@ -161,7 +167,7 @@ export function JuniorView() {
               <li className="flex items-start">
                 <GraphicalIcon
                   icon="fun"
-                  category="bootcamp"
+                  category="graphics"
                   className="mr-8 w-[20px]"
                 />
                 <span>
@@ -180,7 +186,7 @@ export function JuniorView() {
               <li className="flex items-start">
                 <GraphicalIcon
                   icon="complete"
-                  category="bootcamp"
+                  category="graphics"
                   className="mr-8 w-[20px]"
                 />
                 <span>
@@ -199,7 +205,7 @@ export function JuniorView() {
               <li className="flex items-start">
                 <GraphicalIcon
                   icon="certificate"
-                  category="bootcamp"
+                  category="graphics"
                   className="mr-8 w-[20px]"
                 />
                 <span>

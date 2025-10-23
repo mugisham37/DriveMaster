@@ -15,7 +15,7 @@ type APIResponse = {
   }
 }
 
-const DEFAULT_ERROR = new Error('Unable to delete account')
+
 
 export const DeleteAccountModal = ({
   handle,
@@ -24,7 +24,7 @@ export const DeleteAccountModal = ({
 }: Omit<ModalProps, 'className'> & {
   handle: string
   endpoint: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/DeleteAccountModal.tsx')
   const {
     mutate: mutation,
@@ -46,7 +46,7 @@ export const DeleteAccountModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
       mutation()
     },

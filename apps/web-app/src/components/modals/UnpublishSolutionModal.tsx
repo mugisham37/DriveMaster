@@ -27,7 +27,7 @@ export const UnpublishSolutionModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch.then((json) =>

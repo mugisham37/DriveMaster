@@ -8,7 +8,7 @@ export const CloseButton = ({
   onClick,
 }: {
   onClick: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/mentor-registration-modal')
   return (
     <button type="button" className="close-btn" onClick={onClick}>

@@ -23,7 +23,7 @@ export const TestRunSummary = ({
   isSubmitDisabled?: boolean
   onCancel?: () => void
   showSuccessBox: boolean
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/editor/testComponents')
 
   if (testRun) {
