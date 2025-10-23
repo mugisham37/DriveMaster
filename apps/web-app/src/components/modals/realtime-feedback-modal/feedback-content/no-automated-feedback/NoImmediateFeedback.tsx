@@ -8,7 +8,7 @@ export function NoImmediateFeedback({
   onContinue,
   onSendMentoringRequest,
 }: Pick<RealtimeFeedbackModalProps, 'track'> &
-  Record<'onContinue' | 'onSendMentoringRequest', () => void>): JSX.Element {
+  Record<'onContinue' | 'onSendMentoringRequest', () => void>): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content/no-automated-feedback'
   )

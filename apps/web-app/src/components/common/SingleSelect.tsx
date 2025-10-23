@@ -1,63 +1,63 @@
-import React from 'react'
+import React, { useState } from 'react'
 
-export interface SingleSelectOption {
-  value: string
-  label: string
-}
-
-export interface SingleSelectProps<T = string> {
+export interface SingleSelectProps<T> {
+  options: T[]
   value: T
   setValue: (value: T) => void
-  options: T[]
+  SelectedComponent: React.ComponentType<{ option: T }>
+  OptionComponent: React.ComponentType<{ option: T }>
   placeholder?: string
-  className?: string
   disabled?: boolean
-  SelectedComponent?: React.ComponentType<{ option: T }>
-  OptionComponent?: React.ComponentType<{ option: T }>
+  className?: string
 }
 
-export function SingleSelect<T = string>({ 
-  value, 
-  setValue, 
-  options, 
-  placeholder = "Select an option...",
-  className = "",
-  disabled = false,
+export function SingleSelect<T>({
+  options,
+  value,
+  setValue,
   SelectedComponent,
-  OptionComponent
-}: SingleSelectProps<T>): React.JSX.Element {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedIndex = parseInt(e.target.value, 10)
-    if (!isNaN(selectedIndex) && options[selectedIndex]) {
-      setValue(options[selectedIndex])
-    }
+  OptionComponent,
+  placeholder = 'Select an option',
+  disabled = false,
+  className = ''
+}: SingleSelectProps<T>): React.ReactElement {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleSelect = (option: T) => {
+    setValue(option)
+    setIsOpen(false)
   }
 
-  const selectedIndex = options.findIndex(option => option === value)
-
   return (
-    <div className={`single-select ${className}`}>
-      {SelectedComponent && <SelectedComponent option={value} />}
-      <select 
-        value={selectedIndex >= 0 ? selectedIndex : ""} 
-        onChange={handleChange}
+    <div className={`single-select relative ${className}`}>
+      <button
+        type="button"
+        className="single-select-trigger w-full p-2 border border-gray-300 rounded bg-white text-left flex items-center justify-between"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
       >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
+        {value ? (
+          <SelectedComponent option={value} />
+        ) : (
+          <span className="text-gray-500">{placeholder}</span>
         )}
-        {options.map((option, index) => (
-          <option key={index} value={index}>
-            {OptionComponent ? (
+        <span className="ml-2">▼</span>
+      </button>
+      
+      {isOpen && (
+        <div className="single-select-dropdown absolute top-full left-0 right-0 bg-white border border-gray-300 rounded mt-1 z-10 max-h-60 overflow-y-auto">
+          {options.map((option, index) => (
+            <button
+              key={index}
+              type="button"
+              className="single-select-option w-full p-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+              onClick={() => handleSelect(option)}
+            >
               <OptionComponent option={option} />
-            ) : (
-              String(option)
-            )}
-          </option>
-        ))}
-      </select>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

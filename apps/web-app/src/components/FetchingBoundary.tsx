@@ -6,7 +6,7 @@ interface FetchingBoundaryProps {
   error?: Error | null
   fallback?: React.ReactNode
   errorFallback?: React.ReactNode
-  status?: 'error' | 'success' | 'pending'
+  status?: 'error' | 'success' | 'pending' | 'idle'
   defaultError?: Error
 }
 

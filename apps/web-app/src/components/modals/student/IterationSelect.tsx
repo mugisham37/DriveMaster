@@ -20,11 +20,11 @@ export const IterationSelect = ({
   iterations: readonly Iteration[]
   value: number | null
   setValue: (value: number) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<number>
       options={iterations.map((i) => i.idx)}
-      value={value || iterations[0].idx}
+      value={value || iterations[0]?.idx || 1}
       setValue={setValue}
       SelectedComponent={OptionComponent}
       OptionComponent={OptionComponent}

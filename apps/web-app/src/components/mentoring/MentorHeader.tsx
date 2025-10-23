@@ -66,7 +66,7 @@ export function MentorHeader({ selectedTab }: MentorHeaderProps) {
       <div className="lg-container container">
         <div className="top">
           <div className="title">
-            <GraphicalIcon icon="mentoring" hex={true} />
+            <GraphicalIcon icon="mentoring" />
             <span>Mentoring</span>
           </div>
           

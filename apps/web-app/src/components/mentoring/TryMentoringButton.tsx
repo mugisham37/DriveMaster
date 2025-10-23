@@ -20,7 +20,7 @@ export default function TryMentoringButton({
   links: Links
   text: string
   size: Size
-}): JSX.Element {
+}): React.JSX.Element {
   const [open, setOpen] = useState(false)
 
   return (
@@ -36,7 +36,9 @@ export default function TryMentoringButton({
         open={open}
         links={links}
         onClose={() => setOpen(false)}
-      />
+      >
+        <div>Mentor Registration Content</div>
+      </MentorRegistrationModal>
     </div>
   )
 }

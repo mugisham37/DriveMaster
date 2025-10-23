@@ -18,24 +18,30 @@ export const Sorter = ({
   order: string
   sortOptions: readonly SortOption[]
   className?: string
-}): JSX.Element => {
-  const value = sortOptions.find((o) => o.value === order) || sortOptions[0]
+}): React.JSX.Element => {
+  const mutableOptions = [...sortOptions] as SortOption[]
+  const value = mutableOptions.find((o) => o.value === order) || mutableOptions[0]
   const setValue = useCallback(
-    (option) => {
+    (option: SortOption) => {
       setOrder(option.value)
       setPage(1)
     },
     [setOrder, setPage]
   )
 
+  if (!value) {
+    return <div>No sort options available</div>
+  }
+
   return (
-    <SingleSelect<SortOption>
-      options={sortOptions}
-      value={value}
-      setValue={setValue}
-      SelectedComponent={OptionComponent}
-      OptionComponent={OptionComponent}
-      className={className}
-    />
+    <div className={className}>
+      <SingleSelect<SortOption>
+        options={mutableOptions}
+        value={value}
+        setValue={setValue}
+        SelectedComponent={OptionComponent}
+        OptionComponent={OptionComponent}
+      />
+    </div>
   )
 }

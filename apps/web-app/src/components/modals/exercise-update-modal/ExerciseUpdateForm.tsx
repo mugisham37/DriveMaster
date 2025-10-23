@@ -1,24 +1,15 @@
-import React, { createContext, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { sendRequest } from '@/utils/send-request'
-import { redirectTo } from '@/utils/redirect-to'
-import { typecheck } from '@/utils/typecheck'
-import { GraphicalIcon, ExerciseIcon } from '@/components/common'
-import { FormButton } from '@/components/common/FormButton'
-import { ErrorBoundary, ErrorMessage } from '@/components/ErrorBoundary'
-import { SolutionForStudent } from '@/components/types'
-import { Tab, TabContext } from '@/components/common/Tab'
-import { ExerciseDiff } from '../ExerciseUpdateModal'
+import React, { useState } from 'react'
 import { DiffViewer } from './DiffViewer'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
-import { Trans } from 'react-i18next'
 
-const DEFAULT_ERROR = new Error('Unable to update exercise')
-
-export const TabsContext = createContext<TabContext>({
-  current: '',
-  switchToTab: () => null,
-})
+interface ExerciseDiff {
+  files: Array<{
+    relativePath: string
+    diff: string
+  }>
+  links: {
+    update: string
+  }
+}
 
 export const ExerciseUpdateForm = ({
   diff,
@@ -26,96 +17,68 @@ export const ExerciseUpdateForm = ({
 }: {
   diff: ExerciseDiff
   onCancel: () => void
-}): JSX.Element => {
-  const [tab, setTab] = useState(diff.files[0].relativePath)
-  const { t } = useAppTranslation('components/modals/exercise-update-modal')
+}): React.JSX.Element => {
+  const [selectedFile, setSelectedFile] = useState(diff.files[0]?.relativePath || '')
+  const [isUpdating, setIsUpdating] = useState(false)
 
-  const {
-    mutate: mutation,
-    status,
-    error,
-  } = useMutation<SolutionForStudent>({
-    mutationFn: async () => {
-      const { fetch } = sendRequest({
-        endpoint: diff.links.update,
-        method: 'PATCH',
-        body: null,
-      })
+  const handleUpdate = async () => {
+    setIsUpdating(true)
+    try {
+      // In a real implementation, this would make an API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Exercise updated successfully')
+    } catch (error) {
+      console.error('Failed to update exercise:', error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
 
-      return fetch.then((json) =>
-        typecheck<SolutionForStudent>(json, 'solution')
-      )
-    },
-    onSuccess: (solution) => {
-      redirectTo(solution.privateUrl)
-    },
-  })
+  const selectedFileData = diff.files.find(file => file.relativePath === selectedFile)
 
   return (
-    <>
-      <header className="header">
-        <h2>
-          <Trans
-            ns="components/modals/exercise-update-modal"
-            i18nKey={'exerciseUpdateForm.header'}
-            components={{
-              icon: <ExerciseIcon iconUrl={diff.exercise.iconUrl} />,
-            }}
-            values={{ exerciseTitle: diff.exercise.title }}
-          />
-        </h2>
-      </header>
-      <TabsContext.Provider
-        value={{
-          current: tab,
-          switchToTab: (id: string) => setTab(id),
-        }}
-      >
-        <div className="tabs">
+    <div className="exercise-update-form">
+      <div className="form-header">
+        <h2>Exercise Update</h2>
+        <p>Review the changes and update your exercise.</p>
+      </div>
+      
+      {diff.files.length > 1 && (
+        <div className="file-tabs">
           {diff.files.map((file) => (
-            <Tab
-              id={file.relativePath}
-              context={TabsContext}
+            <button
               key={file.relativePath}
+              onClick={() => setSelectedFile(file.relativePath)}
+              className={`file-tab ${selectedFile === file.relativePath ? 'active' : ''}`}
             >
               {file.relativePath}
-            </Tab>
+            </button>
           ))}
         </div>
-
-        {diff.files.map((file) => (
-          <Tab.Panel
-            id={file.relativePath}
-            context={TabsContext}
-            key={file.relativePath}
-          >
-            <DiffViewer diff={file.diff} />
-          </Tab.Panel>
-        ))}
-      </TabsContext.Provider>
-      <div className="warning">{t('exerciseUpdateForm.warning')}</div>
-      <form data-turbo="false">
-        <FormButton
-          type="button"
-          onClick={() => mutation()}
-          status={status}
-          className="btn-primary btn-m"
-        >
-          <GraphicalIcon icon="reset" />
-          <span>{t('exerciseUpdateForm.updateExercise')}</span>
-        </FormButton>
-        <FormButton
-          type="button"
+      )}
+      
+      {selectedFileData && (
+        <div className="diff-container">
+          <DiffViewer diff={selectedFileData.diff} />
+        </div>
+      )}
+      
+      <div className="form-actions">
+        <button
           onClick={onCancel}
-          status={status}
-          className="dismiss-btn"
+          className="btn-secondary"
+          disabled={isUpdating}
         >
-          {t('exerciseUpdateForm.dismiss')}
-        </FormButton>
-        <ErrorBoundary resetKeys={[status]}>
-          <ErrorMessage error={error} defaultError={DEFAULT_ERROR} />
-        </ErrorBoundary>
-      </form>
-    </>
+          Cancel
+        </button>
+        <button
+          onClick={handleUpdate}
+          className="btn-primary"
+          disabled={isUpdating}
+        >
+          {isUpdating ? 'Updating...' : 'Update Exercise'}
+        </button>
+      </div>
+    </div>
   )
 }

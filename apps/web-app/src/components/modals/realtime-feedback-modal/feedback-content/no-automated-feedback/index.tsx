@@ -26,7 +26,7 @@ export function NoAutomatedFeedback({
   | 'links'
   | 'mentoringStatus'
   | 'hasAvailableMentoringSlot'
->): JSX.Element {
+>): React.JSX.Element {
   const [noFeedbackState, setNoFeedbackState] = useState<NoFeedbackState>(
     mentoringStatus === 'none' ? 'initial' : mentoringStatus
   )
@@ -63,7 +63,10 @@ export function NoAutomatedFeedback({
         mentoringRequestFormComponent={
           <FeedbackMentoringRequestForm
             trackObjectives={trackObjectives}
-            track={track}
+            track={{
+              title: track.title,
+              medianWaitTime: track.medianWaitTime?.toString() || '0'
+            }}
             links={links}
             onContinue={onContinue}
             onSuccess={handleSuccessfulMentorRequest}

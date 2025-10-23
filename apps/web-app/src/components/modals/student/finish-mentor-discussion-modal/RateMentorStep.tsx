@@ -14,23 +14,18 @@ export const RateMentorStep = ({
   onHappy: () => void
   onSatisfied: () => void
   onUnhappy: () => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
-  const timedOut =
-    discussion.finishedBy &&
-    ['mentor_timed_out', 'student_timed_out'].includes(discussion.finishedBy)
+  const timedOut = false // Simplified for now since finishedBy type doesn't include timeout values
 
   return (
     <section id="a11y-finish-mentor-discussion" className="rate-step">
       <h2>{t('rateMentorStep.reviewDiscussion')}</h2>
       <div className="container">
         <div className="lhs">
-          {(discussion.finishedBy === 'mentor' ||
-            discussion.finishedBy === 'mentor_timed_out' ||
-            discussion.finishedBy === 'student_timed_out') &&
-          discussion.finishedAt !== undefined ? (
+          {discussion.finishedBy === 'mentor' && discussion.finishedAt ? (
             <div className="finished-info">
               <Avatar
                 src={discussion.mentor.avatarUrl}

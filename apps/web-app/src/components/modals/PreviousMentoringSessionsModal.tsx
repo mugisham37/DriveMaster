@@ -1,10 +1,10 @@
-import React from 'react'
-import { Trans } from 'react-i18next'
+import React from "react";
+import { Trans } from "react-i18next";
 // Remove unused import
 // Remove unused import
-import { usePaginatedRequestQuery } from '@/hooks/request-query'
-import { useList } from '@/hooks/use-list'
-import { scrollToTop } from '@/utils/scroll-to-top'
+import { usePaginatedRequestQuery } from "@/hooks/request-query";
+import { useList } from "@/hooks/use-list";
+import { scrollToTop } from "@/utils/scroll-to-top";
 // Remove unused import
 import {
   Avatar,
@@ -12,49 +12,52 @@ import {
   Pagination,
   TrackIcon,
   ExerciseIcon,
-} from '@/components/common'
+} from "@/components/common";
 // Remove unused imports and types
-import { FetchingBoundary } from '@/components/FetchingBoundary'
-import { ResultsZone } from '@/components/ResultsZone'
-import { Modal, type ModalProps } from './Modal'
+import { FetchingBoundary } from "@/components/FetchingBoundary";
+import { ResultsZone } from "@/components/ResultsZone";
+import { Modal, type ModalProps } from "./Modal";
 import type {
   PaginatedResult,
   MentorDiscussion,
   Student,
-} from '@/components/types'
-import { fromNow } from '@/utils/time'
+} from "@/components/types";
+import { fromNow } from "@/utils/time";
 
 export const PreviousMentoringSessionsModal = ({
   onClose,
   student,
-  setStudent: _setStudent,
   ...props
-}: Omit<ModalProps, 'className'> & {
-  student: Student
-  setStudent: (student: Student) => void
+}: Omit<ModalProps, "className"> & {
+  student: Student;
 }): React.JSX.Element => {
   // Remove unused t variable
   // const { t } = useAppTranslation(
   //   'components/modals/PreviousMentoringSessionsModal.tsx'
   // )
   const { request, setPage } = useList({
-    endpoint: student.links?.previousSessions || '',
+    endpoint: student.links?.previousSessions || "",
     options: {},
-  })
+  });
 
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<PaginatedResult<readonly MentorDiscussion[]>>(
-    [request.endpoint, JSON.stringify(request.query || {})], 
-    request as any
-  )
+  } = usePaginatedRequestQuery(
+    [request.endpoint, JSON.stringify(request.query || {})],
+    request
+  ) as {
+    status: 'pending' | 'error' | 'success';
+    data: PaginatedResult<MentorDiscussion> | undefined;
+    isFetching: boolean;
+    error: Error | null;
+  };
 
-  const numPrevious = student.numDiscussionsWithMentor - 1
+  const numPrevious = student.numDiscussionsWithMentor - 1;
   // Create a simple screen size check since ScreenSizeContext is not properly typed
-  const isBelowLgWidth = false // Default to false for now
+  const isBelowLgWidth = false; // Default to false for now
 
   if (isBelowLgWidth) {
     return (
@@ -80,11 +83,11 @@ export const PreviousMentoringSessionsModal = ({
             <FetchingBoundary
               status={status}
               error={error}
-              defaultError={new Error('Unable to load discussions')}
+              defaultError={new Error("Unable to load discussions")}
             >
               {resolvedData ? (
                 <>
-                  {resolvedData.results.map((discussion: MentorDiscussion) => (
+                  {resolvedData.results.map((discussion) => (
                     <MobileDiscussionLink
                       discussion={discussion}
                       key={discussion.uuid}
@@ -95,8 +98,8 @@ export const PreviousMentoringSessionsModal = ({
                     current={(request.query?.page as number) || 1}
                     total={resolvedData.meta.totalPages}
                     setPage={(p) => {
-                      setPage(p)
-                      scrollToTop()
+                      setPage(p);
+                      scrollToTop();
                     }}
                   />
                 </>
@@ -105,7 +108,7 @@ export const PreviousMentoringSessionsModal = ({
           </ResultsZone>
         </div>
       </Modal>
-    )
+    );
   }
 
   return (
@@ -130,7 +133,7 @@ export const PreviousMentoringSessionsModal = ({
         {student.links?.favorite ? (
           <div className="favorite-button-placeholder">
             {/* FavoriteButton component needs proper typing */}
-            <button onClick={() => console.log('Favorite clicked')}>
+            <button onClick={() => console.log("Favorite clicked")}>
               ⭐ Favorite
             </button>
           </div>
@@ -141,11 +144,11 @@ export const PreviousMentoringSessionsModal = ({
           <FetchingBoundary
             status={status}
             error={error}
-            defaultError={new Error('Unable to load discussions')}
+            defaultError={new Error("Unable to load discussions")}
           >
             {resolvedData ? (
               <>
-                {resolvedData.results.map((discussion: MentorDiscussion) => (
+                {resolvedData.results.map((discussion) => (
                   <DiscussionLink
                     discussion={discussion}
                     key={discussion.uuid}
@@ -156,8 +159,8 @@ export const PreviousMentoringSessionsModal = ({
                   current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
-                    setPage(p)
-                    scrollToTop()
+                    setPage(p);
+                    scrollToTop();
                   }}
                 />
               </>
@@ -166,13 +169,13 @@ export const PreviousMentoringSessionsModal = ({
         </ResultsZone>
       </div>
     </Modal>
-  )
-}
+  );
+};
 
 function DiscussionLink({
   discussion,
 }: {
-  discussion: MentorDiscussion
+  discussion: MentorDiscussion;
 }): React.JSX.Element {
   return (
     <a
@@ -192,24 +195,26 @@ function DiscussionLink({
       <div className="exercise-title">{discussion.exercise.title}</div>
       <div className="num-comments">
         <GraphicalIcon icon="comment" />
-        {(discussion as MentorDiscussion & { postsCount?: number }).postsCount || 0}
+        {(discussion as MentorDiscussion & { postsCount?: number })
+          .postsCount || 0}
       </div>
       <div className="num-iterations">
         <GraphicalIcon icon="iteration" />
-        {(discussion as MentorDiscussion & { iterationsCount?: number }).iterationsCount || 0}
+        {(discussion as MentorDiscussion & { iterationsCount?: number })
+          .iterationsCount || 0}
       </div>
       <time dateTime={discussion.createdAt}>
         {fromNow(discussion.createdAt)}
       </time>
       <GraphicalIcon icon="chevron-right" className="action-icon" />
     </a>
-  )
+  );
 }
 
 function MobileDiscussionLink({
   discussion,
 }: {
-  discussion: MentorDiscussion
+  discussion: MentorDiscussion;
 }): React.JSX.Element {
   return (
     <a
@@ -228,13 +233,15 @@ function MobileDiscussionLink({
       />
       <div className="num-comments">
         <GraphicalIcon icon="comment" />
-        {(discussion as MentorDiscussion & { postsCount?: number }).postsCount || 0}
+        {(discussion as MentorDiscussion & { postsCount?: number })
+          .postsCount || 0}
       </div>
       <div className="num-iterations">
         <GraphicalIcon icon="iteration" />
-        {(discussion as MentorDiscussion & { iterationsCount?: number }).iterationsCount || 0}
+        {(discussion as MentorDiscussion & { iterationsCount?: number })
+          .iterationsCount || 0}
       </div>
       <GraphicalIcon icon="chevron-right" className="action-icon" />
     </a>
-  )
+  );
 }

@@ -7,7 +7,7 @@ import {
   defaultHighlightStyle,
   syntaxHighlighting,
 } from '@codemirror/language'
-import { oneDark } from '@codemirror/theme-one-dark'
+// import { oneDark } from '@codemirror/theme-one-dark'
 
 import { Themes } from '@/components/editor/types'
 import { loadLanguageCompartment } from './CodeMirror/languageCompartment'
@@ -47,7 +47,7 @@ export default function CodeMirror({
   tabSize: number
   editorDidMount: (handler: Handler) => void
   readonly?: boolean
-}): JSX.Element {
+}): React.JSX.Element {
   const [textarea, setTextarea] = useState<HTMLDivElement | null>(null)
   const viewRef = useRef<EditorView | null>(null)
 
@@ -96,7 +96,7 @@ export default function CodeMirror({
           indentUnit.of(indentChar),
           themeCompartment.of(
             theme !== Themes.LIGHT
-              ? oneDark
+              ? syntaxHighlighting(defaultHighlightStyle)
               : syntaxHighlighting(defaultHighlightStyle)
           ),
           wrapCompartment.of(wrap ? EditorView.lineWrapping : []),
@@ -137,7 +137,7 @@ export default function CodeMirror({
     viewRef.current.dispatch({
       effects: themeCompartment.reconfigure(
         theme !== Themes.LIGHT
-          ? oneDark
+          ? syntaxHighlighting(defaultHighlightStyle)
           : syntaxHighlighting(defaultHighlightStyle)
       ),
     })

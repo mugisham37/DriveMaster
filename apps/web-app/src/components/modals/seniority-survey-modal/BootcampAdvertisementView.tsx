@@ -8,7 +8,7 @@ import { Trans } from 'react-i18next'
 
 const DEFAULT_ERROR = new Error('Unable to dismiss modal')
 
-export function BootcampAdvertismentView() {
+export function BootcampAdvertisementView() {
   const { patchCloseModal, links } = useContext(SenioritySurveyModalContext)
   const { t } = useAppTranslation('components/modals/seniority-survey-modal')
 
@@ -38,25 +38,21 @@ export function BootcampAdvertismentView() {
 
           <div className="grid grid-cols-4 gap-10 mb-12">
             <Icon
-              category="bootcamp"
               alt="Image of a space invaders game"
               icon="space-invaders.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a tic-tac-toe game"
               icon="tic-tac-toe.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a breakout game"
               icon="breakout.gif"
               className="w-full"
             />
             <Icon
-              category="bootcamp"
               alt="Image of a maze game"
               icon="maze.gif"
               className="w-full"
@@ -93,7 +89,7 @@ export function BootcampAdvertismentView() {
 
         <ErrorBoundary resetKeys={[patchCloseModal.status]}>
           <ErrorMessage
-            error={patchCloseModal.error}
+            error={patchCloseModal.error instanceof Error ? patchCloseModal.error : null}
             defaultError={DEFAULT_ERROR}
           />
         </ErrorBoundary>
@@ -123,7 +119,7 @@ export function BootcampAdvertismentView() {
 
         <div className="bubbles">
           <div className="bubble">
-            <Icon category="bootcamp" alt="wave-icon" icon="video-tutorial" />
+            <Icon alt="wave-icon" icon="video-tutorial" />
             <div className="text">
               <Trans
                 ns="components/modals/seniority-survey-modal"
@@ -134,7 +130,7 @@ export function BootcampAdvertismentView() {
           </div>
 
           <div className="bubble">
-            <Icon category="bootcamp" alt="fun-icon" icon="fun" />
+            <Icon alt="fun-icon" icon="fun" />
             <div className="text">
               <Trans
                 ns="components/modals/seniority-survey-modal"
@@ -145,7 +141,7 @@ export function BootcampAdvertismentView() {
           </div>
 
           <div className="bubble">
-            <Icon category="bootcamp" alt="help-icon" icon="help" />
+            <Icon alt="help-icon" icon="help" />
             <div className="text">
               <Trans
                 ns="components/modals/seniority-survey-modal"
@@ -188,7 +184,6 @@ export function BootcampAdvertismentView() {
                 </div>
               </div>
               <Icon
-                category="bootcamp/testimonials"
                 alt="Picture of shaun"
                 icon="shaun.jpg"
               />

@@ -1,182 +1,82 @@
-import React, { useCallback, useState, useEffect } from 'react'
-import {
-  usePaginatedRequestQuery,
-  type Request as BaseRequest,
-} from '@/hooks/request-query'
-import { useHistory, removeEmpty } from '@/hooks/use-history'
-import { useList } from '@/hooks/use-list'
-import { FetchingBoundary } from '@/components/FetchingBoundary'
-import { ResultsZone } from '@/components/ResultsZone'
-import { GraphicalIcon, Pagination } from '@/components/common'
-import {
-  RevealedTestimonial,
-  OrderSelect,
-  TrackDropdown,
-  UnrevealedTestimonial,
-} from './testimonials-list'
-import type {
-  PaginatedResult as DefaultPaginatedResult,
-  SharePlatform,
-  Testimonial,
-} from '../../types'
-import { scrollToTop } from '@/utils/scroll-to-top'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import React, { useState } from 'react'
+import type { Testimonial } from '../types'
+import { Pagination } from '../common/Pagination'
 
-export type PaginatedResult = DefaultPaginatedResult<Testimonial[]>
-export type Track = {
-  slug: string
-  title: string
-  iconUrl: string
+interface TestimonialsListProps {
+  testimonials: Testimonial[]
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
 }
 
-export type Order = 'unrevealed' | 'newest' | 'oldest'
-
-export type Request = BaseRequest<{
-  criteria?: string
-  order?: string
-  trackSlug?: string
-  page?: number
-}>
-
-const DEFAULT_ERROR = new Error('Unable to load testimonials')
-const DEFAULT_ORDER = 'unrevealed'
-
 export default function TestimonialsList({
-  request: initialRequest,
-  tracks,
-  platforms,
-}: {
-  request: Request
-  tracks: readonly Track[]
-  platforms: readonly SharePlatform[]
-}): JSX.Element {
-  const { t } = useAppTranslation('components/mentoring/TestimonialsList.tsx')
-  const {
-    request,
-    setQuery,
-    setCriteria: setRequestCriteria,
-    setPage,
-    setOrder,
-  } = useList(initialRequest)
-  const [criteria, setCriteria] = useState(request.query?.criteria)
-  const cacheKey = [
-    'mentor-testimonials',
-    request.endpoint,
-    removeEmpty(request.query),
-  ]
-  const {
-    status,
-    data: resolvedData,
-    isFetching,
-    error,
-  } = usePaginatedRequestQuery<PaginatedResult, Error | Response>(cacheKey, {
-    ...request,
-    query: removeEmpty(request.query),
-  })
-
-  const setTrack = useCallback(
-    (trackSlug) => {
-      setQuery({ ...request.query, trackSlug: trackSlug, page: undefined })
-    },
-    [request.query, setQuery]
-  )
-  const [revealedTestimonials, setRevealedTestimonials] = useState<string[]>([])
-
-  useHistory({ pushOn: removeEmpty(request.query) })
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (criteria === undefined || criteria === null) return
-      setRequestCriteria(criteria)
-    }, 200)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [setRequestCriteria, criteria])
+  testimonials,
+  currentPage,
+  totalPages,
+  onPageChange
+}: TestimonialsListProps): React.JSX.Element {
+  const [selectedTrack, setSelectedTrack] = useState<string>('')
 
   return (
-    <div className="lg-container">
-      <article className="content">
-        <div className="c-search-bar">
-          <TrackDropdown
-            tracks={tracks}
-            value={request.query.trackSlug || ''}
-            setValue={setTrack}
-          />
-          <input
-            className="--search"
-            placeholder={t('testimonialsList.searchPlaceholder')}
-            value={criteria || ''}
-            onChange={(e) => {
-              setCriteria(e.target.value)
-            }}
-          />
-          <OrderSelect
-            value={request.query.order || DEFAULT_ORDER}
-            setValue={setOrder}
-          />
-        </div>
-        <ResultsZone isFetching={isFetching}>
-          <FetchingBoundary
-            status={status}
-            error={error}
-            defaultError={DEFAULT_ERROR}
+    <div className="testimonials-list">
+      <div className="testimonials-header">
+        <h2>Testimonials</h2>
+        <div className="filters">
+          <select 
+            value={selectedTrack} 
+            onChange={(e) => setSelectedTrack(e.target.value)}
+            className="track-filter"
           >
-            {resolvedData ? (
-              resolvedData.results.length == 0 ? (
-                <div className="no-testimonials">
-                  <GraphicalIcon icon="testimonials" />
-                  <h2>{t('testimonialsList.noTestimonialsTitle')}</h2>
-                  <p>{t('testimonialsList.noTestimonialsDescription')}</p>
-                </div>
-              ) : (
-                <React.Fragment>
-                  <div className="testimonials">
-                    {resolvedData.results.map((testimonial) => {
-                      return testimonial.isRevealed ? (
-                        <RevealedTestimonial
-                          key={testimonial.uuid}
-                          testimonial={testimonial}
-                          cacheKey={cacheKey}
-                          isRevealed={revealedTestimonials.includes(
-                            testimonial.uuid
-                          )}
-                          platforms={platforms}
-                        />
-                      ) : (
-                        <UnrevealedTestimonial
-                          key={testimonial.uuid}
-                          testimonial={testimonial}
-                          cacheKey={cacheKey}
-                          onRevealed={() =>
-                            setRevealedTestimonials([
-                              ...revealedTestimonials,
-                              testimonial.uuid,
-                            ])
-                          }
-                          platforms={platforms}
-                        />
-                      )
-                    })}
+            <option value="">All Tracks</option>
+          </select>
+        </div>
+      </div>
+      
+      <div className="testimonials-content">
+        {testimonials.length === 0 ? (
+          <div className="no-testimonials">
+            <p>No testimonials found.</p>
+          </div>
+        ) : (
+          <div className="testimonials-grid">
+            {testimonials.map((testimonial) => (
+              <div key={testimonial.id} className="testimonial-card">
+                <div className="testimonial-header">
+                  <div className="student-info">
+                    <img src={testimonial.student.avatarUrl} alt="" className="student-avatar" />
+                    <span>{testimonial.student.handle}</span>
                   </div>
-                </React.Fragment>
-              )
-            ) : null}
-          </FetchingBoundary>
-        </ResultsZone>
-      </article>
-      {resolvedData ? (
+                  <div className="exercise-info">
+                    <img src={testimonial.exercise.iconUrl} alt="" className="exercise-icon" />
+                    <span>{testimonial.exercise.title}</span>
+                  </div>
+                </div>
+                
+                <div className="testimonial-content">
+                  <div dangerouslySetInnerHTML={{ __html: testimonial.contentHtml }} />
+                </div>
+                
+                <div className="testimonial-footer">
+                  <span className="created-at">
+                    {new Date(testimonial.createdAt).toLocaleDateString()}
+                  </span>
+                  {testimonial.isRevealed && (
+                    <span className="revealed-badge">Revealed</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {totalPages > 1 && (
         <Pagination
-          disabled={resolvedData === undefined}
-          current={request.query.page || 1}
-          total={resolvedData.meta.totalPages}
-          setPage={(p) => {
-            setPage(p)
-            scrollToTop()
-          }}
+          current={currentPage}
+          total={totalPages}
+          setPage={onPageChange}
         />
-      ) : null}
+      )}
     </div>
   )
 }

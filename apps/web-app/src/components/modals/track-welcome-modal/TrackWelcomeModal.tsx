@@ -19,7 +19,7 @@ const DEFAULT_ERROR = new Error('Unable to dismiss modal')
 export const TrackContext = createContext<{
   track: Track
   currentState: CurrentState
-  send: any
+  send: (event: string | { type: string }) => void
   links: TrackWelcomeModalLinks
   userSeniority: SeniorityLevel
   userJoinedDaysAgo: number

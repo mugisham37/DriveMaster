@@ -11,10 +11,10 @@ import { Modal, ModalProps } from '../Modal'
 import { InitialView } from './InitialView'
 import { useMutation } from '@tanstack/react-query'
 import { sendRequest } from '@/utils/send-request'
-import { BootcampAdvertismentView } from './BootcampAdvertismentView'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import { BootcampAdvertisementView } from './BootcampAdvertisementView'
 
-type ViewVariant = 'initial' | 'thanks' | 'bootcamp-advertisment'
+
+type ViewVariant = 'initial' | 'thanks' | 'bootcamp-advertisement'
 
 type Links = {
   hideModalEndpoint: string
@@ -56,8 +56,7 @@ export default function SenioritySurveyModal({
   ...props
 }: Omit<ModalProps, 'className' | 'open' | 'onClose'> & {
   links: Links
-}): JSX.Element {
-  const { t } = useAppTranslation('components/modals/seniority-survey-modal')
+}): React.JSX.Element {
   const [open, setOpen] = useState(true)
   const [currentView, setCurrentView] = useState<ViewVariant>(DEFAULT_VIEW)
 
@@ -70,7 +69,7 @@ export default function SenioritySurveyModal({
       const { fetch } = sendRequest({
         endpoint: links.hideModalEndpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -98,12 +97,7 @@ export default function SenioritySurveyModal({
         cover={true}
         open={open}
         {...props}
-        style={{
-          content: {
-            maxWidth: currentView === 'bootcamp-advertisment' ? '' : '620px',
-            placeSelf: 'center',
-          },
-        }}
+        ReactModalClassName={currentView === 'bootcamp-advertisement' ? 'w-full' : 'max-w-[620px]'}
         onClose={() => null}
         className="m-welcome"
       >
@@ -113,13 +107,14 @@ export default function SenioritySurveyModal({
   )
 }
 
-function Inner() {
-  const { t } = useAppTranslation('components/modals/seniority-survey-modal')
+function Inner(): React.JSX.Element {
   const { currentView } = useContext(SenioritySurveyModalContext)
   switch (currentView) {
     case 'initial':
       return <InitialView />
-    case 'bootcamp-advertisment':
-      return <BootcampAdvertismentView />
+    case 'bootcamp-advertisement':
+      return <BootcampAdvertisementView />
+    default:
+      return <InitialView />
   }
 }

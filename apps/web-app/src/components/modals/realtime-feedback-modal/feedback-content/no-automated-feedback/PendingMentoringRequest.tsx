@@ -8,7 +8,7 @@ export function PendingMentoringRequest({
 }: {
   mentoringRequestLink: string
   onContinue: () => void
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content/no-automated-feedback'
   )

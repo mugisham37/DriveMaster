@@ -30,8 +30,7 @@ export function TrackLeaveModal({ track, isOpen, onClose, onSuccess }: TrackLeav
     onSuccess: () => {
       onSuccess?.()
       onClose()
-    },
-    successMessage: `You have successfully left the ${track.title} track`
+    }
   })
 
   const handleSubmit = async () => {

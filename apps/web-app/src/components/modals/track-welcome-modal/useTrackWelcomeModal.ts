@@ -1,4 +1,4 @@
-import { redirectTo } from '@/utils'
+
 import { sendRequest } from '@/utils/send-request'
 import { useMachine } from '@/lib/xstate-mock'
 import { useCallback, useState } from 'react'
@@ -26,7 +26,7 @@ export function useTrackWelcomeModal(
     setShouldShowBootcampRecommendationView(false)
   }, [])
 
-  const { mutate: hideModal, error } = useMutation({
+  const { error } = useMutation({
     mutationFn: () => {
       const { fetch } = sendRequest({
         endpoint: links.hideModal,
@@ -41,7 +41,7 @@ export function useTrackWelcomeModal(
     },
   })
 
-  const { mutate: activateLearningMode } = useMutation({
+  const {} = useMutation({
     mutationFn: () => {
       const { fetch } = sendRequest({
         endpoint: links.activateLearningMode,
@@ -53,7 +53,7 @@ export function useTrackWelcomeModal(
     },
   })
 
-  const { mutate: activatePracticeMode } = useMutation({
+  const {} = useMutation({
     mutationFn: () => {
       const { fetch } = sendRequest({
         endpoint: links.activatePracticeMode,
@@ -65,23 +65,7 @@ export function useTrackWelcomeModal(
     },
   })
 
-  const [currentState, send] = useMachine(machine, {
-    actions: {
-      handleContinueToLocalMachine() {
-        hideModal()
-      },
-      handleContinueToOnlineEditor() {
-        hideModal()
-        redirectTo(links.editHelloWorld)
-      },
-      handleSelectLearningMode() {
-        activateLearningMode()
-      },
-      handleSelectPracticeMode() {
-        activatePracticeMode()
-      },
-    },
-  })
+  const [currentState, send] = useMachine(machine)
 
   return {
     open,

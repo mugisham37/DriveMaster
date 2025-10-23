@@ -1,8 +1,7 @@
 // i18n-key-prefix: finishMentorDiscussionModal
 // i18n-namespace: components/modals/student
 import React, { useEffect, useState } from 'react'
-import { useMachine } from '@xstate/react'
-import { createMachine } from 'xstate'
+import { useMachine, createMachine } from '@/lib/xstate-mock'
 import { redirectTo } from '@/utils/redirect-to'
 import { MentorDiscussion, MentoringSessionDonation } from '@/components/types'
 import { Modal, ModalProps } from '../Modal'
@@ -56,7 +55,7 @@ const Inner = ({
   discussion: MentorDiscussion
   links: DiscussionActionsLinks
   donation: MentoringSessionDonation
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/modals/student')
   const [currentStep, send] = useMachine(modalStepMachine)
   const [report, setReport] = useState<MentorReport | null>(null)
@@ -66,7 +65,7 @@ const Inner = ({
   // otherwise it will start rendering `unhappy` step before report arrives from mutation in ReportStep.tsx
   useEffect(() => {
     if (report) send('SUBMIT')
-  }, [report])
+  }, [report, send])
 
   switch (currentStep.value) {
     case 'rateMentor':
@@ -123,7 +122,6 @@ const Inner = ({
       return (
         <Step.ReportStep
           discussion={discussion}
-          send={send}
           onSubmit={setReport}
           onBack={() => send('BACK')}
         />
@@ -157,12 +155,11 @@ export const FinishMentorDiscussionModal = ({
   discussion: MentorDiscussion
   donation: MentoringSessionDonation
   onCancel: () => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <Modal
-      style={{ content: { maxWidth: 'fit-content' } }}
       cover
-      aria={{ modal: true, describedby: 'a11y-finish-mentor-discussion' }}
+      aria={{ describedby: 'a11y-finish-mentor-discussion' }}
       className="m-finish-student-mentor-discussion"
       ReactModalClassName="bg-unnamed15"
       shouldCloseOnOverlayClick={false}

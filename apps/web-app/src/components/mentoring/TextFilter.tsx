@@ -3,19 +3,19 @@ import React from 'react'
 export const TextFilter = ({
   setFilter,
   id,
-  filter = '',
+  filter,
   placeholder,
 }: {
   setFilter: (filter: string) => void
   id: string
-  filter?: string
+  filter?: string | undefined
   placeholder: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <input
       id={id}
       onChange={(e) => setFilter(e.target.value)}
-      value={filter}
+      value={filter || ''}
       placeholder={placeholder}
       className="--search"
     />

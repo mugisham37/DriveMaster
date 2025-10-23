@@ -2,6 +2,7 @@ import React from 'react'
 import { Icon } from './Icon'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+import { Flair as FlairType } from '@/components/types'
 
 export type Flair = 'insider' | 'lifetime_insider' | 'founder' | 'staff'
 
@@ -23,22 +24,25 @@ export function HandleWithFlair({
   className,
 }: {
   handle: string
-  flair: Flair
+  flair: Flair | FlairType | string
   iconClassName?: string
   className?: string
 }): React.JSX.Element | null {
   const { t } = useAppTranslation('components/common/HandleWithFlair.tsx')
 
+  const flairName = typeof flair === 'string' ? flair : typeof flair === 'object' && flair?.name ? flair.name : flair
+  const flairKey = flairName as Flair
+
   return (
     <span className={assembleClassNames('flex items-center', className)}>
       {handle}
-      {Object.prototype.hasOwnProperty.call(FLAIRS, flair) && (
+      {Object.prototype.hasOwnProperty.call(FLAIRS, flairKey) && (
         <>
           &nbsp;
           <Icon
             className={`handle-with-flair-icon ${iconClassName || ''}`}
-            icon={FLAIRS[flair]}
-            alt={t('flair.alt', { title: t(`flair.${flair}`) })}
+            icon={FLAIRS[flairKey]}
+            alt={t('flair.alt', { title: t(`flair.${flairKey}`) })}
           />
         </>
       )}

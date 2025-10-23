@@ -8,6 +8,7 @@ import { ErrorBoundary, useErrorHandler } from '@/components/ErrorBoundary'
 import type { CommunityVideoType } from '@/components/types'
 import { UploadVideoTextInput } from '.'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+import Image from 'next/image'
 
 type UploadVideoFormProps = {
   data: CommunityVideoType
@@ -43,7 +44,7 @@ export function UploadVideoForm({
 
   async function UploadVideo(body: string) {
     const { fetch } = sendRequest({
-      endpoint: links.video.create,
+      endpoint: links.video?.create || '/api/videos/create',
       body,
       method: 'POST',
     })
@@ -75,9 +76,11 @@ export function UploadVideoForm({
   )
   return (
     <form onSubmit={handleSubmitVideo}>
-      <img
-        src={data.thumbnailUrl}
+      <Image
+        src={data.thumbnailUrl || '/placeholder-video.jpg'}
         alt="video thumbnail"
+        width={640}
+        height={360}
         style={{ height: '360px', width: '100%', objectFit: 'cover' }}
         className="rounded-16 mb-16"
       />

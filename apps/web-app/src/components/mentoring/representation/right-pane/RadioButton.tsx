@@ -5,6 +5,7 @@ interface RadioButtonProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: string
   checked?: boolean
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
+  labelClassName?: string
 }
 
 export function RadioButton({ 
@@ -12,6 +13,7 @@ export function RadioButton({
   value, 
   checked, 
   onChange, 
+  labelClassName,
   ...props 
 }: RadioButtonProps): React.ReactElement {
   return (
@@ -24,7 +26,9 @@ export function RadioButton({
         className="radio-input"
         {...props}
       />
-      <span className="radio-label">{label}</span>
+      <span className={`radio-label ${labelClassName || ''}`}>{label}</span>
     </label>
   )
 }
+
+export default RadioButton

@@ -1,9 +1,7 @@
 import React from 'react'
 import { TrackIcon } from '@/components/common'
-import type { AnalyzerFeedback as Props } from '@/components/types'
+import type { AnalyzerFeedback as Props, Track } from '@/components/types'
 import { Comment } from '@/components/student/iterations-list/AnalyzerFeedback'
-import type { Track } from '@/components/student/IterationsList'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
 export const BLOCKQUOTE = 'border border-l-6 pl-12 border-borderColor6 mb-16'
@@ -15,10 +13,7 @@ export const AnalyzerFeedback = ({
 }: Props & {
   track: Pick<Track, 'title' | 'iconUrl'>
   automatedFeedbackInfoLink: string
-}): JSX.Element => {
-  const { t } = useAppTranslation(
-    'components/modals/realtime-feedback-modal/feedback-content/found-automated-feedback'
-  )
+}): React.JSX.Element => {
   return (
     <div className="c-automated-feedback analyzer-feedback">
       <div className={BLOCKQUOTE}>

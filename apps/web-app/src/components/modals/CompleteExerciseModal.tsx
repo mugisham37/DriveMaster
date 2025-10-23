@@ -57,7 +57,6 @@ interface CompleteExerciseModalProps {
 
 export function CompleteExerciseModal({
   endpoint,
-  iterations,
   open,
   onClose,
 }: CompleteExerciseModalProps): React.ReactElement {

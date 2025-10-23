@@ -8,11 +8,11 @@ export function NoAutomatedFeedbackLHS({
   mentoringRequestFormComponent,
 }: {
   state: NoFeedbackState
-  initialComponent: JSX.Element
-  pendingComponent: JSX.Element
-  inProgressComponent: JSX.Element
-  mentoringRequestFormComponent: JSX.Element
-}): JSX.Element {
+  initialComponent: React.JSX.Element
+  pendingComponent: React.JSX.Element
+  inProgressComponent: React.JSX.Element
+  mentoringRequestFormComponent: React.JSX.Element
+}): React.JSX.Element {
   switch (state) {
     case 'requested':
       return pendingComponent

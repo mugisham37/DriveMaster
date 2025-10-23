@@ -19,7 +19,7 @@ export const ReportStep = ({
   onSubmit: (report: MentorReport) => void
   onBack: () => void
   discussion: MentorDiscussion
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
@@ -37,7 +37,7 @@ export const ReportStep = ({
   } = useMutation({
     mutationFn: async () => {
       const { fetch } = sendRequest({
-        endpoint: discussion.links.finish,
+        endpoint: discussion.links.finish || '',
         method: 'PATCH',
         body: JSON.stringify({
           rating: 1,
@@ -59,7 +59,7 @@ export const ReportStep = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
       mutation()
     },
@@ -166,10 +166,12 @@ export const ReportStep = ({
             </div>
           </form>
           <FetchingBoundary
-            status={status}
+            status={status === 'idle' ? 'idle' : status === 'pending' ? 'pending' : status === 'error' ? 'error' : 'success'}
             error={error}
             defaultError={DEFAULT_ERROR}
-          />
+          >
+            {null}
+          </FetchingBoundary>
         </div>
         <div className="rhs">
           <Avatar

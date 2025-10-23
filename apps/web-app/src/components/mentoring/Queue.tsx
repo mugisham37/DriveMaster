@@ -38,7 +38,7 @@ export default function Queue({
   defaultExercise: MentoredTrackExercise | null
   sortOptions: SortOption[]
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/mentoring/Queuetsx')
   const isMounted = useRef(false)
   const {
@@ -81,7 +81,7 @@ export default function Queue({
       return
     }
 
-    if (tracks.find((track) => track.slug === selectedTrack.slug)) {
+    if (tracks.find((track: MentoredTrack) => track.slug === selectedTrack.slug)) {
       return
     }
 
@@ -98,7 +98,7 @@ export default function Queue({
   }, [selectedTrack])
 
   const handleExerciseChange = useCallback(
-    (exercise) => {
+    (exercise: MentoredTrackExercise | null) => {
       setPage(1)
       setCriteria('')
       setSelectedExercise(exercise)
@@ -107,7 +107,7 @@ export default function Queue({
   )
 
   const handleTrackChange = useCallback(
-    (track) => {
+    (track: MentoredTrack) => {
       setPage(1)
       setCriteria('')
       setSelectedTrack(track)

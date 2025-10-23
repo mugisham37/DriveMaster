@@ -30,8 +30,7 @@ export function PracticeModeModal({ track, isOpen, onClose, onSuccess }: Practic
     onSuccess: () => {
       onSuccess?.()
       onClose()
-    },
-    successMessage: `${track.title} is now in ${targetMode} mode`
+    }
   })
 
   const handleSubmit = async () => {

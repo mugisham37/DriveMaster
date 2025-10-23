@@ -1,6 +1,6 @@
 import React from 'react'
 import { LoadingSpinner } from '../../common/LoadingSpinner'
-import type { Discussion } from '../../../types/mentoring'
+import type { Discussion } from '../../../types'
 import { Pagination } from '../../common/Pagination'
 
 interface Props {
@@ -13,9 +13,13 @@ interface Props {
   } | null
   status: 'idle' | 'loading' | 'error' | 'success'
   setPage: (page: number) => void
+  refetch?: () => void
+  links?: {
+    queue: string
+  }
 }
 
-export function DiscussionList({ resolvedData, status, setPage }: Props): JSX.Element {
+export function DiscussionList({ resolvedData, status, setPage }: Props): React.JSX.Element {
   if (status === 'loading' || !resolvedData) {
     return <LoadingSpinner />
   }

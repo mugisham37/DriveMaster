@@ -61,14 +61,14 @@ export function InitialView() {
       const { fetch } = sendRequest({
         endpoint: links.apiUserEndpoint + `?user[seniority]=${seniority}`,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
     },
     onSuccess: () => {
       if (selected.includes('beginner')) {
-        setCurrentView('bootcamp-advertisment')
+        setCurrentView('bootcamp-advertisement')
         return
       }
 
@@ -128,7 +128,7 @@ export function InitialView() {
       </ErrorBoundary>
       <ErrorBoundary resetKeys={[patchCloseModal.status]}>
         <ErrorMessage
-          error={patchCloseModal.status}
+          error={patchCloseModal.status === 'error' ? new Error('Failed to close modal') : null}
           defaultError={DEFAULT_ERROR}
         />
       </ErrorBoundary>

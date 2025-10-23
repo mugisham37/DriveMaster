@@ -3,6 +3,7 @@
 import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Exercise {
   slug: string
@@ -87,9 +88,11 @@ export function ExerciseTooltipModal({
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-start gap-4 mb-4">
-          <img 
+          <Image 
             src={exercise.iconUrl}
             alt={exercise.title}
+            width={48}
+            height={48}
             className="w-12 h-12 flex-shrink-0 rounded"
           />
           

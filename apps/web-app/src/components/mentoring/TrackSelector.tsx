@@ -1,77 +1,82 @@
-import React, { useCallback } from 'react'
-import { usePaginatedRequestQuery } from '../../hooks/request-query'
-import { TracksList } from './track-selector/TracksList'
-import { SelectedTracksMessage } from './track-selector/SelectedTracksMessage'
-import { ContinueButton } from './track-selector/ContinueButton'
-import { SearchBar } from './track-selector/SearchBar'
-import { useList } from '../../hooks/use-list'
-import { ResultsZone } from '../ResultsZone'
+import React, { useState } from 'react'
+import type { Track } from '../types'
 
-export type APIResponse = {
-  tracks: readonly Track[]
-}
-
-export type Track = {
-  slug: string
-  title: string
-  iconUrl: string
-  medianWaitTime: number
-  numSolutionsQueued: number
-}
-
-export const TrackSelector = ({
-  tracksEndpoint,
-  selected,
-  setSelected,
-  onContinue,
-}: {
-  tracksEndpoint: string
-  selected: string[]
-  setSelected: (selected: string[]) => void
+interface TrackSelectorProps {
+  tracks: Track[]
+  selectedTracks: string[]
+  onTrackToggle: (trackSlug: string) => void
   onContinue: () => void
-}): React.JSX.Element => {
-  const { request, setCriteria } = useList({
-    endpoint: tracksEndpoint,
-    options: {},
-  })
-  const {
-    status,
-    data: resolvedData,
-    isFetching,
-    error,
-  } = usePaginatedRequestQuery<APIResponse>(
-    ['tracks', request.endpoint, request.query],
-    request
+}
+
+export default function TrackSelector({
+  tracks,
+  selectedTracks,
+  onTrackToggle,
+  onContinue
+}: TrackSelectorProps): React.JSX.Element {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredTracks = tracks.filter(track =>
+    track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    track.slug.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleContinue = useCallback(() => {
-    onContinue()
-  }, [onContinue])
-
   return (
-    <div className="c-mentor-track-selector">
-      <div className="c-search-bar">
-        <SearchBar
-          value={request.query.criteria || ''}
-          setValue={setCriteria}
-        />
-        <SelectedTracksMessage numSelected={selected.length} />
-        <ContinueButton
-          disabled={selected.length === 0}
-          onClick={handleContinue}
+    <div className="track-selector">
+      <div className="track-selector-header">
+        <h2>Select Tracks to Mentor</h2>
+        <p>Choose the programming tracks you'd like to mentor students in.</p>
+      </div>
+      
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search tracks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
         />
       </div>
-      <ResultsZone isFetching={isFetching}>
-        <div className="tracks">
-          <TracksList
-            status={status}
-            selected={selected}
-            setSelected={setSelected}
-            data={resolvedData}
-            error={error}
-          />
+      
+      <div className="tracks-list">
+        {filteredTracks.map((track) => (
+          <div key={track.slug} className="track-item">
+            <label className="track-label">
+              <input
+                type="checkbox"
+                checked={selectedTracks.includes(track.slug)}
+                onChange={() => onTrackToggle(track.slug)}
+                className="track-checkbox"
+              />
+              <div className="track-info">
+                <img src={track.iconUrl} alt="" className="track-icon" />
+                <div className="track-details">
+                  <h3>{track.title}</h3>
+                  {track.description && (
+                    <p className="track-description">{track.description}</p>
+                  )}
+                </div>
+              </div>
+            </label>
+          </div>
+        ))}
+      </div>
+      
+      {selectedTracks.length > 0 && (
+        <div className="selected-tracks-message">
+          <p>You've selected {selectedTracks.length} track{selectedTracks.length !== 1 ? 's' : ''} to mentor.</p>
         </div>
-      </ResultsZone>
+      )}
+      
+      <div className="continue-button-container">
+        <button
+          onClick={onContinue}
+          disabled={selectedTracks.length === 0}
+          className="continue-button"
+        >
+          Continue
+        </button>
+      </div>
     </div>
   )
 }

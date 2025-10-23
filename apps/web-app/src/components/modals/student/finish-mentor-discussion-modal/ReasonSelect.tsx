@@ -31,7 +31,7 @@ export const ReasonSelect = ({
 }: {
   value: ReportReason
   setValue: (value: ReportReason) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<ReportReason>
       options={['coc', 'incorrect', 'other']}

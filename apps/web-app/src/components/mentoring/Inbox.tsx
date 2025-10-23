@@ -11,7 +11,7 @@ import {
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
 import { ResultsZone } from '../ResultsZone'
-import type { Discussion, DiscussionStatus, MentorRequest } from '../../types/mentoring'
+import type { Discussion, DiscussionStatus } from '../types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export type SortOption = {
@@ -20,7 +20,7 @@ export type SortOption = {
 }
 
 export type APIResponse = {
-  results: readonly MentorDiscussion[]
+  results: readonly Discussion[]
   meta: {
     currentPage: number
     totalPages: number
@@ -54,9 +54,9 @@ export default function Inbox({
   discussionsRequest: Request
   sortOptions: readonly SortOption[]
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/mentoring/Inboxtsx')
-  const [criteria, setCriteria] = useState<string | undefined>(discussionsRequest.query?.criteria)
+  const [criteria, setCriteria] = useState<string | undefined>(discussionsRequest.query?.criteria as string)
   const {
     request,
     setCriteria: setRequestCriteria,
@@ -71,7 +71,10 @@ export default function Inbox({
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
     ['mentor-discussion-list', request.endpoint, JSON.stringify(request.query)],
-    request
+    {
+      ...request,
+      query: request.query || {}
+    } as BaseRequest<APIResponse>
   )
 
   useEffect(() => {
@@ -89,17 +92,17 @@ export default function Inbox({
 
   const setTrack = (trackSlug: string | null) => {
     const query: Request['query'] = {
-      ...request.query,
+      ...(request.query || {}),
       trackSlug: trackSlug || undefined,
       page: undefined,
-      status: request.query?.status || 'awaiting_mentor'
+      status: (request.query?.status as DiscussionStatus) || 'awaiting_mentor'
     }
     setQuery(query)
   }
 
   const setStatus = (status: DiscussionStatus) => {
     const query: Request['query'] = {
-      ...request.query,
+      ...(request.query || {}),
       status,
       page: undefined
     }
@@ -111,7 +114,7 @@ export default function Inbox({
       <div className="tabs">
         <StatusTab<DiscussionStatus>
           status="awaiting_mentor"
-          currentStatus={request.query.status}
+          currentStatus={(request.query?.status as DiscussionStatus) || 'awaiting_mentor'}
           setStatus={setStatus}
         >
           {t('inbox.inbox')}
@@ -121,7 +124,7 @@ export default function Inbox({
         </StatusTab>
         <StatusTab<DiscussionStatus>
           status="awaiting_student"
-          currentStatus={request.query.status}
+          currentStatus={(request.query?.status as DiscussionStatus) || 'awaiting_mentor'}
           setStatus={setStatus}
         >
           {t('inbox.awaitingStudent')}
@@ -133,7 +136,7 @@ export default function Inbox({
         </StatusTab>
         <StatusTab<DiscussionStatus>
           status="finished"
-          currentStatus={request.query.status}
+          currentStatus={(request.query?.status as DiscussionStatus) || 'awaiting_mentor'}
           setStatus={setStatus}
         >
           {t('inbox.finished')}
@@ -147,9 +150,9 @@ export default function Inbox({
           <TrackFilter
             request={{
               ...tracksRequest,
-              query: { status: request.query.status },
+              query: { status: (request.query?.status as DiscussionStatus) || 'awaiting_mentor' },
             }}
-            value={request.query.trackSlug || null}
+            value={(request.query?.trackSlug as string) || null}
             setTrack={setTrack}
           />
           <TextFilter
@@ -160,7 +163,7 @@ export default function Inbox({
           />
           <Sorter
             sortOptions={sortOptions}
-            order={request.query.order}
+            order={(request.query?.order as string) || sortOptions[0]?.value || ''}
             setOrder={setOrder}
             setPage={setPage}
           />
@@ -168,7 +171,7 @@ export default function Inbox({
         <ResultsZone isFetching={isFetching}>
           <DiscussionList
             resolvedData={resolvedData}
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             refetch={refetch}
             setPage={setPage}
             links={links}

@@ -13,13 +13,7 @@ type UploadVideoModalProps = {
   onClose: () => void
 }
 
-const enum UploadSteps {
-  RETRIEVE,
-  UPLOAD,
-  SUCCESS,
-}
-
-type UploadStatus = keyof typeof UploadSteps
+type UploadStatus = 'RETRIEVE' | 'UPLOAD' | 'SUCCESS'
 
 export function UploadVideoModal({
   isOpen,

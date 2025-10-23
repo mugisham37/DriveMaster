@@ -1,3 +1,3 @@
-export { BootcampAdvertismentView } from './BootcampAdvertismentView'
+export { BootcampAdvertisementView } from './BootcampAdvertisementView'
 export { InitialView } from './InitialView'
-export { SenioritySurveyModal } from './SenioritySurveyModal'
+export { default as SenioritySurveyModal } from './SenioritySurveyModal'

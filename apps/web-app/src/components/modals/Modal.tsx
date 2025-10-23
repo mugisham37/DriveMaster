@@ -20,6 +20,7 @@ export interface ModalProps {
   }
   celebratory?: boolean
   style?: React.CSSProperties
+  shouldCloseOnOverlayClick?: boolean
 }
 
 export default function Modal({

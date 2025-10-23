@@ -12,7 +12,6 @@ interface PublishSolutionModalProps {
 export function PublishSolutionModal({
   isOpen,
   onClose,
-  endpoint,
   iterations,
 }: PublishSolutionModalProps): React.JSX.Element {
   const [selectedIteration, setSelectedIteration] = useState<number>(

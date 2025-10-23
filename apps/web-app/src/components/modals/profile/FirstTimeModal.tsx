@@ -14,7 +14,7 @@ export default function FirstTimeModal({
   links,
 }: {
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const [open, setOpen] = useState(true)
   const { t } = useAppTranslation('components/modals/profile')
 

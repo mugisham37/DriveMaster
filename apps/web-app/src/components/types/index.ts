@@ -102,7 +102,11 @@ export interface Iteration {
     testRun?: string
     delete?: string
   }
+  representerFeedback?: RepresenterFeedback
+  analyzerFeedback?: AnalyzerFeedback
 }
+
+export type ResolvedIteration = Iteration
 
 export interface Solution {
   uuid: string
@@ -308,6 +312,8 @@ export interface MentorDiscussion {
   uuid: string
   status: 'awaiting_student' | 'awaiting_mentor' | 'mentor_finished' | 'finished'
   isFinished: boolean
+  finishedBy?: 'student' | 'mentor'
+  finishedAt?: string
   student: {
     handle: string
     avatarUrl: string
@@ -394,6 +400,9 @@ export interface CompleteRepresentationData {
       avatarUrl: string
     }
   }>
+  links: {
+    self: string
+  }
 }
 
 export interface Guidance {
@@ -426,15 +435,20 @@ export interface MentoringSessionDonation {
     externalId: string
     externalReceipt: string
   }
+  showDonationModal?: boolean
+  previousDonor?: boolean
+  request?: Record<string, unknown>
 }
 
 // Badge types
+export type BadgeRarity = 'common' | 'rare' | 'ultimate' | 'legendary'
+
 export interface Badge {
   id: number
   uuid: string
   name: string
   description: string
-  rarity: 'common' | 'rare' | 'ultimate' | 'legendary'
+  rarity: BadgeRarity
   iconUrl: string
   numAwardedToUser: number
   links: {
@@ -629,6 +643,93 @@ export interface CommunityVideoType {
     slug: string
   }
   createdAt: string
+}
+
+// Additional types for mentoring and discussions
+export interface DiscussionActionsLinks {
+  exercise: string
+  exerciseMentorDiscussionUrl: string
+  donationsSettings?: string
+}
+
+export interface Links {
+  exercise: string
+  exerciseMentorDiscussionUrl: string
+}
+
+export type PaymentIntentType = 'donation' | 'subscription'
+
+// Mentoring specific types
+export type DiscussionStatus = 'awaiting_mentor' | 'awaiting_student' | 'finished'
+
+export interface Discussion {
+  id: string
+  uuid: string
+  title: string
+  status: DiscussionStatus
+  student: {
+    handle: string
+    avatarUrl: string
+    flair?: Flair
+  }
+  mentor?: {
+    handle: string
+    avatarUrl: string
+    flair?: Flair
+  }
+  track: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  exercise: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  createdAt: string
+  updatedAt: string
+  links: {
+    self: string
+    posts?: string
+  }
+}
+
+export interface MentorRequest<T = Record<string, unknown>> {
+  endpoint: string
+  query?: T
+  options?: {
+    initialData?: unknown[]
+    staleTime?: number
+    cacheTime?: number
+  }
+}
+
+// Alias for backward compatibility
+export type MentorDiscussion = Discussion
+
+// Analyzer feedback types
+export interface AnalyzerFeedback {
+  summary?: string
+  comments: AnalyzerComment[]
+}
+
+export interface AnalyzerComment {
+  type: 'essential' | 'actionable' | 'informative' | 'celebratory'
+  html: string
+  markdown?: string
+}
+
+export interface RepresenterFeedback {
+  html: string
+  author: {
+    name: string
+    avatarUrl?: string
+  }
+  editor?: {
+    name: string
+    avatarUrl?: string
+  }
 }
 
 // Export all types individually instead of as default object

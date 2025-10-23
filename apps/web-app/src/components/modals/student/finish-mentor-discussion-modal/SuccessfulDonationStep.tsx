@@ -14,7 +14,7 @@ export function SuccessfulDonationStep({
 }: {
   amount: currency | null
   closeLink: string
-}): JSX.Element {
+}): React.ReactElement {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
@@ -40,7 +40,7 @@ export function SuccessfulDonationStep({
           <Trans
             ns="components/donations"
             i18nKey="successfulDonationStep.youVeEarnedTheBadge"
-            components={[<strong className="font-medium" />]}
+            components={[<strong key="badge" className="font-medium" />]}
           />
         </div>
       </div>

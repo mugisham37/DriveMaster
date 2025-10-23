@@ -10,7 +10,6 @@ interface RequestMentoringModalProps {
 export function RequestMentoringModal({
   isOpen,
   onClose,
-  endpoint,
 }: RequestMentoringModalProps): React.JSX.Element {
   const [comment, setComment] = useState('')
 

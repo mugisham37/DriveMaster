@@ -10,7 +10,7 @@ export function CheckingForAutomatedFeedback({
 }: {
   onClick: () => void
   showTakingTooLong: boolean
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/modals/realtime-feedback-modal')
 
   return (
@@ -47,7 +47,7 @@ export function CheckingForAutomatedFeedback({
   )
 }
 
-function TakingTooLong(): JSX.Element {
+function TakingTooLong(): React.JSX.Element {
   const { t } = useAppTranslation('components/modals/realtime-feedback-modal')
   return (
     <div className="c-textblock-caution mt-12 mb-20">

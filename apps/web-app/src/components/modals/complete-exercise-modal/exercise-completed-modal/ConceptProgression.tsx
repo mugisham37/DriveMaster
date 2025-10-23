@@ -1,12 +1,12 @@
-import React from 'react'
-import { ConceptIcon } from '../../../common/ConceptIcon'
+import React from "react";
+import { ConceptIcon } from "../../../common/ConceptIcon";
 
 export const ConceptProgression = ({
   name,
   links,
 }: {
-  name: string
-  links: { self: string }
+  name: string;
+  links: { self: string };
 }): React.JSX.Element => {
   return (
     <a href={links.self} className="concept">
@@ -16,5 +16,5 @@ export const ConceptProgression = ({
         <div className="c-ed --completed --concept" />
       </div>
     </a>
-  )
-}
+  );
+};

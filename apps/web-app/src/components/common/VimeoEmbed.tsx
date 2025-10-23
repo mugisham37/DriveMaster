@@ -1,29 +1,44 @@
 import React from 'react'
 
-interface VimeoEmbedProps {
-  videoId: string
-  className?: string
+export interface VimeoEmbedProps {
+  videoId?: string
+  id?: string
+  title?: string
   width?: number
   height?: number
+  autoplay?: boolean
+  loop?: boolean
+  muted?: boolean
+  className?: string
 }
 
-export function VimeoEmbed({ 
-  videoId, 
-  className = '', 
-  width = 640, 
-  height = 360 
-}: VimeoEmbedProps): React.ReactElement {
+export const VimeoEmbed: React.FC<VimeoEmbedProps> = ({
+  videoId,
+  id,
+  title = 'Vimeo video',
+  width = 640,
+  height = 360,
+  autoplay = false,
+  loop = false,
+  muted = false,
+  className = ''
+}) => {
+  const actualVideoId = videoId || id || ''
+  const src = `https://player.vimeo.com/video/${actualVideoId}?autoplay=${autoplay ? 1 : 0}&loop=${loop ? 1 : 0}&muted=${muted ? 1 : 0}`
+
   return (
     <div className={`vimeo-embed ${className}`}>
       <iframe
-        src={`https://player.vimeo.com/video/${videoId}`}
+        src={src}
         width={width}
         height={height}
-        frameBorder="0"
+        style={{ border: 'none' }}
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
-        title={`Vimeo video ${videoId}`}
+        title={title}
       />
     </div>
   )
 }
+
+export default VimeoEmbed

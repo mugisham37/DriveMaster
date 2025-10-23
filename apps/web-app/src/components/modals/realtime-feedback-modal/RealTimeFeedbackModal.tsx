@@ -43,7 +43,7 @@ export const RealtimeFeedbackModal = ({
   exercise,
   showDeepDiveVideo,
   hasAvailableMentoringSlot,
-}: RealtimeFeedbackModalProps): JSX.Element => {
+}: RealtimeFeedbackModalProps): React.JSX.Element => {
   const { latestIteration, checkStatus } = useGetLatestIteration({
     request,
     submission,
@@ -62,8 +62,7 @@ export const RealtimeFeedbackModal = ({
       open={open}
       closeButton={false}
       onClose={onClose}
-      shouldCloseOnEsc={false}
-      shouldCloseOnOverlayClick={false}
+
       ReactModalClassName="w-fill max-w-[700px]"
     >
       {showVideoStep ? (

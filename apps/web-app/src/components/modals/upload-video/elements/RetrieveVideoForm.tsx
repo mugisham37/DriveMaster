@@ -22,7 +22,7 @@ export function RetrieveVideoForm({
   const { t } = useAppTranslation('components/modals/upload-video/elements')
 
   async function VerifyVideo(link: string) {
-    const URL = `${links.video.lookup}?video_url=${link}`
+    const URL = `${links.video?.lookup || '/api/videos/lookup'}?video_url=${link}`
     const { fetch } = sendRequest({ endpoint: URL, body: undefined, method: 'GET' })
     return fetch
   }
@@ -40,7 +40,9 @@ export function RetrieveVideoForm({
       e.preventDefault()
       const data = new FormData(e.currentTarget)
       const videoUrl = data.get('videoUrl')
-      verifyVideo(videoUrl)
+      if (videoUrl && typeof videoUrl === 'string') {
+        verifyVideo(videoUrl)
+      }
     },
     [verifyVideo]
   )

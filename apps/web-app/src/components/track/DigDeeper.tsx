@@ -6,6 +6,10 @@ interface DigDeeperData {
   track: Track
   links: {
     self: string
+    video?: {
+      lookup: string
+      create: string
+    }
   }
 }
 

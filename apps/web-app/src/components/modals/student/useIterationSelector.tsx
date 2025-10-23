@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Iteration } from "../../types";
 
 type IterationOption = "allIterations" | "singleIteration";
@@ -19,9 +19,11 @@ export const useIterationSelector = ({
 }): IterationSelectorHandler => {
   return {
     onSelected: (option: IterationOption) => {
-      option === "allIterations"
-        ? setIterationIdx(null)
-        : setIterationIdx(iterations[0].idx);
+      if (option === "allIterations") {
+        setIterationIdx(null);
+      } else {
+        setIterationIdx(iterations[0]?.idx || 1);
+      }
     },
     selected: iterationIdx === null ? "allIterations" : "singleIteration",
   };

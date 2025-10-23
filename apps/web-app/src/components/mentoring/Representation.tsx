@@ -1,6 +1,6 @@
 import React from 'react'
 import { SplitPane } from '../common/SplitPane'
-import { CompleteRepresentationData } from '../../types'
+import type { CompleteRepresentationData } from '../types'
 import { LeftPane } from './representation/left-pane'
 import { RightPane } from './representation/right-pane'
 
@@ -8,7 +8,7 @@ export default function Representation({
   data,
 }: {
   data: CompleteRepresentationData
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <div className="c-mentor-discussion">
       <SplitPane

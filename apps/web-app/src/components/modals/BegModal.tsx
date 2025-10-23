@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import { useAuth } from '@/hooks/useAuth'
@@ -9,6 +9,22 @@ import { JSX } from 'react/jsx-runtime'
 
 interface BegModalProps {
   previousDonor?: boolean
+}
+
+export function PreviousDonorContent(): JSX.Element {
+  return (
+    <div className="previous-donor-content">
+      <p>Thank you for your previous support! Your contributions help keep Exercism free for everyone.</p>
+    </div>
+  )
+}
+
+export function NonDonorContent(): JSX.Element {
+  return (
+    <div className="non-donor-content">
+      <p>Exercism is free thanks to the generosity of our community. Consider supporting us to help keep it that way!</p>
+    </div>
+  )
 }
 
 export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element {
@@ -66,7 +82,7 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
     return false
   }
 
-  const checkIntroducerDismissal = async (): Promise<boolean> => {
+  const checkIntroducerDismissal = useCallback(async (): Promise<boolean> => {
     const introducerSlug = 'beg-modal'
     
     // Check if dismissed and if dismissal was more than 1 month ago
@@ -99,7 +115,7 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
     }
     
     return true
-  }
+  }, [user?.preferences?.dismissedIntroducers])
 
   const checkSeniorityModalRecent = (): boolean => {
     // Check if seniority modal was shown recently (within 5 minutes)
@@ -112,7 +128,7 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
       fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5)
       
       return shownDate > fiveMinutesAgo
-    } catch (err) {
+    } catch {
       return false
     }
   }
@@ -154,7 +170,7 @@ export function BegModal({ previousDonor = false }: BegModalProps): JSX.Element 
     }
 
     checkShouldShow()
-  }, [isAuthenticated, user, canShowModal])
+  }, [isAuthenticated, user, canShowModal, checkIntroducerDismissal])
 
   const handleDismiss = async () => {
     const introducerSlug = 'beg-modal'

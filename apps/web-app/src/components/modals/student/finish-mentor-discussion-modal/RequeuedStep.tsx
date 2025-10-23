@@ -5,14 +5,14 @@ type Links = {
   exercise: string
 }
 
-export const RequeuedStep = ({ links }: { links: Links }): JSX.Element => {
+export const RequeuedStep = ({ links }: { links: Links }): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
   return (
     <section className="acceptable-final-step">
       <h2>{t('requeuedStep.solutionRequeued')}</h2>
-      <p className="explanation">{t('requeuedStep.requedExplanation')}</p>
+      <p className="explanation">{t('requeuedStep.requeuedExplanation')}</p>
 
       <div className="form-buttons">
         <a href={links.exercise} className="btn-primary btn-m">

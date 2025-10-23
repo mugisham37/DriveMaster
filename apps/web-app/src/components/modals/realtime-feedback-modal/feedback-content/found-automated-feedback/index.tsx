@@ -29,7 +29,7 @@ export function FoundAutomatedFeedback({
   'latestIteration' | 'track' | 'onClose' | 'links'
 > & {
   onContinue: () => void
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content/found-automated-feedback'
   )
@@ -40,7 +40,9 @@ export function FoundAutomatedFeedback({
       <div className="flex gap-40 items-start">
         <div className="flex-col items-left">
           <div className="text-h4 mb-16 flex c-iteration-summary">
-            {t(HEADLINE[latestIteration!.status] as string)}
+            {latestIteration?.status && HEADLINE[latestIteration.status] 
+              ? t(HEADLINE[latestIteration.status] as string)
+              : t('index.automatedFeedback')}
           </div>
           {latestIteration?.representerFeedback ? (
             <RepresenterFeedback {...latestIteration.representerFeedback} />

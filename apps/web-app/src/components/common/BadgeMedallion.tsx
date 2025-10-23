@@ -1,17 +1,36 @@
 import React from 'react'
-import { Badge } from '../../types'
-import { GraphicalIcon } from './'
+import { BadgeRarity } from '@/components/types'
 
-export const BadgeMedallion = ({
+export interface BadgeMedallionProps {
+  badge: {
+    rarity: BadgeRarity
+    iconName: string
+  }
+  size?: 'small' | 'medium' | 'large'
+}
+
+export const BadgeMedallion: React.FC<BadgeMedallionProps> = ({
   badge,
-}: {
-  badge: Pick<Badge, 'rarity' | 'iconName'>
-}): React.JSX.Element => {
-  const classNames = ['c-badge-medallion', `--${badge.rarity}`]
+  size = 'medium'
+}) => {
+  const sizeClasses = {
+    small: 'w-8 h-8',
+    medium: 'w-12 h-12',
+    large: 'w-16 h-16'
+  }
+
+  const rarityClasses = {
+    common: 'bg-gray-200 border-gray-300',
+    rare: 'bg-blue-200 border-blue-300',
+    ultimate: 'bg-purple-200 border-purple-300',
+    legendary: 'bg-yellow-200 border-yellow-300'
+  }
 
   return (
-    <div className={classNames.join(' ')}>
-      <GraphicalIcon icon={badge.iconName} />
+    <div className={`badge-medallion ${sizeClasses[size]} ${rarityClasses[badge.rarity]} rounded-full border-2 flex items-center justify-center`}>
+      <span className="text-xs font-bold">{badge.iconName.charAt(0).toUpperCase()}</span>
     </div>
   )
 }
+
+export default BadgeMedallion

@@ -20,7 +20,7 @@ export const AddTestimonialStep = ({
   onSkip: () => void
   onBack: () => void
   discussion: MentorDiscussion
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
@@ -32,7 +32,7 @@ export const AddTestimonialStep = ({
   } = useMutation({
     mutationFn: async () => {
       const { fetch } = sendRequest({
-        endpoint: discussion.links.finish,
+        endpoint: discussion.links.finish || '',
         method: 'PATCH',
         body: JSON.stringify({
           rating: 5,
@@ -43,13 +43,16 @@ export const AddTestimonialStep = ({
       return fetch
     },
     onSuccess: () => {
-      value.length === 0 ? onSkip() : onSubmit()
+      if (value.length === 0) {
+        onSkip()
+      } else {
+        onSubmit()
+      }
     },
   })
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
-
       mutation()
     },
     [mutation]
@@ -57,7 +60,7 @@ export const AddTestimonialStep = ({
   const handleBack = useCallback(() => {
     onBack()
   }, [onBack])
-  const handleChange = useCallback((e) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.target.value)
   }, [])
   const primaryButtonText =
@@ -109,10 +112,12 @@ export const AddTestimonialStep = ({
             </div>
           </form>
           <FetchingBoundary
-            status={status}
+            status={status === 'idle' ? 'idle' : status === 'pending' ? 'pending' : status === 'error' ? 'error' : 'success'}
             error={error}
             defaultError={DEFAULT_ERROR}
-          />
+          >
+            {null}
+          </FetchingBoundary>
         </div>
         <div className="rhs">
           <div className="avatar-wrapper">

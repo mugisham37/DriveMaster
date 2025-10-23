@@ -1,7 +1,7 @@
 // i18n-key-prefix: deepDiveVideoContent
 // i18n-namespace: components/modals/realtime-feedback-modal/feedback-content
 import React from 'react'
-import YoutubePlayerWithMutation from '@/components/common/YoutubePlayerWithMutation'
+import { YoutubePlayerWithMutation } from '@/components/common/YoutubePlayerWithMutation'
 import { ContinueButton } from '../components/FeedbackContentButtons'
 import type { Props } from '@/components/editor/Props'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
@@ -14,7 +14,6 @@ type DeepDiveVideoContentProps = {
 export function DeepDiveVideoContent({
   exercise,
   onContinue,
-  links,
 }: DeepDiveVideoContentProps) {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content'
@@ -29,8 +28,7 @@ export function DeepDiveVideoContent({
       <p className="text-p-large mb-16">{exercise.deepDiveBlurb}</p>
       <div className="w-[100%] mb-16">
         <YoutubePlayerWithMutation
-          id={exercise.deepDiveYoutubeId}
-          markAsSeenEndpoint={links.markVideoAsSeenEndpoint}
+          videoId={exercise.deepDiveYoutubeId}
         />
       </div>
       <ContinueButton

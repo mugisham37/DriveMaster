@@ -18,7 +18,7 @@ export const SatisfiedStep = ({
   onRequeued: () => void
   onNotRequeued: () => void
   onBack: () => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation(
     'components/modals/student/finish-mentor-discussion-modal'
   )
@@ -29,15 +29,19 @@ export const SatisfiedStep = ({
   } = useMutation({
     mutationFn: async (requeue: boolean) => {
       const { fetch } = sendRequest({
-        endpoint: discussion.links.finish,
+        endpoint: discussion.links.finish || '',
         method: 'PATCH',
         body: JSON.stringify({ rating: 3, requeue: requeue }),
       })
 
       return fetch
     },
-    onSuccess: (data, requeue) => {
-      requeue ? onRequeued() : onNotRequeued()
+    onSuccess: (_, requeue) => {
+      if (requeue) {
+        onRequeued()
+      } else {
+        onNotRequeued()
+      }
     },
   })
   const handleBack = useCallback(() => {
@@ -75,10 +79,12 @@ export const SatisfiedStep = ({
           {t('satisfiedStep.yesPlease')}
         </FormButton>
         <FetchingBoundary
-          status={status}
+          status={status === 'idle' ? 'idle' : status === 'pending' ? 'pending' : status === 'error' ? 'error' : 'success'}
           error={error}
           defaultError={DEFAULT_ERROR}
-        />
+        >
+          {null}
+        </FetchingBoundary>
       </div>
     </section>
   )

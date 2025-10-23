@@ -28,7 +28,7 @@ export const FinishMentorDiscussionModal = ({
   error: unknown
   onFinish: () => void
   onCancel: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/modals/mentor')
 
   return (

@@ -33,7 +33,7 @@ const translations = {
     "You've earned the <0>Supporter</0> badge!",
   'successfulDonationStep.continueToExercise': 'Continue to Exercise',
   'requeuedStep.solutionRequeued': 'Your solution has been requeued.',
-  'requeuedStep.requedExplanation':
+  'requeuedStep.requeuedExplanation':
     'Your solution has been put back in the queue and another mentor will hopefully pick it up soon. We hope you have a positive mentoring session on this solution next time!',
   'requeuedStep.goToSolution': 'Go back to your solution',
   'testimonialField.writeTestimonial': 'Write your testimonial here',

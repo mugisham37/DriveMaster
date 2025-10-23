@@ -7,7 +7,7 @@ export const Checkbox = ({
 }: {
   children: React.ReactNode
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <label className="c-checkbox-wrapper">
       <input onChange={onChange} required type="checkbox" />

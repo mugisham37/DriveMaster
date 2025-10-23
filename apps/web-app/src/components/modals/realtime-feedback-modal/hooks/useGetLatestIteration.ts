@@ -64,7 +64,7 @@ export function useGetLatestIteration({
   useEffect(() => {
     const solutionChannel = new SolutionWithLatestIterationChannel(
       { uuid: solution.uuid },
-      (response) => {
+      (response: { iteration: ResolvedIteration }) => {
         queryClient.setQueryData([CACHE_KEY], { iteration: response.iteration })
       }
     )

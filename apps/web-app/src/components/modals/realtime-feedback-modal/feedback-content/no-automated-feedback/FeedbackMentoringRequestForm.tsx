@@ -23,7 +23,7 @@ export const FeedbackMentoringRequestForm = ({
   track: Pick<Track, 'title' | 'medianWaitTime'>
   onContinue: () => void
   onSuccess: () => void
-} & Pick<RealtimeFeedbackModalProps, 'links'>): JSX.Element => {
+} & Pick<RealtimeFeedbackModalProps, 'links'>): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content/no-automated-feedback'
   )
@@ -56,20 +56,22 @@ export const FeedbackMentoringRequestForm = ({
           onClick={onContinue}
         />
         <FormButton
-          status={status}
+          status={status === 'submitting' ? 'pending' : status}
           className="!w-auto btn-primary btn-s flex-grow"
         >
           {t('index.submitForCodeReview')}
         </FormButton>
       </div>
       <FetchingBoundary
-        status={status}
+        status={status === 'submitting' ? 'pending' : status}
         error={error}
         defaultError={DEFAULT_ERROR}
-      />
+      >
+        {null}
+      </FetchingBoundary>
       <p className="flow-explanation">
         {t('index.onceYouSubmit')}
-        <MedianWaitTime seconds={track.medianWaitTime} />
+        <MedianWaitTime waitTime={track.medianWaitTime || '0'} />
       </p>
     </form>
   )

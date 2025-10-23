@@ -35,8 +35,7 @@ export function TrackResetModal({ track, isOpen, onClose, onSuccess }: TrackRese
     onSuccess: () => {
       onSuccess?.()
       onClose()
-    },
-    successMessage: `Your progress in ${track.title} has been reset`
+    }
   })
 
   const handleSubmit = async () => {

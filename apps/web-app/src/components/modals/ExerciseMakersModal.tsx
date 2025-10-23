@@ -38,7 +38,7 @@ const MakerInner = ({
       <div className="handle">
         <HandleWithFlair
           handle={maker.handle}
-          flair={(maker.flair?.name as any) || "insider"}
+          flair={maker.flair || "insider"}
         />
       </div>
       <Reputation value={maker.reputation || "0"} type="primary" size="small" />

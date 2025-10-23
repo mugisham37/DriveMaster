@@ -34,7 +34,7 @@ export function FeedbackContent({
   trackObjectives,
   mentoringStatus,
   hasAvailableMentoringSlot,
-}: FeedbackContentProps): JSX.Element {
+}: FeedbackContentProps): React.JSX.Element {
   const itIsTakingTooLong = useTakingTooLong(open)
 
   switch (checkStatus) {

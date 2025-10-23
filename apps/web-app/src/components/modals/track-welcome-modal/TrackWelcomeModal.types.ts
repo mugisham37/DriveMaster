@@ -1,6 +1,4 @@
-import { State, ResolveTypegenMeta, BaseActionObject, ServiceMap } from '@/lib/xstate-mock'
-import { StateEvent } from './LHS/TrackWelcomeModal.machine'
-import { Typegen0 } from './LHS/TrackWelcomeModal.machine.typegen'
+import { State } from '@/lib/xstate-mock'
 import { Track } from '@/components/types'
 import { SeniorityLevel } from '../welcome-modal/WelcomeModal'
 
@@ -31,25 +29,5 @@ export type CurrentState = State<
       Interface: string
     }
   },
-  {
-    type: StateEvent
-  },
-  any,
-  {
-    value: any
-    context: {
-      choices: {
-        Mode: string
-        Interface: string
-      }
-    }
-  },
-  ResolveTypegenMeta<
-    Typegen0,
-    {
-      type: StateEvent
-    },
-    BaseActionObject,
-    ServiceMap
-  >
+  string
 >

@@ -5,7 +5,7 @@ import { GraphicalIcon } from '../../../common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export const ReputationInfo = (): JSX.Element => {
+export const ReputationInfo = (): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/modals/mentor-registration-modal/commit-step'
   )

@@ -4,7 +4,7 @@ import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export function NoImmediateFeedbackNoAvailableMentoringSlot({
   onContinue,
-}: Record<'onContinue', () => void>): JSX.Element {
+}: Record<'onContinue', () => void>): React.JSX.Element {
   const { t } = useAppTranslation(
     'components/modals/realtime-feedback-modal/feedback-content/no-automated-feedback'
   )

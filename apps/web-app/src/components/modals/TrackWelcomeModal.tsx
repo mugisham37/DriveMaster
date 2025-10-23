@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common'
 import { useAuth } from '@/hooks/useAuth'
+import Image from 'next/image'
 
 interface TrackWelcomeModalProps {
   track: {
@@ -106,9 +107,11 @@ export default function TrackWelcomeModal({
     >
       <div className="track-welcome-modal p-8">
         <div className="text-center mb-6">
-          <img 
+          <Image 
             src={track.iconUrl} 
             alt={track.title}
+            width={80}
+            height={80}
             className="h-[80px] w-[80px] mx-auto mb-4"
           />
           <h2 className="text-h2 mb-2">

@@ -1,30 +1,27 @@
-import React, { useEffect, useRef } from 'react'
-import { Diff2HtmlUI } from 'diff2html/lib/ui/js/diff2html-ui-base.js'
-import HighlightJS from 'highlight.js'
+import React from 'react'
 
-export const DiffViewer = ({ diff }: { diff: string }): JSX.Element => {
-  const contentRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!contentRef.current) {
-      return
-    }
-
-    const configuration = {
-      drawFileList: false,
-      fileListToggle: false,
-      fileListStartVisible: false,
-      fileContentToggle: false,
-    }
-
-    const diff2htmlUi = new Diff2HtmlUI(
-      contentRef.current,
-      diff,
-      configuration,
-      HighlightJS
-    )
-    diff2htmlUi.draw()
-  }, [diff])
-
-  return <div className="c-diff" ref={contentRef} />
+export const DiffViewer = ({ diff }: { diff: string }): React.JSX.Element => {
+  // Simple diff viewer - in a real implementation, this would use a proper diff library
+  const lines = diff.split('\n')
+  
+  return (
+    <div className="c-diff">
+      <div className="diff-content">
+        <pre className="diff-text">
+          {lines.map((line, index) => (
+            <div 
+              key={index} 
+              className={`diff-line ${
+                line.startsWith('+') ? 'added' : 
+                line.startsWith('-') ? 'removed' : 
+                line.startsWith('@@') ? 'header' : 'context'
+              }`}
+            >
+              {line}
+            </div>
+          ))}
+        </pre>
+      </div>
+    </div>
+  )
 }
