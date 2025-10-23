@@ -510,7 +510,9 @@
     "verilog",
     "vbnet",
     "plutojl",
-    "mllike"
+    "mllike",
+    "unfetched",
+    "Unfetched"
   ],
   "ignorePaths": [
     "node_modules/**",

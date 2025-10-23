@@ -4,7 +4,7 @@ import React from 'react'
 import { GraphicalIcon } from '@/components/common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export const ChatGptUpsellContent = (): JSX.Element => {
+export const ChatGptUpsellContent = () => {
   const { t } = useAppTranslation('components/editor/ChatGptFeedback')
   return (
     <div className="  px-24 pt-16 pb-24 text-center">

@@ -1,4 +1,10 @@
-import { SubmissionTestsStatus } from '../../types'
+import { SubmissionTestsStatus, File as BaseFile, TestFile as BaseTestFile } from '../../types'
+
+// Re-export types that are used throughout the editor
+export type { SubmissionTestsStatus } from '../../types'
+
+export type File = BaseFile
+export type TestFile = BaseTestFile
 
 export type Submission = {
   testsStatus: SubmissionTestsStatus

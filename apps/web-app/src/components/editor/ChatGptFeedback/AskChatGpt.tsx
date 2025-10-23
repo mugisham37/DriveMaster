@@ -13,7 +13,7 @@ export function AskChatGpt({
   children,
 }: Pick<useChatGptFeedbackProps, 'helpRecord' | 'status'> & {
   children: React.ReactNode
-}): JSX.Element {
+}) {
   const { t } = useAppTranslation('components/editor/ChatGptFeedback')
   let content
   switch (status) {
@@ -85,7 +85,7 @@ function AskingChatGpt() {
   )
 }
 
-function Unfetched({ children }: { children: React.ReactNode }): JSX.Element {
+function Unfetched({ children }: { children: React.ReactNode }) {
   const { t } = useAppTranslation('components/editor/ChatGptFeedback')
 
   return (

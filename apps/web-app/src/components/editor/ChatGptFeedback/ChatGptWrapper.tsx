@@ -9,7 +9,7 @@ export const ChatGptWrapper = ({
 }: {
   status: FetchingStatus
   children: React.ReactNode
-} & Pick<useChatGptFeedbackProps, 'helpRecord'>): JSX.Element => {
+} & Pick<useChatGptFeedbackProps, 'helpRecord'>) => {
   return (
     <section className="flex justify-center pb-16 px-24">
       <AskChatGpt status={status} helpRecord={helpRecord}>

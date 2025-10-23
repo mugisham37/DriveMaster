@@ -81,3 +81,5 @@ export const AskChatGptButton = forwardRef<HTMLButtonElement, Props>(
     );
   }
 );
+
+AskChatGptButton.displayName = 'AskChatGptButton';

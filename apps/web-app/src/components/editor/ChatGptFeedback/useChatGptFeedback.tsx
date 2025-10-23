@@ -58,7 +58,7 @@ export function useChatGptFeedback({
   const [exceededLimit, setExceededLimit] = useState(false)
   const [chatGptUsage, setChatGptUsage] = useState(chatgptUsage)
 
-  const onError = useCallback((err) => {
+  const onError = useCallback((err: any) => {
     if (err.status === 402) {
       setExceededLimit(true)
     }

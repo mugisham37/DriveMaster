@@ -34,7 +34,7 @@ const OptionComponent = ({
   option: model,
 }: {
   option: GptModelInfo
-}): JSX.Element | null => {
+}): React.ReactNode => {
   switch (model.version) {
     case '3.5':
       return (
@@ -67,7 +67,7 @@ const SelectedComponent = ({
   option: model,
 }: {
   option: GptModelInfo
-}): JSX.Element | null => {
+}): React.ReactNode => {
   switch (model.version) {
     case '3.5':
       return (
@@ -96,7 +96,7 @@ export const ChatGptDialog = ({
   chatgptUsage,
   error,
   exceededLimit,
-}: ChatGptDialogModalProps): JSX.Element => {
+}: ChatGptDialogModalProps) => {
   const { t } = useAppTranslation('components/editor/ChatGptFeedback')
 
   return (
@@ -104,7 +104,7 @@ export const ChatGptDialog = ({
       open={open}
       closeButton={false}
       onClose={onClose}
-      shouldCloseOnEsc={false}
+
       shouldCloseOnOverlayClick
       ReactModalClassName={`max-w-[40%]`}
     >
