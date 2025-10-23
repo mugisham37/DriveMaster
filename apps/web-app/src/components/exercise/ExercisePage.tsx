@@ -24,7 +24,8 @@ export function ExercisePage({
       <div id="page-exercise">
         <ExerciseHeader 
           exercise={exercise} 
-          track={track} 
+          track={track}
+          selectedTab="overview"
         />
 
         <div className="lg-container container">

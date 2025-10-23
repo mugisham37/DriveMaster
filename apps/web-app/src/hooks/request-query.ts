@@ -1,18 +1,24 @@
-// Request query hooks to preserve exact behavior from Rails implementation
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
 
-export type Request<T = Record<string, unknown>> = {
+export interface Request {
   endpoint: string
-  options?: Record<string, unknown>
-  query?: T
+  query?: Record<string, any>
 }
 
-export function usePaginatedRequestQuery<T = Record<string, unknown>>(
-  key: (string | number | boolean | null | undefined)[],
-  request: Request<Record<string, unknown>>
-) {
+export interface PaginatedResult<T> {
+  results: T
+  meta: {
+    totalPages: number
+    unscopedTotal: number
+  }
+}
+
+export function usePaginatedRequestQuery<TData, TError = Error>(
+  queryKey: any[],
+  request: Request
+): UseQueryResult<TData, TError> {
   return useQuery({
-    queryKey: key,
+    queryKey,
     queryFn: async () => {
       const url = new URL(request.endpoint, window.location.origin)
       if (request.query) {
@@ -23,22 +29,12 @@ export function usePaginatedRequestQuery<T = Record<string, unknown>>(
         })
       }
       
-      const response = await fetch(url.toString(), {
-        credentials: 'same-origin',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      })
-      
+      const response = await fetch(url.toString())
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`Request failed: ${response.statusText}`)
       }
       
       return response.json()
     },
-    ...request.options,
   })
 }
-
-// Alias for backward compatibility
-export const useRequestQuery = usePaginatedRequestQuery

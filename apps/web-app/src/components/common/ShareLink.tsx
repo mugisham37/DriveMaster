@@ -8,9 +8,10 @@ interface ShareLinkProps {
   shareTitle: string
   shareLink: string
   platforms: readonly SharePlatform[]
+  className?: string
 }
 
-export function ShareLink({ title, shareTitle, shareLink, platforms }: ShareLinkProps): React.ReactElement {
+export function ShareLink({ title, shareTitle, shareLink, platforms, className = '' }: ShareLinkProps): React.ReactElement {
   const handleShare = (platform: SharePlatform) => {
     const url = platform.url
       .replace('{url}', encodeURIComponent(shareLink))
@@ -20,7 +21,7 @@ export function ShareLink({ title, shareTitle, shareLink, platforms }: ShareLink
   }
 
   return (
-    <div className="share-link">
+    <div className={`share-link ${className}`}>
       <h3 className="text-lg font-semibold mb-3">{title}</h3>
       <div className="flex gap-2">
         {platforms.map((platform) => (

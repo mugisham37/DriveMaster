@@ -1,90 +1,90 @@
-import React from 'react'
-import { SingleSelect } from '@/components/common/SingleSelect'
-import { ContributionCategoryId } from '@/components/types'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import React from "react";
+import { SingleSelect } from "@/components/common/SingleSelect";
+import { ContributionCategoryId } from "@/components/types";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
 const OptionComponent = ({
   option: category,
 }: {
-  option: ContributionCategoryId | undefined
+  option: ContributionCategoryId | undefined;
 }): React.ReactElement => {
-  const { t } = useAppTranslation('components/journey/contributions-list')
+  const { t } = useAppTranslation("components/journey/contributions-list");
 
   switch (category) {
-    case 'authoring':
+    case "authoring":
       return (
         <div className="info">
           <div className="title">
-            {t('categorySelect.contributingToExercises')}
+            {t("categorySelect.contributingToExercises")}
           </div>
         </div>
-      )
-    case 'building':
+      );
+    case "building":
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.buildingExercism')}</div>
+          <div className="title">{t("categorySelect.buildingExercism")}</div>
         </div>
-      )
-    case 'maintaining':
+      );
+    case "maintaining":
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.maintaining')}</div>
+          <div className="title">{t("categorySelect.maintaining")}</div>
         </div>
-      )
-    case 'mentoring':
+      );
+    case "mentoring":
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.mentoring')}</div>
+          <div className="title">{t("categorySelect.mentoring")}</div>
         </div>
-      )
-    case 'publishing':
+      );
+    case "publishing":
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.publishing')}</div>
+          <div className="title">{t("categorySelect.publishing")}</div>
         </div>
-      )
-    case 'other':
+      );
+    case "other":
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.other')}</div>
+          <div className="title">{t("categorySelect.other")}</div>
         </div>
-      )
+      );
     case undefined:
       return (
         <div className="info">
-          <div className="title">{t('categorySelect.anyCategory')}</div>
+          <div className="title">{t("categorySelect.anyCategory")}</div>
         </div>
-      )
+      );
   }
-}
+};
 
 const SelectedComponent = () => {
-  const { t } = useAppTranslation('components/journey/contributions-list')
-  return <>{t('categorySelect.category')}</>
-}
+  const { t } = useAppTranslation("components/journey/contributions-list");
+  return <>{t("categorySelect.category")}</>;
+};
 
 export const CategorySelect = ({
   value,
   setValue,
 }: {
-  value: ContributionCategoryId | undefined
-  setValue: (value: ContributionCategoryId | undefined) => void
+  value: ContributionCategoryId | undefined;
+  setValue: (value: ContributionCategoryId | undefined) => void;
 }): React.ReactElement => {
   return (
     <SingleSelect<ContributionCategoryId | undefined>
       options={[
         undefined,
-        'building',
-        'authoring',
-        'maintaining',
-        'mentoring',
-        'publishing',
-        'other',
+        "building",
+        "authoring",
+        "maintaining",
+        "mentoring",
+        "publishing",
+        "other",
       ]}
       value={value}
       setValue={setValue}
       SelectedComponent={SelectedComponent}
       OptionComponent={OptionComponent}
     />
-  )
-}
+  );
+};

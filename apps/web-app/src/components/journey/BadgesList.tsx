@@ -9,7 +9,6 @@ import { FetchingBoundary } from '@/components/common/FetchingBoundary'
 import { BadgeResults } from './BadgeResults'
 import { OrderSwitcher } from './badges-list/OrderSwitcher'
 import type { PaginatedResult, Badge } from '../types'
-import type { QueryKey } from '@tanstack/react-query'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import type { Order } from './BadgeResults'
 
@@ -33,17 +32,17 @@ export const BadgesList = ({
   const [criteria, setCriteria] = useState<string>(
     (request.query?.criteria as string) || ''
   )
-  const cacheKey: QueryKey = [
+  const cacheKey = [
     'badges-list',
     request.endpoint,
-    removeEmpty(request.query || {}),
-  ]
+    JSON.stringify(removeEmpty(request.query || {})),
+  ] as const
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<PaginatedResult<Badge[]>>(cacheKey, {
+  } = usePaginatedRequestQuery<PaginatedResult<Badge>>([...cacheKey], {
     ...request,
     query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
@@ -96,7 +95,6 @@ export const BadgesList = ({
               <React.Fragment>
                 <BadgeResults data={resolvedData} cacheKey={cacheKey} />
                 <Pagination
-                  disabled={resolvedData === undefined}
                   current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {

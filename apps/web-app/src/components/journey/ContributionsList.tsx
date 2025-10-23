@@ -47,14 +47,14 @@ export function ContributionsList({
   const cacheKey = [
     "contributions-list",
     request.endpoint,
-    removeEmpty(request.query || {}),
-  ];
+    JSON.stringify(removeEmpty(request.query || {})),
+  ] as const;
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<APIResult>(cacheKey, {
+  } = usePaginatedRequestQuery<APIResult>([...cacheKey], {
     ...request,
     query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
@@ -62,7 +62,7 @@ export function ContributionsList({
 
   const requestQuery = useDeepMemo(request.query);
   const setCategory = useCallback(
-    (category: any) => {
+    (category: string | undefined) => {
       setQuery({ ...requestQuery, category: category, page: undefined });
     },
     [requestQuery, setQuery]
@@ -111,7 +111,6 @@ export function ContributionsList({
               <React.Fragment>
                 <ContributionResults data={resolvedData} cacheKey={cacheKey} />
                 <Pagination
-                  disabled={resolvedData === undefined}
                   current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {

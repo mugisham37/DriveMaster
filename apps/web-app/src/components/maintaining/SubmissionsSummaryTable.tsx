@@ -13,9 +13,9 @@ type Submission = {
   analysisStatus: string
 }
 
-type SubmissionEvent = {
-  submission: Submission
-}
+// type SubmissionEvent = {
+//   submission: Submission
+// }
 
 function SubmissionsSummaryTableRow({
   uuid,
@@ -41,9 +41,9 @@ export function SubmissionsSummaryTable({
   submissions,
 }: {
   submissions: readonly Submission[]
-}): JSX.Element {
+}): React.ReactElement {
   const { t } = useAppTranslation('components/maintaining')
-  const [stateSubmissions, setSubmissions] = useState(submissions)
+  const [stateSubmissions] = useState(submissions)
 
   useEffect(() => {
     // TODO: Implement real-time ActionCable subscription

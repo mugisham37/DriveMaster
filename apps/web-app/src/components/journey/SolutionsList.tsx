@@ -16,11 +16,12 @@ import {
   SolutionFilter,
   OrderSwitcher,
   ExerciseStatus,
+  Order,
 } from './solutions-list'
 import type { PaginatedResult } from '@/types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export type Order = 'newest_first' | 'oldest_first'
+// Order type is imported from solutions-list
 
 const DEFAULT_ORDER = 'newest_first'
 const DEFAULT_ERROR = new Error('Unable to load solutions')
@@ -46,14 +47,14 @@ export const SolutionsList = ({
   const cacheKey = [
     'solutions-list',
     request.endpoint,
-    removeEmpty(request.query || {}),
-  ]
+    JSON.stringify(removeEmpty(request.query || {})),
+  ] as const
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<PaginatedResult<SolutionProps[]>>(cacheKey, {
+  } = usePaginatedRequestQuery<PaginatedResult<SolutionProps[]>>([...cacheKey], {
     ...request,
     query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
@@ -157,13 +158,12 @@ export const SolutionsList = ({
                     </button>
                   </div>
                   <div className="solutions">
-                    {resolvedData.results.map((solution: any) => {
+                    {resolvedData.results.map((solution: SolutionProps) => {
                       return <Solution {...solution} key={solution.uuid} />
                     })}
                   </div>
                 </div>
                 <Pagination
-                  disabled={resolvedData === undefined}
                   current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {

@@ -1,2 +1,1 @@
-export { default as FavoritesList } from './index'
-export type { FavoritesListProps } from './index'
+export { default as FavoritesList, type FavoritesListProps } from './FavoritesList'

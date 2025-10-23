@@ -1,7 +1,8 @@
 import React from 'react'
 import { SingleSelect } from '../../common/SingleSelect'
-import { Order } from '../SolutionsList'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+
+export type Order = 'newest_first' | 'oldest_first'
 
 const OptionComponent = ({ option: order }: { option: Order }) => {
   const { t } = useAppTranslation('components/journey/solutions-list')
@@ -19,7 +20,7 @@ export const OrderSwitcher = ({
 }: {
   value: Order
   setValue: (value: Order) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<Order>
       options={['newest_first', 'oldest_first']}

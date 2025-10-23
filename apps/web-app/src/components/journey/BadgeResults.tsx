@@ -12,7 +12,7 @@ export const BadgeResults = ({
   data,
   cacheKey,
 }: {
-  data: PaginatedResult<BadgeProps[]>
+  data: PaginatedResult<BadgeProps>
   cacheKey: QueryKey
 }): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')

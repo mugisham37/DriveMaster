@@ -46,7 +46,7 @@ export const UnrevealedBadge = ({
 
   const updateCache = useCallback(() => {
     const oldData =
-      queryClient.getQueryData<PaginatedResult<BadgeProps[]>>(cacheKey)
+      queryClient.getQueryData<PaginatedResult<BadgeProps>>(cacheKey)
 
     if (!oldData || !revealedBadge) {
       return

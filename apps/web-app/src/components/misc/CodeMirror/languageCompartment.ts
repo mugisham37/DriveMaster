@@ -327,7 +327,7 @@ export const loadLanguageCompartment = async (
     case 'julia': {
       try {
         const { julia } = await import('@plutojl/lang-julia')
-        return compartment.of(julia())
+        return compartment.of(julia() as import('@codemirror/state').Extension)
       } catch {
         return compartment.of([])
       }

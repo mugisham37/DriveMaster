@@ -11,7 +11,7 @@ export const SolutionFilter = ({
   request,
   onApply,
 }: {
-  request: any
+  request: unknown
   onApply: (
     status: ExerciseStatus,
     mentoringStatus: MentoringStatus,
