@@ -9,7 +9,7 @@ export function HasLearningModeStep({
 }: Record<
   'onSelectLearningMode' | 'onSelectPracticeMode',
   () => void
->): JSX.Element {
+>): React.ReactElement {
   const { track } = useContext(TrackContext)
   const { t } = useAppTranslation(
     'components/modals/track-welcome-modal/LHS/steps'

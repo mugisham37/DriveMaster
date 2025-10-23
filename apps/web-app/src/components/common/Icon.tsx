@@ -6,9 +6,11 @@ interface IconProps {
   icon: string
   alt?: string
   className?: string
+  height?: number
+  width?: number
 }
 
-export function Icon({ icon, alt, className = '' }: IconProps): React.ReactElement {
+export function Icon({ icon, alt, className = '', height, width }: IconProps): React.ReactElement {
   return (
     <i 
       className={`c-icon ${className}`}

@@ -10,7 +10,7 @@ export function LearningEnvironmentSelectorStep({
 }: Record<
   'onSelectLocalMachine' | 'onSelectOnlineEditor',
   () => void
->): JSX.Element {
+>): React.ReactElement {
   const { track, shouldShowBootcampRecommendationView } =
     useContext(TrackContext)
   const { t } = useAppTranslation(

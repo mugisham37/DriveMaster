@@ -13,7 +13,7 @@ type UploadVideoModalProps = {
   onClose: () => void
 }
 
-enum UploadSteps {
+const enum UploadSteps {
   RETRIEVE,
   UPLOAD,
   SUCCESS,
@@ -24,7 +24,7 @@ type UploadStatus = keyof typeof UploadSteps
 export function UploadVideoModal({
   isOpen,
   onClose,
-}: UploadVideoModalProps): JSX.Element {
+}: UploadVideoModalProps): React.ReactElement {
   const [videoData, setVideoData] = useState<VideoDataResponse>(null)
   const [videoUploadStep, setVideoUploadStep] =
     useState<UploadStatus>('RETRIEVE')

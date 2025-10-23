@@ -35,6 +35,7 @@ export interface Track {
   numExercises: number
   description?: string
   tags?: string[]
+  course?: boolean
 }
 
 export type ExerciseStatus = 'available' | 'started' | 'completed' | 'published' | 'locked' | 'iterated'
@@ -50,6 +51,9 @@ export interface Exercise {
   blurb?: string
   deepDiveBlurb?: string
   isUnlocked?: boolean
+  links?: {
+    self: string
+  }
 }
 
 export enum IterationStatus {
@@ -603,6 +607,28 @@ export interface TrackContribution {
   iconUrl: string
   categories: readonly ContributionCategory[]
   totalReputation: number
+}
+
+// Community video types
+export interface CommunityVideoType {
+  id: string
+  title: string
+  description: string
+  url: string
+  thumbnailUrl?: string
+  author: {
+    handle: string
+    avatarUrl: string
+  }
+  exercise?: {
+    title: string
+    slug: string
+  }
+  track?: {
+    title: string
+    slug: string
+  }
+  createdAt: string
 }
 
 // Export all types individually instead of as default object

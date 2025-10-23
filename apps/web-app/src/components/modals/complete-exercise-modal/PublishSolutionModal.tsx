@@ -18,7 +18,7 @@ export const PublishSolutionModal = ({
   iterations: readonly Iteration[]
   endpoint: string
   onSuccess: (data: ExerciseCompletion) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/modals/complete-exercise-modal')
   const ariaObject = generateAriaFieldIds('publish-code')
   return (

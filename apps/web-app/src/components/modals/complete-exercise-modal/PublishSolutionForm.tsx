@@ -54,7 +54,7 @@ export const PublishSolutionForm = ({
   endpoint: string
   iterations: readonly Iteration[]
   onSuccess: (data: ExerciseCompletion) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/modals/complete-exercise-modal')
   const [toPublish, setToPublish] = useState(true)
   const [iterationIdxToPublish, setIterationIdxToPublish] = useState<
@@ -81,7 +81,7 @@ export const PublishSolutionForm = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

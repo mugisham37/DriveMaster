@@ -17,20 +17,20 @@ type RetrieveVideoForm = {
 
 export function RetrieveVideoForm({
   onSuccess,
-}: RetrieveVideoForm): JSX.Element {
+}: RetrieveVideoForm): React.ReactElement {
   const { links } = useContext(DigDeeperDataContext)
   const { t } = useAppTranslation('components/modals/upload-video/elements')
 
   async function VerifyVideo(link: string) {
     const URL = `${links.video.lookup}?video_url=${link}`
-    const { fetch } = sendRequest({ endpoint: URL, body: null, method: 'GET' })
+    const { fetch } = sendRequest({ endpoint: URL, body: undefined, method: 'GET' })
     return fetch
   }
 
   const [retrievalError, setRetrievalError] = useState(false)
 
   const { mutate: verifyVideo } = useMutation({
-    mutationFn: async (url: any) => VerifyVideo(url),
+    mutationFn: async (url: string) => VerifyVideo(url),
     onSuccess: (data: VideoDataResponse) => onSuccess(data),
     onError: () => setRetrievalError(true),
   })

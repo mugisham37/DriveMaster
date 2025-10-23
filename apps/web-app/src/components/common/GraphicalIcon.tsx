@@ -2,7 +2,7 @@ import React from 'react'
 
 interface GraphicalIconProps {
   icon: string
-  category?: 'graphics' | 'icons'
+  category?: 'graphics' | 'icons' | 'bootcamp'
   className?: string
   width?: number
   height?: number

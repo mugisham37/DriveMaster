@@ -1,12 +1,19 @@
 import React from 'react'
 import { ExerciseIcon } from '../../../common'
-import { Exercise } from '../../../types'
+
+interface UnlockedExerciseProps {
+  title: string
+  iconUrl: string
+  links: {
+    self: string
+  }
+}
 
 export const UnlockedExercise = ({
   title,
   iconUrl,
   links,
-}: Exercise): JSX.Element => {
+}: UnlockedExerciseProps): React.ReactElement => {
   return (
     <a
       href={links.self}

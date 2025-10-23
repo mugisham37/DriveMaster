@@ -11,7 +11,7 @@ export const TutorialCompletedModal = ({
 }: {
   open: boolean
   completion: ExerciseCompletion
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/modals/complete-exercise-modal')
 
   const hasCourse = Boolean(completion.track.course)
@@ -49,7 +49,7 @@ export const TutorialCompletedModal = ({
             trackTitle: completion.track.title,
             conceptCount: completion.track.numConcepts,
           }}
-          components={[<a href={completion.track.links.exercises} />]}
+          components={[<a key="exercises-link" href={completion.track.links.exercises} />]}
         />
       </p>
 

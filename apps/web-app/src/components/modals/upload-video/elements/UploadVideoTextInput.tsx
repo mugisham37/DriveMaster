@@ -20,7 +20,7 @@ export function UploadVideoTextInput({
   error,
   errorMessage,
   placeholder,
-}: UploadVideoInputProps): JSX.Element {
+}: UploadVideoInputProps): React.ReactElement {
   return (
     <label
       className={`text-label text-btnBorder flex flex-col mb-16 ${className}`}

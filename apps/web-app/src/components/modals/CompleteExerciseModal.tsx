@@ -1,5 +1,6 @@
 import React from 'react'
 import { Modal } from '../common'
+import { Exercise, Track, Concept as BaseConcept } from '../types'
 
 interface Iteration {
   idx: number
@@ -10,6 +11,41 @@ interface Iteration {
   representationStatus: string
   analysisStatus: string
   isPublished: boolean
+}
+
+export interface Concept extends BaseConcept {
+  name: string
+  links: {
+    self: string
+  }
+}
+
+export interface ConceptProgression {
+  name: string
+  from: number
+  to: number
+  total: number
+  links: {
+    self: string
+  }
+}
+
+export interface ExerciseCompletion {
+  track: Track & {
+    numConcepts: number
+    links: {
+      concepts: string
+      exercises: string
+    }
+  }
+  exercise: Exercise & {
+    links: {
+      self: string
+    }
+  }
+  conceptProgressions: ConceptProgression[]
+  unlockedExercises: Exercise[]
+  unlockedConcepts: Concept[]
 }
 
 interface CompleteExerciseModalProps {
@@ -24,7 +60,7 @@ export function CompleteExerciseModal({
   iterations,
   open,
   onClose,
-}: CompleteExerciseModalProps): React.JSX.Element {
+}: CompleteExerciseModalProps): React.ReactElement {
   const handleComplete = async () => {
     try {
       const response = await fetch(endpoint, {

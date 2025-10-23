@@ -4,7 +4,7 @@ import { UnlockedExercise } from './UnlockedExercise'
 import { Concept } from '../../CompleteExerciseModal'
 import { GraphicalIcon } from '../../../common'
 import { Exercise } from '../../../types'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+
 import { Trans } from 'react-i18next'
 
 export const Unlocks = ({
@@ -13,10 +13,7 @@ export const Unlocks = ({
 }: {
   unlockedConcepts: Concept[]
   unlockedExercises: Exercise[]
-}): JSX.Element => {
-  const { t } = useAppTranslation(
-    'components/modals/complete-exercise-modal/exercise-completed-modal/Unlocks.tsx'
-  )
+}): React.ReactElement => {
 
   return (
     <div className="unlocks" data-testid="unlocks">
@@ -55,7 +52,12 @@ export const Unlocks = ({
           </h3>
           <div className="list">
             {unlockedExercises.map((exercise) => (
-              <UnlockedExercise key={exercise.title} {...exercise} />
+              <UnlockedExercise 
+                key={exercise.title} 
+                title={exercise.title}
+                iconUrl={exercise.iconUrl}
+                links={exercise.links || { self: '' }}
+              />
             ))}
           </div>
         </div>

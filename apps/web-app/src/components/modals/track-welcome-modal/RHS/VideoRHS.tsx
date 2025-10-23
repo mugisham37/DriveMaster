@@ -5,7 +5,7 @@ import VimeoEmbed from '@/components/common/VimeoEmbed'
 import { Track } from '@/components/types'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export function VideoRHS({ track }: { track: Track }): JSX.Element {
+export function VideoRHS({ track }: { track: Track }): React.ReactElement {
   const { t } = useAppTranslation('components/modals/track-welcome-modal/RHS')
 
   return (

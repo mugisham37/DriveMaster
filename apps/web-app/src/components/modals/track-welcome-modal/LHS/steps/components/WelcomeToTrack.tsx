@@ -3,7 +3,7 @@
 import React, { useContext } from 'react'
 import { TrackContext } from '../../../TrackWelcomeModal'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
-export function WelcomeToTrack(): JSX.Element {
+export function WelcomeToTrack(): React.ReactElement {
   const { track } = useContext(TrackContext)
   const { t } = useAppTranslation(
     'components/modals/track-welcome-modal/LHS/steps/components'

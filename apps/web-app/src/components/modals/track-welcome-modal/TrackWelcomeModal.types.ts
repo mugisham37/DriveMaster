@@ -1,4 +1,4 @@
-import { State, ResolveTypegenMeta, BaseActionObject, ServiceMap } from 'xstate'
+import { State, ResolveTypegenMeta, BaseActionObject, ServiceMap } from '@/lib/xstate-mock'
 import { StateEvent } from './LHS/TrackWelcomeModal.machine'
 import { Typegen0 } from './LHS/TrackWelcomeModal.machine.typegen'
 import { Track } from '@/components/types'
@@ -19,7 +19,8 @@ export type TrackWelcomeModalLinks = Record<
   | 'cliWalkthrough'
   | 'trackTooling'
   | 'learningResources'
-  | 'codingFundamentalsCourse',
+  | 'codingFundamentalsCourse'
+  | 'downloadCmd',
   string
 >
 

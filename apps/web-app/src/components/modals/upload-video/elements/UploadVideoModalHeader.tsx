@@ -7,7 +7,7 @@ export function UploadVideoModalHeader({
   videoRetrieved = false,
 }: {
   videoRetrieved?: boolean
-}): JSX.Element {
+}): React.ReactElement {
   const { t } = useAppTranslation('components/modals/upload-video/elements')
 
   return (
@@ -19,7 +19,7 @@ export function UploadVideoModalHeader({
         <Trans
           ns="components/modals/upload-video/elements"
           i18nKey="uploadVideoModalHeader.producedAVideoOfWorkingThroughThisExerciseYourselfWantToShareItWithTheExercismCommunity"
-          components={[<strong className="font-medium text" />]}
+          components={[<strong key="strong" className="font-medium text" />]}
         />
       </p>
       <ExerciseTrackIndicator videoRetrieved={videoRetrieved} />

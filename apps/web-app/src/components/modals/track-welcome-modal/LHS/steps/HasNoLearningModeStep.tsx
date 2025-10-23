@@ -8,7 +8,7 @@ export function HasNoLearningModeStep({
   onContinue,
 }: {
   onContinue: () => void
-}): JSX.Element {
+}): React.ReactElement {
   const { track, links } = useContext(TrackContext)
   const { t } = useAppTranslation(
     'components/modals/track-welcome-modal/LHS/steps'
@@ -37,6 +37,7 @@ export function HasNoLearningModeStep({
           values={{ trackTitle: track.title }}
           components={[
             <a
+              key="learning-resources"
               className="font-semibold text-prominentLinkColor"
               href={links.learningResources}
               target="_blank"

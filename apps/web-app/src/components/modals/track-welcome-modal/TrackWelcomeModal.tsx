@@ -42,7 +42,7 @@ export const TrackWelcomeModal = ({
   userSeniority,
   userJoinedDaysAgo,
 }: Omit<ModalProps, 'className' | 'open' | 'onClose'> &
-  TrackWelcomeModalProps): JSX.Element => {
+  TrackWelcomeModalProps): React.ReactElement => {
   const {
     open,
     currentState,

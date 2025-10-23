@@ -5,7 +5,7 @@ export function ThanksForSubmitting({
   onClick,
 }: {
   onClick: () => void
-}): JSX.Element {
+}): React.ReactElement {
   const { t } = useAppTranslation('components/modals/upload-video')
   return (
     <>

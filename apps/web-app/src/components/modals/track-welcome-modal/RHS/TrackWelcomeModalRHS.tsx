@@ -3,7 +3,7 @@ import { TrackContext } from '../TrackWelcomeModal'
 import { VideoRHS } from './VideoRHS'
 import { WhoIsThisTrackForRHS } from './WhoIsThisTrackForRHS'
 
-export function TrackWelcomeModalRHS(): JSX.Element {
+export function TrackWelcomeModalRHS(): React.ReactElement {
   const { track, currentState, shouldShowBootcampRecommendationView } =
     useContext(TrackContext)
 

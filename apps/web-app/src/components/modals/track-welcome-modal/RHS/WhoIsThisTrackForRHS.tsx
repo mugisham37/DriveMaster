@@ -5,7 +5,7 @@ import { GraphicalIcon } from '@/components/common'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
-export function WhoIsThisTrackForRHS(): JSX.Element {
+export function WhoIsThisTrackForRHS(): React.ReactElement {
   const { t } = useAppTranslation('components/modals/track-welcome-modal/RHS')
 
   return (

@@ -27,7 +27,7 @@ import { fromNow } from '@/utils/time'
 export const PreviousMentoringSessionsModal = ({
   onClose,
   student,
-  setStudent,
+  setStudent: _setStudent,
   ...props
 }: Omit<ModalProps, 'className'> & {
   student: Student
@@ -192,11 +192,11 @@ function DiscussionLink({
       <div className="exercise-title">{discussion.exercise.title}</div>
       <div className="num-comments">
         <GraphicalIcon icon="comment" />
-        {(discussion as any).postsCount || 0}
+        {(discussion as MentorDiscussion & { postsCount?: number }).postsCount || 0}
       </div>
       <div className="num-iterations">
         <GraphicalIcon icon="iteration" />
-        {(discussion as any).iterationsCount || 0}
+        {(discussion as MentorDiscussion & { iterationsCount?: number }).iterationsCount || 0}
       </div>
       <time dateTime={discussion.createdAt}>
         {fromNow(discussion.createdAt)}
@@ -228,11 +228,11 @@ function MobileDiscussionLink({
       />
       <div className="num-comments">
         <GraphicalIcon icon="comment" />
-        {(discussion as any).postsCount || 0}
+        {(discussion as MentorDiscussion & { postsCount?: number }).postsCount || 0}
       </div>
       <div className="num-iterations">
         <GraphicalIcon icon="iteration" />
-        {(discussion as unknown).iterationsCount || 0}
+        {(discussion as MentorDiscussion & { iterationsCount?: number }).iterationsCount || 0}
       </div>
       <GraphicalIcon icon="chevron-right" className="action-icon" />
     </a>

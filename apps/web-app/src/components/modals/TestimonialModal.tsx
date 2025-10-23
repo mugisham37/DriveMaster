@@ -56,7 +56,7 @@ export const TestimonialModal = ({
               <HandleWithFlair
                 key="handle"
                 handle={testimonial.student.handle}
-                flair={testimonial.student.flair as unknown || 'insider'}
+                flair={(testimonial.student.flair?.name as any) || "insider"}
 
               />,
             ]}

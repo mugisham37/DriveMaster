@@ -38,7 +38,7 @@ const MakerInner = ({
       <div className="handle">
         <HandleWithFlair
           handle={maker.handle}
-          flair={(maker.flair || "insider") as unknown}
+          flair={(maker.flair?.name as any) || "insider"}
         />
       </div>
       <Reputation value={maker.reputation || "0"} type="primary" size="small" />
@@ -52,7 +52,7 @@ const MakerInner = ({
 };
 
 const Maker = ({ maker }: { maker: User }): React.JSX.Element => {
-  const userLinks = (maker as any).links as { self?: string } | undefined;
+  const userLinks = (maker as User & { links?: { self?: string } }).links;
   return userLinks?.self ? (
     <a className="maker" href={userLinks.self}>
       <MakerInner maker={maker} showIcon={true} />

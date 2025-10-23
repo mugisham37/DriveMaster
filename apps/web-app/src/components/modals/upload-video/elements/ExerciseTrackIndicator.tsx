@@ -7,7 +7,7 @@ type ExerciseTrackIndicatorProps = {
 
 export function ExerciseTrackIndicator({
   videoRetrieved,
-}: ExerciseTrackIndicatorProps): JSX.Element {
+}: ExerciseTrackIndicatorProps): React.ReactElement {
   const { exercise, track } = useContext(DigDeeperDataContext)
 
   return (

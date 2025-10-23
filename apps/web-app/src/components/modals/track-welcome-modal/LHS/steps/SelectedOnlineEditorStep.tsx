@@ -3,9 +3,9 @@ import { StepButton } from './components/StepButton'
 import { TrackContext } from '../../TrackWelcomeModal'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export function SelectedOnlineEdiorStep({
+export function SelectedOnlineEditorStep({
   onContinueToOnlineEditor,
-}: Record<'onContinueToOnlineEditor', () => void>): JSX.Element {
+}: Record<'onContinueToOnlineEditor', () => void>): React.ReactElement {
   const { send } = useContext(TrackContext)
   const { t } = useAppTranslation(
     'components/modals/track-welcome-modal/LHS/steps'

@@ -4,7 +4,7 @@ import { StateValue } from './TrackWelcomeModal.machine'
 import { WelcomeToTrack } from './steps/components/WelcomeToTrack'
 import { TrackContext } from '../TrackWelcomeModal'
 
-export function TrackWelcomeModalLHS(): JSX.Element {
+export function TrackWelcomeModalLHS(): React.ReactElement {
   return (
     <div className="lhs">
       <WelcomeToTrack />

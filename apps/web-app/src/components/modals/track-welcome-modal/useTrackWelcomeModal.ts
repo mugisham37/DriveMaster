@@ -1,6 +1,6 @@
 import { redirectTo } from '@/utils'
 import { sendRequest } from '@/utils/send-request'
-import { useMachine } from '@xstate/react'
+import { useMachine } from '@/lib/xstate-mock'
 import { useCallback, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { machine } from './LHS/TrackWelcomeModal.machine'
@@ -31,7 +31,7 @@ export function useTrackWelcomeModal(
       const { fetch } = sendRequest({
         endpoint: links.hideModal,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -46,7 +46,7 @@ export function useTrackWelcomeModal(
       const { fetch } = sendRequest({
         endpoint: links.activateLearningMode,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -58,7 +58,7 @@ export function useTrackWelcomeModal(
       const { fetch } = sendRequest({
         endpoint: links.activatePracticeMode,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch

@@ -37,7 +37,7 @@ export function UploadVideoForm({
   data,
   onUseDifferentVideoClick,
   onSuccess,
-}: UploadVideoFormProps): JSX.Element {
+}: UploadVideoFormProps): React.ReactElement {
   const { links, track, exercise } = useContext(DigDeeperDataContext)
   const { t } = useAppTranslation('components/modals/upload-video/elements')
 

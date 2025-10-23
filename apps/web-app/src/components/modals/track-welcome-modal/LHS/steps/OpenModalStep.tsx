@@ -8,7 +8,7 @@ export function OpenModalStep({
 }: Record<
   'onHasLearningMode' | 'onHasNoLearningMode',
   () => void
->): JSX.Element {
+>): React.ReactElement {
   const { track } = useContext(TrackContext)
   const { t } = useAppTranslation(
     'components/modals/track-welcome-modal/LHS/steps'

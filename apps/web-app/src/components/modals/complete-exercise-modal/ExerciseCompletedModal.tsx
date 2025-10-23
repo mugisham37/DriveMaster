@@ -2,9 +2,9 @@ import React, { useCallback, useMemo } from 'react'
 import { Trans } from 'react-i18next'
 import { Modal } from '../Modal'
 import { ExerciseIcon } from '../../common'
-import { ConceptProgression } from './exercise-completed-modal/ConceptProgression'
+import { ConceptProgression as ConceptProgressionComponent } from './exercise-completed-modal/ConceptProgression'
 import { Unlocks } from './exercise-completed-modal/Unlocks'
-import { ExerciseCompletion } from '../CompleteExerciseModal'
+import { ExerciseCompletion, ConceptProgression } from '../CompleteExerciseModal'
 import { redirectTo } from '../../../utils/redirect-to'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -102,8 +102,8 @@ export const ExerciseCompletedModal: React.FC<Props> = ({
 
           {conceptCount > 0 && (
             <div className="progressed-concepts">
-              {conceptProgressions.map((progression) => (
-                <ConceptProgression key={progression.name} {...progression} />
+              {conceptProgressions.map((progression: ConceptProgression) => (
+                <ConceptProgressionComponent key={progression.name} {...progression} />
               ))}
             </div>
           )}
@@ -148,8 +148,8 @@ export const ExerciseCompletedModal: React.FC<Props> = ({
 
           {conceptCount > 0 && (
             <div className="progressed-concepts">
-              {conceptProgressions.map((progression) => (
-                <ConceptProgression key={progression.name} {...progression} />
+              {conceptProgressions.map((progression: ConceptProgression) => (
+                <ConceptProgressionComponent key={progression.name} {...progression} />
               ))}
             </div>
           )}

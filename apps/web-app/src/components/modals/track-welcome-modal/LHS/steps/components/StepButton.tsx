@@ -8,7 +8,7 @@ export function StepButton({
   children,
   className,
   ...props
-}: StepButtonProps): JSX.Element {
+}: StepButtonProps): React.ReactElement {
   return (
     <button {...props} className={assembleClassNames('btn-m', className)}>
       {children}
