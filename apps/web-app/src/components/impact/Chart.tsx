@@ -18,7 +18,7 @@ export default function ImpactChart({
   data,
 }: {
   data: ChartData
-}): JSX.Element {
+}): React.JSX.Element {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
   const [chart, setChart] = useState<Chart<'line'> | null>(null)
 

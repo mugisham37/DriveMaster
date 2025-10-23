@@ -11,10 +11,10 @@ export type PaymentPendingProps = {
   insidersRedirectPath: string
 }
 
-export default function PaymentPending({
+export function PaymentPending({
   endpoint,
   insidersRedirectPath,
-}: PaymentPendingProps): JSX.Element {
+}: PaymentPendingProps): React.JSX.Element {
   const { t } = useAppTranslation('components/insiders')
   const fetchPaymentPending = async () => {
     const response = await fetch(endpoint)
@@ -24,7 +24,9 @@ export default function PaymentPending({
     return response.json()
   }
 
-  const { data } = useQuery(['paypalStatus'], fetchPaymentPending, {
+  const { data } = useQuery({
+    queryKey: ['paypalStatus'],
+    queryFn: fetchPaymentPending,
     refetchInterval: 1000,
   })
 
@@ -33,7 +35,7 @@ export default function PaymentPending({
       return
     }
 
-    const insidersStatus = camelizeKeys(data.user).insidersStatus
+    const insidersStatus = camelizeKeys(data).user?.insidersStatus
     if (insidersStatus == 'active' || insidersStatus == 'active_lifetime') {
       redirectTo(insidersRedirectPath)
     }

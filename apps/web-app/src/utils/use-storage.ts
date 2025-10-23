@@ -1,77 +1,47 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-// Simple replacement for StoredMemoryValue functionality
-class StoredMemoryValue<T> {
-  constructor(
-    private key: string,
-    private persistent: boolean,
-    private defaultValue: T
-  ) {}
-
-  get(): T {
-    if (this.persistent && typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(this.key)
-        return stored ? JSON.parse(stored) : this.defaultValue
-      } catch {
-        return this.defaultValue
-      }
+export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return defaultValue
     }
-    return this.defaultValue
-  }
-
-  set(value: T): void {
-    if (this.persistent && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(this.key, JSON.stringify(value))
-      } catch {
-        // Ignore storage errors
-      }
-    }
-  }
-}
-
-// Simple replacement for useMutableMemoryValue
-function useMutableMemoryValue<T>(memoryValue: StoredMemoryValue<T>): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(() => memoryValue.get())
-
-  const setValueAndStore = (newValue: T) => {
-    setValue(newValue)
-    memoryValue.set(newValue)
-  }
-
-  return [value, setValueAndStore]
-}
-
-export function useStorage<T>(key: string, initialValue: T) {
-  const memoryValue = new StoredMemoryValue<T>(key, true, initialValue)
-
-  return useMutableMemoryValue(memoryValue)
-}
-
-export function useLocalStorage<T>(
-  key: string,
-  initialValue: T
-): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
+    
     try {
-      const item = JSON.parse(localStorage.getItem(key) || '') as T
-
-      return item
-    } catch {
-      return initialValue
+      const item = window.localStorage.getItem(key)
+      return item ? JSON.parse(item) : defaultValue
+    } catch (error) {
+      console.warn(`Error reading localStorage key "${key}":`, error)
+      return defaultValue
     }
   })
 
-  const setValue = (value: T) => {
+  const setStoredValue = useCallback((newValue: T) => {
     try {
-      setStoredValue(value)
-
-      localStorage.setItem(key, JSON.stringify(value))
+      setValue(newValue)
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(newValue))
+      }
     } catch (error) {
-      console.log(error)
+      console.warn(`Error setting localStorage key "${key}":`, error)
     }
-  }
+  }, [key])
 
-  return [storedValue, setValue]
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key && e.newValue !== null) {
+        try {
+          setValue(JSON.parse(e.newValue))
+        } catch (error) {
+          console.warn(`Error parsing localStorage key "${key}":`, error)
+        }
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange)
+      return () => window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [key])
+
+  return [value, setStoredValue]
 }

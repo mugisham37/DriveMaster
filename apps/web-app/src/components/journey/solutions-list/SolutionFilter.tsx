@@ -7,11 +7,21 @@ import { SyncStatus, SyncStatusSelect } from './SyncStatusSelect'
 import { TestsStatus, TestsStatusSelect } from './TestsStatusSelect'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
+interface SolutionFilterRequest {
+  query: {
+    status?: ExerciseStatus
+    mentoringStatus?: MentoringStatus
+    syncStatus?: SyncStatus
+    testsStatus?: TestsStatus
+    headTestsStatus?: HeadTestsStatus
+  }
+}
+
 export const SolutionFilter = ({
   request,
   onApply,
 }: {
-  request: unknown
+  request: SolutionFilterRequest
   onApply: (
     status: ExerciseStatus,
     mentoringStatus: MentoringStatus,
@@ -22,18 +32,18 @@ export const SolutionFilter = ({
 }): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
 
-  const [status, setStatus] = useState<ExerciseStatus>(request.query.status)
+  const [status, setStatus] = useState<ExerciseStatus>(request.query.status || undefined)
   const [mentoringStatus, setMentoringStatus] = useState<MentoringStatus>(
-    request.query.mentoringStatus
+    request.query.mentoringStatus || undefined
   )
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(
-    request.query.syncStatus
+    request.query.syncStatus || undefined
   )
   const [testsStatus, setTestsStatus] = useState<TestsStatus>(
-    request.query.testsStatus
+    request.query.testsStatus || undefined
   )
   const [headTestsStatus, setHeadTestsStatus] = useState<HeadTestsStatus>(
-    request.query.headTestsStatus
+    request.query.headTestsStatus || undefined
   )
 
   const [expanded, setExpanded] = useState(false)

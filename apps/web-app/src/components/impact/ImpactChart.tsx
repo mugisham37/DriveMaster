@@ -1,10 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
-
-interface Milestone {
-  date: string
-  text: string
-  emoji: string
-}
+import React from 'react'
 
 interface ImpactChartProps {
   usersPerMonth: string

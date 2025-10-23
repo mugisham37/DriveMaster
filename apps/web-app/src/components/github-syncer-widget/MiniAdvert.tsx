@@ -9,19 +9,16 @@ export function MiniAdvert({ settingsLink }: { settingsLink: string }) {
       <div className="flex gap-20 items-center mb-12 mx-auto">
         <Icon
           icon="exercism-face"
-          category="icons"
           alt="Exercism"
           className="h-[64px]"
         />
         <Icon
           icon="sync"
-          category="graphics"
           alt="Sync with"
           className="h-[45px]"
         />
         <Icon
           icon="external-site-github"
-          category="icons"
           alt="Github"
           className="h-[64px]"
         />

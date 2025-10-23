@@ -5,7 +5,7 @@ interface ExerciseInstructionsProps {
   exercise: Exercise
 }
 
-export function ExerciseInstructions({ instructions, exercise }: ExerciseInstructionsProps) {
+export function ExerciseInstructions({ instructions, exercise: _exercise }: ExerciseInstructionsProps) {
   return (
     <section className="exercise-instructions">
       <h2>Instructions</h2>

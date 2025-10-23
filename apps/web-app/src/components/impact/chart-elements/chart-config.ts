@@ -16,7 +16,7 @@ export function createChartConfig(
   // this can be set as a max offset if needed
   const Y_AXIS_MAX_OFFSET = 1.2
   const SCREEN_BREAKPOINT = 1400 // plus the width of scrollbar, which is 15px on a mac by default, so the real breakpoint is 1415px
-  const HIGHEST_VALUE = data[data.length - 1]
+  const HIGHEST_VALUE = data[data.length - 1] || 0
 
   const DATA: ChartData<'line'> = {
     // labels: new Array(data.length).fill(''),

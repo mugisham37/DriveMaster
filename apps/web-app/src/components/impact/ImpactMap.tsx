@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { GraphicalIcon, TrackIcon, Avatar } from '@/components/common'
 
 interface Metric {
@@ -34,7 +34,7 @@ const coordinatesToPosition = (latitude: number, longitude: number) => {
   return [left, top]
 }
 
-const MetricPoint = ({ metric }: { metric: Metric }) => {
+const _MetricPoint = ({ metric }: { metric: Metric }) => {
   const [left, top] = coordinatesToPosition(
     metric.coordinates[0],
     metric.coordinates[1]

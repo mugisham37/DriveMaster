@@ -5,13 +5,15 @@ interface PaginationProps {
   total: number
   setPage: (page: number) => void
   className?: string
+  disabled?: boolean
 }
 
 export function Pagination({ 
   current, 
   total, 
   setPage, 
-  className = '' 
+  className = '',
+  disabled = false
 }: PaginationProps): React.JSX.Element {
   const handlePrevious = () => {
     if (current > 1) {
@@ -57,7 +59,7 @@ export function Pagination({
     <div className={`pagination flex items-center justify-center space-x-2 ${className}`}>
       <button
         onClick={handlePrevious}
-        disabled={current === 1}
+        disabled={disabled || current === 1}
         className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Previous
@@ -67,7 +69,8 @@ export function Pagination({
         <button
           key={page}
           onClick={() => handlePageClick(page)}
-          className={`px-3 py-2 text-sm font-medium border rounded-md ${
+          disabled={disabled}
+          className={`px-3 py-2 text-sm font-medium border rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${
             page === current
               ? 'text-blue-600 bg-blue-50 border-blue-500'
               : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'
@@ -79,7 +82,7 @@ export function Pagination({
       
       <button
         onClick={handleNext}
-        disabled={current === total}
+        disabled={disabled || current === total}
         className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Next

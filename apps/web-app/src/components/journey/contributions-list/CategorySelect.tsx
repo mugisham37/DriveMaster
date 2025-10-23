@@ -1,6 +1,8 @@
 import React from "react";
 import { SingleSelect } from "@/components/common/SingleSelect";
-import { ContributionCategoryId } from "@/components/types";
+import { ContributionCategory } from "@/components/types";
+
+type ContributionCategoryId = ContributionCategory['id'];
 import { useAppTranslation } from "@/i18n/useAppTranslation";
 
 const OptionComponent = ({
@@ -50,6 +52,12 @@ const OptionComponent = ({
         </div>
       );
     case undefined:
+      return (
+        <div className="info">
+          <div className="title">{t("categorySelect.anyCategory")}</div>
+        </div>
+      );
+    default:
       return (
         <div className="info">
           <div className="title">{t("categorySelect.anyCategory")}</div>

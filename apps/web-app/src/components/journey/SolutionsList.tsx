@@ -1,13 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react'
-import pluralize from 'pluralize'
-import { scrollToTop } from '@/utils/scroll-to-top'
-import { SolutionProps, Solution } from './Solution'
-import { usePaginatedRequestQuery, type Request } from '@/hooks/request-query'
-import { removeEmpty, useHistory } from '@/hooks/use-history'
-import { useList } from '@/hooks/use-list'
-import { ResultsZone } from '@/components/common/ResultsZone'
-import { Pagination, GraphicalIcon } from '@/components/common'
-import { FetchingBoundary } from '@/components/common/FetchingBoundary'
+import React, { useState, useCallback, useEffect } from "react";
+import pluralize from "pluralize";
+import { scrollToTop } from "@/utils/scroll-to-top";
+import { SolutionProps, Solution } from "./Solution";
+import { usePaginatedRequestQuery, type Request } from "@/hooks/request-query";
+import { removeEmpty, useHistory } from "@/hooks/use-history";
+import { useList } from "@/hooks/use-list";
+import { ResultsZone } from "@/components/common/ResultsZone";
+import { Pagination, GraphicalIcon } from "@/components/common";
+import { FetchingBoundary } from "@/components/common/FetchingBoundary";
 import {
   MentoringStatus,
   SyncStatus,
@@ -17,61 +17,64 @@ import {
   OrderSwitcher,
   ExerciseStatus,
   Order,
-} from './solutions-list'
-import type { PaginatedResult } from '@/types'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+} from "./solutions-list";
+import type { PaginatedResult } from "@/types";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
 // Order type is imported from solutions-list
 
-const DEFAULT_ORDER = 'newest_first'
-const DEFAULT_ERROR = new Error('Unable to load solutions')
+const DEFAULT_ORDER = "newest_first";
+const DEFAULT_ERROR = new Error("Unable to load solutions");
 
 export const SolutionsList = ({
   request: initialRequest,
   isEnabled,
 }: {
-  request: Request
-  isEnabled: boolean
+  request: Request;
+  isEnabled: boolean;
 }): React.ReactElement => {
-  const { t } = useAppTranslation('components/journey')
+  const { t } = useAppTranslation("components/journey");
   const {
     request,
     setPage,
     setCriteria: setRequestCriteria,
     setQuery,
     setOrder,
-  } = useList(initialRequest)
+  } = useList(initialRequest);
   const [criteria, setCriteria] = useState<string>(
-    (request.query?.criteria as string) || ''
-  )
+    (request.query?.criteria as string) || ""
+  );
   const cacheKey = [
-    'solutions-list',
+    "solutions-list",
     request.endpoint,
     JSON.stringify(removeEmpty(request.query || {})),
-  ] as const
+  ] as const;
   const {
     status,
     data: resolvedData,
     isFetching,
     error,
-  } = usePaginatedRequestQuery<PaginatedResult<SolutionProps[]>>([...cacheKey], {
-    ...request,
-    query: removeEmpty(request.query || {}),
-    options: { ...request.options, enabled: isEnabled },
-  })
+  } = usePaginatedRequestQuery<PaginatedResult<SolutionProps[]>>(
+    [...cacheKey],
+    {
+      ...request,
+      query: removeEmpty(request.query || {}),
+      options: { ...request.options, enabled: isEnabled },
+    }
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (criteria === undefined || criteria === null) return
-      setRequestCriteria(criteria)
-    }, 200)
+      if (criteria === undefined || criteria === null) return;
+      setRequestCriteria(criteria);
+    }, 200);
 
     return () => {
-      clearTimeout(handler)
-    }
-  }, [setRequestCriteria, criteria])
+      clearTimeout(handler);
+    };
+  }, [setRequestCriteria, criteria]);
 
-  useHistory({ pushOn: removeEmpty(request.query || {}) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) });
 
   const handleApply = useCallback(
     (
@@ -89,10 +92,10 @@ export const SolutionsList = ({
         syncStatus: syncStatus,
         testsStatus: testsStatus,
         headTestsStatus: headTestsStatus,
-      })
+      });
     },
     [request.query, setQuery]
-  )
+  );
 
   const handleReset = useCallback(() => {
     setQuery({
@@ -103,8 +106,8 @@ export const SolutionsList = ({
       syncStatus: undefined,
       testsStatus: undefined,
       headTestsStatus: undefined,
-    })
-  }, [request.query, setQuery])
+    });
+  }, [request.query, setQuery]);
 
   return (
     <article
@@ -116,10 +119,10 @@ export const SolutionsList = ({
           <input
             className="--search"
             onChange={(e) => {
-              setCriteria(e.target.value)
+              setCriteria(e.target.value);
             }}
-            value={criteria || ''}
-            placeholder={t('solutionsList.searchByExerciseOrTrackName')}
+            value={criteria || ""}
+            placeholder={t("solutionsList.searchByExerciseOrTrackName")}
           />
           <SolutionFilter request={request} onApply={handleApply} />
           <OrderSwitcher
@@ -131,7 +134,7 @@ export const SolutionsList = ({
       <div className="md-container container">
         <ResultsZone isFetching={isFetching}>
           <FetchingBoundary
-            status={status === 'pending' ? 'loading' : status}
+            status={status === "pending" ? "loading" : status}
             error={error}
             defaultError={DEFAULT_ERROR}
           >
@@ -140,10 +143,10 @@ export const SolutionsList = ({
                 <div>
                   <div className="results-title-bar">
                     <h3>
-                      {t('solutionsList.showingSolutions', {
+                      {t("solutionsList.showingSolutions", {
                         totalCount: resolvedData.meta.totalCount,
                         solutionLabel: pluralize(
-                          'solution',
+                          "solution",
                           resolvedData.meta.totalCount
                         ),
                       })}
@@ -154,12 +157,12 @@ export const SolutionsList = ({
                       className="btn-link"
                     >
                       <GraphicalIcon icon="reset" />
-                      <span>{t('solutionsList.resetFilters')}</span>
+                      <span>{t("solutionsList.resetFilters")}</span>
                     </button>
                   </div>
                   <div className="solutions">
                     {resolvedData.results.map((solution: SolutionProps) => {
-                      return <Solution {...solution} key={solution.uuid} />
+                      return <Solution {...solution} key={solution.uuid} />;
                     })}
                   </div>
                 </div>
@@ -167,8 +170,8 @@ export const SolutionsList = ({
                   current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
-                    setPage(p)
-                    scrollToTop('solutions-list')
+                    setPage(p);
+                    scrollToTop("solutions-list");
                   }}
                 />
               </React.Fragment>
@@ -177,5 +180,5 @@ export const SolutionsList = ({
         </ResultsZone>
       </div>
     </article>
-  )
-}
+  );
+};

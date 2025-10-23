@@ -15,7 +15,7 @@ const ImpactTestimonial = ({
   open: boolean
   onClick: () => void
   onClose: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/impact/ImpactTestimonial.tsx')
   return (
     <React.Fragment>
@@ -61,7 +61,9 @@ const ImpactTestimonial = ({
         testimonial={testimonial}
         open={open}
         onClose={onClose}
-      />
+      >
+        {/* Modal content is handled internally by TestimonialModal */}
+      </TestimonialModal>
     </React.Fragment>
   )
 }

@@ -20,7 +20,9 @@ export const CANVAS_CUSTOM_POINTS = {
 
     for (const milestone of milestones) {
       if (dateMap[milestone.date]) {
-        const { x, y } = points[dateMap[milestone.date]]
+        const point = points[dateMap[milestone.date]]
+        if (point && 'x' in point && 'y' in point) {
+          const { x, y } = point
         const customTooltipOptions: CustomTooltipOptions = {
           x,
           y: y - radius,
@@ -34,9 +36,10 @@ export const CANVAS_CUSTOM_POINTS = {
           paddingY: 6,
           chartWidth: chart.width,
         }
-        drawCircleWithEmoji(ctx, x, y, radius, fontSize, milestone.emoji)
-        if (chart.width > TW_MD - 16) {
-          drawCustomTooltip(ctx, customTooltipOptions)
+          drawCircleWithEmoji(ctx, x, y, radius, fontSize, milestone.emoji)
+          if (chart.width > TW_MD - 16) {
+            drawCustomTooltip(ctx, customTooltipOptions)
+          }
         }
       } else continue
     }

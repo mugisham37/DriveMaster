@@ -29,7 +29,7 @@ export function GithubSyncerWidget({
   syncer,
   links,
   sync,
-}: GithubSyncerWidgetProps): JSX.Element {
+}: GithubSyncerWidgetProps): React.JSX.Element {
   if (!syncer) return <MiniAdvert settingsLink={links.githubSyncerSettings} />
 
   if (!syncer.enabled)

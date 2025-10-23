@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { type Request, usePaginatedRequestQuery } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
@@ -58,7 +58,7 @@ export default function FavoritesList({
   )
 
   const setTrack = useCallback(
-    (slug) => {
+    (slug: string) => {
       setQuery({ ...request.query, trackSlug: slug, page: undefined })
     },
     [request.query, setQuery]
@@ -130,7 +130,7 @@ export default function FavoritesList({
           resolvedData.results.length > 0 ? (
             <>
               <div className={assembleClassNames('solutions', layout)}>
-                {resolvedData.results.map((solution) => (
+                {resolvedData.results.map((solution: CommunitySolutionProps) => (
                   <CommunitySolution
                     key={solution.uuid}
                     solution={solution}

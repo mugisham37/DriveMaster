@@ -53,15 +53,15 @@ type Response = {
   insidersStatus: InsidersStatus
 }
 
-export default function Status({
+export function InsidersStatus({
   activateInsiderLink,
-  captchaRequired,
+  captchaRequired: _captchaRequired,
   insidersStatusRequest,
   links,
-  recaptchaSiteKey,
+  recaptchaSiteKey: _recaptchaSiteKey,
   status,
-  userSignedIn,
-}: InsidersStatusData): JSX.Element {
+  userSignedIn: _userSignedIn,
+}: InsidersStatusData): React.JSX.Element {
   const { t } = useAppTranslation('components/insiders')
   const [insidersStatus, setInsidersStatus] = useState(status)
   const [stripeModalOpen, setStripeModalOpen] = useState(false)
@@ -79,7 +79,6 @@ export default function Status({
       const { fetch } = sendRequest({
         endpoint: insidersStatusRequest,
         method: 'GET',
-        body: null,
       })
 
       return fetch.then((json) => typecheck<Response>(json, 'user'))
@@ -92,7 +91,6 @@ export default function Status({
       const { fetch } = sendRequest({
         endpoint: activateInsiderLink,
         method: 'PATCH',
-        body: null,
       })
 
       return fetch
@@ -205,7 +203,7 @@ export default function Status({
   )
 }
 
-function ModalHeader(): JSX.Element {
+function ModalHeader(): React.JSX.Element {
   const { t } = useAppTranslation('components/insiders')
   return (
     <>
@@ -231,7 +229,7 @@ function ModalHeader(): JSX.Element {
   )
 }
 
-function ModalFooter(): JSX.Element {
+function ModalFooter(): React.JSX.Element {
   const { t } = useAppTranslation('components/insiders')
   return (
     <p className="text-p-small mt-20">

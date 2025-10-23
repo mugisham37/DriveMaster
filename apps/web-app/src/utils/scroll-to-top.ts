@@ -1,22 +1,18 @@
-// Utility function to scroll to top, preserving exact behavior from Rails implementation
-export function scrollToTop(anchor?: string, offset: number = 0): void {
-  if (anchor) {
-    const element = document.querySelector(
-      `[data-scroll-top-anchor="${anchor}"]`
-    );
+export function scrollToTop(elementId?: string, offset: number = 0) {
+  if (elementId) {
+    const element = document.getElementById(elementId) || document.querySelector(`[data-scroll-top-anchor="${elementId}"]`)
     if (element) {
-      const elementPosition =
-        element.getBoundingClientRect().top + window.pageYOffset;
+      const elementTop = element.offsetTop - offset
       window.scrollTo({
-        top: elementPosition - offset,
-        behavior: "smooth",
-      });
-      return;
+        top: elementTop,
+        behavior: 'smooth'
+      })
+      return
     }
   }
-
+  
   window.scrollTo({
     top: 0,
-    behavior: "smooth",
-  });
+    behavior: 'smooth'
+  })
 }

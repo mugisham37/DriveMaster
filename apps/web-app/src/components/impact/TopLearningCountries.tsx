@@ -13,7 +13,7 @@ export function TopLearningCountries({
   data,
 }: {
   data: LearningCountry[]
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/impact/TopLearningCountries.tsx')
   return (
     <div>

@@ -15,7 +15,7 @@ export function ImpactPage({
   discussionsCount,
   usersPerMonth,
   milestones,
-  metrics
+  metrics: _metrics
 }: ImpactPageProps) {
   const usersPerMonthData = JSON.parse(usersPerMonth)
   const milestonesData = JSON.parse(milestones)
@@ -140,7 +140,7 @@ export function ImpactPage({
           <section>
             <h2 className="text-h3 mb-6">Key Milestones</h2>
             <div className="space-y-4">
-              {milestonesData.map((milestone: any, index: number) => (
+              {milestonesData.map((milestone: unknown, index: number) => (
                 <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl">{milestone.emoji}</div>
                   <div>
