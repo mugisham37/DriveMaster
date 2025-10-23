@@ -25,7 +25,7 @@ export default function TrackSelector({
     <div className="track-selector">
       <div className="track-selector-header">
         <h2>Select Tracks to Mentor</h2>
-        <p>Choose the programming tracks you'd like to mentor students in.</p>
+        <p>Choose the programming tracks you&apos;d like to mentor students in.</p>
       </div>
       
       <div className="search-bar">
@@ -49,7 +49,7 @@ export default function TrackSelector({
                 className="track-checkbox"
               />
               <div className="track-info">
-                <img src={track.iconUrl} alt="" className="track-icon" />
+                <img src={track.iconUrl} alt={`${track.title} track icon`} className="track-icon" />
                 <div className="track-details">
                   <h3>{track.title}</h3>
                   {track.description && (
@@ -64,7 +64,7 @@ export default function TrackSelector({
       
       {selectedTracks.length > 0 && (
         <div className="selected-tracks-message">
-          <p>You've selected {selectedTracks.length} track{selectedTracks.length !== 1 ? 's' : ''} to mentor.</p>
+          <p>You&apos;ve selected {selectedTracks.length} track{selectedTracks.length !== 1 ? 's' : ''} to mentor.</p>
         </div>
       )}
       

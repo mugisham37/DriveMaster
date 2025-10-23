@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { QueryStatus } from '@tanstack/react-query'
 import { usePaginatedRequestQuery, Request } from '@/hooks/request-query'
 import { useList } from '@/hooks/use-list'
-import { useHistory } from '@/hooks/use-history'
+import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useDebounce } from '@/hooks/use-debounce'
 
 import type { MentoredTrack, Representation } from '@/components/types'
@@ -66,7 +66,7 @@ export const useMentoringAutomation = ({
     status,
     error,
   } = usePaginatedRequestQuery<APIResponse>(
-    ['mentoring-automation', debouncedQuery],
+    ['mentoring-automation', JSON.stringify(debouncedQuery)],
     {
       ...request,
       query: debouncedQuery,
@@ -77,7 +77,7 @@ export const useMentoringAutomation = ({
     }
   )
 
-  useHistory({ pushOn: debouncedQuery })
+  useHistory({ pushOn: removeEmpty(debouncedQuery) })
 
   return {
     resolvedData,

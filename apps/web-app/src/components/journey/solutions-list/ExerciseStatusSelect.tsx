@@ -13,7 +13,7 @@ const OptionComponent = ({
   option: status,
 }: {
   option: ExerciseStatus
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
   switch (status) {
     case 'started':
@@ -46,7 +46,7 @@ export const ExerciseStatusSelect = ({
 }: {
   value: ExerciseStatus
   setValue: (value: ExerciseStatus) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<ExerciseStatus>
       options={[undefined, 'started', 'iterated', 'completed', 'published']}

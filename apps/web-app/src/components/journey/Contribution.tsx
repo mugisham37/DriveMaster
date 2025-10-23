@@ -13,7 +13,7 @@ export const Contribution = ({
   externalUrl,
   createdAt,
   track,
-}: ContributionProps): JSX.Element => {
+}: ContributionProps): React.ReactElement => {
   const url = internalUrl || externalUrl
   const linkIcon = url === internalUrl ? 'chevron-right' : 'external-link'
   const { t } = useAppTranslation('components/journey')

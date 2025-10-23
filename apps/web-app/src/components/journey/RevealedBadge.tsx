@@ -7,7 +7,7 @@ export const RevealedBadge = ({
   badge,
 }: {
   badge: BadgeProps
-}): JSX.Element => {
+}): React.ReactElement => {
   const [open, setOpen] = useState(false)
   return (
     <React.Fragment>

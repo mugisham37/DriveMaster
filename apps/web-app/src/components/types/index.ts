@@ -78,9 +78,11 @@ export enum SubmissionMethod {
 
 export interface Iteration {
   idx: number
+  number?: number
   uuid: string
   submissionUuid: string
   createdAt: string
+  submittedAt?: string
   testsStatus: string
   representationStatus?: string
   analysisStatus?: string
@@ -444,13 +446,20 @@ export interface MentoringSessionDonation {
 export type BadgeRarity = 'common' | 'rare' | 'ultimate' | 'legendary'
 
 export interface Badge {
-  id: number
+  id?: number
   uuid: string
   name: string
   description: string
   rarity: BadgeRarity
-  iconUrl: string
-  numAwardedToUser: number
+  iconUrl?: string
+  iconName?: string
+  numAwardedToUser?: number
+  isRevealed?: boolean
+  unlockedAt?: string
+  numAwardees?: number
+  percentageAwardees?: number
+  reason?: string
+  earnedAt?: string
   links: {
     reveal?: string
   }
@@ -754,8 +763,15 @@ export interface Representation {
     content: string
     contentHtml: string
   } | null
+  feedbackHtml?: string
+  feedbackAuthor?: User
+  feedbackEditor?: User
   lastSubmittedAt: string
   feedbackAddedAt?: string
+  links: {
+    edit: string
+    self?: string
+  }
 }
 
 export interface ExerciseRepresentation {

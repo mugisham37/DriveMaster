@@ -8,9 +8,10 @@ import { Pagination } from '@/components/common'
 import { FetchingBoundary } from '@/components/common/FetchingBoundary'
 import { BadgeResults } from './BadgeResults'
 import { OrderSwitcher } from './badges-list/OrderSwitcher'
-import type { PaginatedResult, Badge } from '@/types'
+import type { PaginatedResult, Badge } from '../types'
 import type { QueryKey } from '@tanstack/react-query'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
+import type { Order } from './BadgeResults'
 
 const DEFAULT_ORDER = 'unrevealed_first'
 const DEFAULT_ERROR = new Error('Unable to load badge list')
@@ -21,7 +22,7 @@ export const BadgesList = ({
 }: {
   request: Request
   isEnabled: boolean
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')
   const {
     request,
@@ -29,11 +30,13 @@ export const BadgesList = ({
     setCriteria: setRequestCriteria,
     setOrder,
   } = useList(initialRequest)
-  const [criteria, setCriteria] = useState(request.query?.criteria || '')
+  const [criteria, setCriteria] = useState<string>(
+    (request.query?.criteria as string) || ''
+  )
   const cacheKey: QueryKey = [
     'badges-list',
     request.endpoint,
-    removeEmpty(request.query),
+    removeEmpty(request.query || {}),
   ]
   const {
     status,
@@ -42,7 +45,7 @@ export const BadgesList = ({
     error,
   } = usePaginatedRequestQuery<PaginatedResult<Badge[]>>(cacheKey, {
     ...request,
-    query: removeEmpty(request.query),
+    query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
   })
 
@@ -57,10 +60,10 @@ export const BadgesList = ({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   useEffect(() => {
-    scrollToTop('badges-list', 0, 'smooth')
+    scrollToTop('badges-list')
   }, [])
 
   return (
@@ -79,13 +82,13 @@ export const BadgesList = ({
             placeholder={t('badgesList.searchByBadgeNameOrDescription')}
           />
           <OrderSwitcher
-            value={request.query.order || DEFAULT_ORDER}
+            value={(request.query?.order as Order) || DEFAULT_ORDER}
             setValue={setOrder}
           />
         </div>
         <ResultsZone isFetching={isFetching}>
           <FetchingBoundary
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             error={error}
             defaultError={DEFAULT_ERROR}
           >
@@ -94,7 +97,7 @@ export const BadgesList = ({
                 <BadgeResults data={resolvedData} cacheKey={cacheKey} />
                 <Pagination
                   disabled={resolvedData === undefined}
-                  current={request.query.page || 1}
+                  current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
                     setPage(p)

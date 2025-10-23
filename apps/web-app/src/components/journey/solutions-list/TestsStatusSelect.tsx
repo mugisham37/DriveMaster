@@ -13,7 +13,7 @@ const OptionComponent = ({
   option: status,
 }: {
   option: TestsStatus
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
 
   switch (status) {
@@ -47,7 +47,7 @@ export const TestsStatusSelect = ({
 }: {
   value: TestsStatus
   setValue: (value: TestsStatus) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<TestsStatus>
       options={[undefined, 'passed', 'failed', 'errored', 'exceptioned']}

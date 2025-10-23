@@ -13,7 +13,7 @@ export function StudentInfo({ student }: Props) {
   return (
     <div className="student-info">
       <div className="student-header">
-        <img src={student.avatarUrl} alt={student.handle} className="avatar" />
+        <img src={student.avatarUrl} alt={`${student.handle} avatar`} className="avatar" />
         <div className="student-details">
           <h3>{student.handle}</h3>
           <div className="reputation">Reputation: {student.reputation}</div>

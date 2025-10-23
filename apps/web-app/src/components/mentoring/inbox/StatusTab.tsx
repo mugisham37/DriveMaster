@@ -20,7 +20,7 @@ export function StatusTab<T extends DiscussionStatus>({
     <button
       onClick={() => setStatus(status)}
       className={`status-tab ${isActive ? 'active' : ''}`}
-      aria-selected={isActive}
+      aria-pressed={isActive}
     >
       {children}
     </button>
@@ -47,7 +47,7 @@ export function StatusTabLink<T extends string>({
     <a
       href={href}
       className={`status-tab ${isActive ? 'active' : ''}`}
-      aria-selected={isActive}
+      aria-current={isActive ? 'page' : undefined}
     >
       {children}
     </a>

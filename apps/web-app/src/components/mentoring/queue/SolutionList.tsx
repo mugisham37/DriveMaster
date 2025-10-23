@@ -3,17 +3,29 @@ import { LoadingSpinner } from '../../common/LoadingSpinner'
 import { ErrorBoundary } from '../../ErrorBoundary'
 import { Pagination } from '../../common/Pagination'
 
+interface SolutionData {
+  id: string
+  // Add other solution properties as needed
+}
+
+interface ResolvedData {
+  solutions: SolutionData[]
+  meta: {
+    totalPages: number
+    currentPage: number
+  }
+}
+
 type Props = {
   status: string
   error: Error | null
   page: number
-  resolvedData: any
+  resolvedData: ResolvedData
   setPage: (page: number) => void
 }
 
 export function SolutionList({
   status,
-  error,
   page,
   resolvedData,
   setPage,
@@ -26,7 +38,7 @@ export function SolutionList({
         ) : (
           <>
             <div className="solutions">
-              {resolvedData.solutions.map((solution: any) => (
+              {resolvedData.solutions.map((solution: SolutionData) => (
                 <div key={solution.id} className="solution-card">
                   {/* Render solution card content */}
                 </div>

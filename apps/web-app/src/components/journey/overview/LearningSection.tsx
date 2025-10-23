@@ -19,7 +19,7 @@ type Links = {
   fable: string
 }
 
-export const LearningSection = ({ tracks, links }: Props): JSX.Element => {
+export const LearningSection = ({ tracks, links }: Props): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/overview')
   if (tracks.length === 0) {
     return (

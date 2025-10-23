@@ -138,11 +138,11 @@ export function Representations({
           <div className="flex flex-row flex-grow justify-between">
             <SearchInput
               className="mr-24"
-              setFilter={(input) => {
+              onChange={(input: string) => {
                 setCriteria(input)
                 handlePageResetOnInputChange(input)
               }}
-              filter={criteria || ''}
+              value={criteria || ''}
               placeholder={t('filterByExercise')}
             />
             <Sorter

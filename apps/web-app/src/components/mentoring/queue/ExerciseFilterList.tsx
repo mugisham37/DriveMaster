@@ -16,7 +16,6 @@ export function ExerciseFilterList({
   exercises,
   value,
   setValue,
-  error,
 }: Props) {
   return (
     <div className="exercise-filter-list">

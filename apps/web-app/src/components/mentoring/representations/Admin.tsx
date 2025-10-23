@@ -3,11 +3,8 @@ import { usePaginatedRequestQuery, type Request as BaseRequest } from '@/hooks/r
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
 import { ResultsZone } from '../../common/ResultsZone'
-import { TextFilter } from '../TextFilter'
-import { Sorter } from '../Sorter'
 import { Introducer } from '../../common/Introducer'
 import { RepresentationsList } from './RepresentationsList'
-import { useAuth } from '@/hooks/useAuth'
 import type { ExerciseRepresentation } from '../../../types'
 
 interface Track {
@@ -80,7 +77,7 @@ export function Admin({
     isFetching,
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
-    ['admin-representations', request.endpoint, request.query],
+    ['admin-representations', request.endpoint, JSON.stringify(request.query)],
     request
   )
 
@@ -95,7 +92,7 @@ export function Admin({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const setTrack = (trackSlug: string | null) => {
     setQuery({ ...request.query, trackSlug: trackSlug || '', page: 1 })
@@ -195,7 +192,7 @@ export function Admin({
         <ResultsZone isFetching={isFetching}>
           <RepresentationsList
             resolvedData={resolvedData}
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             refetch={refetch}
             setPage={setPage}
             type="admin"

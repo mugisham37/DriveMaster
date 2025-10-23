@@ -73,7 +73,7 @@ export function WithFeedback({
     isFetching,
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
-    ['with-feedback-representations', request.endpoint, request.query],
+    ['with-feedback-representations', request.endpoint, JSON.stringify(request.query)],
     request
   )
 
@@ -88,7 +88,7 @@ export function WithFeedback({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const setTrack = (trackSlug: string | null) => {
     setQuery({ ...request.query, trackSlug: trackSlug || '', page: 1 })
@@ -170,7 +170,7 @@ export function WithFeedback({
         <ResultsZone isFetching={isFetching}>
           <RepresentationsList
             resolvedData={resolvedData}
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             refetch={refetch}
             setPage={setPage}
             type="with-feedback"

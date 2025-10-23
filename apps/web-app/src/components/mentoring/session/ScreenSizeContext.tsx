@@ -26,7 +26,7 @@ interface ScreenSizeWrapperProps {
   children: React.ReactNode
 }
 
-export function ScreenSizeWrapper({ children }: ScreenSizeWrapperProps): JSX.Element {
+export function ScreenSizeWrapper({ children }: ScreenSizeWrapperProps): React.JSX.Element {
   const [screenSize, setScreenSize] = useState<ScreenSizeContextType>({
     isMobile: false,
     isTablet: false,

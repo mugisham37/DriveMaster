@@ -31,7 +31,7 @@ export const SolutionsList = ({
 }: {
   request: Request
   isEnabled: boolean
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')
   const {
     request,
@@ -40,11 +40,13 @@ export const SolutionsList = ({
     setQuery,
     setOrder,
   } = useList(initialRequest)
-  const [criteria, setCriteria] = useState(request.query?.criteria)
+  const [criteria, setCriteria] = useState<string>(
+    (request.query?.criteria as string) || ''
+  )
   const cacheKey = [
-    'contributions-list',
+    'solutions-list',
     request.endpoint,
-    removeEmpty(request.query),
+    removeEmpty(request.query || {}),
   ]
   const {
     status,
@@ -53,7 +55,7 @@ export const SolutionsList = ({
     error,
   } = usePaginatedRequestQuery<PaginatedResult<SolutionProps[]>>(cacheKey, {
     ...request,
-    query: removeEmpty(request.query),
+    query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
   })
 
@@ -68,7 +70,7 @@ export const SolutionsList = ({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const handleApply = useCallback(
     (
@@ -120,7 +122,7 @@ export const SolutionsList = ({
           />
           <SolutionFilter request={request} onApply={handleApply} />
           <OrderSwitcher
-            value={(request.query.order || DEFAULT_ORDER) as Order}
+            value={(request.query?.order || DEFAULT_ORDER) as Order}
             setValue={setOrder}
           />
         </div>
@@ -128,7 +130,7 @@ export const SolutionsList = ({
       <div className="md-container container">
         <ResultsZone isFetching={isFetching}>
           <FetchingBoundary
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             error={error}
             defaultError={DEFAULT_ERROR}
           >
@@ -155,14 +157,14 @@ export const SolutionsList = ({
                     </button>
                   </div>
                   <div className="solutions">
-                    {resolvedData.results.map((solution) => {
+                    {resolvedData.results.map((solution: any) => {
                       return <Solution {...solution} key={solution.uuid} />
                     })}
                   </div>
                 </div>
                 <Pagination
                   disabled={resolvedData === undefined}
-                  current={request.query.page || 1}
+                  current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
                     setPage(p)

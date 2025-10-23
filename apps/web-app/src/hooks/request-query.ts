@@ -9,7 +9,7 @@ export type Request<T = Record<string, unknown>> = {
 
 export function usePaginatedRequestQuery<T = Record<string, unknown>>(
   key: (string | number | boolean | null | undefined)[],
-  request: Request<T>
+  request: Request<Record<string, unknown>>
 ) {
   return useQuery({
     queryKey: key,

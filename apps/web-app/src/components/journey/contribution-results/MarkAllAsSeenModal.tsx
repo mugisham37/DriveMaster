@@ -19,7 +19,7 @@ export const MarkAllAsSeenModal = ({
   endpoint: string
   onSuccess: (response: APIResult) => void
   unseenTotal: number
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/contribution-results')
   const {
     mutate: mutation,
@@ -30,7 +30,7 @@ export const MarkAllAsSeenModal = ({
       const { fetch } = sendRequest({
         endpoint: endpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch
@@ -42,7 +42,7 @@ export const MarkAllAsSeenModal = ({
   })
 
   const handleSubmit = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
 
       mutation()

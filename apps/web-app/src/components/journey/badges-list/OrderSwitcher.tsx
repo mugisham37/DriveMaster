@@ -3,7 +3,7 @@ import { SingleSelect } from '../../common/SingleSelect'
 import { Order } from '../BadgeResults'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-const OptionComponent = ({ option: order }: { option: Order }) => {
+const OptionComponent = ({ option: order }: { option: Order }): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/badges-list')
 
   switch (order) {
@@ -30,7 +30,7 @@ export const OrderSwitcher = ({
 }: {
   value: Order
   setValue: (value: Order) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<Order>
       options={['unrevealed_first', 'newest_first', 'oldest_first']}

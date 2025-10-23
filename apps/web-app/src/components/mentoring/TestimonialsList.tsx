@@ -43,11 +43,11 @@ export default function TestimonialsList({
               <div key={testimonial.id} className="testimonial-card">
                 <div className="testimonial-header">
                   <div className="student-info">
-                    <img src={testimonial.student.avatarUrl} alt="" className="student-avatar" />
+                    <img src={testimonial.student.avatarUrl} alt={`${testimonial.student.handle} avatar`} className="student-avatar" />
                     <span>{testimonial.student.handle}</span>
                   </div>
                   <div className="exercise-info">
-                    <img src={testimonial.exercise.iconUrl} alt="" className="exercise-icon" />
+                    <img src={testimonial.exercise.iconUrl} alt={`${testimonial.exercise.title} exercise icon`} className="exercise-icon" />
                     <span>{testimonial.exercise.title}</span>
                   </div>
                 </div>

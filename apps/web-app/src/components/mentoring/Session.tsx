@@ -20,11 +20,11 @@ export default function Session({
         <h1>Mentoring Session</h1>
         <div className="session-info">
           <div className="student-info">
-            <img src={student.avatarUrl} alt="" className="student-avatar" />
+            <img src={student.avatarUrl} alt={`${student.handle} avatar`} className="student-avatar" />
             <span>{student.handle}</span>
           </div>
           <div className="exercise-info">
-            <img src={exercise.iconUrl} alt="" className="exercise-icon" />
+            <img src={exercise.iconUrl} alt={`${exercise.title} exercise icon`} className="exercise-icon" />
             <span>{exercise.title}</span>
             <span className="track-name">({track.title})</span>
           </div>

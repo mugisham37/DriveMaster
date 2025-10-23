@@ -15,7 +15,7 @@ export const UnrevealedBadge = ({
 }: {
   badge: BadgeProps
   cacheKey: QueryKey
-}): JSX.Element => {
+}): React.ReactElement => {
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [revealedBadge, setRevealedBadge] = useState<BadgeProps | null>(null)
@@ -25,10 +25,15 @@ export const UnrevealedBadge = ({
     error,
   } = useMutation<BadgeProps>({
     mutationFn: async () => {
+      const revealEndpoint = badge.links?.reveal
+      if (!revealEndpoint) {
+        throw new Error('No reveal endpoint available')
+      }
+      
       const { fetch } = sendRequest({
-        endpoint: badge.links.reveal,
+        endpoint: revealEndpoint,
         method: 'PATCH',
-        body: null,
+        body: undefined,
       })
 
       return fetch.then((json) => typecheck<BadgeProps>(json, 'badge'))

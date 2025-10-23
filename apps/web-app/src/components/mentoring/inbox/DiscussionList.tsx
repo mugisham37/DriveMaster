@@ -1,6 +1,6 @@
 import React from 'react'
 import { LoadingSpinner } from '../../common/LoadingSpinner'
-import type { Discussion } from '../../../types'
+import type { Discussion } from '@/components/types'
 import { Pagination } from '../../common/Pagination'
 
 interface Props {

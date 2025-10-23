@@ -13,7 +13,7 @@ const OptionComponent = ({
   option: status,
 }: {
   option: HeadTestsStatus
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
 
   switch (status) {
@@ -47,7 +47,7 @@ export const HeadTestsStatusSelect = ({
 }: {
   value: HeadTestsStatus
   setValue: (value: HeadTestsStatus) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<HeadTestsStatus>
       options={[undefined, 'passed', 'failed', 'errored', 'exceptioned']}

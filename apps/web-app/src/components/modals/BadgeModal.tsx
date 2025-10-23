@@ -4,22 +4,17 @@ import { useState, useEffect } from 'react'
 import { Modal } from '@/components/common'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { useModalManager } from '@/hooks/useModalManager'
-
-interface Badge {
-  id: string
-  name: string
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'ultimate'
-  iconUrl: string
-  reason: string
-  earnedAt: string
-}
+import { Badge } from '@/components/types'
 
 interface BadgeModalProps {
   badge?: Badge
+  open?: boolean
+  onClose?: () => void
+  wasUnrevealed?: boolean
 }
 
-export function BadgeModal({ badge }: BadgeModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function BadgeModal({ badge, open = false, onClose, wasUnrevealed = false }: BadgeModalProps): React.ReactElement | null {
+  const [isOpen, setIsOpen] = useState(open)
   const { registerModal, canShowModal } = useModalManager()
 
   useEffect(() => {
@@ -32,13 +27,16 @@ export function BadgeModal({ badge }: BadgeModalProps) {
   }, [registerModal])
 
   useEffect(() => {
-    if (badge && canShowModal('badge-modal')) {
+    if (open !== undefined) {
+      setIsOpen(open)
+    } else if (badge && canShowModal('badge-modal')) {
       setIsOpen(true)
     }
-  }, [badge, canShowModal])
+  }, [badge, canShowModal, open])
 
   const handleClose = () => {
     setIsOpen(false)
+    onClose?.()
   }
 
   if (!badge) return null
@@ -53,7 +51,8 @@ export function BadgeModal({ badge }: BadgeModalProps) {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Recently'
     return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
@@ -84,12 +83,14 @@ export function BadgeModal({ badge }: BadgeModalProps) {
       
       <hr className="c-divider --small mb-4" />
       
-      <div className="reason text-p-base mb-4">
-        {badge.reason}
-      </div>
+      {badge.reason && (
+        <div className="reason text-p-base mb-4">
+          {badge.reason}
+        </div>
+      )}
       
       <div className="earned-at text-sm text-gray-500 dark:text-gray-400">
-        Earned on {formatDate(badge.earnedAt)}
+        Earned on {formatDate(badge.earnedAt || badge.unlockedAt)}
       </div>
 
       <div className="mt-6 flex justify-center">

@@ -20,14 +20,17 @@ export function useMentoringQueue({
 
   const { data: resolvedData, status, error, isFetching } = useQuery({
     queryKey: ['mentoring-queue', track.slug, exercise?.slug, criteria, order, page],
-    queryFn: () =>
-      (request as any).endpoint.request({
+    queryFn: async () => {
+      const params = new URLSearchParams({
         trackSlug: track.slug,
-        exerciseSlug: exercise?.slug,
-        criteria,
-        order,
-        page,
-      }),
+        ...(exercise?.slug && { exerciseSlug: exercise.slug }),
+        ...(criteria && { criteria }),
+        ...(order && { order }),
+        page: page.toString(),
+      })
+      const response = await fetch(`${request.endpoint}?${params}`)
+      return response.json()
+    },
     placeholderData: (previousData) => previousData,
   })
 

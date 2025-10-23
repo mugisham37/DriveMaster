@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React from 'react'
 import { TrackIcon, Icon } from '../../common'
 import { FetchingBoundary } from '../../FetchingBoundary'
 import { AutomationTrack } from '@/components/types'
@@ -79,38 +79,16 @@ const Component = ({
   setValue,
   countText,
 }: Props): React.JSX.Element | null => {
-  const changeTracksRef = useRef<HTMLButtonElement>(null)
+  // changeTracksRef removed as it's not used
   const {
     buttonAttributes,
     panelAttributes,
-    listAttributes,
-    itemAttributes,
-    setOpen,
-    open,
-  } = useDropdown((tracks?.length || 0) + 1, (i) => handleItemSelect(i), {
-    placement: 'bottom',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [0, 8],
-        },
-      },
-    ],
-  })
-  const handleItemSelect = useCallback(
-    (index) => {
-      if (!tracks) {
-        return
-      }
-
-      const track = tracks[index]
-
-      track ? setValue(tracks[index]) : changeTracksRef.current?.click()
-      setOpen(false)
-    },
-    [setValue, tracks, setOpen]
-  )
+    isOpen,
+    close,
+    toggle,
+  } = useDropdown()
+  
+  // handleItemSelect removed as it's not used in current implementation
 
   if (!tracks) {
     return null
@@ -122,6 +100,7 @@ const Component = ({
         <button
           className="current-track"
           aria-label="Open the track filter"
+          onClick={toggle}
           {...buttonAttributes}
         >
           <TrackIcon iconUrl={value.iconUrl} title={value.title} />
@@ -136,17 +115,17 @@ const Component = ({
           />
         </button>
       </ResultsZone>
-      {open ? (
+      {isOpen ? (
         <div {...panelAttributes} className="--options">
-          <ul {...listAttributes}>
-            {tracks.map((track, i) => {
+          <ul>
+            {tracks.map((track) => {
               return (
-                <li key={track.slug} {...itemAttributes(i)}>
+                <li key={track.slug}>
                   <TrackFilter
                     countText={countText}
                     onChange={() => {
                       setValue(track)
-                      setOpen(false)
+                      close()
                     }}
                     checked={value.slug === track.slug}
                     {...track}

@@ -6,26 +6,43 @@ const compartment = new Compartment()
 export const loadLanguageCompartment = async (
   language: string
 ): Promise<Extension> => {
-  switch (language) {
+  try {
+    switch (language) {
     case 'arturo': {
-      const { arturo } = await import('@exercism/codemirror-lang-arturo')
-      return compartment.of(arturo())
+      try {
+        const { arturo } = await import('@exercism/codemirror-lang-arturo')
+        return compartment.of(arturo())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'cpp': {
-      const { cpp } = await import('@codemirror/lang-cpp')
-      return compartment.of(cpp())
+      try {
+        const { cpp } = await import('@codemirror/lang-cpp')
+        return compartment.of(cpp())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'java': {
-      const { java } = await import('@codemirror/lang-java')
-      return compartment.of(java())
+      try {
+        const { java } = await import('@codemirror/lang-java')
+        return compartment.of(java())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'cfml': {
       const { javascript: cfml } = await import('@codemirror/lang-javascript')
       return compartment.of(cfml())
     }
     case 'gleam': {
-      const { gleam } = await import('@exercism/codemirror-lang-gleam')
-      return compartment.of(gleam())
+      try {
+        const { gleam } = await import('@exercism/codemirror-lang-gleam')
+        return compartment.of(gleam())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'javascript':
     case 'typescript': {
@@ -37,36 +54,68 @@ export const loadLanguageCompartment = async (
       return compartment.of(jq())
     }
     case 'php': {
-      const { php } = await import('@codemirror/lang-php')
-      return compartment.of(php())
+      try {
+        const { php } = await import('@codemirror/lang-php')
+        return compartment.of(php())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'python': {
-      const { python } = await import('@codemirror/lang-python')
-      return compartment.of(python())
+      try {
+        const { python } = await import('@codemirror/lang-python')
+        return compartment.of(python())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'rust': {
-      const { rust } = await import('@codemirror/lang-rust')
-      return compartment.of(rust())
+      try {
+        const { rust } = await import('@codemirror/lang-rust')
+        return compartment.of(rust())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'reasonml': {
-      const { rust: reasonml } = await import('@codemirror/lang-rust')
-      return compartment.of(reasonml())
+      try {
+        const { rust: reasonml } = await import('@codemirror/lang-rust')
+        return compartment.of(reasonml())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'uiua': {
-      const { uiua } = await import('@exercism/codemirror-lang-uiua')
-      return compartment.of(uiua())
+      try {
+        const { uiua } = await import('@exercism/codemirror-lang-uiua')
+        return compartment.of(uiua())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'wren': {
-      const { wren } = await import('@exercism/codemirror-lang-wren')
-      return compartment.of(wren())
+      try {
+        const { wren } = await import('@exercism/codemirror-lang-wren')
+        return compartment.of(wren())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'yamlscript': {
-      const { yaml } = await import('@codemirror/lang-yaml')
-      return compartment.of(yaml())
+      try {
+        const { yaml } = await import('@codemirror/lang-yaml')
+        return compartment.of(yaml())
+      } catch {
+        return compartment.of([])
+      }
     }
     case 'zig': {
-      const { rust: zig } = await import('@codemirror/lang-rust')
-      return compartment.of(zig())
+      try {
+        const { rust: zig } = await import('@codemirror/lang-rust')
+        return compartment.of(zig())
+      } catch {
+        return compartment.of([])
+      }
     }
 
     // Legacy
@@ -269,18 +318,25 @@ export const loadLanguageCompartment = async (
     // Custom
     case 'elixir': {
       const { elixir } = await import('codemirror-lang-elixir')
-      // @ts-ignore
       return compartment.of(StreamLanguage.define(elixir))
     }
     case 'nim': {
-      const { nim } = await require('nim-codemirror-mode')
+      const { nim } = await import('nim-codemirror-mode')
       return compartment.of(StreamLanguage.define(nim({}, {})))
     }
     case 'julia': {
-      const { julia } = await import('@plutojl/lang-julia')
-      return compartment.of(julia())
+      try {
+        const { julia } = await import('@plutojl/lang-julia')
+        return compartment.of(julia())
+      } catch {
+        return compartment.of([])
+      }
     }
     default:
-      return []
+      return compartment.of([])
+    }
+  } catch (error) {
+    console.warn(`Failed to load language support for ${language}:`, error)
+    return compartment.of([])
   }
 }

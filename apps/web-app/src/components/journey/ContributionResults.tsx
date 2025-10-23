@@ -15,7 +15,7 @@ export const ContributionResults = ({
 }: {
   cacheKey: QueryKey
   data: APIResult
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -65,7 +65,9 @@ export const ContributionResults = ({
         onSuccess={handleSuccess}
         onClose={handleModalClose}
         unseenTotal={data.meta.unseenTotal}
-      />
+      >
+        {/* Modal content is handled internally */}
+      </MarkAllAsSeenModal>
     </div>
   )
 }

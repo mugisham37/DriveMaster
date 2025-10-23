@@ -15,7 +15,10 @@ export function useTrackList({ cacheKey, request }: UseTrackListOptions) {
     isFetching,
   } = useQuery<{ tracks: MentoredTrack[] }>({
     queryKey: cacheKey,
-    queryFn: () => (request as any).endpoint.request()
+    queryFn: async () => {
+      const response = await fetch(request.endpoint)
+      return response.json()
+    }
   })
 
   return {

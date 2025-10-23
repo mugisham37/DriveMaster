@@ -64,13 +64,11 @@ const formatData = ({ overview }: { overview: JourneyOverview }) => {
       },
       contributing: {
         ...overview.contributing,
-        tracks: overview.contributing.tracks.map(
-          (track) => new TrackContribution(track)
-        ),
+        tracks: overview.contributing.tracks,
       },
       badges: {
         ...overview.badges,
-        badges: new BadgeList({ items: overview.badges.badges }),
+        badges: overview.badges.badges,
       },
     },
   }
@@ -82,7 +80,7 @@ export const Overview = ({
 }: {
   request: Request
   isEnabled: boolean
-}): JSX.Element => {
+}): React.ReactElement => {
   const {
     status,
     data: resolvedData,
@@ -100,7 +98,7 @@ export const Overview = ({
     <article className="overview-tab theme-dark">
       <ResultsZone isFetching={isFetching}>
         <FetchingBoundary
-          status={status}
+          status={status === 'pending' ? 'loading' : status}
           error={error}
           defaultError={DEFAULT_ERROR}
         >

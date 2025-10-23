@@ -17,12 +17,9 @@ type Props = {
 
 export function TrackFilterList({
   status,
-  error,
   tracks,
-  isFetching,
   value,
   setValue,
-  links,
 }: Props) {
   return (
     <div className="track-filter-list">
@@ -38,7 +35,7 @@ export function TrackFilterList({
                 className={`track-button ${track.slug === value.slug ? 'selected' : ''}`}
                 onClick={() => setValue(track)}
               >
-                <img src={track.iconUrl} alt={track.title} />
+                <img src={track.iconUrl} alt={`${track.title} track icon`} />
                 <span>{track.title}</span>
               </button>
             ))}

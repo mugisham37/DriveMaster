@@ -10,13 +10,13 @@ export function useExerciseList({ track }: UseExerciseListOptions) {
     data,
     status,
     error,
-  } = useQuery<{ exercises: MentoredTrackExercise[] }>(
-    ['mentored-exercises', track.slug],
-    async () => {
+  } = useQuery<{ exercises: MentoredTrackExercise[] }>({
+    queryKey: ['mentored-exercises', track.slug],
+    queryFn: async () => {
       const response = await fetch(`/api/v1/tracks/${track.slug}/exercises`)
       return response.json()
     }
-  )
+  })
 
   return {
     exercises: data?.exercises || [],

@@ -19,7 +19,7 @@ export const SolutionFilter = ({
     testsStatus: TestsStatus,
     headTestsStatus: HeadTestsStatus
   ) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
 
   const [status, setStatus] = useState<ExerciseStatus>(request.query.status)
@@ -80,7 +80,7 @@ export const SolutionFilter = ({
   }, [expanded])
 
   const handleApply = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
       onApply(status, mentoringStatus, syncStatus, testsStatus, headTestsStatus)
       setExpanded(false)
@@ -97,7 +97,7 @@ export const SolutionFilter = ({
   )
 
   const handleClose = useCallback(
-    (e) => {
+    (e: React.FormEvent) => {
       e.preventDefault()
       setExpanded(false)
     },

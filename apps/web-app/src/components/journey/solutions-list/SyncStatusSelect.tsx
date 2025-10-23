@@ -8,7 +8,7 @@ const OptionComponent = ({
   option: status,
 }: {
   option: SyncStatus
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
   switch (status) {
     case 'up_to_date':
@@ -36,7 +36,7 @@ export const SyncStatusSelect = ({
 }: {
   value: SyncStatus
   setValue: (value: SyncStatus) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<SyncStatus>
       options={[undefined, 'up_to_date', 'out_of_date']}

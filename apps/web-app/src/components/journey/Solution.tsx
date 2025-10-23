@@ -41,7 +41,7 @@ export const Solution = ({
   exercise,
   track,
   isOutOfDate,
-}: SolutionProps): JSX.Element => {
+}: SolutionProps): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')
   return (
     <a href={privateUrl} className="solution">
@@ -102,8 +102,8 @@ export const Solution = ({
                   i18nKey="solution.inTrack"
                   values={{ track: track.title }}
                   components={[
-                    <TrackIcon iconUrl={track.iconUrl} title={track.title} />,
-                    <div className="track-title" />,
+                    <TrackIcon key="track-icon" iconUrl={track.iconUrl} title={track.title} />,
+                    <div key="track-title" className="track-title" />,
                   ]}
                 />
               </div>

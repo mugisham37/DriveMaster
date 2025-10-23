@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { pluralizeWithNumber } from '@/utils/pluralizeWithNumber'
+// import { pluralizeWithNumber } from '@/utils/pluralizeWithNumber' // Unused
 import { fromNow } from '@/utils/date'
 import { TrackIcon, ExerciseIcon, GraphicalIcon } from '@/components/common'
 import { MostPopularTag } from './MostPopularTag'
@@ -20,13 +20,8 @@ export const AutomationListElement = ({
   const withFeedback = selectedTab === 'with_feedback'
   const isAdminTab = selectedTab === 'admin'
   const ELEMENT_LABELS = useMemo(() => {
-    const pluralizeNumSubmissions = pluralizeWithNumber.bind(
-      null,
-      representation.numSubmissions
-    )
-
     const dateElement: Record<SelectedTab, React.JSX.Element> = {
-      admin: <>{fromNow(representation.feedbackAddedAt)}</>,
+      admin: <>{fromNow(representation.feedbackAddedAt || representation.lastSubmittedAt)}</>,
       with_feedback: (
         <>
           {t('adminTab.lastShown')}
@@ -36,7 +31,7 @@ export const AutomationListElement = ({
       ),
       without_feedback: (
         <>
-          {t('adminTab.lastOccurence')}
+          {t('adminTab.lastOccurrence')}
           <br />
           {fromNow(representation.lastSubmittedAt)}
         </>
@@ -53,8 +48,8 @@ export const AutomationListElement = ({
           )
         : t(
             representation.numSubmissions === 1
-              ? 'automationListElement.occurenceTime'
-              : 'automationListElement.occurenceTimes',
+              ? 'automationListElement.occurrenceTime'
+              : 'automationListElement.occurrenceTimes',
             { number: representation.numSubmissions }
           ),
       dateElement: dateElement[selectedTab],
@@ -130,10 +125,10 @@ export const AutomationListElement = ({
       )}
       <div
         className="--feedback-glimpse"
-        dangerouslySetInnerHTML={{ __html: representation.feedbackHtml }}
+        dangerouslySetInnerHTML={{ __html: representation.feedbackHtml || representation.feedback?.contentHtml || '' }}
       />
       {!isAdminTab && (
-        <div className="--occurencies">{ELEMENT_LABELS['counterElement']}</div>
+        <div className="--occurrences">{ELEMENT_LABELS['counterElement']}</div>
       )}
       <time className="whitespace-nowrap">{ELEMENT_LABELS['dateElement']}</time>
       <GraphicalIcon

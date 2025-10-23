@@ -13,7 +13,7 @@ const OptionComponent = ({
   option: status,
 }: {
   option: MentoringStatus
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/solutions-list')
 
   switch (status) {
@@ -46,7 +46,7 @@ export const MentoringStatusSelect = ({
 }: {
   value: MentoringStatus
   setValue: (value: MentoringStatus) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<MentoringStatus>
       options={[undefined, 'none', 'requested', 'in_progress', 'finished']}

@@ -56,7 +56,6 @@ function Component({ resolvedData, page, setPage, selectedTab }: Props) {
           </div>
           <footer>
             <Pagination
-              disabled={resolvedData === undefined}
               current={page}
               total={resolvedData.meta.totalPages}
               setPage={(p) => {

@@ -24,8 +24,8 @@ export const a11yTabBindingPanelTheme = EditorView.baseTheme({
 
 // The typing for this seems to be wrong in CodeMirror.
 // Changes doesn't have `inserted` defined on it
-function tabPressed(changes: any): boolean {
-  // @ts-ignore */
+function tabPressed(changes: unknown): boolean {
+  // @ts-expect-error CodeMirror typing issue - changes.inserted is not properly typed
   return changes.inserted.some((insert) => insert.text == '\t')
 }
 
@@ -41,8 +41,8 @@ function tabPressed(changes: any): boolean {
 // times it is cycled into the box (I presume that's a non-spamming feature)
 // so for now I have 5 different prompts which means this is announced a maximum
 // of 5 times. There's also a chance this is just down to something weird
-// in VoiceOver (which seems to be quite random to me) so this might be entirelty
-// unncessary and we can just switch between twodifferent ones as per a previous
+// in VoiceOver (which seems to be quite random to me) so this might be entirely
+// unnecessary and we can just switch between two different ones as per a previous
 // commit in the PR that adds this.
 const prompts = [
   'Press Escape then Tab to exit the editor',
@@ -60,14 +60,16 @@ const a11yTabBindingState = StateField.define<string>({
     let found = false
     const newValue = prompts.find((prompt) => {
       if (found) {
-        return value
+        return true
       }
 
       if (value == prompt) {
         found = true
+        return false
       }
+      return false
     })
-    value = newValue || prompts[0]
+    value = newValue || prompts[0] || ''
     return value
   },
 })

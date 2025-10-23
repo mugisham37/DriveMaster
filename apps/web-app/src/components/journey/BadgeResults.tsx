@@ -2,7 +2,7 @@ import React from 'react'
 import { RevealedBadge } from './RevealedBadge'
 import { UnrevealedBadge } from './UnrevealedBadge'
 import pluralize from 'pluralize'
-import { Badge as BadgeProps, PaginatedResult } from '../../types'
+import { Badge as BadgeProps, PaginatedResult } from '../types'
 import { QueryKey } from '@tanstack/react-query'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -14,7 +14,7 @@ export const BadgeResults = ({
 }: {
   data: PaginatedResult<BadgeProps[]>
   cacheKey: QueryKey
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey')
   return (
     <div>

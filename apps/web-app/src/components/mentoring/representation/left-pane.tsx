@@ -28,16 +28,16 @@ interface LeftPaneProps {
   }
 }
 
-export function LeftPane({ links, representation }: LeftPaneProps): React.JSX.Element {
+export function LeftPane({ representation }: LeftPaneProps): React.JSX.Element {
   return (
     <div className="representation-left-pane">
       <div className="representation-header">
         <h2>Representation #{representation.id}</h2>
         <div className="exercise-info">
-          <img src={representation.exercise.iconUrl} alt="" className="exercise-icon" />
+          <img src={representation.exercise.iconUrl} alt={`${representation.exercise.title} exercise icon`} className="exercise-icon" />
           <span>{representation.exercise.title}</span>
           <span className="track-info">
-            <img src={representation.track.iconUrl} alt="" className="track-icon" />
+            <img src={representation.track.iconUrl} alt={`${representation.track.title} track icon`} className="track-icon" />
             {representation.track.title}
           </span>
         </div>
@@ -62,7 +62,7 @@ export function LeftPane({ links, representation }: LeftPaneProps): React.JSX.El
         <div className="representation-feedback">
           <h3>Feedback</h3>
           <div className="feedback-author">
-            <img src={representation.feedback.author.avatarUrl} alt="" className="author-avatar" />
+            <img src={representation.feedback.author.avatarUrl} alt={`${representation.feedback.author.handle} avatar`} className="author-avatar" />
             <span>{representation.feedback.author.handle}</span>
           </div>
           <div 

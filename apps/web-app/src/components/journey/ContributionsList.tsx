@@ -33,7 +33,7 @@ export function ContributionsList({
 }: {
   request: Request;
   isEnabled: boolean;
-}): JSX.Element {
+}): React.ReactElement {
   const { t } = useAppTranslation("components/journey");
   const {
     request,
@@ -41,11 +41,13 @@ export function ContributionsList({
     setCriteria: setRequestCriteria,
     setQuery,
   } = useList(initialRequest);
-  const [criteria, setCriteria] = useState(request.query?.criteria);
+  const [criteria, setCriteria] = useState<string>(
+    (request.query?.criteria as string) || ""
+  );
   const cacheKey = [
     "contributions-list",
     request.endpoint,
-    removeEmpty(request.query),
+    removeEmpty(request.query || {}),
   ];
   const {
     status,
@@ -54,13 +56,13 @@ export function ContributionsList({
     error,
   } = usePaginatedRequestQuery<APIResult>(cacheKey, {
     ...request,
-    query: removeEmpty(request.query),
+    query: removeEmpty(request.query || {}),
     options: { ...request.options, enabled: isEnabled },
   });
 
   const requestQuery = useDeepMemo(request.query);
   const setCategory = useCallback(
-    (category) => {
+    (category: any) => {
       setQuery({ ...requestQuery, category: category, page: undefined });
     },
     [requestQuery, setQuery]
@@ -77,7 +79,7 @@ export function ContributionsList({
     };
   }, [setRequestCriteria, criteria]);
 
-  useHistory({ pushOn: removeEmpty(request.query) });
+  useHistory({ pushOn: removeEmpty(request.query || {}) });
 
   return (
     <article
@@ -95,13 +97,13 @@ export function ContributionsList({
             placeholder={t("contributionsList.searchByContributionName")}
           />
           <CategorySelect
-            value={request.query.category}
+            value={request.query?.category}
             setValue={setCategory}
           />
         </div>
         <ResultsZone isFetching={isFetching}>
           <FetchingBoundary
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             error={error}
             defaultError={DEFAULT_ERROR}
           >
@@ -110,7 +112,7 @@ export function ContributionsList({
                 <ContributionResults data={resolvedData} cacheKey={cacheKey} />
                 <Pagination
                   disabled={resolvedData === undefined}
-                  current={request.query.page || 1}
+                  current={(request.query?.page as number) || 1}
                   total={resolvedData.meta.totalPages}
                   setPage={(p) => {
                     setPage(p);

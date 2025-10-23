@@ -7,7 +7,7 @@ const OptionComponent = ({
   option: category,
 }: {
   option: ContributionCategoryId | undefined
-}): JSX.Element => {
+}): React.ReactElement => {
   const { t } = useAppTranslation('components/journey/contributions-list')
 
   switch (category) {
@@ -69,7 +69,7 @@ export const CategorySelect = ({
 }: {
   value: ContributionCategoryId | undefined
   setValue: (value: ContributionCategoryId | undefined) => void
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <SingleSelect<ContributionCategoryId | undefined>
       options={[

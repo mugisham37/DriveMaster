@@ -77,7 +77,7 @@ export function WithoutFeedback({
     isFetching,
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
-    ['without-feedback-representations', request.endpoint, request.query],
+    ['without-feedback-representations', request.endpoint, JSON.stringify(request.query)],
     request
   )
 
@@ -92,7 +92,7 @@ export function WithoutFeedback({
     }
   }, [setRequestCriteria, criteria])
 
-  useHistory({ pushOn: removeEmpty(request.query) })
+  useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const setTrack = (trackSlug: string | null) => {
     setQuery({ ...request.query, trackSlug: trackSlug || '', page: 1 })
@@ -116,7 +116,7 @@ export function WithoutFeedback({
         >
           <h3>Add feedback to common solutions</h3>
           <p>
-            These representations don't have feedback yet. Add feedback to help
+            These representations don&apos;t have feedback yet. Add feedback to help
             students improve their solutions automatically.
           </p>
         </Introducer>
@@ -192,7 +192,7 @@ export function WithoutFeedback({
         <ResultsZone isFetching={isFetching}>
           <RepresentationsList
             resolvedData={resolvedData}
-            status={status}
+            status={status === 'pending' ? 'loading' : status}
             refetch={refetch}
             setPage={setPage}
             type="without-feedback"

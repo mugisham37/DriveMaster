@@ -116,7 +116,21 @@ export type ExerciseRepresentation = {
   id: string
   exerciseId: string
   title: string
-  // Add other fields as needed
+  track: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  exercise: {
+    title: string
+    iconUrl: string
+    slug: string
+  }
+  numSubmissions: number
+  appearsFrequently: boolean
+  feedbackType?: string
+  lastSubmittedAt: string
+  feedbackAddedAt?: string
 }
 
 export type MentorSessionRequest = {

@@ -1,5 +1,5 @@
 import React from 'react'
-import type { CompleteRepresentationData } from '../../../types'
+// import type { CompleteRepresentationData } from '../../../types' // Unused
 
 interface RightPaneProps {
   data: {
@@ -25,7 +25,7 @@ export function RightPane({ data }: RightPaneProps): React.JSX.Element {
           <div key={submission.uuid} className="submission-item">
             <div className="submission-header">
               <div className="student-info">
-                <img src={submission.student.avatarUrl} alt="" className="student-avatar" />
+                <img src={submission.student.avatarUrl} alt={`${submission.student.handle} avatar`} className="student-avatar" />
                 <span>{submission.student.handle}</span>
               </div>
               <div className="submission-meta">

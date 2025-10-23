@@ -85,7 +85,9 @@ export default function Queue({
       return
     }
 
-    setSelectedTrack(tracks[0])
+    if (tracks[0]) {
+      setSelectedTrack(tracks[0])
+    }
   }, [selectedTrack.slug, tracks])
 
   useEffect(() => {
