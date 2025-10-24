@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { GraphicalIcon, Icon } from '../../common'
 import { BugReportModal } from '../../modals/BugReportModal'
-import { useDropdown } from '../../dropdowns/useDropdown'
+import { useDropdown } from '@/hooks'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export const More = ({
@@ -14,7 +14,7 @@ export const More = ({
   onRevertToExerciseStart: () => void
   trackSlug: string
   exerciseSlug: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/editor/header')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const {
@@ -24,17 +24,7 @@ export const More = ({
     itemAttributes,
     open,
     setOpen,
-  } = useDropdown(3, undefined, {
-    placement: 'bottom-end',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [-8, 8],
-        },
-      },
-    ],
-  })
+  } = useDropdown(3)
 
   const handleRevertToLastIteration = useCallback(() => {
     onRevertToLastIteration()

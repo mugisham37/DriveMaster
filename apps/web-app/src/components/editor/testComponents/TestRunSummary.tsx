@@ -33,9 +33,9 @@ export const TestRunSummary = ({
         <TestRunSummaryContent
           testRun={testRun}
           testRunner={testRunner}
-          onSubmit={onSubmit}
-          isSubmitDisabled={isSubmitDisabled}
-          onCancel={onCancel}
+          {...(onSubmit !== undefined && { onSubmit })}
+          {...(isSubmitDisabled !== undefined && { isSubmitDisabled })}
+          {...(onCancel !== undefined && { onCancel })}
           showSuccessBox={showSuccessBox}
         />
       </div>
@@ -84,7 +84,7 @@ const TestRunSummaryStatus = ({
 }: React.PropsWithChildren<{
   statusClass: string
   percentagePassing: number
-}>): JSX.Element => {
+}>): React.JSX.Element => {
   return (
     <>
       <div className={`progress ${statusClass}`}>

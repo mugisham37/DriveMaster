@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { FileEditorHandle } from './FileEditorCodeMirror'
-import { File } from '../types'
+import { File } from '../../types'
 
 export const useEditorFiles = ({
   defaultFiles,
@@ -19,7 +19,7 @@ export const useEditorFiles = ({
     return files
   }, [defaultFiles, editorRef])
   const set = useCallback(
-    (files) => editorRef.current?.setFiles(files),
+    (files: File[]) => editorRef.current?.setFiles(files),
     [editorRef]
   )
 

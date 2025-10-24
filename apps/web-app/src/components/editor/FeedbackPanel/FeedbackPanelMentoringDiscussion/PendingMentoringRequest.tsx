@@ -6,7 +6,7 @@ import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export function PendingMentoringRequest({
   mentoringRequestLink,
-}: Pick<FeedbackPanelProps, 'mentoringRequestLink'>): JSX.Element {
+}: Pick<FeedbackPanelProps, 'mentoringRequestLink'>): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/FeedbackPanel')
 
   return (

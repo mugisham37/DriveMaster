@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tab, GraphicalIcon } from '@/components/common'
-import { TabsContext } from '@/components/Editor'
+import { TabsContext } from '@/components/editor'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export const InstructionsTab = () => {

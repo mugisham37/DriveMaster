@@ -15,7 +15,7 @@ export function GetHelpAccordionSkeleton({
   iconSlug,
   children,
   className,
-}: GetHelpAccordionSkeletonProps): JSX.Element {
+}: GetHelpAccordionSkeletonProps): React.JSX.Element {
   return (
     <details
       className={`c-details border-t-1 border-borderColor6 py-16 px-24 ${

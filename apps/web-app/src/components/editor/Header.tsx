@@ -40,7 +40,7 @@ Header.Title = function HeaderTitle({
 Header.ActionKeyboardShortcuts = forwardRef<
   HTMLButtonElement,
   { onClick: () => void }
->(function HeaderActionKeyboardShortcuts(({ onClick }, ref) => {
+>(function HeaderActionKeyboardShortcuts({ onClick }, ref) {
   return (
     <button
       ref={ref}

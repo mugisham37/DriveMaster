@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLocalStorage } from '../../utils/use-storage'
-import { File } from '../types'
+import { File } from '../../types'
 
 export const useSaveFiles = ({
   key,
@@ -19,8 +19,10 @@ export const useSaveFiles = ({
   useEffect(() => {
     const interval = setInterval(() => {
       const newFiles = getFiles()
+      const filesString = JSON.stringify(files)
+      const newFilesString = JSON.stringify(newFiles)
 
-      if (JSON.stringify(files) === JSON.stringify(newFiles)) {
+      if (filesString === newFilesString) {
         return
       }
 
@@ -28,7 +30,7 @@ export const useSaveFiles = ({
     }, saveInterval)
 
     return () => clearInterval(interval)
-  }, [JSON.stringify(files), getFiles, saveInterval, setFiles])
+  }, [files, getFiles, saveInterval, setFiles])
 
   return [files]
 }

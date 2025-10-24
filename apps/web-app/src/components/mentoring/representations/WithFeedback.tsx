@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { usePaginatedRequestQuery, type Request as BaseRequest } from '@/hooks/request-query'
+import { usePaginatedRequestQuery, type Request as RequestQueryType } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
 import { ResultsZone } from '../../common/ResultsZone'
@@ -27,12 +27,14 @@ export type APIResponse = {
   }
 }
 
-export type Request = BaseRequest<{
-  criteria?: string
-  trackSlug?: string
-  order?: string
-  page?: number
-}>
+export type WithFeedbackRequest = RequestQueryType & {
+  query?: {
+    criteria?: string
+    trackSlug?: string
+    order?: string
+    page?: number
+  }
+}
 
 type Links = {
   withoutFeedback: string
@@ -41,7 +43,7 @@ type Links = {
 }
 
 type Props = {
-  representationsRequest: Request
+  representationsRequest: WithFeedbackRequest
   tracks: readonly Track[]
   counts: Record<string, number>
   links: Links
@@ -74,7 +76,11 @@ export function WithFeedback({
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
     ['with-feedback-representations', request.endpoint, JSON.stringify(request.query)],
-    request
+    {
+      endpoint: request.endpoint,
+      query: request.query || {},
+      ...(request.options && { options: request.options })
+    }
   )
 
   useEffect(() => {
@@ -133,7 +139,7 @@ export function WithFeedback({
       <div className="container">
         <header className="c-search-bar">
           <select
-            value={request.query?.trackSlug || ''}
+            value={(request.query?.trackSlug as string) || ''}
             onChange={(e) => setTrack(e.target.value || null)}
             className="track-selector"
           >
@@ -155,7 +161,7 @@ export function WithFeedback({
           />
 
           <select
-            value={request.query?.order || ''}
+            value={(request.query?.order as string) || ''}
             onChange={(e) => setOrder(e.target.value)}
             className="sort-selector"
           >

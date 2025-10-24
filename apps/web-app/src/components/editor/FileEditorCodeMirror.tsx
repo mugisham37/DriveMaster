@@ -43,7 +43,7 @@ export function FileEditorCodeMirror({
   readonly: boolean
 }): React.JSX.Element {
   const [files, setFiles] = useState(defaultFiles)
-  const [tab, setTab] = useState(files[0].filename)
+  const [tab, setTab] = useState(files[0]?.filename || '')
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRefs = useRef<Record<string, Handler>>({})
 
@@ -98,9 +98,9 @@ export function FileEditorCodeMirror({
         }
 
         if (index === 0 && currentFiles.length > 1) {
-          setTab(currentFiles[1].filename)
+          setTab(currentFiles[1]?.filename || '')
         } else if (index > 0) {
-          setTab(currentFiles[index - 1].filename)
+          setTab(currentFiles[index - 1]?.filename || '')
         }
 
         setFiles(

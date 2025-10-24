@@ -11,7 +11,7 @@ export const TestsGroup = ({
   open?: boolean
   tests: Test[]
   children: React.ReactNode
-}): JSX.Element | null => {
+}): React.JSX.Element | null => {
   if (tests.length === 0) {
     return null
   }
@@ -23,12 +23,14 @@ export const TestsGroup = ({
   )
 }
 
-TestsGroup.Header = ({
+TestsGroup.Header = function TestsGroupHeader({
   children,
 }: {
   children: React.ReactNode
-}): JSX.Element => (
-  <summary className="tests-group-summary">
-    <div className="--summary-inner">{children}</div>
-  </summary>
-)
+}): React.JSX.Element {
+  return (
+    <summary className="tests-group-summary">
+      <div className="--summary-inner">{children}</div>
+    </summary>
+  )
+}

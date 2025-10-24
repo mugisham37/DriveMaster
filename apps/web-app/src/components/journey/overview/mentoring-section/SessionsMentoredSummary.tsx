@@ -11,7 +11,7 @@ export const SessionsMentoredSummary = ({
 }: {
   tracks: MentoredTrackProgressList
   rank?: number
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/mentoring-section'
   )

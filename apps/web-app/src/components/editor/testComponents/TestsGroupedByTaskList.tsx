@@ -3,7 +3,7 @@ import { TestStatus, Test, AssignmentTask } from '../types'
 import { GraphicalIcon } from '../../common/GraphicalIcon'
 import { TestsGroup, TestWithToggle } from './TestsGroup'
 import { TestSummary } from './TestSummary'
-import { TasksContext } from '../../Editor'
+import { TasksContext } from '../../editor'
 
 type TaskWithTestsWithToggle = AssignmentTask & {
   id: number

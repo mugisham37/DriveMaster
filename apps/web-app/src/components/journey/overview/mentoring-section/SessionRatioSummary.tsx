@@ -8,7 +8,7 @@ export const SessionRatioSummary = ({
   tracks,
 }: {
   tracks: MentoredTrackProgressList
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/mentoring-section'
   )

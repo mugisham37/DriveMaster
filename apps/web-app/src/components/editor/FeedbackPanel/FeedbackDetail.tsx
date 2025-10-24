@@ -9,7 +9,7 @@ export function FeedbackDetail({
   summary: string
   children: React.ReactNode
   open?: boolean
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <details open={open} className="c-details feedback">
       <summary className="--summary select-none text-textColor1">

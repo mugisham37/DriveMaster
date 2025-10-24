@@ -2,7 +2,15 @@
 // i18n-namespace: components/editor/FeedbackPanel
 import React from 'react'
 import { useRequestQuery } from '@/hooks/request-query'
-import { DiscussionPostProps } from '@/components/mentoring/discussion/DiscussionPost'
+// Define DiscussionPostProps locally since the import is not available
+type DiscussionPostProps = {
+  uuid: string
+  iterationIdx: number
+  authorHandle: string
+  authorAvatarUrl: string
+  contentHtml: string
+  updatedAt: string
+}
 import { FeedbackPanelProps } from '../FeedbackPanel'
 import { FeedbackDetail } from '../FeedbackDetail'
 import { PendingMentoringRequest, ReadonlyDiscussionPostView } from '.'
@@ -14,21 +22,21 @@ export function MentoringDiscussion({
   requestedMentoring,
   mentoringRequestLink,
   open,
-}: Pick<
-  FeedbackPanelProps,
-  'discussion' | 'requestedMentoring' | 'mentoringRequestLink'
-> & {
+}: {
+  discussion?: FeedbackPanelProps['discussion']
+  requestedMentoring: FeedbackPanelProps['requestedMentoring']
+  mentoringRequestLink: FeedbackPanelProps['mentoringRequestLink']
   open?: boolean
-}): JSX.Element | null {
+}): React.JSX.Element | null {
   const { t } = useAppTranslation('components/editor/FeedbackPanel')
 
   const { data, status } = useRequestQuery<{ items: DiscussionPostProps[] }>(
     [`posts-discussion-${discussion?.uuid}`],
-    { endpoint: discussion?.links.posts, options: { enabled: !!discussion } }
+    { endpoint: discussion?.links.posts || '', options: { enabled: !!discussion } }
   )
   if (discussion) {
     return (
-      <FeedbackDetail open={open} summary={t('feedbackPanel.codeReview')}>
+      <FeedbackDetail open={open ?? false} summary={t('feedbackPanel.codeReview')}>
         {status === 'pending' ? (
           <div>
             {t(
@@ -58,7 +66,7 @@ export function MentoringDiscussion({
                   prevIterationIdx={
                     index === 0
                       ? 0
-                      : data.items[index >= 1 ? index - 1 : 0].iterationIdx
+                      : data?.items?.[index >= 1 ? index - 1 : 0]?.iterationIdx ?? 0
                   }
                   post={post}
                 />
@@ -71,7 +79,7 @@ export function MentoringDiscussion({
   } else if (requestedMentoring) {
     return (
       <FeedbackDetail
-        open={open}
+        open={open ?? false}
         summary={t('feedbackPanel.codeReviewPending')}
       >
         <PendingMentoringRequest mentoringRequestLink={mentoringRequestLink} />

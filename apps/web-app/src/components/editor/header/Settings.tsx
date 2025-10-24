@@ -1,8 +1,8 @@
 import React, { useCallback, useState, useEffect, useContext } from 'react'
 import { Icon } from '../../common/Icon'
 import { Keybindings, Themes, EditorSettings } from '../types'
-import { useDropdown } from '../../dropdowns/useDropdown'
-import { FeaturesContext } from '../../Editor'
+import { useDropdown } from '@/hooks'
+import { FeaturesContext } from '../../editor'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 const THEMES = [
@@ -38,7 +38,7 @@ const Setting = React.forwardRef<
   React.HTMLProps<HTMLLIElement> & SettingProp
 >(({ title, options, value, set, ...props }, ref) => {
   const handleKeyDown = useCallback(
-    (e) => {
+    (e: React.KeyboardEvent<HTMLLIElement>) => {
       const index = options.findIndex((option) => option.value === value)
 
       switch (e.key) {
@@ -46,7 +46,7 @@ const Setting = React.forwardRef<
           e.preventDefault()
           const nextIndex = (index + options.length + 1) % options.length
 
-          set(options[nextIndex].value)
+          set(options[nextIndex]?.value || value)
 
           break
         }
@@ -54,7 +54,7 @@ const Setting = React.forwardRef<
           e.preventDefault()
           const nextIndex = (index + options.length - 1) % options.length
 
-          set(options[nextIndex].value)
+          set(options[nextIndex]?.value || value)
 
           break
         }
@@ -95,33 +95,35 @@ const Setting = React.forwardRef<
   )
 })
 
+Setting.displayName = 'Setting'
+
 export function Settings({
   settings,
   setSettings,
 }: {
   settings: EditorSettings
   setSettings: (settings: EditorSettings) => void
-}): JSX.Element {
+}): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/header')
   const features = useContext(FeaturesContext)
   const [localKeybindings, setLocalKeybindings] = useState(settings.keybindings)
   const handleThemeChange = useCallback(
-    (theme) => {
-      setSettings({ ...settings, theme: theme })
+    (theme: string) => {
+      setSettings({ ...settings, theme: theme as Themes })
     },
     [setSettings, settings]
   )
 
   const handleWrapChange = useCallback(
-    (wrap) => {
-      setSettings({ ...settings, wrap: wrap })
+    (wrap: string) => {
+      setSettings({ ...settings, wrap: wrap as 'on' | 'off' })
     },
     [setSettings, settings]
   )
 
   const handleTabBehaviorChange = useCallback(
-    (tabBehavior) => {
-      setSettings({ ...settings, tabBehavior: tabBehavior })
+    (tabBehavior: string) => {
+      setSettings({ ...settings, tabBehavior: tabBehavior as 'captured' | 'default' })
     },
     [setSettings, settings]
   )
@@ -179,17 +181,7 @@ export function Settings({
     listAttributes,
     itemAttributes,
     open,
-  } = useDropdown(optionsToShow.length, undefined, {
-    placement: 'bottom-end',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [-8, 8],
-        },
-      },
-    ],
-  })
+  } = useDropdown(optionsToShow.length)
 
   useEffect(() => {
     if (open) {

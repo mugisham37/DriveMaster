@@ -58,7 +58,8 @@ export function useChatGptFeedback({
   const [exceededLimit, setExceededLimit] = useState(false)
   const [chatGptUsage, setChatGptUsage] = useState(chatgptUsage)
 
-  const onError = useCallback((err: any) => {
+  const onError = useCallback((error: Error) => {
+    const err = error as Error & { status?: number }
     if (err.status === 402) {
       setExceededLimit(true)
     }
@@ -86,9 +87,10 @@ export function useChatGptFeedback({
     if (!submission) return
     const solutionChannel = new AIHelpRecordsChannel(
       submission?.uuid,
-      (response: AIHelpRecordsChannelResponse) => {
-        setHelpRecord(camelizeKeysAs<HelpRecord>(response.help_record))
-        setChatGptUsage(response.usage)
+      (response: unknown) => {
+        const typedResponse = response as AIHelpRecordsChannelResponse
+        setHelpRecord(camelizeKeysAs<HelpRecord>(typedResponse.help_record))
+        setChatGptUsage(typedResponse.usage)
         setStatus('received')
       }
     )

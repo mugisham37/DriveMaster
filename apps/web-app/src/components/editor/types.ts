@@ -1,8 +1,7 @@
 import { SubmissionTestsStatus, File as BaseFile, TestFile as BaseTestFile } from '../../types'
 
 // Re-export types that are used throughout the editor
-export type { SubmissionTestsStatus } from '../../types'
-export type { File, TestFile } from '../../types'
+export type { SubmissionTestsStatus, File, TestFile } from '../../types'
 
 export type EditorFile = BaseFile
 export type EditorTestFile = BaseTestFile
@@ -15,10 +14,10 @@ export type Submission = {
 }
 
 export type TestContentContextType = {
-  testTab: TestFile
-  setTestTab: React.Dispatch<React.SetStateAction<TestFile>>
+  testTab: BaseTestFile
+  setTestTab: React.Dispatch<React.SetStateAction<BaseTestFile>>
   tabContext: React.Context<TabContext>
-  testFiles: readonly TestFile[]
+  testFiles: readonly BaseTestFile[]
   testTabGroupCss: string
 }
 

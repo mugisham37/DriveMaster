@@ -1,6 +1,6 @@
 import { sendRequest } from '../../utils/send-request'
 import { Submission } from './types'
-import { File } from '../types'
+import { File } from '../../types'
 import { useMutation } from '@tanstack/react-query'
 import { typecheck } from '../../utils/typecheck'
 
@@ -17,7 +17,6 @@ export const useFileRevert = () => {
 
       const { fetch } = sendRequest({
         endpoint: submission.links.lastIterationFiles,
-        body: null,
         method: 'GET',
       })
 
@@ -37,7 +36,6 @@ export const useFileRevert = () => {
 
       const { fetch } = sendRequest({
         endpoint: submission.links.initialFiles,
-        body: null,
         method: 'GET',
       })
 

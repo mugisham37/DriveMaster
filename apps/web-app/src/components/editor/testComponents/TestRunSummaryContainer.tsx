@@ -23,26 +23,25 @@ export const TestRunSummaryContainer = ({
   onSubmit: () => void
   isSubmitDisabled: boolean
   cancelLink: string
-}): JSX.Element | null => {
+}): React.JSX.Element | null => {
   const { data } = useRequestQuery<{ testRun: TestRun }>(
     [`test-run-${testRun.submissionUuid}`],
     {
       endpoint: testRun.links.self,
       options: {
         enabled: testRun.submissionUuid !== 'faux-submission',
-        refetchInterval:
-          testRun.status === TestRunStatus.QUEUED ? REFETCH_INTERVAL : false,
+        staleTime: testRun.status === TestRunStatus.QUEUED ? REFETCH_INTERVAL : Infinity,
       },
     }
   )
   const setTestRun = useCallback(
-    (testRun) => {
+    (testRun: TestRun) => {
       onUpdate(testRun)
     },
     [onUpdate]
   )
-  const channel = useRef<TestRunChannel | undefined>()
-  const timer = useRef<number | undefined>()
+  const channel = useRef<TestRunChannel | undefined>(undefined)
+  const timer = useRef<number | undefined>(undefined)
   const handleQueued = useCallback(() => {
     clearTimeout(timer.current)
 
@@ -50,13 +49,13 @@ export const TestRunSummaryContainer = ({
       setTestRun({ ...testRun, status: TestRunStatus.TIMEOUT })
       timer.current = undefined
     }, timeout)
-  }, [setTestRun, JSON.stringify(testRun), timeout])
+  }, [setTestRun, testRun, timeout])
 
   const cancel = useCallback(() => {
     setTestRun({ ...testRun, status: TestRunStatus.CANCELLED })
 
     fetchJSON(cancelLink, { method: 'PATCH' })
-  }, [cancelLink, setTestRun, JSON.stringify(testRun)])
+  }, [cancelLink, setTestRun, testRun])
 
   useEffect(() => {
     if (!data || !data.testRun) {
@@ -64,7 +63,7 @@ export const TestRunSummaryContainer = ({
     }
 
     setTestRun(data.testRun)
-  }, [JSON.stringify(data), setTestRun])
+  }, [data, setTestRun])
 
   useEffect(() => {
     switch (testRun.status) {
@@ -90,7 +89,7 @@ export const TestRunSummaryContainer = ({
     })
 
     return () => channel.current?.disconnect()
-  }, [setTestRun, JSON.stringify(testRun)])
+  }, [setTestRun, testRun])
 
   useEffect(() => {
     return () => {

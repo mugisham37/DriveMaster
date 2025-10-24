@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tab } from '@/components/common'
-import { TabsContext } from '../../Editor'
+import { TabsContext } from '../../editor'
 import { Iteration, MentorDiscussion, Exercise, Track } from '../../types'
 import { AutomatedFeedback } from './FeedbackPanelAutomatedFeedback'
 import { MentoringDiscussion } from './FeedbackPanelMentoringDiscussion/FeedbackPanelMentoringDiscussion'
@@ -25,7 +25,7 @@ export const FeedbackPanel = ({
   mentoringRequestLink,
   requestedMentoring,
   discussion,
-}: FeedbackPanelProps): JSX.Element => {
+}: FeedbackPanelProps): React.JSX.Element => {
   const AutomatedFeedbackProps = { iteration, track, automatedFeedbackInfoLink }
   const MentoringDiscussionProps = {
     mentoringRequestLink,

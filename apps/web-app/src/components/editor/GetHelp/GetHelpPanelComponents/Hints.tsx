@@ -12,7 +12,7 @@ export const Hints = ({
   hints: string[] | undefined
   expanded: boolean
   collapsable: boolean
-}): JSX.Element | null => {
+}): React.JSX.Element | null => {
   if (hints === undefined || hints.length === 0) {
     return null
   }

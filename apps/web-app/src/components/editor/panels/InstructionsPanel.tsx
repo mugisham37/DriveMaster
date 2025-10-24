@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Tab } from '../../common/Tab'
-import { TabsContext, TasksContext } from '../../Editor'
+import { TabsContext, TasksContext } from '../../editor'
 import { Assignment, AssignmentTask } from '../types'
 import { TaskHintsModal } from '../../modals/TaskHintsModal'
 import { GraphicalIcon, Icon } from '../../common'
@@ -19,8 +19,7 @@ export const InstructionsPanel = ({
   assignment: Assignment
   debuggingInstructions?: string
   tutorial?: boolean
-}): JSX.Element => {
-  const { t } = useAppTranslation('components/editor/panels')
+}): React.JSX.Element => {
   const ref = useHighlighting<HTMLDivElement>()
 
   return (
@@ -30,7 +29,7 @@ export const InstructionsPanel = ({
           {tutorial && <HelloWorldVideo />}
           <Introduction introduction={introduction} />
           <Instructions assignment={assignment} />
-          <Debug debuggingInstructions={debuggingInstructions} />
+          {debuggingInstructions && <Debug debuggingInstructions={debuggingInstructions} />}
         </div>
       </section>
     </Tab.Panel>
@@ -145,7 +144,7 @@ const Task = ({ task, idx }: { task: AssignmentTask; idx: number }) => {
 const Debug = ({
   debuggingInstructions,
 }: {
-  debuggingInstructions?: string
+  debuggingInstructions: string
 }) => {
   const { t } = useAppTranslation('components/editor/panels')
 

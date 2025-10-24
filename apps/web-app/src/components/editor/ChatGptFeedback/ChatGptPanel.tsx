@@ -1,5 +1,5 @@
 import React from 'react'
-import { TabsContext } from '@/components/Editor'
+import { TabsContext } from '@/components/editor'
 import { Tab } from '@/components/common'
 
 export type GetHelpPanelProps = {

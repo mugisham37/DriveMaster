@@ -7,7 +7,7 @@ import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 export function ReadonlyIterationMarker({
   idx,
-}: Pick<Iteration, 'idx'>): JSX.Element {
+}: Pick<Iteration, 'idx'>): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/FeedbackPanel')
 
   return (

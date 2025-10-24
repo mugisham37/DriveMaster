@@ -16,7 +16,6 @@ export const useIteration = (): {
       const { fetch } = sendRequest({
         endpoint: submission.links.submit,
         method: 'POST',
-        body: null,
       })
 
       return fetch.then((json) => typecheck<Iteration>(json, 'iteration'))

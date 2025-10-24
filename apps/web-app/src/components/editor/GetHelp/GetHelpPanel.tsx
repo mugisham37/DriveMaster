@@ -1,5 +1,5 @@
 import React from 'react'
-import { TabsContext } from '@/components/Editor'
+import { TabsContext } from '@/components/editor'
 import { Tab } from '@/components/common'
 import * as Component from './GetHelpPanelComponents'
 import type { Assignment } from '../types'
@@ -17,7 +17,7 @@ export function GetHelpPanel({
   assignment,
   links,
   track,
-}: GetHelpPanelProps): JSX.Element {
+}: GetHelpPanelProps): React.JSX.Element {
   return (
     <Tab.Panel id="get-help" context={TabsContext}>
       <div className="pb-12 flex flex-col">

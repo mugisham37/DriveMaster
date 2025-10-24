@@ -7,7 +7,7 @@ export function TestsPanel({
 }: {
   context: React.Context<TabContext>
   children: React.ReactNode
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <Tab.Panel id="tests" className="overflow-auto" context={context}>
       {children}

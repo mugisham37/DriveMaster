@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { sendRequest } from '../../utils/send-request'
 import { Submission, TestRunStatus, TestRun } from './types'
-import { File, SubmissionTestsStatus } from '../types'
+import { File, SubmissionTestsStatus } from '../../types'
 import { useMutation } from '@tanstack/react-query'
 import { typecheck } from '../../utils/typecheck'
 
@@ -11,7 +11,7 @@ type Links = {
 
 type CreateSubmissionParams = {
   files: File[]
-  testResults: Object | null
+  testResults: object | null
 }
 
 export const useSubmissionsList = (
@@ -140,7 +140,7 @@ export const useSubmissionsList = (
   const current = list[list.length - 1] || null
 
   useEffect(() => {
-    if (defaultList.length === 0) {
+    if (defaultList.length === 0 || !current) {
       return
     }
 
@@ -150,16 +150,20 @@ export const useSubmissionsList = (
 
     const { fetch } = sendRequest({
       endpoint: current.links.testRun,
-      body: null,
       method: 'GET',
     })
 
     fetch.then((json) => {
       const testRun = typecheck<TestRun>(json, 'testRun')
 
-      set(current.uuid, { ...current, testRun: testRun })
+      set(current.uuid, { 
+        testsStatus: current.testsStatus,
+        uuid: current.uuid,
+        links: current.links,
+        testRun: testRun 
+      })
     })
-  }, [set])
+  }, [current, defaultList.length, set])
 
   return { current, create, set, remove }
 }

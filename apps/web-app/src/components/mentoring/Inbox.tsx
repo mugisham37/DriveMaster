@@ -6,7 +6,7 @@ import { Sorter } from './Sorter'
 import { TrackFilter } from './inbox/TrackFilter'
 import {
   usePaginatedRequestQuery,
-  type Request as BaseRequest,
+  type Request as RequestQueryType,
 } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
@@ -20,7 +20,7 @@ export type SortOption = {
 }
 
 export type APIResponse = {
-  results: readonly Discussion[]
+  results: Discussion[]
   meta: {
     currentPage: number
     totalPages: number
@@ -38,7 +38,9 @@ export type RequestQuery = {
   trackSlug?: string | undefined
 }
 
-export type Request = BaseRequest<RequestQuery>
+export type MentoringRequest = RequestQueryType & {
+  query?: RequestQuery
+}
 
 type Links = {
   queue: string
@@ -50,8 +52,8 @@ export default function Inbox({
   discussionsRequest,
   links,
 }: {
-  tracksRequest: Request
-  discussionsRequest: Request
+  tracksRequest: MentoringRequest
+  discussionsRequest: MentoringRequest
   sortOptions: readonly SortOption[]
   links: Links
 }): React.JSX.Element {
@@ -72,9 +74,10 @@ export default function Inbox({
   } = usePaginatedRequestQuery<APIResponse>(
     ['mentor-discussion-list', request.endpoint, JSON.stringify(request.query)],
     {
-      ...request,
-      query: request.query || {}
-    } as BaseRequest<APIResponse>
+      endpoint: request.endpoint,
+      query: request.query || {},
+      ...(request.options && { options: request.options })
+    }
   )
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export default function Inbox({
   useHistory({ pushOn: removeEmpty(request.query || {}) })
 
   const setTrack = (trackSlug: string | null) => {
-    const query: Request['query'] = {
+    const query: MentoringRequest['query'] = {
       ...(request.query || {}),
       trackSlug: trackSlug || undefined,
       page: undefined,
@@ -101,7 +104,7 @@ export default function Inbox({
   }
 
   const setStatus = (status: DiscussionStatus) => {
-    const query: Request['query'] = {
+    const query: MentoringRequest['query'] = {
       ...(request.query || {}),
       status,
       page: undefined
@@ -149,7 +152,7 @@ export default function Inbox({
         <header className="c-search-bar inbox-header">
           <TrackFilter
             request={{
-              ...tracksRequest,
+              endpoint: tracksRequest.endpoint,
               query: { status: (request.query?.status as DiscussionStatus) || 'awaiting_mentor' },
             }}
             value={(request.query?.trackSlug as string) || null}
@@ -170,7 +173,7 @@ export default function Inbox({
         </header>
         <ResultsZone isFetching={isFetching}>
           <DiscussionList
-            resolvedData={resolvedData}
+            resolvedData={resolvedData || null}
             status={status === 'pending' ? 'loading' : status}
             refetch={refetch}
             setPage={setPage}

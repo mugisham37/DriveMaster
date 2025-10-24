@@ -2,7 +2,7 @@ import React, { createContext } from 'react'
 import { TabContext } from '../common/Tab'
 
 // Tab index type for editor tabs
-export type TabIndex = 'instructions' | 'tests' | 'results' | 'feedback' | 'get-help'
+export type TabIndex = 'instructions' | 'tests' | 'results' | 'feedback' | 'get-help' | 'chat-gpt'
 
 // Context for managing tabs in the editor
 export const TabsContext = createContext<TabContext>({

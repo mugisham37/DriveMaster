@@ -2,7 +2,7 @@ import React from 'react'
 import { TestRunSummaryContainer } from '../testComponents/TestRunSummaryContainer'
 import { Submission, TestRun, TestRunner } from '../types'
 import { GraphicalIcon, Tab } from '../../common'
-import { TabsContext } from '../../Editor'
+import { TabsContext } from '../../editor'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 import { Trans } from 'react-i18next'
 
@@ -24,7 +24,7 @@ export const ResultsPanel = ({
   isSubmitDisabled: boolean
   testRunner: TestRunner
   hasCancelled: boolean
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/editor/panels')
   return (
     <Tab.Panel id="results" context={TabsContext}>

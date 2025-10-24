@@ -9,7 +9,7 @@ import { useAppTranslation } from '@/i18n/useAppTranslation'
 export function GetHelpPanelTrackHelp({
   helpHtml,
   track,
-}: Pick<GetHelpPanelProps, 'helpHtml' | 'track'>): JSX.Element {
+}: Pick<GetHelpPanelProps, 'helpHtml' | 'track'>): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/GetHelp')
   return (
     <GetHelpAccordionSkeleton

@@ -15,7 +15,7 @@ export const LearningStats = ({
 }: {
   tracks: TrackProgressList
   links: Links
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     'components/journey/overview/learning-section'
   )

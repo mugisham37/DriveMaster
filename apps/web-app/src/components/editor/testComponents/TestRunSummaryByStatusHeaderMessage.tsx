@@ -7,7 +7,7 @@ export const TestRunSummaryByStatusHeaderMessage = ({
 }: {
   version: number
   numFailedTests: number
-}): JSX.Element => {
+}): React.JSX.Element => {
   return version === 2 || version === 3 ? (
     <span>
       {numFailedTests} test {pluralize('failure', numFailedTests)}

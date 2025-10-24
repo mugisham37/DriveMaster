@@ -38,7 +38,7 @@ export function TestContentWrapper({
   TestContentContextType,
   "testTabGroupCss" | "tabContext" | "testFiles"
 >): React.JSX.Element {
-  const [testTab, setTestTab] = useState<TestFile>(testFiles[0]);
+  const [testTab, setTestTab] = useState<TestFile>(testFiles[0] || { filename: '', content: '' });
 
   return (
     <TestContentContext.Provider

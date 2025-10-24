@@ -13,7 +13,7 @@ export function RequestMentoring({
 }: Pick<
   FeedbackPanelProps,
   'exercise' | 'track' | 'mentorDiscussionsLink'
->): JSX.Element {
+>): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/FeedbackPanel')
 
   return (

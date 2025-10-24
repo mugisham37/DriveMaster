@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tab } from '../../common/Tab'
-import { TabsContext } from '../../Editor'
+import { TabsContext } from '../../editor'
 import { GraphicalIcon } from '../../common/GraphicalIcon'
 
 export const ChatGptTab = () => {

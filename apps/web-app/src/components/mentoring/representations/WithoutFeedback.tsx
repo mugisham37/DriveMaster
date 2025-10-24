@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { usePaginatedRequestQuery, type Request as BaseRequest } from '@/hooks/request-query'
+import { usePaginatedRequestQuery, type Request as RequestQueryType } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'
 import { useList } from '@/hooks/use-list'
 import { ResultsZone } from '../../common/ResultsZone'
@@ -27,13 +27,15 @@ export type APIResponse = {
   }
 }
 
-export type Request = BaseRequest<{
-  onlyMentoredSolutions?: boolean
-  criteria?: string
-  trackSlug?: string
-  order?: string
-  page?: number
-}>
+export type WithoutFeedbackRequest = RequestQueryType & {
+  query?: {
+    onlyMentoredSolutions?: boolean
+    criteria?: string
+    trackSlug?: string
+    order?: string
+    page?: number
+  }
+}
 
 type Links = {
   withFeedback: string
@@ -42,7 +44,7 @@ type Links = {
 }
 
 type Props = {
-  representationsRequest: Request
+  representationsRequest: WithoutFeedbackRequest
   tracks: readonly Track[]
   counts: Record<string, number>
   links: Links
@@ -78,7 +80,11 @@ export function WithoutFeedback({
     refetch,
   } = usePaginatedRequestQuery<APIResponse>(
     ['without-feedback-representations', request.endpoint, JSON.stringify(request.query)],
-    request
+    {
+      endpoint: request.endpoint,
+      query: request.query || {},
+      ...(request.options && { options: request.options })
+    }
   )
 
   useEffect(() => {
@@ -146,7 +152,7 @@ export function WithoutFeedback({
       <div className="container">
         <header className="c-search-bar">
           <select
-            value={request.query?.trackSlug || ''}
+            value={(request.query?.trackSlug as string) || ''}
             onChange={(e) => setTrack(e.target.value || null)}
             className="track-selector"
           >
@@ -177,7 +183,7 @@ export function WithoutFeedback({
           </label>
 
           <select
-            value={request.query?.order || ''}
+            value={(request.query?.order as string) || ''}
             onChange={(e) => setOrder(e.target.value)}
             className="sort-selector"
           >

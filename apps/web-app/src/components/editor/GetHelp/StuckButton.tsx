@@ -2,7 +2,7 @@
 // i18n-namespace: components/editor/GetHelp
 import React from 'react'
 import { GraphicalIcon } from '@/components/common'
-import { TabIndex } from '@/components/Editor'
+import { TabIndex } from '@/components/editor'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
 type StuckButtonProps = {
@@ -15,7 +15,7 @@ export function StuckButton({
   insider,
   setTab,
   tab,
-}: StuckButtonProps): JSX.Element {
+}: StuckButtonProps): React.JSX.Element {
   const { t } = useAppTranslation('components/editor/GetHelp')
   return (
     <button

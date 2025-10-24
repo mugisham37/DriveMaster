@@ -97,7 +97,7 @@ export function ContributionsList({
             placeholder={t("contributionsList.searchByContributionName")}
           />
           <CategorySelect
-            value={request.query?.category}
+            value={request.query?.category as "mentoring" | "other" | "authoring" | "publishing" | "building" | "maintaining" | undefined}
             setValue={setCategory}
           />
         </div>
