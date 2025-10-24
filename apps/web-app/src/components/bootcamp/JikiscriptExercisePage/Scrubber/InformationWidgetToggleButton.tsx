@@ -35,16 +35,26 @@ export function InformationWidgetToggleButton({
 
     //  if there is only one frame..
     if (inspectedTestResult.frames.length === 1) {
+      const firstFrame = inspectedTestResult.frames[0]
+      if (!firstFrame) return
+      
       // ...and we are about to show information widget
       if (!shouldShowInformationWidget) {
         // highlight relevant line
-        setHighlightedLine(inspectedTestResult.frames[0].line)
+        setHighlightedLine(firstFrame.line)
       } else {
         // if toggling's next step is off, remove highlight
         setHighlightedLine(0)
       }
     }
-  }, [shouldShowInformationWidget, inspectedTestResult, highlightedLine])
+  }, [
+    shouldShowInformationWidget, 
+    inspectedTestResult, 
+    highlightedLine, 
+    toggleShouldShowInformationWidget, 
+    editorView, 
+    setHighlightedLine
+  ])
   return (
     <label data-ci="information-widget-toggle" className="switch">
       <input

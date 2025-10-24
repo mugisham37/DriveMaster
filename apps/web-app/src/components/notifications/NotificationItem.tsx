@@ -47,7 +47,7 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
       case 'avatar':
         return <Avatar src={notification.imageUrl} {...commonProps} />
       case 'exercise':
-        return <img src={notification.imageUrl} {...commonProps} />
+        return <img src={notification.imageUrl} {...commonProps} alt="Exercise" />
       case 'track':
         return <TrackIcon iconUrl={notification.imageUrl} title="Track" {...commonProps} />
       case 'icon':

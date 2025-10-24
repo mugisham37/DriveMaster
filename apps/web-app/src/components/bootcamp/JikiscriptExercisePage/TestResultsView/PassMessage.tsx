@@ -15,7 +15,7 @@ export function PassMessage({ testIdx }: { testIdx: number }) {
       <GraphicalIcon icon="bootcamp-completed-check-circle" />
       <div>
         <strong>You did it.</strong>{' '}
-        {congratsMessages[stringToHash(title, testIdx)]}
+        {congratsMessages[stringToHash(title || 'Exercise', testIdx)]}
       </div>
     </div>
   )

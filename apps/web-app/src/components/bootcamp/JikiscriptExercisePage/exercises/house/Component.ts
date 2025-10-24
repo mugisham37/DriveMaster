@@ -1,6 +1,6 @@
-import { ExecutionContext } from '@/interpreter/executor'
+import { ExecutionContext } from '@/lib/interpreter/executor'
 import HouseExercise from './HouseExercise'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export function storeShape(exercise: HouseExercise, instance: Jiki.Instance) {
   ;(function (this: HouseExercise) {

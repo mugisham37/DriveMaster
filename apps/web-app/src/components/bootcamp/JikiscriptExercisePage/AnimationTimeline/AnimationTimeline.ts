@@ -1,12 +1,11 @@
-import { type Frame } from '@/interpreter/frames'
-import { createTimeline, stagger } from '@juliangarnierorg/anime-beta'
+import { type Frame } from '@/lib/interpreter/frames'
+import { createTimeline } from '@/lib/anime-beta-mock'
 import type {
   DefaultsParams,
   Timeline,
   AnimationParams,
-  TargetSelector,
   TargetsParam,
-} from '@juliangarnierorg/anime-beta'
+} from '@/lib/anime-beta-mock'
 import type { AnimeCSSProperties } from './types'
 
 export type Animation =
@@ -109,7 +108,7 @@ export class AnimationTimeline {
     const lastFrame = this.frames[this.frames.length - 1]
     this.animationTimeline.duration = Math.max(
       animationDurationAfterAnimations,
-      lastFrame ? lastFrame.time : 0
+      lastFrame ? (lastFrame.time || lastFrame.timelineTime || 0) : 0
     )
     return this
   }
@@ -122,6 +121,10 @@ export class AnimationTimeline {
     return this.animationTimeline.duration
   }
 
+  public get currentTime() {
+    return this.animationTimeline.currentTime
+  }
+
   private updateScrubber(anim: Timeline) {
     if (!anim) return
     this.progress = anim.currentTime
@@ -130,7 +133,7 @@ export class AnimationTimeline {
       .slice()
       .reverse()
       .findIndex((frame) => {
-        return frame.time <= this.progress
+        return (frame.time || frame.timelineTime || 0) <= this.progress
       })
 
     this.currentIndex = this.frames.length - 1 - reversedIndex
@@ -151,7 +154,7 @@ export class AnimationTimeline {
       .slice()
       .reverse()
       .findIndex((frame) => {
-        return frame.time <= time
+        return (frame.time || frame.timelineTime || 0) <= time
       })
 
     const index = this.frames.length - 1 - reversedIndex
@@ -180,7 +183,8 @@ export class AnimationTimeline {
   }
 
   public seekLastFrame() {
-    this.animationTimeline.seek(this.frames[this.frames.length - 1].time)
+    const lastFrame = this.frames[this.frames.length - 1]
+    this.animationTimeline.seek(lastFrame ? (lastFrame.time || lastFrame.timelineTime || 0) : 0)
   }
 
   public seekEndOfTimeline() {

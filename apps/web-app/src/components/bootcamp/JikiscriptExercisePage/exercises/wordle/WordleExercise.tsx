@@ -1,11 +1,10 @@
 import React from 'react'
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import * as Jiki from '@/interpreter/jikiObjects'
-import { InterpretResult } from '@/interpreter/interpreter'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
 import { AnimeCSSProperties } from '../../AnimationTimeline/types'
 import { buildWordleGame } from './WordleGame'
-import { utils } from '@juliangarnierorg/anime-beta'
 
 type state = 'absent' | 'present' | 'correct' | 'correct'
 
@@ -427,4 +426,8 @@ export default class WordleExercise extends Exercise {
       description: 'returns the target word',
     },
   ]
+
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 }

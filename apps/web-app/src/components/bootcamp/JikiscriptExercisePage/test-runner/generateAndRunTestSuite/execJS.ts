@@ -80,16 +80,19 @@ export async function execJS(
     }
     return successResult
   } catch (error: unknown) {
-    let lineNumber: string
-    let colNumber: string
+    let lineNumber: string | undefined
+    let colNumber: string | undefined
 
     const errorObj = error as { name?: string; stack?: string; message?: string }
     if (errorObj.name === 'JikiLogicError') {
-      ;[, lineNumber, colNumber] = extractLineColFromJikiLogicError(errorObj)
+      const extracted = extractLineColFromJikiLogicError(errorObj)
+      lineNumber = extracted[1]
+      colNumber = extracted[2]
     } else {
       // Extract line, and column from the error message string
-      ;[, lineNumber, colNumber] =
-        errorObj.stack?.match(/:(\d+):(\d+)\)?\s*$/m) || ['', '0', '0']
+      const match = errorObj.stack?.match(/:(\d+):(\d+)\)?\s*$/m)
+      lineNumber = match?.[1]
+      colNumber = match?.[2]
     }
     let errorMessage = errorObj.message || 'Unknown error'
     if (errorMessage.includes('does not provide an export')) {

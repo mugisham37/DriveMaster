@@ -1,7 +1,7 @@
 import React from 'react'
 import { Exercise } from '../Exercise'
-import { ExecutionContext } from '@/interpreter/executor'
-import * as Jiki from '@/interpreter/jikiObjects'
+import { ExecutionContext } from '@/lib/interpreter/executor'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export default class DigitalClockExercise extends Exercise {
   private displayedTime?: String
@@ -121,4 +121,8 @@ export default class DigitalClockExercise extends Exercise {
       description: 'Writes the hour, minute and am/pm onto the digital display',
     },
   ]
+
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 }

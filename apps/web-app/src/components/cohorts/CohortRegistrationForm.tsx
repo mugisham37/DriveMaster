@@ -94,17 +94,17 @@ export function CohortRegistrationForm({ cohort, membership }: CohortRegistratio
             </>
           ) : membership?.enrolled ? (
             <>
-              <h3 className="text-h1 text-center mb-16">You're all set!</h3>
+              <h3 className="text-h1 text-center mb-16">You&apos;re all set!</h3>
               <p className="text-p-xlarge mb-16 text-center mx-auto max-w-[800px]">
-                You're successfully registered for {cohort.name}. We'll send you updates and information as the cohort begins.
+                You&apos;re successfully registered for {cohort.name}. We&apos;ll send you updates and information as the cohort begins.
               </p>
             </>
           ) : membership?.positionOnWaitingList ? (
             <>
-              <h3 className="text-h1 text-center mb-16">You're on the waiting list</h3>
+              <h3 className="text-h1 text-center mb-16">You&apos;re on the waiting list</h3>
               <p className="text-p-xlarge mb-16 text-center mx-auto max-w-[800px]">
-                You're currently #{membership.positionOnWaitingList} on the waiting list for {cohort.name}. 
-                We'll let you know if a spot opens up!
+                You&apos;re currently #{membership.positionOnWaitingList} on the waiting list for {cohort.name}. 
+                We&apos;ll let you know if a spot opens up!
               </p>
             </>
           ) : (
@@ -165,7 +165,7 @@ export function CohortRegistrationForm({ cohort, membership }: CohortRegistratio
 
                 {status === 'success' && (
                   <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded text-green-800">
-                    Successfully registered! We'll be in touch with more details soon.
+                    Successfully registered! We&apos;ll be in touch with more details soon.
                   </div>
                 )}
               </form>

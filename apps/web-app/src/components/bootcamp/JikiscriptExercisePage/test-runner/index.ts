@@ -30,13 +30,19 @@ function createTestCallback(tests: NewTestResult[]) {
     testCallback: TestCallback
   ): Promise<void> {
     const result = testCallback()
-    tests.push({
+    const newTest: NewTestResult = {
       // we need testIndex, so we can retrieve quickly the test that we are currently inspecting/working on
       testIndex: tests.length,
       name: testName,
-      descriptionHtml: descriptionHtml || undefined,
       status: result.expects.every((t) => t.pass) ? 'pass' : 'fail',
       ...result,
-    })
+    }
+    
+    // Only add descriptionHtml if it exists
+    if (descriptionHtml) {
+      newTest.descriptionHtml = descriptionHtml
+    }
+    
+    tests.push(newTest)
   }
 }

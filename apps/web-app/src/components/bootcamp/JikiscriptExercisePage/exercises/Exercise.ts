@@ -1,21 +1,21 @@
 import type { Animation } from '../AnimationTimeline/AnimationTimeline'
-import type { ExecutionContext, ExternalFunction } from '@/interpreter/executor'
-import { InterpretResult } from '@/interpreter/interpreter'
+import type { ExecutionContext, ExternalFunction } from '@/lib/interpreter/executor'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
 import checkers from '../test-runner/generateAndRunTestSuite/checkers'
 
 export abstract class Exercise {
   public showAnimationsOnInfiniteLoops: boolean
   public availableFunctions!: ExternalFunction[]
   public animations: Animation[] = []
-  public abstract getState(): any | null
+  public abstract getState(): Record<string, unknown> | null
   // allow dynamic method access
-  [key: string]: any
+  [key: string]: unknown
 
   protected view!: HTMLElement
   protected container!: HTMLElement
   public static hasView = true
 
-  public constructor(private slug?: String) {
+  public constructor(private slug?: string) {
     if (slug) {
       this.createView()
     }
@@ -29,19 +29,17 @@ export abstract class Exercise {
   public numFunctionCalls(
     result: InterpretResult,
     name: string,
-    args: any[] | null,
-    times?: number
+    args: unknown[] | null
   ): number {
-    return checkers.numFunctionCalls(result, name, args, times)
+    return checkers.numFunctionCalls(result, name, args)
   }
 
   public wasFunctionCalled(
     result: InterpretResult,
     name: string,
-    args: any[] | null,
-    times?: number
+    args: unknown[] | null
   ): boolean {
-    return checkers.wasFunctionCalled(result, name, args, times)
+    return checkers.wasFunctionCalled(result, name, args)
   }
 
   public numFunctionCallsInCode(
@@ -73,7 +71,7 @@ export abstract class Exercise {
   protected createView() {
     const cssClass = `exercise-${this.slug}`
     this.view = document.createElement('div')
-    this.view.id = `${cssClass}-${Math.random().toString(36).substr(2, 9)}`
+    this.view.id = `${cssClass}-${Math.random().toString(36).substring(2, 11)}`
     this.view.classList.add('exercise-container')
     this.view.classList.add(cssClass)
     this.view.style.display = 'none'

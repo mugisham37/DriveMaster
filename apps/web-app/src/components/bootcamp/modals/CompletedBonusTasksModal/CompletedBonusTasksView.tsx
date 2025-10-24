@@ -21,7 +21,7 @@ export function CompletedBonusTasksView() {
       </h2>
 
       <p className="text-18 leading-140 mb-20">
-        You've completed the bonus tasks! You can mark this exercise as
+        You&apos;ve completed the bonus tasks! You can mark this exercise as
         completed and move forward, or carry on tweaking your code.
       </p>
 
@@ -41,7 +41,7 @@ export function CompletedBonusTasksView() {
       </div>
       <p className="mt-12 text-15 leading-140 text-textColor6 text-balance">
         (If you tweak further, you can complete the exercise using the button at
-        the right when you're done)
+        the right when you&apos;re done)
       </p>
     </>
   )

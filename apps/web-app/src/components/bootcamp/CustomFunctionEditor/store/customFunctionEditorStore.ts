@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { v4 as uuid } from 'uuid'
-import { Frame } from '@/interpreter/frames'
+import { Frame } from '@/lib/interpreter/frames'
 import { EditorView } from 'codemirror'
 import { CustomFunction } from '../CustomFunctionEditor'
 import toast from 'react-hot-toast'

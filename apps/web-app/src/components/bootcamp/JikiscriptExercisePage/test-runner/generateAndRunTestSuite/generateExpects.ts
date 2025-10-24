@@ -1,16 +1,7 @@
 import { expect } from '../expect'
 import type { Exercise } from '../../exercises/Exercise'
-// Mock InterpretResult type
-interface InterpretResult {
-  meta: {
-    functionCallLog: Record<string, unknown[][]>
-    statements: unknown[]
-    sourceCode: string
-  }
-  output?: unknown
-}
+import type { InterpretResult, TaskTest, ExpectCheck, ExpectCheckFunction, ExpectCheckProperty } from '../../../types/JikiscriptTypes'
 import checkers from './checkers'
-import { generateCodeRunString } from '../../utils/generateCodeRunString'
 
 export function generateExpects(
   interpreterResult: InterpretResult,
@@ -55,7 +46,11 @@ export function generateExpects(
       }
 
       // And then we get the function from either exercise or checkers and call it.
-      const fn = exercise ? (exercise as any)[fnName]?.bind(exercise) : (checkers as any)[fnName]
+      const fn = exercise ? 
+        (typeof (exercise as Record<string, unknown>)[fnName] === 'function' ? 
+          ((exercise as Record<string, unknown>)[fnName] as (...args: unknown[]) => unknown).bind(exercise) : 
+          undefined) : 
+        (checkers as Record<string, unknown>)[fnName] as ((...args: unknown[]) => unknown) | undefined
 
       checkActual = fn?.call(exercise, interpreterResult, ...args)
       codeRun = functionCheck.codeRun ? functionCheck.codeRun : undefined
@@ -65,7 +60,7 @@ export function generateExpects(
     // we've retrieved above via getState() for the variable in question.
     else if ('property' in check) {
       const propertyCheck = check as ExpectCheckProperty
-      checkActual = (state as any)[propertyCheck.property]
+      checkActual = (state as Record<string, unknown>)[propertyCheck.property]
       codeRun = propertyCheck.codeRun ? propertyCheck.codeRun : undefined
     }
 

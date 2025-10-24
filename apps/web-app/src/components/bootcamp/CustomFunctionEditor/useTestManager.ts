@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import { v4 as uuid } from 'uuid'
 import { CustomFunction } from './CustomFunctionEditor'
 import { useLocalStorage } from '@uidotdev/usehooks'
-import { Frame } from '@/interpreter/frames'
+import { Frame } from '@/lib/interpreter/frames'
 
 export type CustomTests = { args: string; expected: string; uuid: string }[]
 

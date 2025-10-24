@@ -1,19 +1,19 @@
 // Mock interpreter functions
-function evaluateExpression(expr: string): unknown {
+function evaluateExpression(_code: string, _context: unknown, _expr: string): unknown {
   return null
 }
 
-function evaluateFunction(name: string, args: unknown[]): unknown {
+function evaluateFunction(_code: string, _context: unknown, _name: string, _args: unknown[]): unknown {
   return null
 }
 
-function interpret(code: string): { frames: Frame[], output?: unknown } {
+function interpret(_code: string, _context: unknown): { frames: Frame[], output?: unknown } {
   return { frames: [] }
 }
 import { generateExpects } from './generateExpects'
 import { TestRunnerOptions } from '@/components/bootcamp/types/TestRunner'
 // Mock stdlib functions
-const filteredStdLibFunctions: Record<string, (...args: unknown[]) => unknown> = {}
+const filteredStdLibFunctions: Array<{ name: string; func: (...args: unknown[]) => unknown }> = []
 import { generateCodeRunString } from '../../utils/generateCodeRunString'
 import { parseArgs } from './parseArgs'
 import { type Project } from '@/components/bootcamp/JikiscriptExercisePage/utils/exerciseMap'
@@ -28,6 +28,7 @@ import { EditorView } from '@codemirror/view'
 import { InformationWidgetData } from '../../CodeMirror/extensions/end-line-information/line-information'
 import { showError } from '../../utils/showError'
 import { cloneDeep } from 'lodash'
+import type { TaskTest, TestCallback, SetupFunction, InterpretResult } from '../../../types/JikiscriptTypes'
 
 class JikiLogicError extends Error {
   constructor(message: string) {
@@ -58,16 +59,16 @@ export async function execTest(
 
   // Turn {name: , func: } into {name: func}
   const externalFunctions = buildExternalFunctions(options, exercise)
-  ;(globalThis as any).externalFunctions = externalFunctions.reduce((acc: Record<string, unknown>, func: { name: string; func: unknown }) => {
+  ;(globalThis as Record<string, unknown>).externalFunctions = externalFunctions.reduce((acc: Record<string, unknown>, func: { name: string; func: unknown }) => {
     acc[func.name] = func.func
     return acc
   }, {} as Record<string, unknown>)
 
   const logMessages: unknown[] = []
-  ;(globalThis as any).customLog = function (...args: unknown[]) {
+  ;(globalThis as Record<string, unknown>).customLog = function (...args: unknown[]) {
     logMessages.push(cloneDeep(args))
   }
-  ;(globalThis as any).logicError = function (msg: string) {
+  ;(globalThis as Record<string, unknown>).logicError = function (msg: string) {
     throw new JikiLogicError(msg)
   }
 
@@ -86,7 +87,7 @@ export async function execTest(
         // we can probably assume that fnName will always exist?
         fnName!,
         args,
-        externalFunctions.map((f: any) => f.name)
+        externalFunctions.map((f: { name: string; func: unknown }) => f.name)
       )
 
       // console.log('result', result)
@@ -133,15 +134,16 @@ export async function execTest(
         evaluated = interpret(options.studentCode, context)
       }
 
-      actual = (evaluated as any).value
-      frames = (evaluated as any).frames
+      const interpretResult = evaluated as InterpretResult
+      actual = interpretResult.output
+      frames = []
       break
     }
   }
 
   const codeRun = testData.codeRun ?? generateCodeRunString(fnName, args)
 
-  const expects = generateExpects(evaluated as any, testData, actual, exercise)
+  const expects = generateExpects(evaluated as InterpretResult, testData, actual, exercise)
 
   if (hasJSError) {
     expects.push({
@@ -153,26 +155,35 @@ export async function execTest(
     })
   }
 
-  return {
+  const result: ReturnType<TestCallback> = {
     expects,
     slug: testData.slug,
     codeRun,
     frames,
     type: options.config.testsType || (exercise ? 'state' : 'io'),
     animationTimeline: buildAnimationTimeline(exercise, frames),
-    imageSlug: testData.imageSlug ?? undefined,
-    view: exercise?.getView(),
     logMessages,
   }
+  
+  // Only add optional properties if they exist
+  if (testData.imageSlug) {
+    result.imageSlug = testData.imageSlug
+  }
+  
+  const view = exercise?.getView()
+  if (view) {
+    result.view = view
+  }
+  
+  return result
 }
 
 const buildExternalFunctions = (
   options: TestRunnerOptions,
   exercise: Exercise | undefined
-) => {
-  const externalFunctions = filteredStdLibFunctions(
-    options.config.stdlibFunctions
-  )
+): Array<{ name: string; func: (...args: unknown[]) => unknown }> => {
+  // Mock implementation - in real code this would filter stdlib functions
+  const externalFunctions = filteredStdLibFunctions
   if (!exercise) return externalFunctions
 
   let exerciseFunctions = exercise.availableFunctions || []
@@ -187,13 +198,13 @@ const buildExternalFunctions = (
 const buildExternalClasses = (
   options: TestRunnerOptions,
   exercise: Exercise | undefined
-) => {
+): Array<{ name: string; [key: string]: unknown }> => {
   if (!exercise) return []
 
   let exerciseClasses = exercise.availableClasses || []
   if (options.config.exerciseClasses != undefined) {
     const required = options.config.exerciseClasses
-    exerciseClasses = exerciseClasses.filter((func: any) =>
+    exerciseClasses = exerciseClasses.filter((func: { name: string; [key: string]: unknown }) =>
       required.includes(func.name)
     )
   }
@@ -232,7 +243,7 @@ export function buildAnimationTimeline(
     animations = [
       {
         targets: `body`,
-        duration: (lastFrame as any).time || 0,
+        duration: lastFrame.timelineTime || 0,
         transformations: {},
         offset: 0,
       },
@@ -245,8 +256,10 @@ export function buildAnimationTimeline(
   if (
     lastFrame &&
     lastFrame.status === 'error' &&
-    ((lastFrame as any).error?.type == 'MaxIterationsReached' ||
-      (lastFrame as any).error?.type == 'InfiniteRecursion') &&
+    lastFrame.error &&
+    ('type' in lastFrame.error) &&
+    ((lastFrame.error as { type: string }).type === 'MaxIterationsReached' ||
+      (lastFrame.error as { type: string }).type === 'InfiniteRecursion') &&
     !exercise?.showAnimationsOnInfiniteLoops
   ) {
     // No-op

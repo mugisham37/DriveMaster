@@ -1,6 +1,6 @@
-import { ExecutionContext } from '@/interpreter/executor'
+import { ExecutionContext } from '@/lib/interpreter/executor'
 import BreakoutExercise from './BreakoutExercise'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export type BlockInstance = Jiki.Instance & {
   top: Jiki.Number

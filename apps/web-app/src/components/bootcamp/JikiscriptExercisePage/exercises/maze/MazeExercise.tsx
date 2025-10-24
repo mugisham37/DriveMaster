@@ -1,14 +1,14 @@
 import React from 'react'
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
 import cloneDeep from 'lodash.clonedeep'
-import { isString } from '@/interpreter/checks'
+import { isString } from '@/lib/interpreter/checks'
 import { randomEmoji } from '../../test-runner/generateAndRunTestSuite/genericSetupFunctions'
 import { isEqual } from 'lodash'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { exec } from 'child_process'
 import { buildSquare, type SquareInstance } from './Square'
-import { UserDefinedMethod } from '@/interpreter/functions'
+import { UserDefinedMethod } from '@/lib/interpreter/functions'
 
 type Cell = 0 | 1 | 2 | 3 | 4 | 5 | 6 | string
 
@@ -522,6 +522,10 @@ export default class MazeExercise extends Exercise {
   }
   public announceEmojis(_: ExecutionContext, emojis: Jiki.Dictionary) {
     this.collectedEmojis = Jiki.unwrapJikiObject(emojis)
+  }
+
+  public override getExerciseSpecificFunctions() {
+    return []
   }
 
   public availableFunctions = [

@@ -112,6 +112,11 @@ export function useTasks() {
     inspectedTestResult,
     solution.status,
     bonusTestSuiteResult,
+    exercise.language,
+    hasRuntimeErrors,
+    testSuiteResult,
+    setWasCompletedBonusTasksModalShown,
+    setWasFinishLessonModalShown,
   ])
 
   const handleCompleteSolution = useCallback(async () => {

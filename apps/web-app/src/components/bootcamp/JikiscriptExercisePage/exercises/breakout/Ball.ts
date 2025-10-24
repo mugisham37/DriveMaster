@@ -1,5 +1,5 @@
-import { ExecutionContext } from '@/interpreter/executor'
-import * as Jiki from '@/interpreter/jikiObjects'
+import { ExecutionContext } from '@/lib/interpreter/executor'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import BreakoutExercise from './BreakoutExercise'
 import { moveCursorByPasteLength } from '../../CodeMirror/extensions/move-cursor-by-paste-length'
 

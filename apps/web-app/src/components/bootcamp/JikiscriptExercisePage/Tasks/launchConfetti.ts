@@ -1,7 +1,8 @@
 import confetti from 'canvas-confetti'
+import type { ConfettiStatic, ConfettiInstance } from '../../types/JikiscriptTypes'
 
 let confettiCanvas: HTMLCanvasElement | null = null
-let myConfetti: typeof confetti | null = null
+let myConfetti: ConfettiInstance | null = null
 
 function setupCanvas() {
   if (!confettiCanvas) {
@@ -18,7 +19,7 @@ function setupCanvas() {
 
     document.body.appendChild(confettiCanvas)
 
-    myConfetti = (confetti as any).create(confettiCanvas, { resize: true })
+    myConfetti = (confetti as ConfettiStatic).create(confettiCanvas, { resize: true })
   }
 }
 

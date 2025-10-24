@@ -1,5 +1,5 @@
-import { ExecutionContext } from '@/interpreter/executor'
-import * as Jiki from '@/interpreter/jikiObjects'
+import { ExecutionContext } from '@/lib/interpreter/executor'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { changeBrightness, storeShape } from './Component'
 
 function fn(this: HouseExercise) {

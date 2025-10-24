@@ -30,7 +30,7 @@ export function InitialView() {
     if (hasMoreBonusTasks) {
       setShouldShowBonusTasks(true)
     }
-  }, [bonusTestSuiteResult, hasMoreBonusTasks, setIsOpen, setShouldShowBonusTasks])
+  }, [hasMoreBonusTasks, setIsOpen, setShouldShowBonusTasks])
 
   return (
     <>
@@ -63,7 +63,7 @@ export function InitialView() {
       </div>
       <p className="mt-12 text-15 leading-140 text-textColor6 text-balance">
         (If you tweak further, you can complete the exercise using the button at
-        the right when you're done)
+        the right when you&apos;re done)
       </p>
     </>
   )

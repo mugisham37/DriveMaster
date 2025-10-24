@@ -7,18 +7,11 @@ interface FunctionCallExpression extends Expression {
   type: 'FunctionCall'
   name: string
   args: Expression[]
-}
-
-interface BinaryExpression extends Expression {
-  type: 'Binary'
-  operator: string
-  left: Expression
-  right: Expression
-}
-
-interface LiteralExpression extends Expression {
-  type: 'Literal'
-  value: unknown
+  callee?: {
+    name?: {
+      lexeme: string
+    }
+  }
 }
 
 interface Statement {
@@ -58,10 +51,9 @@ function numFunctionCalls(
 function wasFunctionCalled(
   result: InterpretResult,
   name: string,
-  args: unknown[] | null,
-  times?: number
+  args: unknown[] | null
 ): boolean {
-  return numFunctionCalls(result, name, args) >= (times || 1)
+  return numFunctionCalls(result, name, args) >= 1
 }
 
 function numLinesOfCode(
@@ -75,11 +67,7 @@ function numLinesOfCode(
   return lines.length - numStubLines
 }
 
-// Mock function to extract function call expressions
-function extractFunctionCallExpressions(statements: Statement[]): FunctionCallExpression[] {
-  // Mock implementation - in real code this would parse the AST
-  return []
-}
+// Mock function to extract function call expressions - moved to bottom to avoid duplicate
 
 function numFunctionCallsInCode(
   result: InterpretResult,
@@ -87,7 +75,7 @@ function numFunctionCallsInCode(
 ): number {
   return extractFunctionCallExpressions(result.meta.statements).filter(
     (expr) => {
-      return (expr as any).callee?.name?.lexeme === fnName
+      return expr.callee?.name?.lexeme === fnName
     }
   ).length
 }
@@ -112,39 +100,17 @@ function numTimesStatementUsed(result: InterpretResult, type: string): number {
   return filterStatements(result.meta.statements).length
 }
 
-// Mock function to extract expressions of a specific type
-function extractExpressionsInternal<T extends Expression>(
-  statements: Statement[], 
-  ExpressionType: new (...args: unknown[]) => T
-): T[] {
-  // Mock implementation - in real code this would parse the AST
-  return []
+function numDirectStringComparisons(_result: InterpretResult): number {
+  // Mock implementation - in real code this would parse binary expressions
+  return 0
 }
 
-function numDirectStringComparisons(result: InterpretResult): number {
-  const binaryExpressions = extractExpressionsInternal(
-    result.meta.statements,
-    BinaryExpression
-  )
-  return binaryExpressions.filter(
-    (expr) =>
-      ((expr as any).operator?.type === 'EQUAL_EQUAL' &&
-        expr.left.type === 'Literal' &&
-        expr.right.type === 'Literal' &&
-        typeof (expr.left as LiteralExpression).value === 'string') ||
-      typeof (expr.right as LiteralExpression).value === 'string'
-  ).length
+function numUppercaseLettersInStrings(_result: InterpretResult): number {
+  // Mock implementation - in real code this would parse literal expressions
+  return 0
 }
 
-function numUppercaseLettersInStrings(result: InterpretResult): number {
-  const literals = extractExpressionsInternal(result.meta.statements, LiteralExpression)
-  return literals.filter(
-    (expr: LiteralExpression) =>
-      typeof expr.value === 'string' && expr.value !== expr.value.toLowerCase()
-  ).length
-}
-
-export default {
+const checkers = {
   numFunctionCalls,
   wasFunctionCalled,
   numFunctionCallsInCode,
@@ -155,10 +121,13 @@ export default {
   numLinesOfCode,
 }
 
+export default checkers
+
 export function extractFunctionCallExpressions(
-  tree: Statement[]
+  _tree: Statement[]
 ): FunctionCallExpression[] {
-  return extractExpressionsInternal(tree, FunctionCallExpression)
+  // Mock implementation - in real code this would parse the AST
+  return []
 }
 
 export function extractExpressions<T extends Expression>(

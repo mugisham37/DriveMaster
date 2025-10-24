@@ -93,15 +93,15 @@ function CompletedLevelView({ nextLevelIdx }: { nextLevelIdx: number }) {
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">
-        You've completed level {completedLevelIdx}!
+        You&apos;ve completed level {completedLevelIdx}!
       </h2>
       <p className="text-18 leading-140 mb-8">
         <strong className="font-semibold">
-          Congratulations! That's a big achievement 🎉
+          Congratulations! That&apos;s a big achievement 🎉
         </strong>
       </p>
       <p className="text-18 leading-140 mb-20">
-        You're now onto Level {nextLevelIdx} - a brand new challenge! Remember
+        You&apos;re now onto Level {nextLevelIdx} - a brand new challenge! Remember
         to watch the teaching video in full before starting the exercises.
       </p>
 
@@ -127,15 +127,15 @@ function CompletedAllLevelsView({
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">
-        You've completed level {completedLevelIdx}!
+        You&apos;ve completed level {completedLevelIdx}!
       </h2>
       <p className="text-18 leading-140 mb-8">
         <strong className="font-semibold">
-          Congratulations! That's a big achievement 🎉
+          Congratulations! That&apos;s a big achievement 🎉
         </strong>
       </p>
       <p className="text-18 leading-140 mb-20">
-        You've completed all the levels available to you right now, but you
+        You&apos;ve completed all the levels available to you right now, but you
         still have some exercises outstanding. The next exercise is{' '}
         <strong className="font-semibold">{nextExerciseData.title}.</strong>
       </p>
@@ -166,7 +166,7 @@ function CompletedEverythingView() {
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">Congratulations!</h2>
       <p className="text-18 leading-140 mb-20">
-        Well done! You've finished all the exercises available to you right now.
+        Well done! You&apos;ve finished all the exercises available to you right now.
       </p>
 
       <div className="flex flex-col items-stretch self-stretch">

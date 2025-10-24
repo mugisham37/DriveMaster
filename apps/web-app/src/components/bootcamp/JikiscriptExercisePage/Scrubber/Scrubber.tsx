@@ -22,7 +22,7 @@ function Scrubber({
   frames: Frame[]
   context?: string | undefined
 }) {
-  const [_, setIsPlaying] = useState(false)
+  const [, setIsPlaying] = useState(false)
 
   const { hasCodeBeenEdited, setShouldShowInformationWidget } = useEditorStore()
   const { isSpotlightActive } = useContext(JikiscriptExercisePageContext)
@@ -45,12 +45,12 @@ function Scrubber({
     animationTimeline,
     frames,
     hasCodeBeenEdited,
-    context,
+    ...(context && { context }),
   })
 
   const currentFrame = useMemo(
     () => findFrameNearestTimelineTime(timelineValue),
-    [timelineValue]
+    [timelineValue, findFrameNearestTimelineTime]
   )
 
   return (
@@ -236,10 +236,9 @@ function BreakpointStepperButtons({
   onPrev: () => void
   disabled: boolean
 }) {
-  if (!currentFrame) return null
-
   const { breakpoints } = useEditorStore()
-  if (breakpoints.length == 0) return null
+  
+  if (!currentFrame || breakpoints.length === 0) return null
 
   const isPrevBreakpoint = prevBreakpointExists(
     currentFrame,

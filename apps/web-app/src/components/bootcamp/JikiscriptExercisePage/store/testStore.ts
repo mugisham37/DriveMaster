@@ -29,10 +29,21 @@ const useTestStore = createStoreWithMiddlewares<TestStore>(
     },
     flatPreviewTaskTests: [],
     setFlatPreviewTaskTests: (flatPreviewTaskTests) => {
+      // Always ensure we have a valid inspectedPreviewTaskTest
+      const inspectedTest: TaskTest = flatPreviewTaskTests.length > 0 
+        ? flatPreviewTaskTests[0]! // Non-null assertion since we checked length > 0
+        : {
+            name: '',
+            slug: '',
+            data: null,
+            setupFunctions: [],
+            testsType: 'state' as TestsType,
+          } as TaskTest // Fallback to minimal TaskTest if no items
+      
       set(
         {
           flatPreviewTaskTests,
-          inspectedPreviewTaskTest: flatPreviewTaskTests[0],
+          inspectedPreviewTaskTest: inspectedTest,
         },
         false,
         'exercise/setFlatPreviewTaskTests'

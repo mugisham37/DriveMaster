@@ -1,4 +1,4 @@
-import { CustomFunction, EvaluationContext } from '@/interpreter/interpreter'
+import { CustomFunction } from '@/lib/interpreter/interpreter'
 
 declare type TestRunnerOptions = {
   studentCode: string

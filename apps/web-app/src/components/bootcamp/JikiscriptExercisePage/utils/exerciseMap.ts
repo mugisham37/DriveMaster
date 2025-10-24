@@ -25,7 +25,7 @@ export interface ExerciseConstructor {
 export type Project = ExerciseConstructor
 const projectsCache = new Map<string, Project>()
 
-projectsCache.set('draw', DrawExercise as any)
+projectsCache.set('draw', DrawExercise as Project)
 projectsCache.set('maze', MazeExercise)
 projectsCache.set('wordle', WordleExercise)
 projectsCache.set('golf', GolfExercise)

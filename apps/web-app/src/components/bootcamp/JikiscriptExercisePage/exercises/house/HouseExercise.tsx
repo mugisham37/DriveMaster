@@ -1,8 +1,8 @@
 import React from 'react'
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import * as Jiki from '@/interpreter/jikiObjects'
-import { InterpretResult } from '@/interpreter/interpreter'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
 import DrawExercise from '../draw'
 import { buildRoof } from './Roof'
 import { buildFrame } from './Frame'
@@ -39,7 +39,7 @@ export default class HouseExercise extends DrawExercise {
     this.view.appendChild(this.container)
   }
 
-  public getState() {
+  public override getState() {
     return {}
   }
 
@@ -133,7 +133,9 @@ export default class HouseExercise extends DrawExercise {
   }
 
   // Setup Functions
-  public setupBlocks(_: ExecutionContext, layout: [][]) {}
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 
   public availableClasses = [
     this.Roof,

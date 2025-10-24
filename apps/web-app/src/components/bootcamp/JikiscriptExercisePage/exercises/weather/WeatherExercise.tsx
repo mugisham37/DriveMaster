@@ -1,13 +1,13 @@
 import React from 'react'
 import DrawExercise from '../draw'
-import { ExecutionContext } from '@/interpreter/executor'
+import { ExecutionContext } from '@/lib/interpreter/executor'
 
 export default class WeatherExercise extends DrawExercise {
   public constructor() {
     super('weather')
   }
 
-  public animateShapeIntoView(
+  public override animateShapeIntoView(
     executionCtx: ExecutionContext,
     shape: SVGElement
   ) {
@@ -104,4 +104,8 @@ export default class WeatherExercise extends DrawExercise {
         'Changes the fill color using hue, saturation and lumisity values',
     },
   ]
+
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 }

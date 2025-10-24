@@ -3,6 +3,7 @@ import { assembleClassNames } from '@/utils/assemble-classnames'
 import useTestStore from '../store/testStore'
 import useEditorStore from '../store/editorStore'
 import type { InformationWidgetData } from '../CodeMirror/extensions/end-line-information/line-information'
+import type { EnhancedFrame } from '../../types/JikiscriptTypes'
 import { useShouldAnimate } from './useShouldAnimate'
 import useTaskStore from '../store/taskStore/taskStore'
 import useAnimationTimelineStore from '../store/animationTimelineStore'
@@ -55,7 +56,6 @@ export function TestResultsButtons({ isBonus = false }) {
       bonusTestSuiteResult,
       testSuiteResult,
       shouldAutoplayAnimation,
-      isBonus,
       setInformationWidgetData,
       setInspectedTestResult,
     ]
@@ -106,9 +106,9 @@ export function handleSetInspectedTestResult({
     const frame = testResult.frames[0]
     if (frame) {
       setInformationWidgetData({
-        html: (frame as any).description || '',
-        line: (frame as any).line,
-        status: 'success',
+        html: (frame as EnhancedFrame).description || '',
+        line: frame.line,
+        status: 'SUCCESS',
       })
     }
   }

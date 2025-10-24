@@ -152,17 +152,24 @@ export function useConstructRunCode({
           };
         }
       );
-      
+
       const testResults = await generateAndRunTestSuite(
         {
           studentCode,
           tasks,
           config: {
             ...config,
-            description: config.description ?? "",
-            title: config.title ?? "",
-            projectType: config.projectType ?? "jikiscript",
-            testsType: config.testsType ?? "state",
+            description:
+              typeof config.description === "string" ? config.description : "",
+            title: typeof config.title === "string" ? config.title : "",
+            projectType:
+              typeof config.projectType === "string"
+                ? config.projectType
+                : "jikiscript",
+            testsType:
+              config.testsType === "io" || config.testsType === "state"
+                ? config.testsType
+                : "state",
           },
           customFunctions: customFns,
         },
@@ -197,10 +204,17 @@ export function useConstructRunCode({
           tasks: bonusTasks ?? [],
           config: {
             ...config,
-            description: config.description ?? "",
-            title: config.title ?? "",
-            projectType: config.projectType ?? "jikiscript",
-            testsType: config.testsType ?? "state",
+            description:
+              typeof config.description === "string" ? config.description : "",
+            title: typeof config.title === "string" ? config.title : "",
+            projectType:
+              typeof config.projectType === "string"
+                ? config.projectType
+                : "jikiscript",
+            testsType:
+              config.testsType === "io" || config.testsType === "state"
+                ? config.testsType
+                : "state",
           },
           customFunctions: customFns,
         },

@@ -2,11 +2,11 @@ import { useRef, useState } from 'react'
 import type { EditorView } from 'codemirror'
 import type { Handler } from '../JikiscriptExercisePage/CodeMirror/CodeMirror'
 import DrawExercise from '../JikiscriptExercisePage/exercises/draw'
-import { interpret } from '@/interpreter/interpreter'
+import { interpret } from '@/lib/interpreter/interpreter'
 import useEditorStore from '../JikiscriptExercisePage/store/editorStore'
 import { showError } from '../JikiscriptExercisePage/utils/showError'
 import { AnimationTimeline } from '../JikiscriptExercisePage/AnimationTimeline/AnimationTimeline'
-import type { Frame } from '@/interpreter/frames'
+import type { Frame } from '@/lib/interpreter/frames'
 
 export function useDrawingEditorHandler() {
   const editorHandler = useRef<Handler | null>(null)

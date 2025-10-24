@@ -1,33 +1,44 @@
-export type AnimeCSSProperties = {
+// Animation types for the AnimationTimeline
+
+export interface AnimeCSSProperties {
+  // Transform properties
+  translateX?: number | string
+  translateY?: number | string
+  translateZ?: number | string
+  rotate?: number | string
+  rotateX?: number | string
+  rotateY?: number | string
+  rotateZ?: number | string
+  scale?: number | string
+  scaleX?: number | string
+  scaleY?: number | string
+  scaleZ?: number | string
+  skew?: number | string
+  skewX?: number | string
+  skewY?: number | string
+  
+  // CSS properties
   opacity?: number
-  translateX?: string | number
-  translateY?: string | number
-  translateZ?: string | number
-  rotate?: string | number
-  rotateX?: string | number
-  rotateY?: string | number
-  rotateZ?: string | number
-  scale?: string | number
-  scaleX?: string | number
-  scaleY?: string | number
-  scaleZ?: string | number
-  skew?: string | number
-  skewX?: string | number
-  skewY?: string | number
-  color?: string
   backgroundColor?: string
-  background?: string
-  borderWidth?: string | number
-  borderColor?: string
-  margin?: string | number
-  padding?: string | number
-  width?: string | number
-  height?: string | number
-  top?: string | number
-  right?: string | number
-  bottom?: string | number
-  left?: string | number
-  perspective?: string | number
-  boxShadow?: string
-  filter?: string
+  color?: string
+  width?: number | string
+  height?: number | string
+  left?: number | string
+  top?: number | string
+  right?: number | string
+  bottom?: number | string
+  margin?: number | string
+  padding?: number | string
+  borderRadius?: number | string
+  
+  // Animation properties
+  duration?: number
+  delay?: number
+  easing?: string
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'
+  loop?: boolean | number
+  autoplay?: boolean
+  
+  // Custom properties
+  [key: string]: unknown
 }

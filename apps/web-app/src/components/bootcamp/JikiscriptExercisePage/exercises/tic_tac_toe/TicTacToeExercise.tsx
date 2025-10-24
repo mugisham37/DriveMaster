@@ -1,7 +1,7 @@
 import React from 'react'
 import { Exercise } from '../Exercise'
-import { ExecutionContext } from '@/interpreter/executor'
-import { addOrdinalSuffix } from '@/interpreter/describers/helpers'
+import { ExecutionContext } from '@/lib/interpreter/executor'
+import { addOrdinalSuffix } from '@/lib/interpreter/describers/helpers'
 import DrawExercise from '../draw/DrawExercise'
 import { Color } from '../draw/shapes'
 
@@ -20,15 +20,15 @@ export default class TicTacToeExercise extends DrawExercise {
     this.view.appendChild(this.resultElem)
   }
 
-  public getState() {
+  public override getState() {
     return {}
   }
 
-  public write(executionCtx: ExecutionContext, text: string) {
+  public override write(executionCtx: ExecutionContext, text: string) {
     this.resultElem.innerHTML = text
     this.animateResult(executionCtx)
   }
-  protected animateShapeIntoView(
+  protected override animateShapeIntoView(
     executionCtx: ExecutionContext,
     elem: SVGElement
   ) {
@@ -90,6 +90,10 @@ export default class TicTacToeExercise extends DrawExercise {
       description: 'wrote "${arg1}" on the screen',
     },
   ]
+
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 }
 
 /*this.boardElem = document.createElement('div')

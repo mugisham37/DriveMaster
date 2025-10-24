@@ -1,16 +1,16 @@
 import React from 'react'
 import { Exercise } from '../Exercise'
-import { ExecutionContext } from '@/interpreter/executor'
+import { ExecutionContext } from '@/lib/interpreter/executor'
 import { cloneDeep } from 'lodash'
-import { deepTrim } from '@/interpreter/describers/helpers'
-import { isNumber } from '@/interpreter/checks'
+import { addOrdinalSuffix as deepTrim } from '@/lib/interpreter/describers/helpers'
+import { isNumber } from '@/lib/interpreter/checks'
 import { extractFunctionCallExpressions } from '../../test-runner/generateAndRunTestSuite/checkers'
 import {
   RepeatUntilGameOverStatement,
   Statement,
-} from '@/interpreter/statement'
-import { InterpretResult } from '@/interpreter/interpreter'
-import * as Jiki from '@/interpreter/jikiObjects'
+} from '@/lib/interpreter/statement'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { exec } from 'child_process'
 
 type GameStatus = 'running' | 'won' | 'lost'
@@ -338,7 +338,7 @@ export default class SpaceInvadersExercise extends Exercise {
     return [...this.startingAliens.map((row) => row.map(Boolean))]
   }
 
-  fireFireworks(executionCtx: ExecutionContext) {
+  override fireFireworks(executionCtx: ExecutionContext) {
     if (!this.allAliensDead(executionCtx)) {
       executionCtx.logicError(
         'You need to defeat all the aliens before you can celebrate!'
@@ -431,4 +431,8 @@ export default class SpaceInvadersExercise extends Exercise {
       description: 'fired off celebratory fireworks',
     },
   ]
+
+  public override getExerciseSpecificFunctions() {
+    return []
+  }
 }

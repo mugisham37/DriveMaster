@@ -1,7 +1,7 @@
 import React from 'react'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import { useLocalStorage } from '@uidotdev/usehooks'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 type Direction = 'horizontal' | 'vertical'
 
@@ -68,7 +68,7 @@ export function useResizablePanels({
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const handleResize = () => {
+  const handleResize = useCallback(() => {
     const containerSize =
       direction === 'horizontal' ? window.innerWidth : window.innerHeight
 
@@ -81,7 +81,7 @@ export function useResizablePanels({
     }
     setPrimarySize(newPrimarySize)
     setSecondarySize(containerSize - newPrimarySize)
-  }
+  }, [primarySize, direction, onChange])
 
   useEffect(() => {
     window.addEventListener('resize', handleResize)
@@ -89,7 +89,7 @@ export function useResizablePanels({
     return () => {
       window.removeEventListener('resize', handleResize)
     }
-  }, [primarySize, direction])
+  }, [primarySize, direction, handleResize])
 
   return {
     primarySize,

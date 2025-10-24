@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import projectsCache from '../utils/exerciseMap'
 import { Exercise } from '../exercises/Exercise'
+import type { Config, TaskTest, TestSuiteResult } from '../../types/JikiscriptTypes'
 
 export function useMountViewOrImage({
   config,
@@ -29,7 +30,7 @@ export function useMountViewOrImage({
 
       const setupFns = taskTest.setupFunctions || []
 
-      setupFns.forEach((functionData: any) => {
+      setupFns.forEach((functionData) => {
         const [functionName, params = []] = functionData
         if (!exercise) {
           return

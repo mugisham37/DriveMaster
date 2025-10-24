@@ -2,9 +2,9 @@ import {
   FunctionCallExpression,
   Expression,
   LiteralExpression,
-} from '@/interpreter/expression'
+} from '@/lib/interpreter/expression'
 import { Shape, Circle, Rectangle, Line } from './shapes'
-import { InterpretResult } from '@/interpreter/interpreter'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
 import { extractFunctionCallExpressions } from '../../test-runner/generateAndRunTestSuite/checkers'
 
 export function checkCanvasCoverage(shapes: Shape[], requiredPercentage) {

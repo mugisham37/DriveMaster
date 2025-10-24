@@ -6,8 +6,8 @@
 
 import { marked } from 'marked'
 
-import type { StaticError } from '@/interpreter/error'
-import { SyntaxError } from '@/interpreter/error'
+import type { InterpreterError as StaticError } from '@/lib/interpreter/error'
+import { InterpreterError as SyntaxError } from '@/lib/interpreter/error'
 
 export function describeError(
   error: StaticError,

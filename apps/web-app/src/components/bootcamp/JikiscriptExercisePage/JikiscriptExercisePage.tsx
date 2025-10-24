@@ -92,7 +92,7 @@ export default function JikiscriptExercisePage({
   const { testSuiteResult, bonusTestSuiteResult } = useTestStore();
 
   const project: Project | undefined = useMemo(
-    () => exerciseMap.get(exercise.config.projectType),
+    () => exercise.config.projectType ? exerciseMap.get(exercise.config.projectType) : undefined,
     [exercise]
   );
 

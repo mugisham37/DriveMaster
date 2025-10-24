@@ -62,8 +62,8 @@ export function ExhortContent({ cohort }: ExhortContentProps) {
               </h3>
               <hr className="c-divider my-24" />
               <p className="text-p-xlarge mb-16">
-                Exhort is a free, community-driven learning experience where you'll work through 
-                {cohort.track.title} exercises alongside other learners. It's designed to be flexible, supportive, and fun!
+                Exhort is a free, community-driven learning experience where you&apos;ll work through 
+                {cohort.track.title} exercises alongside other learners. It&apos;s designed to be flexible, supportive, and fun!
               </p>
               <ul className="text-p-xlarge mb-16 list-disc pl-20">
                 <li className="mb-6">Completely free access to all materials</li>

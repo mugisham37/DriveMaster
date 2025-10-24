@@ -1,4 +1,4 @@
-import { LanguageFeatures } from '@/interpreter/interpreter'
+import { LanguageFeatures } from '@/lib/interpreter/interpreter'
 
 declare global {
   type JikiscriptExercisePageProps = {

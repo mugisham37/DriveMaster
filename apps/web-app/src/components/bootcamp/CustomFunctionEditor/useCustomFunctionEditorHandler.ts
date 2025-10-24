@@ -5,17 +5,17 @@ import {
   evaluateFunction,
   EvaluationContext,
   interpret,
-} from '@/interpreter/interpreter'
+} from '@/lib/interpreter/interpreter'
 import useEditorStore from '../JikiscriptExercisePage/store/editorStore'
 import { showError } from '../JikiscriptExercisePage/utils/showError'
-import { StdlibFunctionsForLibrary } from '@/interpreter/stdlib'
+import { StdlibFunctionsForLibrary } from '@/lib/interpreter/stdlib'
 import { buildAnimationTimeline } from '../JikiscriptExercisePage/test-runner/generateAndRunTestSuite/execTest'
-import { framesSucceeded } from '@/interpreter/frames'
+import { framesSucceeded } from '@/lib/interpreter/frames'
 import { updateUnfoldableFunctions } from '../JikiscriptExercisePage/CodeMirror/unfoldableFunctionNames'
 import { CustomFunction } from './CustomFunctionEditor'
 import customFunctionEditorStore from './store/customFunctionEditorStore'
 import customFunctionsStore from './store/customFunctionsStore'
-import { FunctionStatement } from '@/interpreter/statement'
+import { FunctionStatement } from '@/lib/interpreter/statement'
 
 export function useCustomFunctionEditorHandler({
   customFunctionDataFromServer,

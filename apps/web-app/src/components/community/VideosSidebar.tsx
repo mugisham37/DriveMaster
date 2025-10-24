@@ -151,7 +151,7 @@ export function VideosSidebar({
             . All times are in your local timezone.
           </p>
           <p className="text-p-base mb-12">
-            Don't forget to follow us to get notified when we go live!
+            Don&apos;t forget to follow us to get notified when we go live!
           </p>
 
           <ul className="text-p-base list-disc pl-16">
