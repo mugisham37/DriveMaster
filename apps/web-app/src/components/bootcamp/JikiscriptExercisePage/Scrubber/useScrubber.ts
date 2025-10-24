@@ -106,7 +106,7 @@ export function useScrubber({
 
       const idx = frames.findIndex((frame) => {
         return (
-          frame.timelineTime >= timelineTime &&
+          (frame.timelineTime ?? 0) >= timelineTime &&
           !foldedLines.includes(frame.line)
         )
       })
@@ -128,8 +128,8 @@ export function useScrubber({
       const currentFrame = frames[idx]
       if (!prevFrame || !currentFrame) return idx
       
-      return Math.abs(prevFrame.timelineTime - timelineTime) <
-        Math.abs(currentFrame.timelineTime - timelineTime)
+      return Math.abs((prevFrame.timelineTime ?? 0) - timelineTime) <
+        Math.abs((currentFrame.timelineTime ?? 0) - timelineTime)
         ? prevFrameIdx
         : idx
     },
@@ -165,8 +165,8 @@ export function useScrubber({
     (startTimelineTime: number, endTimelineTime: number): EnhancedFrame | undefined =>
       frames.find(
         (frame) =>
-          frame.timelineTime > startTimelineTime &&
-          frame.timelineTime < endTimelineTime &&
+          (frame.timelineTime ?? 0) > startTimelineTime &&
+          (frame.timelineTime ?? 0) < endTimelineTime &&
           breakpoints.includes(frame.line) &&
           !foldedLines.includes(frame.line)
       ),
@@ -178,7 +178,7 @@ export function useScrubber({
       if (!frames.length) return undefined
 
       // If we're past the last frame, return the last frame
-      if (lastFrame && timelineTime > lastFrame.timelineTime) return lastFrame
+      if (lastFrame && timelineTime > (lastFrame.timelineTime ?? 0)) return lastFrame
 
       const idx = findFrameIdxNearestTimelineTime(timelineTime)
       if (idx === undefined) return undefined
@@ -215,7 +215,7 @@ export function useScrubber({
           return
         } else {
           animationTimeline.seek(
-            finalTimelineTime / TIME_TO_TIMELINE_SCALE_FACTOR
+            (finalTimelineTime ?? 0) / TIME_TO_TIMELINE_SCALE_FACTOR
           )
         }
       }
@@ -223,7 +223,7 @@ export function useScrubber({
       // Finally, set the new time. Note, this potentially gets
       // changed in the animationTimeline block above, so don't do it
       // early and guard/return.
-      setTimelineValue(finalTimelineTime)
+      setTimelineValue(finalTimelineTime ?? 0)
     },
     [lastFrame, setShouldAutoplayAnimation]
   )
@@ -302,7 +302,7 @@ export function useScrubber({
       // This helps us not reset to the initial state accidently later.
       // onUpdate calls when the animation starts before anything has
       // happened, so we guard against progres being 0.
-      if (anime.progress > 0) {
+      if ((anime as any).progress > 0) {
         animationTimeline.hasPlayedOrScrubbed = true
       }
 
@@ -332,7 +332,7 @@ export function useScrubber({
           // Because we might be not quite aligned, we set the newTimelineValue
           // to be the breakpoints time, not the animation time. This is our
           // point of true.
-          newTimelineValue = nextBreakpointFrame.timelineTime
+          newTimelineValue = nextBreakpointFrame.timelineTime ?? 0
 
           // We stop the animation here and show the information widget.
           // We presume someone always wants to see that if they've set a breakpoint.
@@ -389,7 +389,7 @@ export function useScrubber({
     // If we have a breakpoint frame, we want to jump there.
     const breakpointFrame = findBreakpointFrameBetweenTimes(
       0,
-      errorFrame.timelineTime
+      errorFrame.timelineTime ?? 0
     )
     if (breakpointFrame) {
       moveToFrame(animationTimeline, breakpointFrame)
@@ -565,7 +565,7 @@ export function useScrubber({
     handleGoToBreakpoint('next', animationTimeline)
 
   const handleGoToPreviousFrame = useCallback(
-    (animationTimeline: AnimationTimeline, _frames: EnhancedFrame[]) => {
+    (animationTimeline: AnimationTimeline, frames: EnhancedFrame[]) => {
       const currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
 
       // If there's no frame for this, then we've got no-where to go

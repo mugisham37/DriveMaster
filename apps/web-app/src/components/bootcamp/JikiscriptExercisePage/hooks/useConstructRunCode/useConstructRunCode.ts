@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { JikiscriptInterpreter } from "@/lib/interpreter";
 import type { InterpreterError } from "@/lib/interpreter/error";
+import type { CustomFunction, LanguageFeatures } from "@/lib/interpreter/interpreter";
 import useTestStore from "../../store/testStore";
 import useEditorStore from "../../store/editorStore";
 import useTaskStore from "../../store/taskStore/taskStore";
@@ -143,12 +144,13 @@ export function useConstructRunCode({
         }
       }
 
-      const customFns = Object.values(customFunctionsForInterpreter).map(
+      const customFns: CustomFunction[] = Object.values(customFunctionsForInterpreter).map(
         (cfn) => {
           return {
             name: cfn.name,
-            arity: cfn.arity,
-            code: cfn.code,
+            parameters: [], // Will be parsed from code
+            body: cfn.code,
+            description: `Custom function ${cfn.name}`,
           };
         }
       );
@@ -170,6 +172,7 @@ export function useConstructRunCode({
               config.testsType === "io" || config.testsType === "state"
                 ? config.testsType
                 : "state",
+            interpreterOptions: (config.interpreterOptions as LanguageFeatures) || undefined,
           },
           customFunctions: customFns,
         },
@@ -215,6 +218,7 @@ export function useConstructRunCode({
               config.testsType === "io" || config.testsType === "state"
                 ? config.testsType
                 : "state",
+            interpreterOptions: (config.interpreterOptions as LanguageFeatures) || undefined,
           },
           customFunctions: customFns,
         },

@@ -116,5 +116,50 @@ export function expect({
         pass,
       }
     },
+    toBeGreaterThan(expected: unknown) {
+      const expectedNum = expected as number
+      return {
+        ...returnObject,
+        expected: expectedNum,
+        pass: typeof actual === 'number' && actual > expectedNum,
+      }
+    },
+    toBeLessThan(expected: unknown) {
+      const expectedNum = expected as number
+      return {
+        ...returnObject,
+        expected: expectedNum,
+        pass: typeof actual === 'number' && (actual as number) < expectedNum,
+      }
+    },
+    toContain(expected: unknown) {
+      let pass = false
+      if (typeof actual === 'string' && typeof expected === 'string') {
+        pass = actual.includes(expected)
+      } else if (isArray(actual)) {
+        pass = (actual as unknown[]).includes(expected)
+      }
+      return {
+        ...returnObject,
+        expected,
+        pass,
+      }
+    },
+    toMatch(expected: unknown) {
+      const pattern = expected as string | RegExp
+      let pass = false
+      if (typeof actual === 'string') {
+        if (typeof pattern === 'string') {
+          pass = actual.includes(pattern)
+        } else if (pattern instanceof RegExp) {
+          pass = pattern.test(actual)
+        }
+      }
+      return {
+        ...returnObject,
+        expected: pattern,
+        pass,
+      }
+    },
   }
 }

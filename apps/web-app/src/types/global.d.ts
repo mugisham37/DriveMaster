@@ -168,6 +168,11 @@ declare module '@exercism/highlightjs-futhark' {
 
 // Config interfaces
 interface Config {
+  projectType?: string
+  testsType?: string
+  interpreterOptions?: unknown
+  exerciseFunctions?: string[]
+  exerciseClasses?: string[]
   [key: string]: unknown
 }
 

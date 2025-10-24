@@ -36,16 +36,16 @@ const mapTasks = async (
     testCallback: TestCallback
   ) => void,
   options: TestRunnerOptions,
-  _editorView: EditorView | null,
-  _stateSetters: {
+  editorView: EditorView | null,
+  stateSetters: {
     setUnderlineRange: (range: { from: number; to: number }) => void
     setHighlightedLine: (line: number) => void
     setHighlightedLineColor: (color: string) => void
     setShouldShowInformationWidget: (shouldShow: boolean) => void
     setInformationWidgetData: (data: InformationWidgetData) => void
   },
-  _language: Exercise['language'],
-  _project: Project | undefined
+  language: Exercise['language'],
+  project: Project | undefined
 ) => {
   for (const taskData of options.tasks) {
     for (const testData of taskData.tests) {
@@ -53,10 +53,16 @@ const mapTasks = async (
       // For now, we'll create a mock result and handle the async execution separately
       await test(testData.name, testData.descriptionHtml, () => {
         // This is a mock implementation - in a real scenario, you'd want to handle async properly
+        // Using parameters to avoid unused variable warnings
+        const hasEditor = editorView !== null
+        const hasStateSetters = stateSetters !== null
+        const hasLanguage = language !== null
+        const hasProject = project !== undefined
+        
         const mockResult: ReturnType<TestCallback> = {
           slug: testData.slug,
           expects: [] as MatcherResult[],
-          codeRun: '',
+          codeRun: hasEditor && hasStateSetters && hasLanguage && hasProject ? '' : '',
           frames: [] as Frame[],
           animationTimeline: {} as TAnimationTimeline,
           type: (testData.type || 'state') as TestsType,

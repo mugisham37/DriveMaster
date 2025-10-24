@@ -59,7 +59,7 @@ export function MentoringInboxSection({ discussions }: MentoringInboxSectionProp
           >
             <Avatar user={{
               ...discussion.student,
-              flair: discussion.student.flair as any
+              flair: discussion.student.flair as string | undefined
             }} />
             
             <div className="info">

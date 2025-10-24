@@ -11,10 +11,10 @@ function TaskPreviewComponent() {
   const { testSuiteResult, inspectedPreviewTaskTest } = useTestStore()
 
   const viewContainerRef = useMountViewOrImage({
-    config: exercise.config,
-    taskTest: inspectedPreviewTaskTest,
+    config: exercise.config as unknown as import('../../types/JikiscriptTypes').Config,
+    taskTest: inspectedPreviewTaskTest as unknown as import('../../types/JikiscriptTypes').TaskTest | null,
     testSuiteResult,
-    inspectedPreviewTaskTest,
+    inspectedPreviewTaskTest: inspectedPreviewTaskTest as unknown as import('../../types/JikiscriptTypes').TaskTest | null,
   })
 
   if (testSuiteResult) {

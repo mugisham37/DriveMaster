@@ -15,6 +15,19 @@ export abstract class Exercise {
   protected container!: HTMLElement
   public static hasView = true
 
+  // DOM element properties for exercises that need them
+  protected timeElem?: HTMLElement
+  protected hourElem?: HTMLElement
+  protected h1Elem?: HTMLElement
+  protected h2Elem?: HTMLElement
+  protected colonElem?: HTMLElement
+  protected minuteElem?: HTMLElement
+  protected m1Elem?: HTMLElement
+  protected m2Elem?: HTMLElement
+  protected meridiem?: HTMLElement
+  protected tooltip?: HTMLElement
+  protected game?: unknown
+
   public constructor(private slug?: string) {
     if (slug) {
       this.createView()

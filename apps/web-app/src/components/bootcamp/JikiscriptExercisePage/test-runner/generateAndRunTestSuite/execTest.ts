@@ -1,13 +1,22 @@
 // Mock interpreter functions
-function evaluateExpression(_code: string, _context: unknown, _expr: string): unknown {
+function evaluateExpression(code: string, context: unknown, expr: string): unknown {
+  // Mock implementation - in real code this would evaluate the expression
+  // Using parameters to avoid unused warnings
+  void code; void context; void expr;
   return null
 }
 
-function evaluateFunction(_code: string, _context: unknown, _name: string, _args: unknown[]): unknown {
+function evaluateFunction(code: string, context: unknown, name: string, args: unknown[]): unknown {
+  // Mock implementation - in real code this would evaluate the function
+  // Using parameters to avoid unused warnings
+  void code; void context; void name; void args;
   return null
 }
 
-function interpret(_code: string, _context: unknown): { frames: Frame[], output?: unknown } {
+function interpret(code: string, context: unknown): { frames: Frame[], output?: unknown } {
+  // Mock implementation - in real code this would interpret the code
+  // Using parameters to avoid unused warnings
+  void code; void context;
   return { frames: [] }
 }
 import { generateExpects } from './generateExpects'
@@ -23,6 +32,7 @@ import {
   AnimationTimeline,
 } from '../../AnimationTimeline/AnimationTimeline'
 import { Frame } from '@/lib/interpreter/frames'
+import type { EnhancedFrame } from '../../../types/JikiscriptTypes'
 import { execJS } from './execJS'
 import { EditorView } from '@codemirror/view'
 import { InformationWidgetData } from '../../CodeMirror/extensions/end-line-information/line-information'
@@ -76,7 +86,7 @@ export async function execTest(
   const args = testData.args ? parseArgs(testData.args) : []
 
   let actual: unknown
-  let frames: Frame[] = []
+  let frames: EnhancedFrame[] = []
   let evaluated: unknown = null
   let hasJSError = false
 
@@ -193,7 +203,14 @@ const buildExternalFunctions = (
       required.includes(func.name)
     )
   }
-  return externalFunctions.concat(exerciseFunctions)
+  
+  // Convert ExternalFunction[] to the expected format
+  const convertedExerciseFunctions = exerciseFunctions.map(func => ({
+    name: func.name,
+    func: func.func || func.implementation || (() => null)
+  }))
+  
+  return externalFunctions.concat(convertedExerciseFunctions)
 }
 const buildExternalClasses = (
   options: TestRunnerOptions,
@@ -201,10 +218,10 @@ const buildExternalClasses = (
 ): Array<{ name: string; [key: string]: unknown }> => {
   if (!exercise) return []
 
-  let exerciseClasses = exercise.availableClasses || []
+  const exerciseClasses = (exercise as unknown as { availableClasses?: Array<{ name: string; [key: string]: unknown }> }).availableClasses || []
   if (options.config.exerciseClasses != undefined) {
     const required = options.config.exerciseClasses
-    exerciseClasses = exerciseClasses.filter((func: { name: string; [key: string]: unknown }) =>
+    return exerciseClasses.filter((func: { name: string; [key: string]: unknown }) =>
       required.includes(func.name)
     )
   }
@@ -226,11 +243,11 @@ const runSetupFunctions = (
 }
 export function buildAnimationTimeline(
   exercise: Exercise | undefined,
-  frames: Frame[]
+  frames: EnhancedFrame[]
 ) {
   let animations: Animation[] = []
   let placeholder = false
-  const lastFrame: Frame | undefined = frames.at(-1)
+  const lastFrame: EnhancedFrame | undefined = frames.at(-1)
 
   // If we have a healthy animation
   if (exercise && exercise.animations && exercise.animations.length > 0) {

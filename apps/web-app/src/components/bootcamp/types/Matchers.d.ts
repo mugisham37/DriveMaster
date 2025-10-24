@@ -5,8 +5,12 @@ declare type AvailableMatchers =
   | 'toBeDefined'
   | 'toBeUndefined'
   | 'toEqual'
+  | 'toBeGreaterThan'
+  | 'toBeLessThan'
   | 'toBeGreaterThanOrEqual'
   | 'toBeLessThanOrEqual'
+  | 'toContain'
+  | 'toMatch'
   | 'toIncludeSameMembers'
 
 interface MatcherResult {

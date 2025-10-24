@@ -1,10 +1,9 @@
-import React from 'react'
 import { Exercise } from '../Exercise'
-import { ExecutionContext } from '@/lib/interpreter/executor'
+import { ExecutionContext, ExternalFunction } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export default class DigitalClockExercise extends Exercise {
-  private displayedTime?: String
+  private displayedTime?: string
   private hours: number
   private minutes: number
 
@@ -76,53 +75,58 @@ export default class DigitalClockExercise extends Exercise {
 
     return this.displayedTime == `${normalisedHours}:${this.minutes}${ampm}`
   }
-  public currentTimeHour(_: ExecutionContext): Jiki.Number {
-    return new Jiki.Number(this.hours)
+  public currentTimeHour(_executionCtx: ExecutionContext): Jiki.JikiNumber {
+    return new Jiki.JikiNumber(this.hours)
   }
-  public currentTimeMinute(_: ExecutionContext): Jiki.Number {
-    return new Jiki.Number(this.minutes)
+  public currentTimeMinute(_executionCtx: ExecutionContext): Jiki.JikiNumber {
+    return new Jiki.JikiNumber(this.minutes)
   }
   public displayTime(
-    _: ExecutionContext,
-    hours: Jiki.String,
-    mins: Jiki.String,
-    ampm: Jiki.String
+    _executionCtx: ExecutionContext,
+    hours: Jiki.JikiString,
+    mins: Jiki.JikiString,
+    ampm: Jiki.JikiString
   ) {
     this.displayedTime = `${hours.value}:${mins.value}${ampm.value}`
 
     const [h1, h2] = String(hours.value).padStart(2, '0').split('')
     const [m1, m2] = String(mins.value).padStart(2, '0').split('')
 
-    this.h1Elem.innerText = h1
-    this.h2Elem.innerText = h2
-    this.m1Elem.innerText = m1
-    this.m2Elem.innerText = m2
+    if (this.h1Elem) this.h1Elem.innerText = h1 || '0'
+    if (this.h2Elem) this.h2Elem.innerText = h2 || '0'
+    if (this.m1Elem) this.m1Elem.innerText = m1 || '0'
+    if (this.m2Elem) this.m2Elem.innerText = m2 || '0'
 
     if (ampm.value === 'am' || ampm.value === 'pm') {
-      this.meridiem.innerText = ampm.value
-      this.meridiem.classList.add(ampm.value)
+      if (this.meridiem) this.meridiem.innerText = ampm.value
+      if (this.meridiem) this.meridiem.classList.add(ampm.value)
     }
   }
 
-  public availableFunctions = [
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: 'current_time_hour',
-      func: this.currentTimeHour.bind(this),
+      func: (...args: unknown[]) => this.currentTimeHour(args[0] as ExecutionContext),
       description: 'Returns the current hour',
     },
     {
       name: 'current_time_minute',
-      func: this.currentTimeMinute.bind(this),
+      func: (...args: unknown[]) => this.currentTimeMinute(args[0] as ExecutionContext),
       description: 'Returns the current minute',
     },
     {
       name: 'display_time',
-      func: this.displayTime.bind(this),
+      func: (...args: unknown[]) => this.displayTime(
+        args[0] as ExecutionContext,
+        args[1] as Jiki.JikiString,
+        args[2] as Jiki.JikiString,
+        args[3] as Jiki.JikiString
+      ),
       description: 'Writes the hour, minute and am/pm onto the digital display',
     },
   ]
 
-  public override getExerciseSpecificFunctions() {
+  public getExerciseSpecificFunctions() {
     return []
   }
 }

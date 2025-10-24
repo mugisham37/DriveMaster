@@ -5,11 +5,22 @@ import { JikiscriptValue } from '@/lib/interpreter/frames'
 // Configuration types
 export interface Config {
   projectType: string
+  testsType?: string
+  interpreterOptions?: unknown
+  exerciseFunctions?: string[]
+  exerciseClasses?: string[]
   [key: string]: unknown
 }
 
 // Task and test types
 export interface TaskTest {
+  name: string
+  slug: string
+  descriptionHtml?: string
+  function?: string
+  args?: unknown[]
+  expression?: string
+  codeRun?: string
   imageSlug?: string
   setupFunctions?: Array<[string, unknown[]]>
   checks?: ExpectCheck[]
@@ -17,7 +28,7 @@ export interface TaskTest {
 }
 
 export interface TestSuiteResult<T = unknown> {
-  status: 'success' | 'error' | 'pending'
+  status: 'success' | 'error' | 'pending' | 'pass' | 'fail'
   result?: T
   error?: Error
   [key: string]: unknown
@@ -45,7 +56,8 @@ export type ExpectCheck = ExpectCheckFunction | ExpectCheckProperty
 
 // Enhanced Frame type with proper typing
 export interface EnhancedFrame {
-  timelineTime: number
+  time?: number
+  timelineTime?: number
   line: number
   status: 'success' | 'error' | 'pending'
   result?: JikiscriptValue
@@ -74,7 +86,7 @@ export interface AnimationTimelineInstance {
   pause(): void
   seek(time: number): void
   seekEndOfTimeline(): void
-  onUpdate(callback: (anime: AnimationTimelineInstance) => void): void
+  onUpdate(callback: (anim: { currentTime: number; duration: number; paused: boolean; completed: boolean }) => void): void
 }
 
 // Exercise and Project types
@@ -142,19 +154,14 @@ export interface InformationWidgetData {
   status: 'SUCCESS' | 'ERROR'
 }
 
-// Additional types for test runner
-export interface TaskTest {
-  name: string
-  slug: string
-  descriptionHtml?: string
-  function?: string
-  args?: unknown[]
-  expression?: string
+// Matcher result type (matches the one in Matchers.d.ts)
+export interface MatcherResult {
+  actual: unknown
+  pass: boolean
   codeRun?: string
-  imageSlug?: string
-  setupFunctions?: Array<[string, unknown[]]>
-  checks?: ExpectCheck[]
-  [key: string]: unknown
+  errorHtml?: string
+  expected?: unknown
+  matcher: AvailableMatchers
 }
 
 export type TestCallback = () => {
@@ -169,9 +176,32 @@ export type TestCallback = () => {
   view?: HTMLElement
 }
 
-export interface SetupFunction extends Array<unknown> {
-  0: string // function name
-  1?: unknown[] // parameters
+export type SetupFunction = [string, unknown[]?]
+
+// Available matchers type (matches the one in Matchers.d.ts)
+export type AvailableMatchers =
+  | 'toBe'
+  | 'toBeTrue'
+  | 'toBeFalse'
+  | 'toBeDefined'
+  | 'toBeUndefined'
+  | 'toEqual'
+  | 'toBeGreaterThan'
+  | 'toBeLessThan'
+  | 'toBeGreaterThanOrEqual'
+  | 'toBeLessThanOrEqual'
+  | 'toContain'
+  | 'toMatch'
+  | 'toIncludeSameMembers'
+
+// Interpreter result type
+export interface InterpretResult {
+  meta: {
+    functionCallLog: Record<string, unknown[][]>
+    statements: unknown[]
+    sourceCode: string
+  }
+  output?: unknown
 }
 
 export interface NewTestResult {

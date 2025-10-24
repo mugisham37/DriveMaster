@@ -13,7 +13,7 @@ import { ResetButton } from './ResetButton'
 import { CompletedBonusTasksModal } from '../../modals/CompletedBonusTasksModal/CompletedBonusTasksModal'
 import { CustomFunctionsButton } from '../../CustomFunctionEditor/Header/CustomFunctionsButton'
 
-function _Header() {
+function Header() {
   const { areAllTasksCompleted } = useTaskStore()
   const { solution, links, exercise } = useContext(
     JikiscriptExercisePageContext
@@ -88,4 +88,5 @@ function _Header() {
   )
 }
 
-export const Header = wrapWithErrorBoundary(_Header)
+export { Header }
+export default wrapWithErrorBoundary(Header)

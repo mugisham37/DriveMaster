@@ -113,7 +113,7 @@ function VideoGridHeader({
   tracks: VideoTrack[]
   handleTrackChange: HandleTrackChangeType
   selectedTrack: VideoTrack
-  t: any
+  t: (key: string) => string
 }): React.JSX.Element {
   return (
     <div className="flex mb-24 sm:flex-row flex-col">

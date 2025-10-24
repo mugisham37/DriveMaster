@@ -1,64 +1,64 @@
-import React, { useState, useCallback } from 'react'
-import { useMutation, QueryKey, useQueryClient } from '@tanstack/react-query'
-import { typecheck } from '@/utils'
-import { sendRequest } from '@/utils/send-request'
-import { FormButton } from '@/components/common/FormButton'
-import { ErrorMessage, ErrorBoundary } from '@/components/ErrorBoundary'
-import { BadgeModal } from '@/components/modals/BadgeModal'
-import type { Badge as BadgeProps, PaginatedResult } from '@/components/types'
+import React, { useState, useCallback } from "react";
+import { useMutation, QueryKey, useQueryClient } from "@tanstack/react-query";
+import { typecheck } from "@/utils";
+import { sendRequest } from "@/utils/send-request";
+import { FormButton } from "@/components/common/FormButton";
+import { ErrorMessage, ErrorBoundary } from "@/components/ErrorBoundary";
+import { BadgeModal } from "@/components/modals/BadgeModal";
+import type { Badge as BadgeProps, PaginatedResult } from "@/components/types";
 
-const DEFAULT_ERROR = new Error('Unable to reveal badge')
+const DEFAULT_ERROR = new Error("Unable to reveal badge");
 
 export const UnrevealedBadge = ({
   badge,
   cacheKey,
 }: {
-  badge: BadgeProps
-  cacheKey: QueryKey
+  badge: BadgeProps;
+  cacheKey: QueryKey;
 }): React.ReactElement => {
-  const queryClient = useQueryClient()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [revealedBadge, setRevealedBadge] = useState<BadgeProps | null>(null)
+  const queryClient = useQueryClient();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [revealedBadge, setRevealedBadge] = useState<BadgeProps | null>(null);
   const {
     mutate: mutation,
     status,
     error,
   } = useMutation<BadgeProps>({
     mutationFn: async () => {
-      const revealEndpoint = badge.links?.reveal
+      const revealEndpoint = badge.links?.reveal;
       if (!revealEndpoint) {
-        throw new Error('No reveal endpoint available')
+        throw new Error("No reveal endpoint available");
       }
-      
+
       const { fetch } = sendRequest({
         endpoint: revealEndpoint,
-        method: 'PATCH',
+        method: "PATCH",
         body: undefined,
-      })
+      });
 
-      return fetch.then((json) => typecheck<BadgeProps>(json, 'badge'))
+      return fetch.then((json) => typecheck<BadgeProps>(json, "badge"));
     },
     onSuccess: (badge) => {
-      setRevealedBadge(badge)
-      setIsModalOpen(true)
+      setRevealedBadge(badge);
+      setIsModalOpen(true);
     },
-  })
+  });
 
   const updateCache = useCallback(() => {
     const oldData =
-      queryClient.getQueryData<PaginatedResult<BadgeProps>>(cacheKey)
+      queryClient.getQueryData<PaginatedResult<BadgeProps>>(cacheKey);
 
     if (!oldData || !revealedBadge) {
-      return
+      return;
     }
 
     queryClient.setQueryData(cacheKey, {
       ...oldData,
       results: oldData.results.map((oldBadge) => {
-        return oldBadge.uuid === revealedBadge.uuid ? revealedBadge : oldBadge
+        return oldBadge.uuid === revealedBadge.uuid ? revealedBadge : oldBadge;
       }),
-    })
-  }, [cacheKey, revealedBadge, queryClient])
+    });
+  }, [cacheKey, revealedBadge, queryClient]);
 
   return (
     <React.Fragment>
@@ -83,12 +83,12 @@ export const UnrevealedBadge = ({
           badge={revealedBadge}
           open={isModalOpen}
           onClose={() => {
-            setIsModalOpen(false)
-            updateCache()
+            setIsModalOpen(false);
+            updateCache();
           }}
           wasUnrevealed
         />
       ) : null}
     </React.Fragment>
-  )
-}
+  );
+};

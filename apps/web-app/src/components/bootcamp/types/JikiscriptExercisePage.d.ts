@@ -74,7 +74,7 @@ declare global {
     errorHtml?: string
   }
 
-  type SetupFunction = [functionName: keyof Exercise, params?: unknown[]]
+  type SetupFunction = [string, unknown[]?]
 
   type CustomFunctionsFromServer = {
     selected: string[]

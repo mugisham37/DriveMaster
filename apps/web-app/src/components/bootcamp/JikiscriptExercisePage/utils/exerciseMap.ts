@@ -14,9 +14,7 @@ import FormalRobotsExercise from '../exercises/formal_robots/FormalRobotsExercis
 
 import { Exercise } from '../exercises/Exercise'
 
-interface Config {
-  projectType?: string
-}
+import type { Config } from '../../types/JikiscriptTypes'
 
 export interface ExerciseConstructor {
   new (...args: unknown[]): Exercise
@@ -25,19 +23,19 @@ export interface ExerciseConstructor {
 export type Project = ExerciseConstructor
 const projectsCache = new Map<string, Project>()
 
-projectsCache.set('draw', DrawExercise as Project)
-projectsCache.set('maze', MazeExercise)
-projectsCache.set('wordle', WordleExercise)
-projectsCache.set('golf', GolfExercise)
-projectsCache.set('space-invaders', SpaceInvadersExercise)
-projectsCache.set('digital-clock', DigitalClockExercise)
-projectsCache.set('rock-paper-scissors', RockPaperScissorsExercise)
-projectsCache.set('tic-tac-toe', TicTacToeExercise)
-projectsCache.set('breakout', BreakoutExercise)
-projectsCache.set('weather', WeatherExercise)
-projectsCache.set('house', HouseExercise)
-projectsCache.set('data', DataExercise)
-projectsCache.set('formal-robots', FormalRobotsExercise)
+projectsCache.set('draw', DrawExercise as unknown as Project)
+projectsCache.set('maze', MazeExercise as unknown as Project)
+projectsCache.set('wordle', WordleExercise as unknown as Project)
+projectsCache.set('golf', GolfExercise as unknown as Project)
+projectsCache.set('space-invaders', SpaceInvadersExercise as unknown as Project)
+projectsCache.set('digital-clock', DigitalClockExercise as unknown as Project)
+projectsCache.set('rock-paper-scissors', RockPaperScissorsExercise as unknown as Project)
+projectsCache.set('tic-tac-toe', TicTacToeExercise as unknown as Project)
+projectsCache.set('breakout', BreakoutExercise as unknown as Project)
+projectsCache.set('weather', WeatherExercise as unknown as Project)
+projectsCache.set('house', HouseExercise as unknown as Project)
+projectsCache.set('data', DataExercise as unknown as Project)
+projectsCache.set('formal-robots', FormalRobotsExercise as unknown as Project)
 
 export default projectsCache
 

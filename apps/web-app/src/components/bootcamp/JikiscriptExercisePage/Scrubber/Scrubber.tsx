@@ -246,7 +246,7 @@ function BreakpointStepperButtons({
     breakpoints
   )
   const isNextBreakpoint = nextBreakpointExists(
-    currentFrame.timelineTime,
+    currentFrame.timelineTime ?? 0,
     frames,
     breakpoints
   )
@@ -268,11 +268,11 @@ function BreakpointStepperButtons({
 }
 
 function prevFrameExists(timelineTime: number, frames: Frame[]) {
-  return frames.some((frame) => frame.timelineTime < timelineTime)
+  return frames.some((frame) => (frame.timelineTime ?? 0) < timelineTime)
 }
 
 function nextFrameExists(timelineTime: number, frames: Frame[]) {
-  return frames.some((frame) => frame.timelineTime > timelineTime)
+  return frames.some((frame) => (frame.timelineTime ?? 0) > timelineTime)
 }
 
 function prevBreakpointExists(
@@ -284,7 +284,7 @@ function prevBreakpointExists(
     return frames.some((frame) => {
       return (
         frame.line === breakpoint &&
-        frame.timelineTime < currentFrame.timelineTime
+        (frame.timelineTime ?? 0) < (currentFrame.timelineTime ?? 0)
       )
     })
   })
@@ -297,7 +297,7 @@ function nextBreakpointExists(
 ) {
   return breakpoints.some((breakpoint) => {
     return frames.some((frame) => {
-      return frame.line === breakpoint && frame.timelineTime > timelineTime
+      return frame.line === breakpoint && (frame.timelineTime ?? 0) > timelineTime
     })
   })
 }

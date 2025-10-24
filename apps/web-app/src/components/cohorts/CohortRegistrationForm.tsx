@@ -74,7 +74,7 @@ export function CohortRegistrationForm({ cohort, membership }: CohortRegistratio
                 Sign up for {cohort.name}
               </h3>
               <p className="text-p-xlarge mb-16 text-center mx-auto max-w-[600px]">
-                To join {cohort.name.split('(')[0]}, you'll need to create an Exercism account or sign in to your existing one.
+                To join {cohort.name.split('(')[0]}, you&apos;ll need to create an Exercism account or sign in to your existing one.
               </p>
 
               <div className="buttons flex mb-40 flex-col sm:flex-row">

@@ -67,7 +67,7 @@ export function ExhortContent({ cohort }: ExhortContentProps) {
               </p>
               <ul className="text-p-xlarge mb-16 list-disc pl-20">
                 <li className="mb-6">Completely free access to all materials</li>
-                <li className="mb-6">Flexible start date - begin when you're ready</li>
+                <li className="mb-6">Flexible start date - begin when you&apos;re ready</li>
                 <li className="mb-6">Learn at your own pace</li>
                 <li className="mb-6">Work individually or pair with others</li>
                 <li className="mb-6">Share your progress and celebrate together</li>
@@ -106,7 +106,7 @@ export function ExhortContent({ cohort }: ExhortContentProps) {
               <div className="text-gradient ml-24">Gain fluency in {cohort.track.title}</div>
             </h2>
 
-            <h3 className="text-h1">A taste of what you'll learn</h3>
+            <h3 className="text-h1">A taste of what you&apos;ll learn</h3>
 
             <hr className="c-divider my-24" />
             <p className="text-p-xlarge mb-16 text-center">
@@ -116,7 +116,7 @@ export function ExhortContent({ cohort }: ExhortContentProps) {
 
             <p className="text-p-xlarge mb-32 text-center">
               <strong>
-                Plus, you'll get personalized mentoring to help you improve your {cohort.track.title} skills 
+                Plus, you&apos;ll get personalized mentoring to help you improve your {cohort.track.title} skills 
                 and learn best practices from experienced developers.
               </strong>
             </p>

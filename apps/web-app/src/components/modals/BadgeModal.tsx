@@ -10,10 +10,9 @@ interface BadgeModalProps {
   badge?: Badge
   open?: boolean
   onClose?: () => void
-  wasUnrevealed?: boolean
 }
 
-export function BadgeModal({ badge, open = false, onClose, wasUnrevealed = false }: BadgeModalProps): React.ReactElement | null {
+export function BadgeModal({ badge, open = false, onClose }: BadgeModalProps): React.ReactElement | null {
   const [isOpen, setIsOpen] = useState(open)
   const { registerModal, canShowModal } = useModalManager()
 

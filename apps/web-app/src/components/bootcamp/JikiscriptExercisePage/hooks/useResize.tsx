@@ -81,7 +81,7 @@ export function useResizablePanels({
     }
     setPrimarySize(newPrimarySize)
     setSecondarySize(containerSize - newPrimarySize)
-  }, [primarySize, direction, onChange])
+  }, [primarySize, direction, onChange, setPrimarySize])
 
   useEffect(() => {
     window.addEventListener('resize', handleResize)

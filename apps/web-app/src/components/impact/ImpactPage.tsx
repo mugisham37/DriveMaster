@@ -14,8 +14,7 @@ export function ImpactPage({
   submissionsCount,
   discussionsCount,
   usersPerMonth,
-  milestones,
-  metrics: _metrics
+  milestones
 }: ImpactPageProps) {
   const usersPerMonthData = JSON.parse(usersPerMonth)
   const milestonesData = JSON.parse(milestones)

@@ -69,7 +69,7 @@ export function generateExpects(
       checkActual = actual
     }
 
-    const errorHtml = check.errorHtml?.replaceAll('%actual%', checkActual) || ''
+    const errorHtml = check.errorHtml?.replaceAll('%actual%', String(checkActual)) || ''
     if (check.value == undefined) {
       check.value = "THIS SHOULDN'T BE UNDEFINED"
     }
@@ -80,6 +80,6 @@ export function generateExpects(
       codeRun: codeRun ?? '',
       errorHtml: errorHtml ?? '',
       matcher, // Useful for logging and the actual tests
-    })[matcher as AvailableMatchers](check.value)
+    })[matcher as unknown as AvailableMatchers](check.value)
   })
 }

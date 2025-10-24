@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { QueryKey, useQueryClient } from '@tanstack/react-query'
 import { Modal, ModalProps } from './Modal'
-import { TrackSelector } from '@/components/mentoring/TrackSelector'
+import TrackSelector from '@/components/mentoring/TrackSelector'
 import { useMutation } from '@tanstack/react-query'
 import { sendRequest } from '@/utils/send-request'
 import { MentoredTrack } from '@/types'

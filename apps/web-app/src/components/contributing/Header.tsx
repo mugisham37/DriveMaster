@@ -37,7 +37,7 @@ export function ContributingHeader({
       <div className="lg-container top-container">
         <div className="content">
           <GraphicalIcon icon="contributing-header" />
-          <h1>Let's build the best coding education platform, together</h1>
+          <h1>Let&apos;s build the best coding education platform, together</h1>
           <p>
             Exercism is an{' '}
             <Link href="/about" className="text-linkColor">

@@ -1,4 +1,3 @@
-import React from 'react'
 import DrawExercise from '../draw'
 import { ExecutionContext } from '@/lib/interpreter/executor'
 
@@ -57,7 +56,7 @@ export default class WeatherExercise extends DrawExercise {
   // TODO: How do I get just the ones I want out of DrawExercise
   // (circle, fillColorHex, fillColorRGB, fillColorHSL)
   // and then add the new ones to this?
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'clear',
       func: this.clear.bind(this),
@@ -105,7 +104,7 @@ export default class WeatherExercise extends DrawExercise {
     },
   ]
 
-  public override getExerciseSpecificFunctions() {
+  public getExerciseSpecificFunctions() {
     return []
   }
 }

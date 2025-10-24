@@ -1,9 +1,7 @@
-import React from 'react'
-import type { ExecutionContext } from '@/lib/interpreter/executor'
+import type { ExecutionContext, ExternalFunction } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { InterpretResult } from '@/lib/interpreter/interpreter'
-import { AnimeCSSProperties } from '../../AnimationTimeline/types'
 import { buildWordleGame } from './WordleGame'
 
 type state = 'absent' | 'present' | 'correct' | 'correct'
@@ -28,19 +26,21 @@ export default class WordleExercise extends Exercise {
     super('wordle')
   }
 
-  public setTargetWord(_: ExecutionContext, word: string) {
+  public setTargetWord(executionCtx: ExecutionContext, word: string) {
+    void executionCtx; // Avoid unused parameter warning
     this.targetWord = word
   }
-  private getTargetWord(_: ExecutionContext) {
+  private getTargetWord(executionCtx: ExecutionContext) {
+    void executionCtx; // Avoid unused parameter warning
     return this.targetWord
   }
 
   public createGame(executionCtx: ExecutionContext) {
-    this.game = this.WordleGame.instantiate(executionCtx, [])
-    this.game.getMethod('draw_board').fn.call(this.game, executionCtx)
+    this.game = (this.WordleGame as unknown as { instantiate: (ctx: ExecutionContext, args: unknown[]) => unknown }).instantiate(executionCtx, [])
+    ;(this.game as unknown as { getMethod: (name: string) => { fn: { call: (game: unknown, ctx: ExecutionContext) => void } } }).getMethod('draw_board').fn.call(this.game, executionCtx)
   }
 
-  private addWord(executionCtx: ExecutionContext, row, guess, states) {
+  private addWord(executionCtx: ExecutionContext, row: number, guess: string, states: string[]) {
     if (row == undefined || row == null) {
       executionCtx.logicError(
         'Row is undefined or null. Please provide a valid row number.'
@@ -57,7 +57,7 @@ export default class WordleExercise extends Exercise {
       )
     }
 
-    this.game
+    ;(this.game as unknown as { getMethod: (name: string) => { fn: { call: (game: unknown, ...args: unknown[]) => void } } })
       .getMethod('add_word')
       .fn.call(
         this.game,
@@ -69,7 +69,8 @@ export default class WordleExercise extends Exercise {
       )
   }
 
-  public setupView(_: ExecutionContext) {
+  public setupView(executionCtx: ExecutionContext) {
+    void executionCtx; // Avoid unused parameter warning
     this.container = document.createElement('div')
     this.container.classList.add('container')
     this.view.appendChild(this.container)
@@ -87,7 +88,8 @@ export default class WordleExercise extends Exercise {
     })
   }
 
-  public drawGuesses(_: ExecutionContext, guesses: string[]) {
+  public drawGuesses(executionCtx: ExecutionContext, guesses: string[]) {
+    void executionCtx; // Avoid unused parameter warning
     guesses.forEach((guess, idx) => {
       this.drawGuess(null, idx, guess)
     })
@@ -101,13 +103,17 @@ export default class WordleExercise extends Exercise {
   ) {
     if (
       this.guessRows.length === 0 ||
-      this.guessRows[0].children.length === 0
+      this.guessRows[0]?.children.length === 0
     ) {
       executionCtx?.logicError(
         'Ooops! You need to draw the board before you can add words.'
       )
     }
     const row = this.guessRows[idx]
+    if (!row) {
+      executionCtx?.logicError('Invalid row index')
+      return
+    }
     const letters = row.getElementsByClassName('letter')
 
     // Compare input with the target word
@@ -132,7 +138,7 @@ export default class WordleExercise extends Exercise {
     const row = document.createElement('div')
     row.classList.add('guess')
 
-    const randomId = `letter-${Math.random().toString(36).substr(2, 9)}`
+    const randomId = `letter-${Math.random().toString(36).substring(2, 11)}`
     row.innerHTML = `
       <div class="letter" id="${randomId}_0" style="color:rgba(255,255,255,0);background-color:rgba(255,255,255)"></div>
       <div class="letter" id="${randomId}_1" style="color:rgba(255,255,255,0);background-color:rgba(255,255,255)"></div>
@@ -169,11 +175,15 @@ export default class WordleExercise extends Exercise {
       return executionCtx.logicError('Oops, the second input must be a list.')
     }
     const row = this.guessRows[rowIdx.value - 1]
+    if (!row) {
+      return executionCtx.logicError('Invalid row index')
+    }
     this.states[rowIdx.value - 1] = Jiki.unwrapJikiObject(states) as state[]
 
-    const letters = row.getElementsByClassName('letter')
-    states.value.forEach((color: Jiki.JikiObject, idx: number) => {
-      if (!(color instanceof Jiki.String)) {
+    const letters = Array.from(row.getElementsByClassName('letter'))
+    const stateValues = states.value as unknown as Jiki.JikiString[]
+    stateValues.forEach((color: Jiki.JikiString, idx: number) => {
+      if (!(color instanceof Jiki.JikiString)) {
         return executionCtx.logicError('Color must be a string')
       }
       if (idx > 4) {
@@ -181,7 +191,7 @@ export default class WordleExercise extends Exercise {
           'There are only 5 letters so there should only be 5 states for each guess.'
         )
       }
-      const backgroundColor: string = this.STATE_COLORS[color.value]
+      const backgroundColor: string = this.STATE_COLORS[color.value as state]
       if (!backgroundColor) {
         return executionCtx.logicError('Invalid state')
       }
@@ -389,45 +399,62 @@ export default class WordleExercise extends Exercise {
 
     'magic',
   ]
-  private getCommonWords = (_: ExecutionContext) =>
-    Jiki.wrapJSToJikiObject(this.commonWords)
-  private getCommonWordsJS = (_: ExecutionContext) => [...this.commonWords]
+  private getCommonWords = (executionCtx: ExecutionContext) => {
+    void executionCtx; // Avoid unused parameter warning
+    return Jiki.wrapJSToJikiObject(this.commonWords)
+  }
+  private getCommonWordsJS = (executionCtx: ExecutionContext) => {
+    void executionCtx; // Avoid unused parameter warning
+    return [...this.commonWords]
+  }
 
   public availableClasses = [this.WordleGame]
-  public availableFunctions = [
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: 'color_row',
-      func: this.colorRow.bind(this),
+      func: (...args: unknown[]) => this.colorRow(
+        args[0] as ExecutionContext,
+        args[1] as Jiki.JikiObject,
+        args[2] as Jiki.JikiObject
+      ),
       description: 'colored the squares in the row',
     },
     {
       name: 'color_top_row',
-      func: this.colorTopRow.bind(this),
+      func: (...args: unknown[]) => this.colorTopRow(
+        args[0] as ExecutionContext,
+        args[1] as Jiki.JikiObject
+      ),
       description: 'colored the squares in the top row',
     },
     {
       name: 'common_words',
-      func: this.getCommonWords.bind(this),
+      func: (...args: unknown[]) => this.getCommonWords(args[0] as ExecutionContext),
       description: 'returns the words in the game',
     },
     {
       name: 'getCommonWords',
-      func: this.getCommonWordsJS.bind(this),
+      func: (...args: unknown[]) => this.getCommonWordsJS(args[0] as ExecutionContext),
       description: 'returns the words in the game',
     },
     {
       name: 'addWord',
-      func: this.addWord.bind(this),
+      func: (...args: unknown[]) => this.addWord(
+        args[0] as ExecutionContext,
+        args[1] as number,
+        args[2] as string,
+        args[3] as string[]
+      ),
       description: 'adds a word to the board',
     },
     {
       name: 'getTargetWord',
-      func: this.getTargetWord.bind(this),
+      func: (...args: unknown[]) => this.getTargetWord(args[0] as ExecutionContext),
       description: 'returns the target word',
     },
   ]
 
-  public override getExerciseSpecificFunctions() {
+  public getExerciseSpecificFunctions() {
     return []
   }
 }

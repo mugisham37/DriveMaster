@@ -26,7 +26,7 @@ export function DashboardSummaryBar({
           user={{
             avatarUrl: user.image || '',
             handle: user.handle || '',
-            flair: user.flair?.name as any
+            flair: user.flair?.name as string | undefined
           }} 
         />
         

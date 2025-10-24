@@ -1,8 +1,8 @@
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
-import { immer } from 'zustand/middleware/immer'
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 // TODO: Fix this, move this to global declaration file
-import type { StateWithMiddleware, StateSetter } from './types'
+import type { StateWithMiddleware, StateSetter } from "./types";
 
 // TODO: Typing this is insanely complicated. Reduce complexity.
 
@@ -12,7 +12,7 @@ export function createStoreWithMiddlewares<State>(
 ) {
   return create<State, StateWithMiddleware>(
     devtools(immer(config), { name: storeName })
-  )
+  );
 }
 
 export function createSetter<State, Key extends keyof State>(
@@ -26,18 +26,18 @@ export function createSetter<State, Key extends keyof State>(
   return (input: State[Key] | ((draft: State[Key]) => State[Key])) =>
     set(
       (state) => {
-        if (typeof input === 'function') {
-          state[key] = (input as (value: State[Key]) => State[Key])(state[key])
+        if (typeof input === "function") {
+          state[key] = (input as (value: State[Key]) => State[Key])(state[key]);
         } else {
-          state[key] = input
+          state[key] = input;
         }
       },
       false,
       `exercise/set${capitalize(String(key))}`
-    )
+    );
 }
 
 function capitalize(str: string): string {
-  if (!str) return str
-  return str.charAt(0).toUpperCase() + str.slice(1)
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

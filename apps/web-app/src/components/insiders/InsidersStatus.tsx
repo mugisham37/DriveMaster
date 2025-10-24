@@ -55,12 +55,9 @@ type Response = {
 
 export function InsidersStatus({
   activateInsiderLink,
-  captchaRequired: _captchaRequired,
   insidersStatusRequest,
   links,
-  recaptchaSiteKey: _recaptchaSiteKey,
   status,
-  userSignedIn: _userSignedIn,
 }: InsidersStatusData): React.JSX.Element {
   const { t } = useAppTranslation('components/insiders')
   const [insidersStatus, setInsidersStatus] = useState(status)

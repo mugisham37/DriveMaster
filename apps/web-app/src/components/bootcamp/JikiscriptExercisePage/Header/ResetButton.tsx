@@ -22,7 +22,7 @@ export function ResetButton() {
     setInspectedTestResult(null)
     setShouldShowBonusTasks(false)
     initializeTasks(exercise.tasks, null)
-  }, [resetEditorToStub, setShouldOpenConfirmationModal])
+  }, [resetEditorToStub, setShouldOpenConfirmationModal, setTestSuiteResult, setInspectedTestResult, setShouldShowBonusTasks, initializeTasks, exercise.tasks])
 
   return (
     <>
@@ -33,7 +33,7 @@ export function ResetButton() {
         Reset
       </button>
 
-      {/* @ts-ignore */}
+
       <Modal
         ariaHideApp={false}
         isOpen={shouldOpenConfirmationModal}
@@ -44,7 +44,7 @@ export function ResetButton() {
           Are you sure?
         </h2>
         <p className="text-18 leading-140 mb-16">
-          Are you sure you want to reset to the starting code? You'll lose your
+          Are you sure you want to reset to the starting code? You&apos;ll lose your
           progress on this exercise.
         </p>
 

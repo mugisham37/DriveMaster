@@ -20,7 +20,7 @@ export function CompletedLevelView() {
       {nextLevelIdx ? (
         <>
           <p className="text-18 leading-140 mb-20">
-            You're now onto Level {nextLevelIdx} - a brand new challenge!
+            You&apos;re now onto Level {nextLevelIdx} - a brand new challenge!
             Remember to watch the teaching video in full before starting the
             exercises.
           </p>
