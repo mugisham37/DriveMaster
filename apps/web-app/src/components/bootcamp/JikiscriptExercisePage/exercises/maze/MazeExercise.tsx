@@ -1,4 +1,4 @@
-import React from 'react'
+
 import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
 import cloneDeep from 'lodash.clonedeep'

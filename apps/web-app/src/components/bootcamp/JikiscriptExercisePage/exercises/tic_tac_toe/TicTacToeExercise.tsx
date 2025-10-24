@@ -1,19 +1,17 @@
-import React from 'react'
-import { Exercise } from '../Exercise'
 import { ExecutionContext } from '@/lib/interpreter/executor'
-import { addOrdinalSuffix } from '@/lib/interpreter/describers/helpers'
 import DrawExercise from '../draw/DrawExercise'
 import { Color } from '../draw/shapes'
 
 export default class TicTacToeExercise extends DrawExercise {
-  protected strokeColor: Color = { type: 'hex', color: '#333' }
-  protected strokeWidth = 1
-  protected fillColor: Color = { type: 'hex', color: '#ffffff' }
+  protected override strokeColor: Color = { type: 'hex', color: '#333' }
+  protected override strokeWidth = 1
+  protected override fillColor: Color = { type: 'hex', color: '#ffffff' }
+  private resultElem: HTMLDivElement
 
   public constructor() {
     super('tic-tac-toe')
     this.resultElem = document.createElement('div')
-    this.resultElem.style.opacity = 0
+    this.resultElem.style.opacity = '0'
     this.resultElem.style.height = '0'
     this.resultElem.style.top = '-100%'
     this.resultElem.classList.add('result')

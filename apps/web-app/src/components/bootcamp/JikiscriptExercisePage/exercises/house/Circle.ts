@@ -9,16 +9,16 @@ function fn(this: HouseExercise) {
     executionCtx: ExecutionContext,
     circle: Jiki.Instance
   ) => {
-    if (circle["shape"]) {
-      this.animateShapeOutOfView(executionCtx, circle["shape"].element);
+    if (circle.shape) {
+      this.animateShapeOutOfView(executionCtx, (circle.shape as any).element);
     }
 
     this.fillColorHex(executionCtx, circle.getField("fill_color_hex"));
     this.circle(
       executionCtx,
-      circle.getField("cx") as Jiki.Number,
-      circle.getField("cy") as Jiki.Number,
-      circle.getField("radius") as Jiki.Number
+      circle.getField("cx") as Jiki.JikiNumber,
+      circle.getField("cy") as Jiki.JikiNumber,
+      circle.getField("radius") as Jiki.JikiNumber
     );
     storeShape(this, circle);
 
@@ -48,16 +48,16 @@ function fn(this: HouseExercise) {
     fillColorHex: Jiki.JikiObject,
     z_index: Jiki.JikiObject
   ) {
-    if (!(cx instanceof Jiki.Number)) {
+    if (!(cx instanceof Jiki.JikiNumber)) {
       return executionCtx.logicError("Ooops! Cx must be a number.");
     }
-    if (!(cy instanceof Jiki.Number)) {
+    if (!(cy instanceof Jiki.JikiNumber)) {
       return executionCtx.logicError("Ooops! Cy must be a number.");
     }
-    if (!(radius instanceof Jiki.Number)) {
+    if (!(radius instanceof Jiki.JikiNumber)) {
       return executionCtx.logicError("Ooops! Radius must be a number.");
     }
-    if (!(z_index instanceof Jiki.Number)) {
+    if (!(z_index instanceof Jiki.JikiNumber)) {
       return executionCtx.logicError("Ooops! Z-index must be a number.");
     }
     guardValidHex(executionCtx, fillColorHex);
@@ -69,8 +69,12 @@ function fn(this: HouseExercise) {
     object.setField("z_index", z_index);
     drawCircle(executionCtx, object);
   });
-  Circle.addGetter("cx", "public");
-  Circle.addGetter("cy", "public");
+  Circle.addGetter("cx", "public", function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField("cx");
+  });
+  Circle.addGetter("cy", "public", function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField("cy");
+  });
 
   Circle.addSetter(
     "cx",
@@ -80,7 +84,7 @@ function fn(this: HouseExercise) {
       object: Jiki.Instance,
       cx: Jiki.JikiObject
     ) {
-      if (!(cx instanceof Jiki.Number)) {
+      if (!(cx instanceof Jiki.JikiNumber)) {
         return executionCtx.logicError("Ooops! Cx must be a number.");
       }
       object.setField("cx", cx);
@@ -96,7 +100,7 @@ function fn(this: HouseExercise) {
       object: Jiki.Instance,
       cy: Jiki.JikiObject
     ) {
-      if (!(cy instanceof Jiki.Number)) {
+      if (!(cy instanceof Jiki.JikiNumber)) {
         return executionCtx.logicError("Ooops! Cy must be a number.");
       }
       object.setField("cy", cy);
@@ -112,7 +116,7 @@ function fn(this: HouseExercise) {
       object: Jiki.Instance,
       brightness: Jiki.JikiObject
     ) {
-      if (!(brightness instanceof Jiki.Number)) {
+      if (!(brightness instanceof Jiki.JikiNumber)) {
         return executionCtx.logicError("Ooops! Brightness must be a number.");
       }
       if (brightness.value < 0 || brightness.value > 100) {
@@ -125,6 +129,6 @@ function fn(this: HouseExercise) {
   return Circle;
 }
 
-export function buildCircle(binder: any) {
+export function buildCircle(binder: HouseExercise) {
   return fn.bind(binder)();
 }

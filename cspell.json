@@ -756,7 +756,8 @@
     "sigificant",
     "verisons",
     "dedented",
-    "initialises"
+    "initialises",
+    "parameterized"
   ],
   "ignorePaths": [
     "node_modules/**",

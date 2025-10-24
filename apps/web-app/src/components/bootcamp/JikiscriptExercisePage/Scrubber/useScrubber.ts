@@ -302,7 +302,7 @@ export function useScrubber({
       // This helps us not reset to the initial state accidently later.
       // onUpdate calls when the animation starts before anything has
       // happened, so we guard against progres being 0.
-      if ((anime as any).progress > 0) {
+      if ((anime as { progress: number }).progress > 0) {
         animationTimeline.hasPlayedOrScrubbed = true
       }
 

@@ -1,7 +1,6 @@
-import React from 'react'
 import { Exercise } from '../Exercise'
-import { ExecutionContext } from '@/interpreter/executor'
-import * as Jiki from '@/interpreter/jikiObjects'
+import { ExecutionContext } from '@/lib/interpreter/executor'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 type Choice = 'rock' | 'paper' | 'scissors'
 type Result = 'player_1' | 'player_2' | 'tie'
@@ -11,6 +10,9 @@ export default class RockPaperScissorsExercise extends Exercise {
   private player2Choice?: Choice
   private expectedResult?: Result
   private result?: Result
+  private container: HTMLDivElement
+  private player1Elem: HTMLDivElement
+  private player2Elem: HTMLDivElement
 
   public constructor() {
     super('rock-paper-scissors')
@@ -32,14 +34,19 @@ export default class RockPaperScissorsExercise extends Exercise {
     return { result: this.result }
   }
 
-  public setChoices(_: ExecutionContext, player1: Choice, player2: Choice) {
+  public setChoices(executionCtx: ExecutionContext, player1: Choice, player2: Choice) {
     this.player1Choice = player1
     this.player2Choice = player2
-    this.expectedResult = this.determineCorrectResult()
+    const result = this.determineCorrectResult()
+    if (result) {
+      this.expectedResult = result
+    }
 
     this.player1Elem.classList.add(`${player1}`)
     this.player2Elem.classList.add(`${player2}`)
-    this.view.classList.add(`result-${this.expectedResult}`)
+    if (this.expectedResult) {
+      this.view.classList.add(`result-${this.expectedResult}`)
+    }
   }
 
   private determineCorrectResult(): Result | undefined {
@@ -63,15 +70,15 @@ export default class RockPaperScissorsExercise extends Exercise {
     return 'player_2'
   }
 
-  public getPlayer1Choice(_: ExecutionContext): Jiki.String {
-    return new Jiki.String(this.player1Choice!)
+  public getPlayer1Choice(executionCtx: ExecutionContext): Jiki.JikiString {
+    return new Jiki.JikiString(this.player1Choice!)
   }
 
-  public getPlayer2Choice(_: ExecutionContext): Jiki.String {
-    return new Jiki.String(this.player2Choice!)
+  public getPlayer2Choice(executionCtx: ExecutionContext): Jiki.JikiString {
+    return new Jiki.JikiString(this.player2Choice!)
   }
 
-  public announceResult(executionCtx: ExecutionContext, result: Jiki.String) {
+  public announceResult(executionCtx: ExecutionContext, result: Jiki.JikiString) {
     const resultStr = result.value
     if (
       resultStr !== 'player_1' &&
@@ -85,14 +92,14 @@ export default class RockPaperScissorsExercise extends Exercise {
 
     this.result = resultStr
     if (resultStr !== this.expectedResult) {
-      // TODO: Change logic error to be paramatized and sanitize the strings in the interpreter.
+      // TODO: Change logic error to be parameterized and sanitize the strings in the interpreter.
       executionCtx.logicError(
         `Oh no! You announced the wrong result. There's chaos in the playing hall!\n\nYou should have announced \`"${this.expectedResult}"\` but you announced \`"${result}"\`.`
       )
     }
   }
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'announce_result',
       func: this.announceResult.bind(this),

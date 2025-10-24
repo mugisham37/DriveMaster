@@ -3,11 +3,11 @@ import * as Jiki from '@/lib/interpreter/jikiObjects'
 import MazeExercise from './MazeExercise'
 
 export type SquareInstance = Jiki.Instance & {
-  start: Jiki.Boolean
-  finish: Jiki.Boolean
-  wall: Jiki.Boolean
-  in_maze: Jiki.Boolean
-  contents: Jiki.String
+  start: Jiki.JikiBoolean
+  finish: Jiki.JikiBoolean
+  wall: Jiki.JikiBoolean
+  in_maze: Jiki.JikiBoolean
+  contents: Jiki.JikiString
 }
 
 function fn(this: MazeExercise) {
@@ -21,7 +21,7 @@ function fn(this: MazeExercise) {
       )
     }
 
-    square.setField('contents', new Jiki.String(''))
+    square.setField('contents', new Jiki.JikiString(''))
 
     const emojiSelector = `#${this.view.id} .cell-${square.getUnwrappedField(
       'row'
@@ -49,19 +49,19 @@ function fn(this: MazeExercise) {
     is_wall: Jiki.JikiObject,
     contents: Jiki.JikiObject
   ) {
-    if (!(row instanceof Jiki.Number))
+    if (!(row instanceof Jiki.JikiNumber))
       executionContext.logicError('row must be a Jiki.Number')
-    if (!(col instanceof Jiki.Number))
+    if (!(col instanceof Jiki.JikiNumber))
       executionContext.logicError('col must be a Jiki.Number')
-    if (!(in_maze instanceof Jiki.Boolean))
+    if (!(in_maze instanceof Jiki.JikiBoolean))
       executionContext.logicError('in_maze must be a Jiki.Boolean')
-    if (!(is_start instanceof Jiki.Boolean))
+    if (!(is_start instanceof Jiki.JikiBoolean))
       executionContext.logicError('is_start must be a Jiki.Boolean')
-    if (!(is_finish instanceof Jiki.Boolean))
+    if (!(is_finish instanceof Jiki.JikiBoolean))
       executionContext.logicError('is_finish must be a Jiki.Boolean')
-    if (!(is_wall instanceof Jiki.Boolean))
+    if (!(is_wall instanceof Jiki.JikiBoolean))
       executionContext.logicError('is_wall must be a Jiki.Boolean')
-    if (!(contents instanceof Jiki.String))
+    if (!(contents instanceof Jiki.JikiString))
       executionContext.logicError('contents must be a Jiki.String')
 
     object.setField('row', row)
@@ -72,11 +72,21 @@ function fn(this: MazeExercise) {
     object.setField('in_maze', in_maze)
     object.setField('contents', contents)
   })
-  Square.addGetter('is_start', 'public')
-  Square.addGetter('is_finish', 'public')
-  Square.addGetter('is_wall', 'public')
-  Square.addGetter('in_maze', 'public')
-  Square.addGetter('contents', 'public')
+  Square.addGetter('is_start', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField('is_start');
+  })
+  Square.addGetter('is_finish', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField('is_finish');
+  })
+  Square.addGetter('is_wall', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField('is_wall');
+  })
+  Square.addGetter('in_maze', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField('in_maze');
+  })
+  Square.addGetter('contents', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+    return object.getField('contents');
+  })
   Square.addMethod(
     'remove_emoji',
     'removed the emoji from the square',
@@ -89,6 +99,6 @@ function fn(this: MazeExercise) {
   return Square
 }
 
-export function buildSquare(binder: any) {
+export function buildSquare(binder: MazeExercise) {
   return fn.bind(binder)()
 }

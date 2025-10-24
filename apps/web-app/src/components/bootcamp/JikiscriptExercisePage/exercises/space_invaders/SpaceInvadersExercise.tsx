@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Exercise } from '../Exercise'
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import { cloneDeep } from 'lodash'
@@ -29,7 +29,7 @@ class Alien {
     this.status = 'alive'
   }
 
-  public isAlive(time) {
+  public isAlive(time: number) {
     if (this.status == 'alive') {
       return true
     }
