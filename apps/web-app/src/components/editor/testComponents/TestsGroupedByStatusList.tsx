@@ -14,7 +14,7 @@ const Tests = ({
 }: {
   tests: TestWithToggle[]
   language: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <>
       {tests.map((test, i) => (
@@ -35,7 +35,7 @@ const Title = ({
 }: {
   status: string
   tests: TestWithToggle[]
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/editor/testComponents')
 
   return (
@@ -52,7 +52,7 @@ export function TestsGroupedByStatusList({
 }: {
   tests: Test[]
   language: string
-}): JSX.Element {
+}): React.JSX.Element {
   const testsWithIndex = tests.map((test, i) => ({ index: i + 1, ...test }))
   const passed: TestWithToggle[] = testsWithIndex
     .filter((test) => test.status === TestStatus.PASS)

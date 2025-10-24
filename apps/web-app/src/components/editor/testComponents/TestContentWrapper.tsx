@@ -1,31 +1,31 @@
 // i18n-key-prefix: testContentWrapper
 // i18n-namespace: components/editor/testComponents
-import React, { useState, useContext, useCallback, createContext } from 'react'
-import { TabContext, Tab } from '../../common'
-import { TestFile } from '../../types'
-import { TabsContext } from '../FileEditorCodeMirror'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import React, { useState, useContext, useCallback, createContext } from "react";
+import { TabContext, Tab } from "../../common";
+import { TestFile } from "../types";
+import { TabsContext } from "../FileEditorCodeMirror";
+import { useAppTranslation } from "@/i18n/useAppTranslation";
 
 export const TestTabContext = createContext<TabContext>({
-  current: '',
+  current: "",
   switchToTab: () => null,
-})
+});
 
 type TestContentContextType = {
-  testTab: { filename: string; content: string }
-  setTestTab: (file: TestFile) => void
-  testFiles: readonly TestFile[]
-  tabContext: React.Context<TabContext>
-  testTabGroupCss?: string
-}
+  testTab: { filename: string; content: string };
+  setTestTab: (file: TestFile) => void;
+  testFiles: readonly TestFile[];
+  tabContext: React.Context<TabContext>;
+  testTabGroupCss?: string;
+};
 
 export const TestContentContext = createContext<TestContentContextType>({
-  testTab: { filename: '', content: '' },
+  testTab: { filename: "", content: "" },
   setTestTab: () => null,
   testFiles: [],
   tabContext: TabsContext,
-  testTabGroupCss: '',
-})
+  testTabGroupCss: "",
+});
 
 export function TestContentWrapper({
   testFiles,
@@ -33,40 +33,40 @@ export function TestContentWrapper({
   tabContext,
   testTabGroupCss,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 } & Pick<
   TestContentContextType,
-  'testTabGroupCss' | 'tabContext' | 'testFiles'
->): JSX.Element {
-  const [testTab, setTestTab] = useState<TestFile>(testFiles[0])
+  "testTabGroupCss" | "tabContext" | "testFiles"
+>): React.JSX.Element {
+  const [testTab, setTestTab] = useState<TestFile>(testFiles[0]);
 
   return (
     <TestContentContext.Provider
-      value={{ testTab, setTestTab, tabContext, testFiles, testTabGroupCss }}
+      value={{ testTab, setTestTab, tabContext, testFiles, testTabGroupCss: testTabGroupCss || '' }}
     >
       <TabContextWrapper>{children}</TabContextWrapper>
     </TestContentContext.Provider>
-  )
+  );
 }
 
 function TabContextWrapper({ children }: { children: React.ReactNode }) {
-  const { t } = useAppTranslation('components/editor/testComponents')
+  const { t } = useAppTranslation("components/editor/testComponents");
 
   const { testTab, setTestTab, tabContext, testFiles, testTabGroupCss } =
-    useContext(TestContentContext)
-  const { current: currentTab } = useContext(tabContext)
+    useContext(TestContentContext);
+  const { current: currentTab } = useContext(tabContext);
 
   const switchToTab = useCallback(
     (filename: string) => {
-      const testFile = testFiles.find((f) => f.filename === filename)
+      const testFile = testFiles.find((f) => f.filename === filename);
       if (!testFile) {
-        throw new Error(t('testContentWrapper.fileNotFound'))
+        throw new Error(t("testContentWrapper.fileNotFound"));
       } else {
-        setTestTab(testFile)
+        setTestTab(testFile);
       }
     },
     [setTestTab, testFiles, t]
-  )
+  );
 
   return (
     <TestTabContext.Provider
@@ -75,7 +75,7 @@ function TabContextWrapper({ children }: { children: React.ReactNode }) {
         switchToTab,
       }}
     >
-      {testFiles.length > 1 && currentTab === 'tests' ? (
+      {testFiles.length > 1 && currentTab === "tests" ? (
         <div className={`c-test-tabs ${testTabGroupCss}`}>
           {testFiles.map((file) => (
             <Tab
@@ -90,5 +90,5 @@ function TabContextWrapper({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="border-t-1 border-borderColor7">{children}</div>
     </TestTabContext.Provider>
-  )
+  );
 }

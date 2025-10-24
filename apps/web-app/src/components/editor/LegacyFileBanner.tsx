@@ -7,7 +7,7 @@ export const LegacyFileBanner = ({
   onDelete,
 }: {
   onDelete: () => void
-}): JSX.Element => {
+}): React.ReactElement => {
   const [isOpen, setIsOpen] = useState(false)
   const { t } = useAppTranslation('components/editor/LegacyFileBanner.tsx')
 
@@ -40,8 +40,9 @@ export const LegacyFileBanner = ({
         />
       </div>
       <DeleteFileModal
-        open={isOpen}
-        onClose={handleClose}
+        filename="legacy file"
+        isOpen={isOpen}
+        onCancel={handleClose}
         onDelete={onDelete}
       />
     </React.Fragment>

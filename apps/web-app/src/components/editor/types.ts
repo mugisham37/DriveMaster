@@ -2,15 +2,29 @@ import { SubmissionTestsStatus, File as BaseFile, TestFile as BaseTestFile } fro
 
 // Re-export types that are used throughout the editor
 export type { SubmissionTestsStatus } from '../../types'
+export type { File, TestFile } from '../../types'
 
-export type File = BaseFile
-export type TestFile = BaseTestFile
+export type EditorFile = BaseFile
+export type EditorTestFile = BaseTestFile
 
 export type Submission = {
   testsStatus: SubmissionTestsStatus
   uuid: string
   links: SubmissionLinks
   testRun?: TestRun
+}
+
+export type TestContentContextType = {
+  testTab: TestFile
+  setTestTab: React.Dispatch<React.SetStateAction<TestFile>>
+  tabContext: React.Context<TabContext>
+  testFiles: readonly TestFile[]
+  testTabGroupCss: string
+}
+
+export type TabContext = {
+  current: string
+  switchToTab: (tab: string) => void
 }
 
 type SubmissionLinks = {

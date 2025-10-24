@@ -31,7 +31,7 @@ type Action =
       error: APIError | null
     }
 
-const reducer = (state: State, action: Action): State => {
+const reducer = (_state: State, action: Action): State => {
   switch (action.status) {
     case EditorStatus.INITIALIZED:
     case EditorStatus.CREATING_SUBMISSION:

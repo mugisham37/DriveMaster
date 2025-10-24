@@ -28,7 +28,7 @@ export function TestSummary({
 }): JSX.Element {
   const { t } = useAppTranslation('components/editor/testComponents')
 
-  const isPresent = useCallback((str) => {
+  const isPresent = useCallback((str: string | undefined | null) => {
     return str !== undefined && str !== null && str !== ''
   }, [])
 

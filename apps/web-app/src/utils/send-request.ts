@@ -1,4 +1,10 @@
 // Utility function to send requests, preserving exact behavior from Rails implementation
+
+export type APIError = {
+  type: string
+  message: string
+}
+
 export function sendRequest({
   endpoint,
   method = 'GET',

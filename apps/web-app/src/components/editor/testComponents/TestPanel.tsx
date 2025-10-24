@@ -8,7 +8,7 @@ type TestPanelProps = {
 }
 export const TestPanel = ({
   highlightjsLanguage,
-}: TestPanelProps): JSX.Element => {
+}: TestPanelProps): React.JSX.Element => {
   const { testTab } = useContext(TestContentContext)
 
   const testRef = useRef<HTMLPreElement>(null)
@@ -43,7 +43,10 @@ export const TestPanel = ({
       }
 
       // ...and appends another child element to our memoTestRef container
-      memoTestRef.current.appendChild(treeMap[testTab.filename])
+      const treeElement = treeMap[testTab.filename]
+      if (treeElement && memoTestRef.current) {
+        memoTestRef.current.appendChild(treeElement)
+      }
     }
 
     // we only want to rerun it if testTab changes

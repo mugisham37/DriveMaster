@@ -9,7 +9,7 @@ type Props = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
 export const RunTestsButton = forwardRef<HTMLButtonElement, Props>(
-  ({ haveFilesChanged, isProcessing, ...props }, ref) => {
+  function RunTestsButton({ haveFilesChanged, isProcessing, ...props }, ref) {
     const { t } = useAppTranslation('components/editor/RunTestsButton.tsx')
     const isDisabled = !haveFilesChanged || isProcessing
 

@@ -9,9 +9,9 @@ export const Header = ({
   children,
 }: {
   children: React.ReactNode
-}): JSX.Element => <div className="header">{children}</div>
+}): React.JSX.Element => <div className="header">{children}</div>
 
-Header.Back = ({ exercisePath }: { exercisePath: string }) => {
+Header.Back = function HeaderBack({ exercisePath }: { exercisePath: string }) {
   const { t } = useAppTranslation('components/editor/header')
   return (
     <a href={exercisePath} className="close-btn">
@@ -21,24 +21,26 @@ Header.Back = ({ exercisePath }: { exercisePath: string }) => {
   )
 }
 
-Header.Title = ({
+Header.Title = function HeaderTitle({
   trackTitle,
   exerciseTitle,
 }: {
   trackTitle: string
   exerciseTitle: string
-}) => (
-  <div className="title">
-    <div className="track">{trackTitle}</div>
-    <div className="divider">/</div>
-    <div className="exercise">{exerciseTitle}</div>
-  </div>
-)
+}) {
+  return (
+    <div className="title">
+      <div className="track">{trackTitle}</div>
+      <div className="divider">/</div>
+      <div className="exercise">{exerciseTitle}</div>
+    </div>
+  )
+}
 
 Header.ActionKeyboardShortcuts = forwardRef<
   HTMLButtonElement,
   { onClick: () => void }
->(({ onClick }, ref) => {
+>(function HeaderActionKeyboardShortcuts(({ onClick }, ref) => {
   return (
     <button
       ref={ref}

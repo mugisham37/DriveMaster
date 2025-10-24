@@ -7,7 +7,7 @@ export const TestRunOutput = ({
   testRun,
 }: {
   testRun: TestRun
-}): JSX.Element => {
+}): React.JSX.Element => {
   const hasTasks =
     testRun.version >= 3 &&
     testRun.tasks.length > 0 &&

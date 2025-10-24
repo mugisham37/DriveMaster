@@ -5,7 +5,7 @@ import { useAppTranslation } from '@/i18n/useAppTranslation'
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement>
 
 export const SubmitButton = forwardRef<HTMLButtonElement, Props>(
-  ({ disabled, ...props }, ref) => {
+  function SubmitButton({ disabled, ...props }, ref) {
     const { t } = useAppTranslation('components/editor/SubmitButton.tsx')
     return (
       <GenericTooltip

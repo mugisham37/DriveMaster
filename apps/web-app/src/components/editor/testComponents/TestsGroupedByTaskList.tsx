@@ -18,7 +18,7 @@ const Tests = ({
 }: {
   tests: TestWithToggle[]
   language: string
-}): JSX.Element => {
+}): React.JSX.Element => {
   return (
     <>
       {tests.map((test, i) => (
@@ -37,7 +37,7 @@ const JumpToInstructionButton = ({
   taskId,
 }: {
   taskId: number
-}): JSX.Element | null => {
+}): React.JSX.Element | null => {
   const { switchToTask, showJumpToInstructionButton } = useContext(TasksContext)
 
   return showJumpToInstructionButton ? (
@@ -59,7 +59,7 @@ export function TestsGroupedByTaskList({
   tests: Test[]
   language: string
   tasks: AssignmentTask[]
-}): JSX.Element {
+}): React.JSX.Element {
   const testsWithIndex = tests.map((test, i) => ({ index: i + 1, ...test }))
   const tasksWithTests = tasks
     .map((task, i) => ({

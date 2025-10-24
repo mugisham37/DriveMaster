@@ -10,12 +10,13 @@ export {
 } from './Editor'
 
 // Types
-export { TestRun, TestRunStatus } from './types'
-export { Props, EditorFeatures as EditorFeatures, TaskContext } from './Props'
+export type { TestRun, TestRunStatus } from './types'
+export type { Props, EditorFeatures, TaskContext } from './Props'
 
 // Components
 export { Header } from './Header'
-export { FileEditorCodeMirror, FileEditorHandle } from './FileEditorCodeMirror'
+export { FileEditorCodeMirror } from './FileEditorCodeMirror'
+export type { FileEditorHandle } from './FileEditorCodeMirror'
 export { InstructionsPanel } from './panels/InstructionsPanel'
 export { TestsPanel } from './panels/TestsPanel'
 export { TestPanel } from './testComponents/TestPanel'
@@ -38,7 +39,8 @@ export { useSubmissionsList } from './useSubmissionsList'
 export { useFileRevert } from './useFileRevert'
 export { useIteration } from './useIteration'
 export { useDefaultSettings } from './useDefaultSettings'
-export { useEditorStatus, EditorStatus } from './useEditorStatus'
+export { useEditorStatus } from './useEditorStatus'
+export type { EditorStatus } from './useEditorStatus'
 export { useEditorTestRunStatus } from './useEditorTestRunStatus'
 export { useSubmissionCancelling } from './useSubmissionCancelling'
 

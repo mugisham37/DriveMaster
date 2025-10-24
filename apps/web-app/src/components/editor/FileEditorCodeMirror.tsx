@@ -41,7 +41,7 @@ export function FileEditorCodeMirror({
   settings: EditorSettings
   files: File[]
   readonly: boolean
-}): JSX.Element {
+}): React.JSX.Element {
   const [files, setFiles] = useState(defaultFiles)
   const [tab, setTab] = useState(files[0].filename)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -72,8 +72,8 @@ export function FileEditorCodeMirror({
         const editor = editorRefs.current[filename]
         const file = files.find((f) => f.filename === filename)
 
-        if (!file) {
-          return
+        if (!file || !editor) {
+          return undefined
         }
 
         return {
@@ -97,9 +97,9 @@ export function FileEditorCodeMirror({
           throw 'File not found!'
         }
 
-        if (index === 0) {
+        if (index === 0 && currentFiles.length > 1) {
           setTab(currentFiles[1].filename)
-        } else {
+        } else if (index > 0) {
           setTab(currentFiles[index - 1].filename)
         }
 
@@ -108,11 +108,12 @@ export function FileEditorCodeMirror({
         )
       }
     },
-    [files, getFiles, setFiles]
+    [getFiles]
   )
 
   const focus = useCallback(() => {
     const editor = editorRefs.current[tab]
+    if (!editor) return
 
     editor?.focus()
   }, [tab])
@@ -146,7 +147,7 @@ export function FileEditorCodeMirror({
             {file.type === 'legacy' ? (
               <LegacyFileBanner onDelete={handleDelete(file)} />
             ) : null}
-            <Suspense fallback={RenderLoader()}>
+            <Suspense fallback={<RenderLoader />}>
               <CodeMirror
                 key={file.filename}
                 value={file.content}

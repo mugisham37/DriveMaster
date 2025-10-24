@@ -8,7 +8,7 @@ export const EditorStatusSummary = ({
 }: {
   status: EditorStatus
   error?: string
-}): JSX.Element | null => {
+}): React.ReactElement | null => {
   const { t } = useAppTranslation('components/editor/EditorStatusSummary.tsx')
   switch (status) {
     case EditorStatus.CREATE_SUBMISSION_FAILED:
