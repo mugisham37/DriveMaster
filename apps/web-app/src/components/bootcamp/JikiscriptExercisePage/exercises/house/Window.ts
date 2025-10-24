@@ -1,6 +1,7 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { changeBrightness, storeShape } from './Component'
+import HouseExercise from './HouseExercise'
 
 function fn(this: HouseExercise) {
   const drawWindow = (
