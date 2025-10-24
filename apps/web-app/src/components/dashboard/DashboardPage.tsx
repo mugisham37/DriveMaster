@@ -39,8 +39,8 @@ export function DashboardPage(props: DashboardPageProps) {
           
           <DashboardSidebar 
             user={user}
-            liveEvent={dashboardData.liveEvent}
-            featuredEvent={dashboardData.featuredEvent}
+            {...(dashboardData.liveEvent && { liveEvent: dashboardData.liveEvent })}
+            {...(dashboardData.featuredEvent && { featuredEvent: dashboardData.featuredEvent })}
             scheduledEvents={dashboardData.scheduledEvents}
             userTracks={dashboardData.userTracks}
             numUserTracks={dashboardData.numUserTracks}

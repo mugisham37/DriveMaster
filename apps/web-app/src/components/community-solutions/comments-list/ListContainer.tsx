@@ -20,7 +20,7 @@ export const ListContainer = ({
 }: {
   request: Request
   cacheKey: QueryKey
-}): JSX.Element => {
+}): React.JSX.Element => {
   const {
     data: resolvedData,
     status,

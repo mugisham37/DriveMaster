@@ -12,10 +12,10 @@ export const NewCommentForm = ({
 }: {
   endpoint: string
   cacheKey: QueryKey
-}): JSX.Element => {
+}): React.JSX.Element => {
   const queryClient = useQueryClient()
   const handleSuccess = useCallback(
-    (comment) => {
+    (comment: SolutionComment) => {
       const oldData = queryClient.getQueryData<APIResponse>(cacheKey)
       if (!oldData) {
         return [comment]
@@ -25,6 +25,7 @@ export const NewCommentForm = ({
         ...oldData,
         items: [comment, ...oldData.items],
       })
+      return
     },
     [cacheKey, queryClient]
   )

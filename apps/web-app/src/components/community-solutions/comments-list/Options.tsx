@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
-import { useDropdown } from '@/components/dropdowns/useDropdown'
+import { useDropdown } from '@/hooks/useAdvancedDropdown'
 import { EnableSolutionCommentsModal } from '@/components/modals/EnableSolutionCommentsModal'
 import { DisableSolutionCommentsModal } from '@/components/modals/DisableSolutionCommentsModal'
 import { GraphicalIcon } from '@/components/common'
@@ -22,7 +22,7 @@ export const Options = ({
   links: Links
   onCommentsEnabled: () => void
   onCommentsDisabled: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/community-solutions')
   const [openedModal, setOpenedModal] = useState<ModalId | null>(null)
   const {
@@ -31,17 +31,7 @@ export const Options = ({
     listAttributes,
     itemAttributes,
     open,
-  } = useDropdown(3, undefined, {
-    placement: 'top-end',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [10, 8],
-        },
-      },
-    ],
-  })
+  } = useDropdown(1)
 
   return (
     <React.Fragment>
@@ -52,7 +42,7 @@ export const Options = ({
         <GraphicalIcon icon="settings" className="filter-textColor6" />
         <span>Options</span>
       </button>
-      {open ? (
+      {open && (
         <div {...panelAttributes} className="c-dropdown-generic-menu">
           <ul {...listAttributes}>
             <li {...itemAttributes(1)}>
@@ -74,7 +64,7 @@ export const Options = ({
             </li>
           </ul>
         </div>
-      ) : null}
+      )}
       <EnableSolutionCommentsModal
         endpoint={links.enable}
         open={openedModal === 'enableComments'}

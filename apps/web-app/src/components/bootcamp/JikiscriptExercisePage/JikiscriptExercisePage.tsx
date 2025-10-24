@@ -1,26 +1,26 @@
-import React, { useMemo } from 'react'
+import React, { useMemo } from "react";
 
-import { useEditorHandler } from './CodeMirror/useEditorHandler'
-import { Instructions } from './RHS/Instructions/Instructions'
-import { useSetupStores } from './hooks/useSetupStores'
-import { ControlButtons } from './ControlButtons/ControlButtons'
-import { CodeMirror } from './CodeMirror/CodeMirror'
-import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary'
-import { Resizer, useResizablePanels } from './hooks/useResize'
-import { Header } from './Header/Header'
-import { useLocalStorage } from '@uidotdev/usehooks'
-import { ResultsPanel } from './ResultsPanel'
-import useTestStore from './store/testStore'
-import useTaskStore from './store/taskStore/taskStore'
-import { generateUnfoldableFunctioNames as generateUnfoldableFunctionNames } from './store/taskStore/generateUnfoldableFunctionNames'
-import exerciseMap from './utils/exerciseMap'
-import { Project } from './utils/exerciseMap'
+import { useEditorHandler } from "./CodeMirror/useEditorHandler";
+import { Instructions } from "./RHS/Instructions/Instructions";
+import { useSetupStores } from "./hooks/useSetupStores";
+import { ControlButtons } from "./ControlButtons/ControlButtons";
+import { CodeMirror } from "./CodeMirror/CodeMirror";
+import ErrorBoundary from "../common/ErrorBoundary/ErrorBoundary";
+import { Resizer, useResizablePanels } from "./hooks/useResize";
+import { Header } from "./Header/Header";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import { ResultsPanel } from "./ResultsPanel";
+import useTestStore from "./store/testStore";
+import useTaskStore from "./store/taskStore/taskStore";
+import { generateUnfoldableFunctioNames as generateUnfoldableFunctionNames } from "./store/taskStore/generateUnfoldableFunctionNames";
+import exerciseMap from "./utils/exerciseMap";
+import { Project } from "./utils/exerciseMap";
 import JikiscriptExercisePageContextWrapper, {
   ExerciseLocalStorageData,
-} from './JikiscriptExercisePageContextWrapper'
-import { Logger } from './RHS/Logger/Logger'
-import { assembleClassNames } from '@/utils/assemble-classnames'
-import { RHS } from './RHS/RHS'
+} from "./JikiscriptExercisePageContextWrapper";
+import { Logger } from "./RHS/Logger/Logger";
+import { assembleClassNames } from "@/utils/assemble-classnames";
+import { RHS } from "./RHS/RHS";
 
 export default function JikiscriptExercisePage({
   exercise,
@@ -30,26 +30,26 @@ export default function JikiscriptExercisePage({
   customFunctions,
 }: JikiscriptExercisePageProps): JSX.Element {
   const { wasFinishLessonModalShown, wasCompletedBonusTasksModalShown } =
-    useTaskStore()
+    useTaskStore();
 
   const [oldEditorLocalStorageValue] = useLocalStorage(
-    'bootcamp-editor-value-' + exercise.config.title,
+    "bootcamp-editor-value-" + exercise.config.title,
     {
       code: code.code,
       storedAt: code.storedAt,
       readonlyRanges: code.readonlyRanges,
     }
-  )
+  );
 
   const [exerciseLocalStorageData, setExerciseLocalStorageData] =
     useLocalStorage<{
-      code: string
-      storedAt: string | Date | null
-      readonlyRanges?: { from: number; to: number }[]
+      code: string;
+      storedAt: string | Date | null;
+      readonlyRanges?: { from: number; to: number }[];
     }>(
-      'bootcamp-exercise-' + exercise.id,
+      "bootcamp-exercise-" + exercise.id,
       migrateToLatestCodeStorageData(code, oldEditorLocalStorageValue)
-    )
+    );
 
   const {
     handleEditorDidMount,
@@ -63,14 +63,14 @@ export default function JikiscriptExercisePage({
     exerciseLocalStorageData,
     setExerciseLocalStorageData,
     unfoldableFunctionNames: generateUnfoldableFunctionNames(),
-  })
+  });
 
   useSetupStores({
     exercise,
     code,
     solution,
     customFunctions,
-  })
+  });
 
   const {
     primarySize: LHSWidth,
@@ -78,9 +78,9 @@ export default function JikiscriptExercisePage({
     handleMouseDown,
   } = useResizablePanels({
     initialSize: 800,
-    direction: 'horizontal',
-    localStorageId: 'solve-exercise-page-lhs',
-  })
+    direction: "horizontal",
+    localStorageId: "solve-exercise-page-lhs",
+  });
 
   const {
     primarySize: TopHeight,
@@ -89,46 +89,46 @@ export default function JikiscriptExercisePage({
   } = useResizablePanels({
     initialSize: 500,
     secondaryMinSize: 250,
-    direction: 'vertical',
-    localStorageId: 'solve-exercise-page-editor-height',
-  })
+    direction: "vertical",
+    localStorageId: "solve-exercise-page-editor-height",
+  });
 
-  const { testSuiteResult, bonusTestSuiteResult } = useTestStore()
+  const { testSuiteResult, bonusTestSuiteResult } = useTestStore();
 
   const project: Project | undefined = useMemo(
     () => exerciseMap.get(exercise.config.projectType),
     [exercise]
-  )
+  );
 
   /* spotlight is active if 
    - testSuiteResult is passing and basic testResult modal wasn't shown before
    - bonus tests are unlocked, bonusTestSuiteResult is passing and bonus modal wasn't shown before 
   */
   const isSpotlightActive = useMemo(() => {
-    if (!project?.hasView) return false
+    if (!project?.hasView) return false;
 
-    const basicTestsArePassing = testSuiteResult?.status === 'pass'
-    const bonusExists = !!bonusTestSuiteResult
-    const bonusHasTests = bonusExists && bonusTestSuiteResult.tests.length > 0
+    const basicTestsArePassing = testSuiteResult?.status === "pass";
+    const bonusExists = !!bonusTestSuiteResult;
+    const bonusHasTests = bonusExists && bonusTestSuiteResult.tests.length > 0;
     const bonusTestsArePassing =
-      bonusHasTests && bonusTestSuiteResult?.status === 'pass'
+      bonusHasTests && bonusTestSuiteResult?.status === "pass";
 
     const isActiveForBasicTasks =
-      basicTestsArePassing && !wasFinishLessonModalShown
+      basicTestsArePassing && !wasFinishLessonModalShown;
 
     const isActiveForBonusTasks =
       basicTestsArePassing &&
       bonusTestsArePassing &&
-      !wasCompletedBonusTasksModalShown
+      !wasCompletedBonusTasksModalShown;
 
-    return isActiveForBasicTasks || isActiveForBonusTasks
+    return isActiveForBasicTasks || isActiveForBonusTasks;
   }, [
     project,
     wasFinishLessonModalShown,
     testSuiteResult?.status,
     wasCompletedBonusTasksModalShown,
     bonusTestSuiteResult?.status,
-  ])
+  ]);
 
   return (
     <JikiscriptExercisePageContextWrapper
@@ -175,7 +175,7 @@ export default function JikiscriptExercisePage({
         </div>
       </div>
     </JikiscriptExercisePageContextWrapper>
-  )
+  );
 }
 
 export function migrateToLatestCodeStorageData(
@@ -185,16 +185,16 @@ export function migrateToLatestCodeStorageData(
   const deprecatedDataIsNewer =
     !!code.storedAt &&
     !!deprecatedStorage.storedAt &&
-    deprecatedStorage.storedAt > code.storedAt
-  const onlyDeprecatedExists = !code.storedAt && !!deprecatedStorage.storedAt
+    deprecatedStorage.storedAt > code.storedAt;
+  const onlyDeprecatedExists = !code.storedAt && !!deprecatedStorage.storedAt;
 
   if (deprecatedDataIsNewer || onlyDeprecatedExists) {
-    return deprecatedStorage
+    return deprecatedStorage;
   }
 
   return {
     code: code.code,
     readonlyRanges: code.readonlyRanges,
     storedAt: code.storedAt,
-  }
+  };
 }

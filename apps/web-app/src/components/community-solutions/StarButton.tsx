@@ -27,7 +27,7 @@ export default function StarButton({
   defaultNumStars: number
   defaultIsStarred: boolean
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const [state, setState] = useState({
     numStars: defaultNumStars,
     isStarred: defaultIsStarred,
@@ -68,7 +68,7 @@ export default function StarButton({
         }`}
         type="button"
         onClick={() => mutation()}
-        status={status}
+        status={status === 'pending' ? 'submitting' : status === 'success' ? 'success' : status === 'error' ? 'error' : 'idle'}
       >
         <GraphicalIcon icon={state.isStarred ? 'starred' : 'star'} />
         <span>{state.isStarred ? 'Favorited' : 'Favorite'}</span>

@@ -26,7 +26,7 @@ export default function CommentsList({
   userSignedIn: boolean
   request: Request
   links: Links
-}): JSX.Element {
+}): React.JSX.Element {
   const [allowComments, setAllowComments] = useState(defaultAllowComments)
 
   const handleCommentsEnabled = useCallback(() => {

@@ -57,7 +57,6 @@ export function DocsTrackList({
             <TrackIcon 
               iconUrl={track.iconUrl} 
               title={track.title}
-              size="medium"
             />
             <div className="title">{track.title}</div>
             <div className="count">

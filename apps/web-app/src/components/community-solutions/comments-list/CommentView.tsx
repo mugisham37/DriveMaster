@@ -8,7 +8,7 @@ import { SolutionComment } from '@/types'
 export const CommentView = ({
   item: comment,
   onEdit,
-}: ViewingComponentType<SolutionComment>): JSX.Element => {
+}: ViewingComponentType<SolutionComment>): React.JSX.Element => {
   const { t } = useAppTranslation('components/community-solutions')
   const isEditable = comment.links.edit
 

@@ -13,7 +13,7 @@ export const EnableSolutionCommentsModal = ({
   endpoint,
   onSuccess,
   ...props
-}: Omit<ModalProps, 'className'> & {
+}: Omit<ModalProps, 'className' | 'children'> & {
   endpoint: string
   onSuccess: () => void
 }): React.JSX.Element => {

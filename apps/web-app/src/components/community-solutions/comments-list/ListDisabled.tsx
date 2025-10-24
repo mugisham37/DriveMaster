@@ -5,7 +5,7 @@ export const ListDisabled = ({
   isAuthor,
 }: {
   isAuthor: boolean
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/community-solutions')
   if (isAuthor) {
     return (

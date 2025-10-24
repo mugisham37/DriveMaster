@@ -13,10 +13,10 @@ export const DisableSolutionCommentsModal = ({
   endpoint,
   onSuccess,
   ...props
-}: Omit<ModalProps, "className"> & {
+}: Omit<ModalProps, "className" | "children"> & {
   endpoint: string;
   onSuccess: () => void;
-}): React.ReactElement => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation(
     "components/modals/DisableSolutionCommentsModal.tsx"
   );

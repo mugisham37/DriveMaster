@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MentorDiscussion } from '@/types'
+import { MentorDiscussion } from '@/types/index'
 import { Avatar } from '@/components/common/Avatar'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { ProminentLink } from '@/components/common/ProminentLink'
@@ -57,7 +57,10 @@ export function MentoringInboxSection({ discussions }: MentoringInboxSectionProp
             aria-label={`Discussion with ${discussion.student.handle}`}
             className="c-mentor-discussion-summary"
           >
-            <Avatar user={discussion.student} />
+            <Avatar user={{
+              ...discussion.student,
+              flair: discussion.student.flair as any
+            }} />
             
             <div className="info">
               <div className="handle">{discussion.student.handle}</div>
@@ -73,9 +76,7 @@ export function MentoringInboxSection({ discussions }: MentoringInboxSectionProp
         ))}
       </div>
 
-      <ProminentLink href="/mentoring/inbox">
-        See all mentoring
-      </ProminentLink>
+      <ProminentLink link="/mentoring/inbox" text="See all mentoring" />
     </section>
   )
 }

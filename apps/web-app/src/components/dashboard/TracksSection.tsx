@@ -54,13 +54,9 @@ export function TracksSection({ userTracks, numUserTracks }: TracksSectionProps)
       </div>
 
       {numUserTracks > userTracks.length ? (
-        <ProminentLink href="/tracks">
-          View all tracks
-        </ProminentLink>
+        <ProminentLink link="/tracks" text="View all tracks" />
       ) : (
-        <ProminentLink href="/tracks">
-          Discover more tracks
-        </ProminentLink>
+        <ProminentLink link="/tracks" text="Discover more tracks" />
       )}
     </section>
   )

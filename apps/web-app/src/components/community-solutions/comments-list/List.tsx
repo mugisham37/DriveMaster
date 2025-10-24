@@ -6,18 +6,17 @@ import { useItemList } from '@/components/common/use-item-list'
 
 export const List = ({
   comments,
-  cacheKey,
 }: {
   comments: readonly SolutionComment[]
   cacheKey: QueryKey
-}): JSX.Element => {
+}): React.JSX.Element => {
   const {
     getItemAction,
     handleEdit,
     handleEditCancel,
     handleUpdate,
     handleDelete,
-  } = useItemList<SolutionComment>(cacheKey)
+  } = useItemList<SolutionComment>()
 
   return (
     <React.Fragment>

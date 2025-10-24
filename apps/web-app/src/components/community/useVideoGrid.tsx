@@ -25,7 +25,7 @@ export type UseVideoGridReturnType = {
   setPage: (page: number) => void
   criteria: string
   setCriteria: (criteria: string) => void
-  request: ListState
+  request: Request
 }
 
 export function useVideoGrid(
@@ -36,8 +36,14 @@ export function useVideoGrid(
     tracks.find((t) => t.slug === videoRequest.query?.videoTrackSlug) ||
     tracks[0]
 
-  const [criteria, setCriteria] = useState(videoRequest.query?.criteria)
-  const [selectedTrack, setSelectedTrack] = useState<VideoTrack>(initialTrack)
+  const [criteria, setCriteria] = useState(videoRequest.query?.criteria as string || '')
+  const [selectedTrack, setSelectedTrack] = useState<VideoTrack>(() => {
+    const track = initialTrack || tracks[0]
+    if (!track) {
+      throw new Error('No tracks available')
+    }
+    return track
+  })
 
   const {
     request,
@@ -50,17 +56,17 @@ export function useVideoGrid(
     usePaginatedRequestQuery<APIResponse>(
       [
         'community-video-grid-key',
-        request.query.criteria,
-        request.query.videoTrackSlug,
-        request.query.videoPage,
+        request.query?.criteria,
+        request.query?.videoTrackSlug,
+        request.query?.videoPage,
       ],
       request
     )
 
   const handlePageChange = useCallback(
-    (page) => {
-      setPage(page, 'videoPage')
-      const queryObject = Object.assign(request.query, { videoPage: page })
+    (page: number) => {
+      setPage(page)
+      const queryObject = Object.assign(request.query || {}, { videoPage: page })
       setQuery(queryObject)
     },
     [request.query, setPage, setQuery]
@@ -78,7 +84,7 @@ export function useVideoGrid(
       if (criteria === undefined || criteria === null) return
       if (criteria.length > 2 || criteria === '') {
         setRequestCriteria(criteria)
-        setQuery({ ...request.query, criteria })
+        setQuery({ ...(request.query || {}), criteria })
       }
     }, 500)
 
@@ -96,7 +102,7 @@ export function useVideoGrid(
       setSelectedTrack(track)
 
       setQuery({
-        ...request.query,
+        ...(request.query || {}),
         videoTrackSlug: track.slug,
         videoPage: 1,
       })
@@ -104,17 +110,16 @@ export function useVideoGrid(
     [handlePageChange, setQuery, request.query]
   )
 
-  useQueryParams(request.query)
+  useQueryParams(request.query as Record<string, string> || {})
 
   return {
     handleTrackChange,
     selectedTrack,
     resolvedData,
     isFetching,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    page: request.query.videoPage!,
+    page: (request.query?.videoPage as number) || 1,
     setPage: handlePageChange,
-    criteria,
+    criteria: (request.query?.criteria as string) || '',
     setCriteria,
     request,
   }

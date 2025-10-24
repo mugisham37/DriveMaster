@@ -9,7 +9,7 @@ type Props = { comment: SolutionComment } & Omit<
   'item' | 'ViewingComponent' | 'EditingComponent'
 >
 
-export const Comment = ({ comment, ...props }: Props): JSX.Element => {
+export const Comment = ({ comment, ...props }: Props): React.JSX.Element => {
   return (
     <ListItem<SolutionComment>
       item={comment}

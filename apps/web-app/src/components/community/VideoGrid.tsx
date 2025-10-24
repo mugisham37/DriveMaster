@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { ResultsZone } from '@/components/ResultsZone'
 import {
   Avatar,
@@ -26,7 +26,7 @@ export function VideoGrid({
   tracks,
   itemsPerRow,
   request,
-}: VideoGridProps): JSX.Element {
+}: VideoGridProps): React.JSX.Element {
   const { t } = useAppTranslation('components/community')
   const {
     resolvedData,
@@ -40,7 +40,7 @@ export function VideoGrid({
   } = useVideoGrid(request, tracks)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const timer = useRef<any>()
+  const timer = useRef<any>(null)
 
   const handlePageResetOnInputChange = useCallback(
     (input: string) => {
@@ -114,7 +114,7 @@ function VideoGridHeader({
   handleTrackChange: HandleTrackChangeType
   selectedTrack: VideoTrack
   t: any
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <div className="flex mb-24 sm:flex-row flex-col">
       <GraphicalIcon
@@ -139,7 +139,7 @@ function VideoGridHeader({
         setValue={handleTrackChange}
         sizeVariant="automation"
         status={'success'}
-        error={undefined}
+        error={null}
         countText={'video'}
       />
     </div>
@@ -149,13 +149,11 @@ function VideoGridHeader({
 type VideoProps = {
   video: CommunityVideoType
 }
-function Video({ video }: VideoProps): JSX.Element {
-  const [isOpen, setIsOpen] = useState(false)
-
+function Video({ video }: VideoProps): React.JSX.Element {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {}}
         className="flex flex-col shadow-smZ1 p-16 bg-backgroundColorA rounded-8 text-left"
       >
         <img

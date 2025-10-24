@@ -3,7 +3,7 @@ import { QueryStatus } from '@tanstack/react-query'
 import type { VideoTrack } from '@/types'
 import { TrackIcon, Icon } from '@/components/common'
 import { FetchingBoundary } from '@/components/FetchingBoundary'
-import { useDropdown } from '@/hooks/useDropdown'
+import { useDropdown } from '@/hooks/useAdvancedDropdown'
 import { ResultsZone } from '@/components/ResultsZone'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
@@ -18,7 +18,7 @@ const TrackFilter = ({
   iconUrl,
   checked,
   onChange,
-}: TrackFilterProps): JSX.Element => {
+}: TrackFilterProps): React.JSX.Element => {
   return (
     <label className="c-radio-wrapper">
       <input
@@ -45,8 +45,8 @@ export const TrackFilterList = ({
   children,
   ...props
 }: React.PropsWithChildren<
-  Props & { status: QueryStatus; error: unknown }
->): JSX.Element => {
+  Props & { status: QueryStatus; error: Error | null }
+>): React.JSX.Element => {
   return (
     <FetchingBoundary
       error={error}
@@ -76,9 +76,27 @@ const Component = ({
   value,
   setValue,
   countText,
-}: Props): JSX.Element | null => {
+}: Props): React.JSX.Element | null => {
   const { t } = useAppTranslation('components/community')
   const changeTracksRef = useRef<HTMLButtonElement>(null)
+  const handleItemSelect = useCallback(
+    (index: number) => {
+      if (!tracks) {
+        return
+      }
+
+      const track = tracks[index]
+
+      if (track) {
+        setValue(track)
+      } else {
+        changeTracksRef.current?.click()
+      }
+      setOpen(false)
+    },
+    [setValue, tracks]
+  )
+
   const {
     buttonAttributes,
     panelAttributes,
@@ -86,30 +104,7 @@ const Component = ({
     itemAttributes,
     setOpen,
     open,
-  } = useDropdown((tracks?.length || 0) + 1, (i) => handleItemSelect(i), {
-    placement: 'bottom',
-    modifiers: [
-      {
-        name: 'offset',
-        options: {
-          offset: [0, 8],
-        },
-      },
-    ],
-  })
-  const handleItemSelect = useCallback(
-    (index) => {
-      if (!tracks) {
-        return
-      }
-
-      const track = tracks[index]
-
-      track ? setValue(tracks[index]) : changeTracksRef.current?.click()
-      setOpen(false)
-    },
-    [setValue, tracks, setOpen]
-  )
+  } = useDropdown((tracks?.length || 0), handleItemSelect)
 
   if (!tracks) {
     return null
@@ -138,7 +133,7 @@ const Component = ({
           />
         </button>
       </ResultsZone>
-      {open ? (
+      {open && (
         <div {...panelAttributes} className="--options">
           <ul {...listAttributes}>
             {tracks.map((track, i) => {
@@ -159,7 +154,7 @@ const Component = ({
             })}
           </ul>
         </div>
-      ) : null}
+      )}
     </div>
   )
 }

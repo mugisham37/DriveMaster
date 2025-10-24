@@ -58,7 +58,7 @@ export function DashboardContent({ user, blogPosts, updates }: DashboardContentP
             <BlogPostComponent key={post.id} post={post} />
           ))}
         </div>
-        <ProminentLink href="/blog">See all posts</ProminentLink>
+        <ProminentLink link="/blog" text="See all posts" />
       </section>
 
       <section className="activity-section">

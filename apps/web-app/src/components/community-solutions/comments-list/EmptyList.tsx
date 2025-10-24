@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAppTranslation } from '@/i18n/useAppTranslation'
 
-export const EmptyList = (): JSX.Element => {
+export const EmptyList = (): React.JSX.Element => {
   const { t } = useAppTranslation('components/community-solutions')
   return (
     <div className="flex flex-col lg:items-center lg:center">

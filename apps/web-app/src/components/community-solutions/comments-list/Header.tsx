@@ -21,7 +21,7 @@ export const Header = ({
   allowComments: boolean
   onCommentsEnabled: () => void
   onCommentsDisabled: () => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { t } = useAppTranslation('components/community-solutions')
   return (
     <header className="flex lg:items-center mb-12">

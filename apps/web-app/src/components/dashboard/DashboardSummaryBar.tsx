@@ -26,7 +26,7 @@ export function DashboardSummaryBar({
           user={{
             avatarUrl: user.image || '',
             handle: user.handle || '',
-            flair: user.flair
+            flair: user.flair?.name as any
           }} 
         />
         
@@ -34,8 +34,7 @@ export function DashboardSummaryBar({
           <div className="handle">
             <HandleWithFlair 
               handle={user.handle || ''} 
-              flair={user.flair} 
-              size="medium" 
+              flair={user.flair?.name || ''} 
             />
           </div>
           <div className="extra">{user.name}</div>
@@ -47,7 +46,6 @@ export function DashboardSummaryBar({
               <BadgeMedallion 
                 key={badge.uuid}
                 badge={badge}
-                className={`--${badge.rarity}`}
               />
             ))}
             {numExtraBadges > 0 && (

@@ -13,7 +13,7 @@ export const CommentEdit = ({
   onUpdate,
   onDelete,
   onCancel,
-}: EditingComponentType<SolutionComment>): JSX.Element => {
+}: EditingComponentType<SolutionComment>): React.JSX.Element => {
   return (
     <div className="comment">
       <header className="flex items-center mb-16">
