@@ -1,4 +1,4 @@
-import { Frame } from '@/interpreter/frames'
+import { Frame } from '@/lib/interpreter/frames'
 declare global {
   type TestCallback = () => {
     slug: string
@@ -9,7 +9,7 @@ declare global {
     type: TestsType
     view?: HTMLElement
     imageSlug?: string
-    logMessages?: any[]
+    logMessages?: unknown[]
   }
 }
 

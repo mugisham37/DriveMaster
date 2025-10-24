@@ -30,7 +30,7 @@ export function InitialView() {
     if (hasMoreBonusTasks) {
       setShouldShowBonusTasks(true)
     }
-  }, [bonusTestSuiteResult, hasMoreBonusTasks])
+  }, [bonusTestSuiteResult, hasMoreBonusTasks, setIsOpen, setShouldShowBonusTasks])
 
   return (
     <>

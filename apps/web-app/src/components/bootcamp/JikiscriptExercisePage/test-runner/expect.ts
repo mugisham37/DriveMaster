@@ -1,5 +1,28 @@
-import { isArray } from '@/interpreter/checks'
-import isEqual from 'lodash.isequal'
+// Simple array check function
+function isArray(value: unknown): value is unknown[] {
+  return Array.isArray(value)
+}
+
+// Simple deep equality check
+function isEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a == null || b == null) return false
+  if (typeof a !== typeof b) return false
+  
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false
+    return a.every((item, index) => isEqual(item, b[index]))
+  }
+  
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a as Record<string, unknown>)
+    const keysB = Object.keys(b as Record<string, unknown>)
+    if (keysA.length !== keysB.length) return false
+    return keysA.every(key => isEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]))
+  }
+  
+  return false
+}
 
 export function expect({
   actual,
@@ -7,16 +30,16 @@ export function expect({
   codeRun,
   matcher,
 }: {
-  actual: any
+  actual: unknown
   slug?: string
   errorHtml?: string
   codeRun?: string
   matcher: AvailableMatchers
-}): Record<AvailableMatchers, (expected?: any) => MatcherResult> {
+}): Record<AvailableMatchers, (expected?: unknown) => MatcherResult> {
   const returnObject: Omit<MatcherResult, 'pass' | 'expected'> = {
     actual,
-    errorHtml,
-    codeRun,
+    errorHtml: errorHtml ?? '',
+    codeRun: codeRun ?? '',
     matcher,
   }
   return {
@@ -32,7 +55,7 @@ export function expect({
         pass: actual === undefined || actual === null,
       }
     },
-    toBe(expected: any) {
+    toBe(expected: unknown) {
       return {
         ...returnObject,
         expected,
@@ -53,40 +76,43 @@ export function expect({
         pass: actual === false,
       }
     },
-    toEqual(expected: any) {
+    toEqual(expected: unknown) {
       return {
         ...returnObject,
         expected,
         pass: isEqual(expected, actual),
       }
     },
-    toBeGreaterThanOrEqual(expected: number) {
+    toBeGreaterThanOrEqual(expected: unknown) {
+      const expectedNum = expected as number
       return {
         ...returnObject,
-        expected,
-        pass: actual >= expected,
+        expected: expectedNum,
+        pass: typeof actual === 'number' && actual >= expectedNum,
       }
     },
-    toBeLessThanOrEqual(expected: number) {
+    toBeLessThanOrEqual(expected: unknown) {
+      const expectedNum = expected as number
       return {
         ...returnObject,
-        expected,
-        pass: actual <= expected,
+        expected: expectedNum,
+        pass: typeof actual === 'number' && (actual as number) <= expectedNum,
       }
     },
 
-    toIncludeSameMembers(expected: any[]) {
+    toIncludeSameMembers(expected: unknown) {
+      const expectedArray = expected as unknown[]
       let pass
-      if (expected == null || actual == null) {
+      if (expectedArray == null || actual == null) {
         pass = false
-      } else if (!isArray(expected) || !isArray(actual)) {
+      } else if (!isArray(expectedArray) || !isArray(actual)) {
         pass = false
       } else {
-        pass = isEqual([...expected].sort(), [...actual].sort())
+        pass = isEqual([...expectedArray].sort(), [...(actual as unknown[])].sort())
       }
       return {
         ...returnObject,
-        expected,
+        expected: expectedArray,
         pass,
       }
     },

@@ -1,4 +1,5 @@
-import type { Draft } from 'immer'
+// Simple Draft type for state management without immer dependency
+type Draft<T> = T
 
 export type StateWithMiddleware = [
   ['zustand/devtools', never],

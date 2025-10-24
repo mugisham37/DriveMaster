@@ -101,7 +101,7 @@ const Task = ({ task, idx }: { task: AssignmentTask; idx: number }) => {
         reducedMotion ? {} : { behavior: 'smooth' }
       )
     }
-  }, [current, detailsRef])
+  }, [current, detailsRef, reducedMotion, task.id])
 
   return (
     <details ref={detailsRef} className="c-details task" {...detailsProps}>

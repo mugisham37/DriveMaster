@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo } from 'react'
+import React, { useCallback, useContext, useEffect } from 'react'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import useTestStore from '../store/testStore'
 import useEditorStore from '../store/editorStore'
@@ -28,7 +28,7 @@ export function TestResultsButtons({ isBonus = false }) {
 
   useEffect(() => {
     setIsEditorReadonly(isSpotlightActive)
-  }, [isSpotlightActive])
+  }, [isSpotlightActive, setIsEditorReadonly])
 
   const handleTestResultSelection = useCallback(
     (test: NewTestResult) => {
@@ -56,6 +56,8 @@ export function TestResultsButtons({ isBonus = false }) {
       testSuiteResult,
       shouldAutoplayAnimation,
       isBonus,
+      setInformationWidgetData,
+      setInspectedTestResult,
     ]
   )
 
@@ -102,11 +104,13 @@ export function handleSetInspectedTestResult({
   setInspectedTestResult(testResult)
   if (testResult.frames.length === 1) {
     const frame = testResult.frames[0]
-    setInformationWidgetData({
-      html: frame.description,
-      line: frame.line,
-      status: 'SUCCESS',
-    })
+    if (frame) {
+      setInformationWidgetData({
+        html: (frame as any).description || '',
+        line: (frame as any).line,
+        status: 'success',
+      })
+    }
   }
 }
 
@@ -116,7 +120,7 @@ function manageTestAnimations(tests: NewTestResult[], slug: string) {
       const timeline = test.animationTimeline
       if (
         test.slug === slug &&
-        test.frames.every((frame) => frame.status === 'SUCCESS')
+        test.frames.every((frame) => frame.status === 'success')
       ) {
         timeline.timeline.play()
       } else {

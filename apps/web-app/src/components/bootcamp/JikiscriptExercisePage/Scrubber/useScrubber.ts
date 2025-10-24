@@ -9,9 +9,9 @@ import {
 
 import useEditorStore from '../store/editorStore'
 import type { AnimationTimeline } from '../AnimationTimeline/AnimationTimeline'
-import type { Frame } from '@/interpreter/frames'
+import type { Frame } from '@/lib/interpreter/frames'
 import { showError } from '../utils/showError'
-import type { StaticError } from '@/interpreter/error'
+import type { InterpreterError } from '@/lib/interpreter/error'
 import { INFO_HIGHLIGHT_COLOR } from '../CodeMirror/extensions/lineHighlighter'
 import useAnimationTimelineStore from '../store/animationTimelineStore'
 import { JikiscriptExercisePageContext } from '../JikiscriptExercisePageContextWrapper'
@@ -74,7 +74,7 @@ export function useScrubber({
       // of the frames, and return the first one that isn't folded.
       for (let idx = currentIdx - 1; idx >= 0; idx--) {
         const frame = frames[idx]
-        if (!foldedLines.includes(frame.line)) return idx
+        if (frame && !foldedLines.includes((frame as any).line)) return idx
       }
       return undefined
     },
@@ -88,7 +88,7 @@ export function useScrubber({
       // of the frames, and return the first one that isn't folded.
       for (let idx = currentIdx + 1; idx < frames.length; idx++) {
         const frame = frames[idx]
-        if (!foldedLines.includes(frame.line)) return frame
+        if (frame && !foldedLines.includes((frame as any).line)) return frame
       }
       return undefined
     },
@@ -104,7 +104,7 @@ export function useScrubber({
       // If we've not started playing yet, return the first frame
       if (timelineTime < 0) return 0
 
-      let idx = frames.findIndex((frame) => {
+      const idx = frames.findIndex((frame) => {
         return (
           frame.timelineTime >= timelineTime &&
           !foldedLines.includes(frame.line)
@@ -124,8 +124,12 @@ export function useScrubber({
       if (!prevFrameIdx) return idx
 
       // Return the id of whichever of the previous frame and this frame is closest
-      return Math.abs(frames[idx - 1].timelineTime - timelineTime) <
-        Math.abs(frames[idx].timelineTime - timelineTime)
+      const prevFrame = frames[idx - 1]
+      const currentFrame = frames[idx]
+      if (!prevFrame || !currentFrame) return idx
+      
+      return Math.abs((prevFrame as any).timelineTime - timelineTime) <
+        Math.abs((currentFrame as any).timelineTime - timelineTime)
         ? prevFrameIdx
         : idx
     },
@@ -141,8 +145,8 @@ export function useScrubber({
         .slice(0, currentIndex)
         .findLast(
           (frame) =>
-            breakpoints.includes(frame.line) &&
-            !foldedLines.includes(frame.line)
+            breakpoints.includes((frame as any).line) &&
+            !foldedLines.includes((frame as any).line)
         ),
     [breakpoints, foldedLines, frames]
   )
@@ -174,7 +178,7 @@ export function useScrubber({
       if (!frames.length) return undefined
 
       // If we're past the last frame, return the last frame
-      if (timelineTime > lastFrame.timelineTime) return lastFrame
+      if (lastFrame && timelineTime > (lastFrame as any).timelineTime) return lastFrame
 
       const idx = findFrameIdxNearestTimelineTime(timelineTime)
       if (idx === undefined) return undefined
@@ -191,8 +195,8 @@ export function useScrubber({
       newTimelineTime?: number,
       pause: boolean = true
     ) => {
-      const isLastFrame = newFrame.timelineTime == lastFrame.timelineTime
-      newTimelineTime = newTimelineTime || newFrame.timelineTime
+      const isLastFrame = lastFrame && (newFrame as any).timelineTime == (lastFrame as any).timelineTime
+      const finalTimelineTime = newTimelineTime ?? (newFrame as any).timelineTime
 
       // Update to the new frame time.
       if (pause) {
@@ -204,20 +208,22 @@ export function useScrubber({
       if (animationTimeline.paused) {
         // If we're dealing with the last frame, seek to the end
         if (isLastFrame) {
-          newTimelineTime =
+          const endTimelineTime =
             animationTimeline?.duration * TIME_TO_TIMELINE_SCALE_FACTOR
           animationTimeline.seekEndOfTimeline()
+          setTimelineValue(endTimelineTime)
+          return
         } else {
           animationTimeline.seek(
-            newTimelineTime / TIME_TO_TIMELINE_SCALE_FACTOR
+            finalTimelineTime / TIME_TO_TIMELINE_SCALE_FACTOR
           )
         }
       }
 
       // Finally, set the new time. Note, this potentially gets
-      // changed in the aimationTimeline block above, so don't do it
+      // changed in the animationTimeline block above, so don't do it
       // early and guard/return.
-      setTimelineValue(newTimelineTime)
+      setTimelineValue(finalTimelineTime)
     },
     [frames, lastFrame]
   )
@@ -274,14 +280,16 @@ export function useScrubber({
       )
 
       // If we're already locked onto a frame, then leave
-      if (frames.some((frame) => frame.timelineTime === newTimelineValue))
+      if (frames.some((frame) => (frame as any).timelineTime === newTimelineValue))
         return
 
       // Otherwise jump to the nearest actual frame.
-      moveToFrame(
-        animationTimeline,
-        findFrameNearestTimelineTime(newTimelineValue) || frames[0]
-      )
+      const nearestFrame = findFrameNearestTimelineTime(newTimelineValue)
+      if (nearestFrame) {
+        moveToFrame(animationTimeline, nearestFrame)
+      } else if (frames[0]) {
+        moveToFrame(animationTimeline, frames[0])
+      }
     }, 10)
   }, [animationTimeline.paused, findFrameNearestTimelineTime, moveToFrame])
 
@@ -370,7 +378,7 @@ export function useScrubber({
     }
     // In this effect, we only care about error frames. Find the first
     // or get out of here.
-    const errorFrame = frames.find((frame) => frame.status === 'ERROR')!
+    const errorFrame = frames.find((frame) => frame.status === 'error')
     if (!errorFrame) {
       return
     }
@@ -378,7 +386,7 @@ export function useScrubber({
     // If we have a breakpoint frame, we want to jump there.
     const breakpointFrame = findBreakpointFrameBetweenTimes(
       0,
-      errorFrame.timelineTime
+      (errorFrame as any).timelineTime
     )
     if (breakpointFrame) {
       moveToFrame(animationTimeline, breakpointFrame)
@@ -413,30 +421,30 @@ export function useScrubber({
     // We don't want to scroll to the line unless the tooltip
     // is showing - it's really annoying otherwise!
     if (shouldShowInformationWidget) {
-      scrollToLine(editorView, currentFrame.line)
+      scrollToLine(editorView, (currentFrame as any).line)
     }
 
     switch (currentFrame.status) {
-      case 'SUCCESS': {
+      case 'success': {
         setHighlightedLineColor(INFO_HIGHLIGHT_COLOR)
         setInformationWidgetData({
-          html: currentFrame.description,
-          line: currentFrame.line,
-          status: 'SUCCESS',
+          html: (currentFrame as any).description || '',
+          line: (currentFrame as any).line,
+          status: 'success',
         })
         break
       }
-      case 'ERROR': {
-        const error = currentFrame.error
+      case 'error': {
+        const error = (currentFrame as any).error
         showError({
-          error: error as StaticError,
+          error: error as InterpreterError,
           setHighlightedLine,
           setHighlightedLineColor,
           setInformationWidgetData,
           setShouldShowInformationWidget,
           setUnderlineRange,
           editorView,
-          context,
+          context: context ?? undefined,
         })
       }
     }
@@ -502,10 +510,10 @@ export function useScrubber({
     (direction: 'previous' | 'next', animationTimeline: AnimationTimeline) => {
       if (breakpoints.length === 0) return
 
-      let currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
+      const currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
       if (currentFrameIdx === undefined) return
 
-      let newFrame =
+      const newFrame =
         direction == 'previous'
           ? findPrevBreakpointFrame(currentFrameIdx)
           : findNextBreakpointFrame(currentFrameIdx)
@@ -533,7 +541,7 @@ export function useScrubber({
 
   const handleGoToPreviousFrame = useCallback(
     (animationTimeline: AnimationTimeline, frames: Frame[]) => {
-      let currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
+      const currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
 
       // If there's no frame for this, then we've got no-where to go
       // And if we're at the start (or before!) there's also nothing to do
@@ -548,8 +556,11 @@ export function useScrubber({
         return
       }
 
-      moveToFrame(animationTimeline, frames[prevFrameIdx])
-      setShouldShowInformationWidget(true)
+      const prevFrame = frames[prevFrameIdx]
+      if (prevFrame) {
+        moveToFrame(animationTimeline, prevFrame)
+        setShouldShowInformationWidget(true)
+      }
     },
     [
       timelineValue,
@@ -579,29 +590,34 @@ export function useScrubber({
 
   const handleGoToFirstFrame = useCallback(
     (animationTimeline: AnimationTimeline) => {
-      moveToFrame(animationTimeline, frames[0])
-      setShouldShowInformationWidget(true)
+      const firstFrame = frames[0]
+      if (firstFrame) {
+        moveToFrame(animationTimeline, firstFrame)
+        setShouldShowInformationWidget(true)
+      }
     },
-    [frames]
+    [frames, moveToFrame, setShouldShowInformationWidget]
   )
 
   const handleGoToEndOfTimeline = useCallback(
     (animationTimeline: AnimationTimeline) => {
-      moveToFrame(animationTimeline, lastFrame)
-      setShouldShowInformationWidget(true)
+      if (lastFrame) {
+        moveToFrame(animationTimeline, lastFrame)
+        setShouldShowInformationWidget(true)
+      }
     },
-    [lastFrame]
+    [lastFrame, moveToFrame, setShouldShowInformationWidget]
   )
 
   /*
    when holding a key down, store it in a Set and escape invoking frame-stepping handlers.
    let user browse the scrubber freely
    */
-  const [heldKeys, setHeldKeys] = useState(new Set<string>())
+  const [_heldKeys, setHeldKeys] = useState(new Set<string>())
   const handleOnKeyUp = useCallback(
     (
       event: React.KeyboardEvent<HTMLInputElement>,
-      animationTimeline: AnimationTimeline
+      _animationTimeline: AnimationTimeline
     ) => {
       setHeldKeys((prev) => {
         const newSet = new Set(prev)

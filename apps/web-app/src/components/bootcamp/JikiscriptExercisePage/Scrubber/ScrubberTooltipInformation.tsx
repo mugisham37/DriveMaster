@@ -23,6 +23,8 @@ export function TooltipInformation({
       <StaticTooltip text="There is only one frame. You can inspect that by toggling the information widget." />
     )
   }
+
+  return null
 }
 
 export function StaticTooltip({

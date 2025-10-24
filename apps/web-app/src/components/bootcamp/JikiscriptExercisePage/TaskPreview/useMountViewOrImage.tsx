@@ -9,35 +9,33 @@ export function useMountViewOrImage({
   inspectedPreviewTaskTest,
 }: {
   config: Config
-  taskTest: TaskTest
-  testSuiteResult: TestSuiteResult<any> | null
+  taskTest: TaskTest | null
+  testSuiteResult: TestSuiteResult<unknown> | null
   inspectedPreviewTaskTest: TaskTest | null
 }) {
-  if (!taskTest) return
-
   const viewContainerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    if (!taskTest) {
+      return
+    }
     if (!viewContainerRef.current) {
       return
     }
-    const Project = projectsCache.get(config.projectType)
+    const Project = projectsCache.get(String(config.projectType))
     let exercise: Exercise | null = null
     if (Project) {
       exercise = new Project()
 
       const setupFns = taskTest.setupFunctions || []
 
-      setupFns.forEach((functionData) => {
-        let [functionName, params] = functionData
-        if (!params) {
-          params = []
-        }
+      setupFns.forEach((functionData: any) => {
+        const [functionName, params = []] = functionData
         if (!exercise) {
           return
         }
         if (typeof exercise[functionName] === 'function') {
-          ;(exercise[functionName] as Function)(null, ...params)
+          ;(exercise[functionName] as (...args: unknown[]) => unknown)(null, ...params)
         }
       })
     }
@@ -74,7 +72,7 @@ export function useMountViewOrImage({
       const viewDisplay = taskTest.imageSlug === undefined ? 'none' : 'block'
       viewContainerRef.current.style.display = viewDisplay
     }
-  }, [testSuiteResult, inspectedPreviewTaskTest])
+  }, [testSuiteResult, inspectedPreviewTaskTest, config.projectType, taskTest?.imageSlug, taskTest?.setupFunctions, taskTest])
 
   return viewContainerRef
 }

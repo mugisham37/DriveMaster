@@ -6,7 +6,7 @@ import { JikiscriptExercisePageContext } from '../../JikiscriptExercisePageConte
 import useTaskStore from '../../store/taskStore/taskStore'
 import useTestStore from '../../store/testStore'
 
-export function _Instructions({
+function InstructionsComponent({
   exerciseTitle,
   exerciseInstructions,
   height = '100%',
@@ -14,7 +14,7 @@ export function _Instructions({
   exerciseTitle: string
   exerciseInstructions: string
   height?: number | string
-}): JSX.Element {
+}): React.JSX.Element {
   const {
     activeTaskIndex,
     tasks,
@@ -56,6 +56,7 @@ export function _Instructions({
         loop: false,
       } as Options)
         .typeString(currentTask.instructionsHtml)
+        .pauseFor(100)
         .callFunction(() => {
           // after typing is done, remove the typewriter wrapper - which includes a blinking cursor
           setTimeout(() => {
@@ -111,4 +112,4 @@ export function _Instructions({
   )
 }
 
-export const Instructions = wrapWithErrorBoundary(_Instructions)
+export const Instructions = wrapWithErrorBoundary(InstructionsComponent)

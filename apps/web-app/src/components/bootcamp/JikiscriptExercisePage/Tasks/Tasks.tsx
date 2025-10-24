@@ -14,7 +14,8 @@ export type TaskType = {
 }
 
 // =============== UNUSED COMPONENT ===============
-function _Tasks() {
+ 
+function TasksComponent() {
   const { tasks, numberOfTasks, numberOfCompletedTasks, areAllTasksCompleted } =
     useTaskStore()
 
@@ -55,4 +56,4 @@ function _Tasks() {
   )
 }
 
-export const Tasks = wrapWithErrorBoundary(_Tasks)
+export const Tasks = wrapWithErrorBoundary(TasksComponent)

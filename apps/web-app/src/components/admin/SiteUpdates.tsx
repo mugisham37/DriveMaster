@@ -181,7 +181,8 @@ export function SiteUpdates() {
                 Content (Markdown)
               </label>
               <MarkdownEditor
-                value={formData.content}
+                contextId="site-update-editor"
+                initialValue={formData.content}
                 onChange={(content) => setFormData({ ...formData, content })}
                 placeholder="Write your site update content in Markdown..."
               />

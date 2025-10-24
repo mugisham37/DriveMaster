@@ -1,4 +1,4 @@
-import type { StaticError } from '@/interpreter/error'
+import type { InterpreterError as StaticError } from '@/lib/interpreter/error'
 import { describeError } from '../CodeMirror/extensions/end-line-information/describeError'
 import { type InformationWidgetData } from '../CodeMirror/extensions/end-line-information/line-information'
 import { ERROR_HIGHLIGHT_COLOR } from '../CodeMirror/extensions/lineHighlighter'
@@ -42,29 +42,22 @@ export function showError({
 
   // If 'location' exists in error, it means it's a Jikiscript error,
   // and we can make it behave as it used to.
-  if ('location' in error) {
-    if (!error.location) {
-      console.error('Error location is missing')
-      return
-    }
-
+  if ('location' in error && error.location) {
     from = Math.max(0, error.location.absolute.begin - 1)
     to = Math.max(0, error.location.absolute.end - 1)
     line = error.location.line
     html = describeError(error, 'jikiscript', context)
-  } else {
+  } else if ('lineNumber' in error && error.lineNumber !== undefined) {
     // Codemirror requires a 1-based line number, while Js's error output generates a 0-based line number
     const lineNumber = error.lineNumber + 1
     // Otherwise it's a JS error, and typeof `error` is not StaticError
     // on this error we - for example - don't have `location`.
-    const pos = editorView.state.doc.line(lineNumber).from + error.colNumber
+    const pos = editorView.state.doc.line(lineNumber).from + (error.colNumber || 0)
     from = pos - 1
     to = pos
     line = lineNumber
     html = describeError(
       {
-        // @ts-expect-error - partial StaticError-like structure
-        // TODO: adjust types in describeError
         type: error.type,
         message: error.message,
       },

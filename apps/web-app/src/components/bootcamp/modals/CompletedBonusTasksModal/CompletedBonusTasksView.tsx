@@ -7,7 +7,7 @@ import { JikiscriptExercisePageContext } from '../../JikiscriptExercisePage/Jiki
 export function CompletedBonusTasksView() {
   const { setIsCompletedBonusTasksModalOpen, handleCompleteSolution } =
     useContext(FinishLessonModalContext)
-  const { links, solution } = useContext(JikiscriptExercisePageContext)
+  const { solution } = useContext(JikiscriptExercisePageContext)
 
   return (
     <>

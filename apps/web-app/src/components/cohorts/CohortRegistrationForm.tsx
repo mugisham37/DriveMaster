@@ -37,7 +37,7 @@ export function CohortRegistrationForm({ cohort, membership }: CohortRegistratio
   const [introduction, setIntroduction] = useState('')
   const [agreedToParticipate, setAgreedToParticipate] = useState(false)
 
-  const { submit, isSubmitting, isSuccess } = useFormSubmission({
+  const { submit, isSubmitting, status } = useFormSubmission({
     endpoint: `/api/cohorts/${cohort.slug}/join`,
     method: 'POST',
     onSuccess: () => {
@@ -163,7 +163,7 @@ export function CohortRegistrationForm({ cohort, membership }: CohortRegistratio
                   {isSubmitting ? 'Registering...' : 'Register for cohort'}
                 </button>
 
-                {isSuccess && (
+                {status === 'success' && (
                   <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded text-green-800">
                     Successfully registered! We'll be in touch with more details soon.
                   </div>

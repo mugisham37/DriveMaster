@@ -20,7 +20,7 @@ function Scrubber({
 }: {
   animationTimeline: AnimationTimeline
   frames: Frame[]
-  context?: string
+  context?: string | undefined
 }) {
   const [_, setIsPlaying] = useState(false)
 

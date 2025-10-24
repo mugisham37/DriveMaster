@@ -7,8 +7,7 @@ import type { StateWithMiddleware, StateSetter } from './types'
 // TODO: Typing this is insanely complicated. Reduce complexity.
 
 export function createStoreWithMiddlewares<State>(
-  config: (set: StateSetter<State>, get: () => State, api: any) => State,
-
+  config: (set: StateSetter<State>, get: () => State, api: unknown) => State,
   storeName: string
 ) {
   return create<State, StateWithMiddleware>(
@@ -28,7 +27,7 @@ export function createSetter<State, Key extends keyof State>(
     set(
       (state) => {
         if (typeof input === 'function') {
-          state[key] = (input as Function)(state[key])
+          state[key] = (input as (value: State[Key]) => State[Key])(state[key])
         } else {
           state[key] = input
         }

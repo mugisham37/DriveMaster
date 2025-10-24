@@ -1,7 +1,11 @@
-import { isString } from '@/interpreter/checks'
+// Simple string check function
+function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}
+
 import { genericSetupFunctions } from './genericSetupFunctions'
 
-export function parseArgs(args: any[]) {
+export function parseArgs(args: unknown[]) {
   return args.map((elem) => {
     if (!isString(elem)) {
       return elem

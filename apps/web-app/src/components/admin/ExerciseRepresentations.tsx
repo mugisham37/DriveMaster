@@ -145,7 +145,7 @@ export function ExerciseRepresentations() {
             </div>
             
             <div className="flex items-center gap-2">
-              <TrackIcon iconUrl={representation.track.iconUrl} className="w-6 h-6" />
+              <TrackIcon iconUrl={representation.track.iconUrl} title={representation.track.title} className="w-6 h-6" />
               <span className="text-textColor2">{representation.track.title}</span>
             </div>
             

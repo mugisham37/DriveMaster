@@ -10,7 +10,7 @@ import { TestResultInfo } from './TestResultInfo'
 import { PassMessage } from './PassMessage'
 import { JikiscriptExercisePageContext } from '../JikiscriptExercisePageContextWrapper'
 
-function _InspectedTestResultView() {
+function InspectedTestResultViewComponent() {
   const { result, viewContainerRef, firstExpect } = useInspectedTestResultView()
   const { isSpotlightActive } = useContext(JikiscriptExercisePageContext)
 
@@ -25,7 +25,7 @@ function _InspectedTestResultView() {
     >
       <InspectedTestResultViewLHS
         // if tests pass, this will be first processed `expect`, otherwise first failing `expect`.
-        firstExpect={firstExpect}
+        firstExpect={firstExpect || null}
         result={result}
       />
 
@@ -39,7 +39,7 @@ function _InspectedTestResultView() {
 }
 
 export const InspectedTestResultView = wrapWithErrorBoundary(
-  _InspectedTestResultView
+  InspectedTestResultViewComponent
 )
 
 export function InspectedTestResultViewLHS({

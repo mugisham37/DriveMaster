@@ -6,7 +6,7 @@ const esm = (code: string) =>
 
 type ExecSuccess = {
   status: 'success'
-  result: any
+  result: unknown
   cleanup: () => void
 }
 type ExecError = {
@@ -24,21 +24,22 @@ type ExecResult = ExecSuccess | ExecError
 export async function execJS(
   studentCode: string,
   fnName: string,
-  args: any[],
+  args: unknown[],
   externalFunctionNames: string[]
 ): Promise<ExecResult> {
   // First, look for parse-errors, which we have to do via acorn to get line/col numbers.
   try {
     acorn.parse(studentCode, { ecmaVersion: 2020, sourceType: 'module' })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorObj = err as { message?: string; loc?: { line: number; column: number }; name?: string }
     return {
       status: 'error',
       cleanup: () => { },
       error: {
-        message: err.message.replace(/\s*\(\d+:\d+\)$/, ''),
-        lineNumber: err.loc.line - 1, // No idea why we are 2 out.
-        colNumber: err.loc.column,
-        type: err.name,
+        message: errorObj.message?.replace(/\s*\(\d+:\d+\)$/, '') || 'Unknown error',
+        lineNumber: errorObj.loc?.line ? errorObj.loc.line - 1 : 0,
+        colNumber: errorObj.loc?.column || 0,
+        type: errorObj.name || 'Error',
       },
     }
   }
@@ -78,26 +79,28 @@ export async function execJS(
       cleanup,
     }
     return successResult
-  } catch (error: any) {
+  } catch (error: unknown) {
     let lineNumber: string
     let colNumber: string
 
-    if (error.name === 'JikiLogicError') {
-      ;[, lineNumber, colNumber] = extractLineColFromJikiLogicError(error)
+    const errorObj = error as { name?: string; stack?: string; message?: string }
+    if (errorObj.name === 'JikiLogicError') {
+      ;[, lineNumber, colNumber] = extractLineColFromJikiLogicError(errorObj)
     } else {
       // Extract line, and column from the error message string
       ;[, lineNumber, colNumber] =
-        error.stack?.match(/:(\d+):(\d+)\)?\s*$/m) || []
+        errorObj.stack?.match(/:(\d+):(\d+)\)?\s*$/m) || ['', '0', '0']
     }
-    if (error.message.includes('does not provide an export')) {
-      error.message = `Oh dear, we couldn't find \`${fnName}\`. Did you forget to \`export\` it?`
+    let errorMessage = errorObj.message || 'Unknown error'
+    if (errorMessage.includes('does not provide an export')) {
+      errorMessage = `Oh dear, we couldn't find \`${fnName}\`. Did you forget to \`export\` it?`
     }
 
     const execError: ExecError = {
       status: 'error',
       error: {
-        type: error.name,
-        message: error.message,
+        type: errorObj.name || 'Error',
+        message: errorMessage,
         lineNumber: lineNumber ? parseInt(lineNumber) - numSetupLines : 0,
         colNumber: colNumber ? parseInt(colNumber) : 0,
       },
@@ -107,7 +110,7 @@ export async function execJS(
   }
 }
 
-function extractLineColFromJikiLogicError(error) {
+function extractLineColFromJikiLogicError(error: { stack?: string }): string[] {
   const stack = error.stack || ''
 
   const lines = stack.split('\n')
@@ -116,10 +119,10 @@ function extractLineColFromJikiLogicError(error) {
   )
   const targetLine = lines[index + 2]
 
-  if (!targetLine) return null
+  if (!targetLine) return ['', '', '']
 
   const match = targetLine.match(/:(\d+):(\d+)\)?\s*$/)
-  if (!match) return null
+  if (!match) return ['', '', '']
 
   return match
 }

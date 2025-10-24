@@ -19,6 +19,63 @@ declare global {
     customFunctions: CustomFunctionsFromServer
   }
 
+  type Task = {
+    name: string
+    instructionsHtml: string
+    status: 'active' | 'completed' | 'inactive'
+    projectType?: string
+    testsType: TestsType
+    tests: TaskTest[]
+    bonus?: boolean
+  }
+
+  type TestsType = 'io' | 'state'
+
+  type TaskTest = {
+    name: string
+    slug: string
+    data: unknown
+    imageSlug?: string
+    codeRun?: string
+    function?: string
+    expression?: string
+    args?: unknown[]
+    type?: TestsType
+    checks?: ExpectCheck[]
+    setupFunctions: SetupFunction[]
+    descriptionHtml?: string
+  }
+
+  type ExpectCheck =
+    | ExpectCheckProperty
+    | ExpectCheckFunction
+    | ExpectCheckReturn
+
+  type ExpectCheckProperty = {
+    property: string
+    value?: unknown
+    matcher?: AvailableMatchers
+    errorHtml?: string
+    codeRun?: string
+  }
+
+  type ExpectCheckFunction = {
+    function: string
+    args?: unknown[]
+    value?: unknown
+    matcher?: AvailableMatchers
+    errorHtml?: string
+    codeRun?: string
+  }
+
+  type ExpectCheckReturn = {
+    value: unknown
+    matcher?: AvailableMatchers
+    errorHtml?: string
+  }
+
+  type SetupFunction = [functionName: keyof Exercise, params?: unknown[]]
+
   type CustomFunctionsFromServer = {
     selected: string[]
     forInterpreter: CustomFunctionForInterpreter[]
@@ -65,11 +122,11 @@ declare global {
   type Project = { slug: string }
 
   type Config = {
-    description: string
-    title: string
-    projectType: string
+    description?: string
+    title?: string
+    projectType?: string
     // tasks: Task[];
-    testsType: 'io' | 'state'
+    testsType?: 'io' | 'state'
     interpreterOptions?: LanguageFeatures
     stdlibFunctions?: string[]
     exerciseFunctions?: string[]

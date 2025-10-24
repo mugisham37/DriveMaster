@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useRef } from 'react'
 import { QueryStatus } from '@tanstack/react-query'
 import type { VideoTrack } from '@/types'
 import { TrackIcon, Icon } from '@/components/common'
@@ -79,24 +79,7 @@ const Component = ({
 }: Props): React.JSX.Element | null => {
   const { t } = useAppTranslation('components/community')
   const changeTracksRef = useRef<HTMLButtonElement>(null)
-  const handleItemSelect = useCallback(
-    (index: number) => {
-      if (!tracks) {
-        return
-      }
-
-      const track = tracks[index]
-
-      if (track) {
-        setValue(track)
-      } else {
-        changeTracksRef.current?.click()
-      }
-      setOpen(false)
-    },
-    [setValue, tracks]
-  )
-
+  
   const {
     buttonAttributes,
     panelAttributes,
@@ -104,7 +87,20 @@ const Component = ({
     itemAttributes,
     setOpen,
     open,
-  } = useDropdown((tracks?.length || 0), handleItemSelect)
+  } = useDropdown((tracks?.length || 0), (index: number) => {
+    if (!tracks) {
+      return
+    }
+
+    const track = tracks[index]
+
+    if (track) {
+      setValue(track)
+    } else {
+      changeTracksRef.current?.click()
+    }
+    setOpen(false)
+  })
 
   if (!tracks) {
     return null

@@ -20,7 +20,7 @@ export function EnhancedMarqueeAnimation({
   const marqueeRef = useRef<HTMLUListElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const speedRef = useRef({ current: minSpeed, max: maxSpeed, min: minSpeed })
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number>(0)
 
   useEffect(() => {
     if (!marqueeRef.current || !containerRef.current) return

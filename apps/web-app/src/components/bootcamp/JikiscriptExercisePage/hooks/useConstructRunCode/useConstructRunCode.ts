@@ -1,29 +1,35 @@
-import { useCallback } from 'react'
-import { CompilationError, compile } from '@/interpreter/interpreter'
-import useTestStore from '../../store/testStore'
-import useEditorStore from '../../store/editorStore'
-import useTaskStore from '../../store/taskStore/taskStore'
-import { handleSetInspectedTestResult } from '../../TestResultsView/TestResultsButtons'
-import generateAndRunTestSuite from '../../test-runner/generateAndRunTestSuite/generateAndRunTestSuite'
-import { showError } from '../../utils/showError'
-import { submitCode } from './submitCode'
-import { getFirstFailingOrLastTest } from './getFirstFailingOrLastTest'
-import type { EditorView } from 'codemirror'
-import { getCodeMirrorFieldValue } from '../../CodeMirror/getCodeMirrorFieldValue'
-import { readOnlyRangesStateField } from '../../CodeMirror/extensions/read-only-ranges/readOnlyRanges'
-import { scrollToLine } from '../../CodeMirror/scrollToLine'
-import { cleanUpEditor } from '../../CodeMirror/extensions/clean-up-editor'
-import useAnimationTimelineStore from '../../store/animationTimelineStore'
-import useCustomFunctionStore from '@/components/bootcamp/CustomFunctionEditor/store/customFunctionsStore'
-import { framesSucceeded } from '@/interpreter/frames'
+import { useCallback } from "react";
+import { JikiscriptInterpreter } from "@/lib/interpreter";
+import type { InterpreterError } from "@/lib/interpreter/error";
+import useTestStore from "../../store/testStore";
+import useEditorStore from "../../store/editorStore";
+import useTaskStore from "../../store/taskStore/taskStore";
+import { handleSetInspectedTestResult } from "../../TestResultsView/TestResultsButtons";
+import generateAndRunTestSuite from "../../test-runner/generateAndRunTestSuite/generateAndRunTestSuite";
+import { showError } from "../../utils/showError";
+import { submitCode } from "./submitCode";
+import { getFirstFailingOrLastTest } from "./getFirstFailingOrLastTest";
+import type { EditorView } from "codemirror";
+import { getCodeMirrorFieldValue } from "../../CodeMirror/getCodeMirrorFieldValue";
+import { readOnlyRangesStateField } from "../../CodeMirror/extensions/read-only-ranges/readOnlyRanges";
+import { scrollToLine } from "../../CodeMirror/scrollToLine";
+import { cleanUpEditor } from "../../CodeMirror/extensions/clean-up-editor";
+import useAnimationTimelineStore from "../../store/animationTimelineStore";
+import useCustomFunctionStore from "@/components/bootcamp/CustomFunctionEditor/store/customFunctionsStore";
+import { Frame } from "@/lib/interpreter/frames";
+
+// Helper function to check if frames succeeded
+function framesSucceeded(frames: Frame[]): boolean {
+  return frames.every((frame) => frame.status === "success");
+}
 
 export function useConstructRunCode({
   links,
   config,
   language,
-}: Pick<JikiscriptExercisePageProps, 'links'> & {
-  config: Config
-  language: Exercise['language']
+}: Pick<JikiscriptExercisePageProps, "links"> & {
+  config: Config;
+  language: Exercise["language"];
 }) {
   const {
     setTestSuiteResult,
@@ -31,9 +37,9 @@ export function useConstructRunCode({
     setInspectedTestResult,
     inspectedTestResult,
     setHasSyntaxError,
-  } = useTestStore()
+  } = useTestStore();
 
-  const { setShouldAutoplayAnimation } = useAnimationTimelineStore()
+  const { setShouldAutoplayAnimation } = useAnimationTimelineStore();
 
   const {
     setHighlightedLine,
@@ -42,7 +48,7 @@ export function useConstructRunCode({
     setShouldShowInformationWidget,
     setHasCodeBeenEdited,
     setUnderlineRange,
-  } = useEditorStore()
+  } = useEditorStore();
 
   const {
     markTaskAsCompleted,
@@ -50,33 +56,45 @@ export function useConstructRunCode({
     bonusTasks,
     setShouldShowBonusTasks,
     shouldShowBonusTasks,
-  } = useTaskStore()
+  } = useTaskStore();
 
-  const handleCompilationError = (error, editorView) => {
-    setHasSyntaxError(true)
-    if (!error.location) {
-      return
-    }
-    if (editorView) {
-      scrollToLine(editorView, error.location.line)
-    }
+  const handleCompilationError = useCallback(
+    (error: InterpreterError, editorView: EditorView | null) => {
+      setHasSyntaxError(true);
+      if (!error.location) {
+        return;
+      }
+      if (editorView) {
+        scrollToLine(editorView, error.location.line);
+      }
 
-    showError({
-      error,
+      showError({
+        error,
+        setHighlightedLine,
+        setHighlightedLineColor,
+        setInformationWidgetData,
+        setShouldShowInformationWidget,
+        setUnderlineRange,
+        editorView,
+      });
+
+      setTestSuiteResult(null);
+      setInspectedTestResult(null);
+    },
+    [
+      setHasSyntaxError,
       setHighlightedLine,
       setHighlightedLineColor,
       setInformationWidgetData,
       setShouldShowInformationWidget,
       setUnderlineRange,
-      editorView,
-    })
-
-    setTestSuiteResult(null)
-    setInspectedTestResult(null)
-  }
+      setTestSuiteResult,
+      setInspectedTestResult,
+    ]
+  );
 
   const { customFunctionsForInterpreter, getSelectedCustomFunctions } =
-    useCustomFunctionStore()
+    useCustomFunctionStore();
 
   /**
    * This function is used to run the code in the editor
@@ -84,37 +102,46 @@ export function useConstructRunCode({
   const runCode = useCallback(
     async (studentCode: string, editorView: EditorView | null) => {
       if (!tasks) {
-        console.error('tasks are missing in useRunCode')
-        return
+        console.error("tasks are missing in useRunCode");
+        return;
       }
 
       // reset on each run
-      cleanUpEditor(editorView)
+      cleanUpEditor(editorView);
 
       // remove previous views
       document
-        .querySelectorAll('.exercise-container')
-        .forEach((e) => e.remove())
+        .querySelectorAll(".exercise-container")
+        .forEach((e) => e.remove());
 
-      if (language === 'jikiscript') {
-        const compiled = compile(studentCode, {
-          languageFeatures: config.interpreterOptions,
-          customFunctions: Object.values(customFunctionsForInterpreter).map(
-            (cfn) => {
-              return { name: cfn.name, arity: cfn.arity, code: cfn.code }
-            }
-          ),
-        })
+      if (language === "jikiscript") {
+        try {
+          const compiled = JikiscriptInterpreter.execute(studentCode);
 
-        const error = compiled.error as CompilationError
-
-        if (error) {
-          handleCompilationError(error, editorView)
-          return
+          if (compiled.error) {
+            const error: InterpreterError = {
+              type: "CompilationError",
+              message: compiled.error.message,
+              line: 1,
+              column: 1,
+            };
+            handleCompilationError(error, editorView);
+            return;
+          }
+        } catch (error) {
+          const interpreterError: InterpreterError = {
+            type: "CompilationError",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Unknown compilation error",
+            line: 1,
+            column: 1,
+          };
+          handleCompilationError(interpreterError, editorView);
+          return;
         }
       }
-
-      let testResults
 
       const customFns = Object.values(customFunctionsForInterpreter).map(
         (cfn) => {
@@ -122,15 +149,21 @@ export function useConstructRunCode({
             name: cfn.name,
             arity: cfn.arity,
             code: cfn.code,
-          }
+          };
         }
-      )
-      // try {
-      testResults = await generateAndRunTestSuite(
+      );
+      
+      const testResults = await generateAndRunTestSuite(
         {
           studentCode,
           tasks,
-          config,
+          config: {
+            ...config,
+            description: config.description ?? "",
+            title: config.title ?? "",
+            projectType: config.projectType ?? "jikiscript",
+            testsType: config.testsType ?? "state",
+          },
           customFunctions: customFns,
         },
         {
@@ -142,7 +175,7 @@ export function useConstructRunCode({
         },
         editorView,
         language
-      )
+      );
       // console.log("Thinks I've run", testResults.tests.length)
       // } catch (error) {
       //   console.log(error)
@@ -156,13 +189,19 @@ export function useConstructRunCode({
       //   }
       //   console.log(compError)
       // }
-      console.log('No error')
+      console.log("No error");
 
       const bonusTestResults = await generateAndRunTestSuite(
         {
           studentCode,
           tasks: bonusTasks ?? [],
-          config,
+          config: {
+            ...config,
+            description: config.description ?? "",
+            title: config.title ?? "",
+            projectType: config.projectType ?? "jikiscript",
+            testsType: config.testsType ?? "state",
+          },
           customFunctions: customFns,
         },
         {
@@ -174,19 +213,19 @@ export function useConstructRunCode({
         },
         editorView,
         language
-      )
+      );
 
-      setTestSuiteResult(testResults)
-      setBonusTestSuiteResult(bonusTestResults)
+      setTestSuiteResult(testResults);
+      setBonusTestSuiteResult(bonusTestResults);
 
-      markTaskAsCompleted(testResults)
+      markTaskAsCompleted(testResults);
 
       const automaticallyInspectedTest = getFirstFailingOrLastTest(
         testResults,
         bonusTestResults,
         inspectedTestResult,
         shouldShowBonusTasks
-      )
+      );
 
       // Don't play out the animation if there are errors
       // The scrubber will automatically handle jumping to
@@ -196,28 +235,28 @@ export function useConstructRunCode({
       // a runtime error on the first line.
       if (framesSucceeded(automaticallyInspectedTest.frames)) {
         // means it should autoplay animation on scenario change
-        setShouldAutoplayAnimation(true)
-        automaticallyInspectedTest.animationTimeline.play()
+        setShouldAutoplayAnimation(true);
+        automaticallyInspectedTest.animationTimeline.play();
       }
 
       handleSetInspectedTestResult({
         testResult: automaticallyInspectedTest,
         setInspectedTestResult,
         setInformationWidgetData,
-      })
+      });
 
       // reset on successful test run
-      setHasCodeBeenEdited(false)
+      setHasCodeBeenEdited(false);
 
-      const areBasicTestsPassing = testResults.status === 'pass'
-      const areBonusTestsPassing = bonusTestResults.status === 'pass'
+      const areBasicTestsPassing = testResults.status === "pass";
+      const areBonusTestsPassing = bonusTestResults.status === "pass";
       const submissionStatus =
         areBasicTestsPassing && areBonusTestsPassing
-          ? 'pass_bonus'
-          : testResults.status
+          ? "pass_bonus"
+          : testResults.status;
 
-      if (submissionStatus === 'pass_bonus') {
-        setShouldShowBonusTasks(true)
+      if (submissionStatus === "pass_bonus") {
+        setShouldShowBonusTasks(true);
       }
 
       submitCode({
@@ -237,7 +276,7 @@ export function useConstructRunCode({
           editorView,
           readOnlyRangesStateField
         ),
-      })
+      });
     },
     [
       setTestSuiteResult,
@@ -247,24 +286,39 @@ export function useConstructRunCode({
       shouldShowBonusTasks,
       bonusTasks,
       customFunctionsForInterpreter,
+      config,
+      getSelectedCustomFunctions,
+      handleCompilationError,
+      language,
+      links.postSubmission,
+      markTaskAsCompleted,
+      setHasCodeBeenEdited,
+      setHighlightedLine,
+      setHighlightedLineColor,
+      setInformationWidgetData,
+      setInspectedTestResult,
+      setShouldAutoplayAnimation,
+      setShouldShowBonusTasks,
+      setShouldShowInformationWidget,
+      setUnderlineRange,
     ]
-  )
+  );
 
-  return runCode
+  return runCode;
 }
 
 function generateSubmissionTestArray({
   testResults,
   isBonus = false,
 }: {
-  testResults: TestSuiteResult<NewTestResult>
-  isBonus?: boolean
+  testResults: TestSuiteResult<NewTestResult>;
+  isBonus?: boolean;
 }) {
   return testResults.tests.map((test) => {
     return {
       slug: test.slug,
       status: test.status,
       ...(isBonus && { bonus: true }),
-    }
-  })
+    };
+  });
 }

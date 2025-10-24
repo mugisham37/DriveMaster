@@ -4,7 +4,6 @@ import { BootcampData } from '@/lib/api/bootcamp'
 
 export function SignupSection({ 
   hasDiscount, 
-  countryCode2, 
   countryName, 
   discountPercentage,
   fullCompletePrice,

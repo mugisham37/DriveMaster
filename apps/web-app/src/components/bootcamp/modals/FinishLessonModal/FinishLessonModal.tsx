@@ -14,7 +14,6 @@ export function FinishLessonModal() {
   )
 
   return (
-    // @ts-ignore
     <Modal
       isOpen={isOpen}
       className="solve-exercise-page-react-modal-content flex flex-col items-center justify-center text-center max-w-[540px]"
@@ -42,12 +41,15 @@ function Inner() {
       if (nextLevelIdx) {
         return <CompletedLevelView nextLevelIdx={nextLevelIdx} />
       }
-
+      return <CompletedEverythingView />
+    case 'completedAllLevels':
       if (nextExerciseData) {
         return <CompletedAllLevelsView nextExerciseData={nextExerciseData} />
       } else {
         return <CompletedEverythingView />
       }
+    default:
+      return <CompletedEverythingView />
   }
 }
 

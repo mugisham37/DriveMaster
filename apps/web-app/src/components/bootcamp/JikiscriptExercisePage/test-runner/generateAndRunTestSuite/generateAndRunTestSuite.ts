@@ -29,12 +29,18 @@ export async function generateAndRunTestSuite(
   })
 }
 const mapTasks = async (
-  test,
-  options,
-  editorView,
-  stateSetters,
-  language,
-  project
+  test: unknown,
+  options: TestRunnerOptions,
+  editorView: EditorView | null,
+  stateSetters: {
+    setUnderlineRange: (range: { from: number; to: number }) => void
+    setHighlightedLine: (line: number) => void
+    setHighlightedLineColor: (color: string) => void
+    setShouldShowInformationWidget: (shouldShow: boolean) => void
+    setInformationWidgetData: (data: InformationWidgetData) => void
+  },
+  language: Exercise['language'],
+  project: Project | undefined
 ) => {
   for (const taskData of options.tasks) {
     for (const testData of taskData.tests) {
@@ -56,7 +62,7 @@ const mapTasks = async (
           matcher: 'toBe',
           errorHtml: 'Your code has an error in it.',
           expected: true,
-          pass: frames.every((frame) => frame.status === 'SUCCESS'),
+          pass: frames.every((frame) => frame.status === 'success'),
         })
 
         return { ...result, expects }

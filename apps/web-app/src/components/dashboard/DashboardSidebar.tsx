@@ -1,5 +1,6 @@
 import { User } from 'next-auth'
-import { StudentTrack, MentorDiscussion } from '@/types'
+import { StudentTrack } from '@/types'
+import { MentorDiscussion } from '@/types/index'
 import { LiveEvent, ScheduledEvent } from '@/lib/api/dashboard'
 import { LiveEventSection } from './LiveEventSection'
 import { FeaturedEventSection } from './FeaturedEventSection'

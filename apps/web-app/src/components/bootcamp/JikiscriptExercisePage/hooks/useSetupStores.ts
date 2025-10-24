@@ -35,7 +35,7 @@ export function useSetupStores({
         // we don't show bonus tasks in the preview.
         if (task.bonus) return []
 
-        return task.tests.map((test) => {
+        return task.tests.map((test: TaskTest) => {
           if (!test.args) return test
           test.args = parseArgs(test.args)
           return test
@@ -43,8 +43,15 @@ export function useSetupStores({
       })
     )
   }, [
+    customFunctions,
+    exercise.tasks,
+    initializeCustomFunctions,
+    initializeTasks,
+    setFlatPreviewTaskTests,
+    setShouldShowBonusTasks,
+    solution.passedBasicTests,
+    solution.passedBonusTests,
     setWasFinishLessonModalShown,
     setWasCompletedBonusTasksModalShown,
-    setWasFinishLessonModalShown,
   ])
 }

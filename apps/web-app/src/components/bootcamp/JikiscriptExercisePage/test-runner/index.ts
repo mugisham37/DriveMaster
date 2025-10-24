@@ -11,7 +11,7 @@ export async function describe(
   // test results are collected in one shared array
   const tests: NewTestResult[] = []
 
-  const test = await createTestCallback(tests)
+  const test = createTestCallback(tests)
 
   // invokes the test callbacks, which mutate the tests array by pushing the new results to it
   await callback(test)
@@ -29,12 +29,12 @@ function createTestCallback(tests: NewTestResult[]) {
     descriptionHtml: string | undefined,
     testCallback: TestCallback
   ): Promise<void> {
-    const result = await testCallback()
+    const result = testCallback()
     tests.push({
       // we need testIndex, so we can retrieve quickly the test that we are currently inspecting/working on
       testIndex: tests.length,
       name: testName,
-      descriptionHtml: descriptionHtml,
+      descriptionHtml: descriptionHtml || undefined,
       status: result.expects.every((t) => t.pass) ? 'pass' : 'fail',
       ...result,
     })

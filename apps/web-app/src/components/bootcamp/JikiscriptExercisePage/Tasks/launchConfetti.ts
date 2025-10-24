@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti'
 
 let confettiCanvas: HTMLCanvasElement | null = null
-let myConfetti: any
+let myConfetti: typeof confetti | null = null
 
 function setupCanvas() {
   if (!confettiCanvas) {
@@ -18,7 +18,7 @@ function setupCanvas() {
 
     document.body.appendChild(confettiCanvas)
 
-    myConfetti = confetti.create(confettiCanvas, { resize: true })
+    myConfetti = (confetti as any).create(confettiCanvas, { resize: true })
   }
 }
 
@@ -30,13 +30,15 @@ export function launchConfetti() {
   const colors = ['#FE3C00', '#AFC8F3', '#4C2E55', '#E9DE3F', '#BEEEAB']
 
   function createConfetti(originX: number) {
-    myConfetti({
+    if (myConfetti) {
+      myConfetti({
       particleCount: 7,
       angle: originX === 0 ? 60 : 120,
       spread: 50,
       origin: { x: originX, y: 1 },
       colors: colors,
-    })
+      })
+    }
   }
 
   ;(function frame() {

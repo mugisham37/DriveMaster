@@ -1,3 +1,5 @@
+import type { AnimationTimeline } from '../../AnimationTimeline/AnimationTimeline'
+
 /**
  * Returns the first failing test or the last test if all tests pass
  */
@@ -42,5 +44,20 @@ export function getFirstFailingOrLastTest(
     return firstFailingBonusTest
 
   // if everything passes, return the last test
-  return allTests[allTests.length - 1]
+  const lastTest = allTests[allTests.length - 1]
+  if (!lastTest) {
+    // Fallback: create a default test result if no tests exist
+    return {
+      name: 'Default Test',
+      slug: 'default-test',
+      testIndex: 0,
+      status: 'pass' as const,
+      expects: [],
+      codeRun: '',
+      frames: [],
+      animationTimeline: {} as AnimationTimeline,
+      type: 'state' as const
+    }
+  }
+  return lastTest
 }

@@ -14,14 +14,18 @@ import FormalRobotsExercise from '../exercises/formal_robots/FormalRobotsExercis
 
 import { Exercise } from '../exercises/Exercise'
 
+interface Config {
+  projectType?: string
+}
+
 export interface ExerciseConstructor {
-  new (...args: any[]): Exercise
+  new (...args: unknown[]): Exercise
   hasView: boolean
 }
 export type Project = ExerciseConstructor
 const projectsCache = new Map<string, Project>()
 
-projectsCache.set('draw', DrawExercise)
+projectsCache.set('draw', DrawExercise as any)
 projectsCache.set('maze', MazeExercise)
 projectsCache.set('wordle', WordleExercise)
 projectsCache.set('golf', GolfExercise)

@@ -7,7 +7,7 @@ export function IOPreview({
 }: {
   inspectedPreviewTaskTest: TaskTest
 }) {
-  const expected = inspectedPreviewTaskTest.checks?.[0].value
+  const expected = inspectedPreviewTaskTest.checks?.[0]?.value
   return (
     <div className="scenario-lhs">
       <div className="scenario-lhs-content">

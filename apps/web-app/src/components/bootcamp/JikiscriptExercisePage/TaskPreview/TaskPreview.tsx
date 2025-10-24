@@ -6,7 +6,7 @@ import { IOPreview } from './IOPreview'
 import { useMountViewOrImage } from './useMountViewOrImage'
 import { JikiscriptExercisePageContext } from '../JikiscriptExercisePageContextWrapper'
 
-export function _TaskPreview() {
+function TaskPreviewComponent() {
   const { exercise } = useContext(JikiscriptExercisePageContext)
   const { testSuiteResult, inspectedPreviewTaskTest } = useTestStore()
 
@@ -33,4 +33,4 @@ export function _TaskPreview() {
   )
 }
 
-export const TaskPreview = wrapWithErrorBoundary(_TaskPreview)
+export const TaskPreview = wrapWithErrorBoundary(TaskPreviewComponent)

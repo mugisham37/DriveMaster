@@ -16,7 +16,7 @@ export function TestResultInfo({
   }
   if (firstExpect.type === 'state') {
     let errorHtml = firstExpect.errorHtml || ''
-    errorHtml = errorHtml.replace(/{value}/, firstExpect.actual)
+    errorHtml = errorHtml.replace(/{value}/g, String(firstExpect.actual))
 
     return (
       <StateTestResultView isPassing={firstExpect.pass} errorHtml={errorHtml} />

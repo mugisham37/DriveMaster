@@ -7,7 +7,7 @@ export const Reminder = (): React.JSX.Element => {
       <Trans
         i18nKey="commentsList.reminder.rememberComments"
         ns="components/community-solutions"
-        components={[<strong />]}
+        components={[<strong key="strong" />]}
       />
     </p>
   )

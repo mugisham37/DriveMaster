@@ -12,7 +12,6 @@ export function CompletedBonusTasksModal() {
   )
 
   return (
-    // @ts-ignore
     <Modal
       isOpen={isCompletedBonusTasksModalOpen}
       className="solve-exercise-page-react-modal-content flex flex-col items-center justify-center text-center max-w-[540px]"

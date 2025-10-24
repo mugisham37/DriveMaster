@@ -1,7 +1,8 @@
 import React from 'react'
 
-export function renderLog(logArgs: unknown[]) {
-  let line = logArgs
+export function renderLog(logArgs: unknown) {
+  const args = Array.isArray(logArgs) ? logArgs : [logArgs]
+  const line = args
     .map((arg) => {
       const type = typeof arg
 
@@ -13,7 +14,7 @@ export function renderLog(logArgs: unknown[]) {
       if (type === 'bigint') return `${arg.toString()}n`
       if (type === 'symbol') return arg.toString()
       if (type === 'function') {
-        const name = (arg as Function).name
+        const name = (arg as (...args: unknown[]) => unknown).name
         return `[Function${name ? `: ${name}` : ''}]`
       }
 
@@ -47,10 +48,10 @@ export function renderLog(logArgs: unknown[]) {
 
   return <code className="language-javascript hljs">{line}</code>
 }
-function verboseStringify(obj) {
+function verboseStringify(obj: unknown): string {
   return JSON.stringify(
     obj,
-    (key, value) => {
+    (_key, value) => {
       return value === undefined ? '__undefined__' : value
     },
     2

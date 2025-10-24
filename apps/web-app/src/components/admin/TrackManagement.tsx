@@ -117,7 +117,7 @@ export function TrackManagement() {
         {tracks.map((track) => (
           <div key={track.id} className="grid grid-cols-7 gap-4 p-4 border-b border-borderColor7 last:border-b-0 items-center">
             <div className="flex items-center gap-3">
-              <TrackIcon iconUrl={track.iconUrl} className="w-8 h-8" />
+              <TrackIcon iconUrl={track.iconUrl} title={track.title} className="w-8 h-8" />
               <div>
                 <div className="font-medium text-textColor2">{track.title}</div>
                 <div className="text-13 text-textColor6">{track.slug}</div>

@@ -6,8 +6,8 @@ export function processTasks(
 ) {
   const passingTests = new Set(
     testResults.tests
-      .filter((test) => test.status === 'pass')
-      .map((test) => test.slug)
+      .filter((test: NewTestResult | PreviousTestResult) => test.status === 'pass')
+      .map((test: NewTestResult | PreviousTestResult) => test.slug)
   )
 
   if (!state || !state.tasks || state.tasks.length === 0) {
@@ -26,6 +26,7 @@ export function processTasks(
 
   for (let i = 0; i < state.tasks.length; i++) {
     const task = state.tasks[i]
+    if (!task) continue
 
     // we don't want to degrade completed tasks to active if they were once completed
     if (task.status === 'completed') {
@@ -43,7 +44,16 @@ export function processTasks(
         .slice(0, i + 1)
         .every((t) => t.tests.every((test) => passingTests.has(test.slug)))
     ) {
-      updatedTasks.push({ ...task, status: 'completed' })
+      updatedTasks.push({ 
+        ...task, 
+        status: 'completed',
+        name: task.name ?? '',
+        instructionsHtml: task.instructionsHtml ?? '',
+        projectType: task.projectType ?? 'jikiscript',
+        testsType: task.testsType ?? 'state',
+        tests: task.tests ?? [],
+        bonus: task.bonus ?? false
+      })
       numberOfCompletedTasks++
       continue
     }
@@ -58,7 +68,16 @@ export function processTasks(
       !foundFirstInactiveTask &&
       task.status === 'inactive'
     ) {
-      updatedTasks.push({ ...task, status: 'active' })
+      updatedTasks.push({ 
+        ...task, 
+        status: 'active',
+        name: task.name ?? '',
+        instructionsHtml: task.instructionsHtml ?? '',
+        projectType: task.projectType ?? 'jikiscript',
+        testsType: task.testsType ?? 'state',
+        tests: task.tests ?? [],
+        bonus: task.bonus ?? false
+      })
       activeTaskIndex = i
       foundFirstInactiveTask = true
       continue

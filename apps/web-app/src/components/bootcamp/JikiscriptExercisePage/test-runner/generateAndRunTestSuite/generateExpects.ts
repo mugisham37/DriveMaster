@@ -1,13 +1,21 @@
 import { expect } from '../expect'
 import type { Exercise } from '../../exercises/Exercise'
-import { InterpretResult } from '@/interpreter/interpreter'
+// Mock InterpretResult type
+interface InterpretResult {
+  meta: {
+    functionCallLog: Record<string, unknown[][]>
+    statements: unknown[]
+    sourceCode: string
+  }
+  output?: unknown
+}
 import checkers from './checkers'
 import { generateCodeRunString } from '../../utils/generateCodeRunString'
 
 export function generateExpects(
   interpreterResult: InterpretResult,
   testData: TaskTest,
-  actual: any,
+  actual: unknown,
   exercise?: Exercise
 ) {
   // We only need to do this once, so do it outside the loop.
@@ -26,15 +34,15 @@ export function generateExpects(
 
     // If it's a function call, we split out any params and then call the function
     // on the exercise with those params passed in.
-    if (check.hasOwnProperty('function')) {
-      check = check as ExpectCheckFunction
+    if ('function' in check) {
+      const functionCheck = check as ExpectCheckFunction
 
       let fnName
       let args
-      if (check.function.includes('(') && check.function.endsWith(')')) {
-        fnName = check.function.slice(0, check.function.indexOf('('))
-        const argsString = check.function.slice(
-          check.function.indexOf('(') + 1,
+      if (functionCheck.function.includes('(') && functionCheck.function.endsWith(')')) {
+        fnName = functionCheck.function.slice(0, functionCheck.function.indexOf('('))
+        const argsString = functionCheck.function.slice(
+          functionCheck.function.indexOf('(') + 1,
           -1
         )
 
@@ -42,23 +50,23 @@ export function generateExpects(
         const safe_eval = eval // https://esbuild.github.io/content-types/#direct-eval
         args = safe_eval(`[${argsString}]`)
       } else {
-        fnName = check.function
-        args = check.args || []
+        fnName = functionCheck.function
+        args = functionCheck.args || []
       }
 
       // And then we get the function from either exercise or checkers and call it.
-      const fn = exercise ? exercise[fnName].bind(exercise) : checkers[fnName]
+      const fn = exercise ? (exercise as any)[fnName]?.bind(exercise) : (checkers as any)[fnName]
 
-      checkActual = fn.call(exercise, interpreterResult, ...args)
-      codeRun = check.codeRun ? check.codeRun : undefined
+      checkActual = fn?.call(exercise, interpreterResult, ...args)
+      codeRun = functionCheck.codeRun ? functionCheck.codeRun : undefined
     }
 
     // Our normal state is much easier! We just check the state object that
     // we've retrieved above via getState() for the variable in question.
-    else if (check.hasOwnProperty('property')) {
-      check = check as ExpectCheckProperty
-      checkActual = state[check.property]
-      codeRun = check.codeRun ? check.codeRun : undefined
+    else if ('property' in check) {
+      const propertyCheck = check as ExpectCheckProperty
+      checkActual = (state as any)[propertyCheck.property]
+      codeRun = propertyCheck.codeRun ? propertyCheck.codeRun : undefined
     }
 
     // And the return state is easiest of all!
@@ -74,8 +82,8 @@ export function generateExpects(
     return expect({
       ...check,
       actual: checkActual,
-      codeRun,
-      errorHtml,
+      codeRun: codeRun ?? '',
+      errorHtml: errorHtml ?? '',
       matcher, // Useful for logging and the actual tests
     })[matcher as AvailableMatchers](check.value)
   })

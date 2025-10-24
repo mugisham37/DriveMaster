@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 
 import { useEditorHandler } from "./CodeMirror/useEditorHandler";
-import { Instructions } from "./RHS/Instructions/Instructions";
+
 import { useSetupStores } from "./hooks/useSetupStores";
 import { ControlButtons } from "./ControlButtons/ControlButtons";
 import { CodeMirror } from "./CodeMirror/CodeMirror";
@@ -12,14 +12,14 @@ import { useLocalStorage } from "@uidotdev/usehooks";
 import { ResultsPanel } from "./ResultsPanel";
 import useTestStore from "./store/testStore";
 import useTaskStore from "./store/taskStore/taskStore";
-import { generateUnfoldableFunctioNames as generateUnfoldableFunctionNames } from "./store/taskStore/generateUnfoldableFunctionNames";
+import { generateUnfoldableFunctionNames } from "./store/taskStore/generateUnfoldableFunctionNames";
 import exerciseMap from "./utils/exerciseMap";
 import { Project } from "./utils/exerciseMap";
 import JikiscriptExercisePageContextWrapper, {
   ExerciseLocalStorageData,
 } from "./JikiscriptExercisePageContextWrapper";
-import { Logger } from "./RHS/Logger/Logger";
-import { assembleClassNames } from "@/utils/assemble-classnames";
+
+
 import { RHS } from "./RHS/RHS";
 
 export default function JikiscriptExercisePage({
@@ -28,7 +28,7 @@ export default function JikiscriptExercisePage({
   links,
   solution,
   customFunctions,
-}: JikiscriptExercisePageProps): JSX.Element {
+}: JikiscriptExercisePageProps): React.JSX.Element {
   const { wasFinishLessonModalShown, wasCompletedBonusTasksModalShown } =
     useTaskStore();
 
@@ -42,11 +42,7 @@ export default function JikiscriptExercisePage({
   );
 
   const [exerciseLocalStorageData, setExerciseLocalStorageData] =
-    useLocalStorage<{
-      code: string;
-      storedAt: string | Date | null;
-      readonlyRanges?: { from: number; to: number }[];
-    }>(
+    useLocalStorage<ExerciseLocalStorageData>(
       "bootcamp-exercise-" + exercise.id,
       migrateToLatestCodeStorageData(code, oldEditorLocalStorageValue)
     );
@@ -127,7 +123,7 @@ export default function JikiscriptExercisePage({
     wasFinishLessonModalShown,
     testSuiteResult?.status,
     wasCompletedBonusTasksModalShown,
-    bonusTestSuiteResult?.status,
+    bonusTestSuiteResult,
   ]);
 
   return (
@@ -194,7 +190,7 @@ export function migrateToLatestCodeStorageData(
 
   return {
     code: code.code,
-    readonlyRanges: code.readonlyRanges,
+    readonlyRanges: code.readonlyRanges || undefined,
     storedAt: code.storedAt,
   };
 }

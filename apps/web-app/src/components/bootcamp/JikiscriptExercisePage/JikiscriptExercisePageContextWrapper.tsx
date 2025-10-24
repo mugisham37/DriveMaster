@@ -6,12 +6,10 @@ import { EditorView } from '@codemirror/view'
 export type ExerciseLocalStorageData = {
   code: string
   storedAt: string | Date | null
-  readonlyRanges?:
-    | {
-        from: number
-        to: number
-      }[]
-    | undefined
+  readonlyRanges?: {
+    from: number
+    to: number
+  }[] | undefined
 }
 
 export type JikiscriptExercisePageContextValues = Pick<

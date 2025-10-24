@@ -15,7 +15,7 @@ export function Logger({ height }: { height: number | string }) {
     }
   }, [inspectedTestResult?.logMessages])
 
-  // rerun on inspected testresult change
+  // rerun on inspected test result change
   const ref = useHighlighting<HTMLDivElement>(inspectedTestResult?.name)
 
   return (
@@ -29,7 +29,7 @@ export function Logger({ height }: { height: number | string }) {
             e.g.
           </p>
           <pre className="hljs language-javascript">
-            <code>log("Hello World")</code>
+            <code>log(&quot;Hello World&quot;)</code>
           </pre>
         </div>
       ) : (

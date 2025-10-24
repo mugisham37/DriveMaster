@@ -10,11 +10,11 @@ export function SyntaxErrorView() {
           icon="bug"
         />
         <div className="text-h5 mb-6 text-textColor6">
-          Oops! Jiki couldn't understand your code.
+          Oops! Jiki couldn&apos;t understand your code.
         </div>
         <div className="mb-20 text-textColor6 leading-160 text-16 text-balance">
           No need to panic. Read and fix the error in the message above, then
-          press "Check Scenarios" to try again.
+          press &quot;Check Scenarios&quot; to try again.
         </div>
       </div>
     </div>

@@ -4,11 +4,12 @@ import { JikiscriptExercisePageContext } from '../JikiscriptExercisePageContextW
 import { GraphicalIcon } from '@/components/common'
 
 export function PassMessage({ testIdx }: { testIdx: number }) {
+  const context = useContext(JikiscriptExercisePageContext)
   const {
     exercise: {
       config: { title },
     },
-  } = useContext(JikiscriptExercisePageContext)
+  } = context
   return (
     <div className="success-message">
       <GraphicalIcon icon="bootcamp-completed-check-circle" />

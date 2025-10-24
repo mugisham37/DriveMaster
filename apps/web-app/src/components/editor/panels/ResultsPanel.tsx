@@ -55,6 +55,7 @@ export const ResultsPanel = ({
               i18nKey="resultsPanel.runTestsToCheckYourCode"
               components={[
                 <button
+                  key="run-tests-button"
                   className="btn-keyboard-shortcut"
                   type="button"
                   onClick={onRunTests}

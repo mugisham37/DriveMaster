@@ -58,8 +58,9 @@ export function useTasks() {
   const isSetupStage = useRef(true)
   const hasRuntimeErrors = useMemo(() => {
     if (inspectedTestResult) {
-      return inspectedTestResult.frames.some((f) => f.status === 'ERROR')
+      return inspectedTestResult.frames.some((f) => f.status === 'error')
     }
+    return false
   }, [inspectedTestResult])
 
   useEffect(() => {
@@ -136,12 +137,7 @@ export function useTasks() {
     } catch (e) {
       console.error('Error completing solution: ', e)
     }
-  }, [
-    completeSolutionLink,
-    nextExerciseData,
-    isFinishModalOpen,
-    isCompletedBonusTasksModalOpen,
-  ])
+  }, [completeSolutionLink, isFinishModalOpen, isCompletedBonusTasksModalOpen])
 
   return {
     modalView,

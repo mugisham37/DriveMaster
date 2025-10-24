@@ -1,4 +1,4 @@
-declare type Task = {
+export type Task = {
   name: string
   instructionsHtml: string
   status: 'active' | 'completed' | 'inactive'
@@ -8,46 +8,49 @@ declare type Task = {
   bonus?: boolean
 }
 
-type TestsType = 'io' | 'state'
+export type TestsType = 'io' | 'state'
 
-declare type TaskTest = {
+export type TaskTest = {
   name: string
   slug: string
-  data: any
+  data: unknown
   imageSlug?: string
   codeRun?: string
   function?: string
   expression?: string
-  args?: any[]
+  args?: unknown[]
   type?: TestsType
   checks?: ExpectCheck[]
   setupFunctions: SetupFunction[]
   descriptionHtml?: string
 }
 
-declare type ExpectCheck =
+export type ExpectCheck =
   | ExpectCheckProperty
   | ExpectCheckFunction
   | ExpectCheckReturn
-declare type ExpectCheckProperty = {
+
+export type ExpectCheckProperty = {
   property: string
-  value?: any
+  value?: unknown
   matcher?: AvailableMatchers
   errorHtml?: string
   codeRun?: string
 }
-declare type ExpectCheckFunction = {
+
+export type ExpectCheckFunction = {
   function: string
-  args?: any[]
-  value?: any
+  args?: unknown[]
+  value?: unknown
   matcher?: AvailableMatchers
   errorHtml?: string
   codeRun?: string
 }
-declare type ExpectCheckReturn = {
-  value: any
+
+export type ExpectCheckReturn = {
+  value: unknown
   matcher?: AvailableMatchers
   errorHtml?: string
 }
 
-type SetupFunction = [functionName: keyof Exercise, params?: any[]]
+export type SetupFunction = [functionName: keyof Exercise, params?: unknown[]]

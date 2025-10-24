@@ -62,7 +62,10 @@ const useTestStore = createStoreWithMiddlewares<TestStore>(
         0
       )
       set(
-        { bonusTestSuiteResult, remainingBonusTasksCount },
+        { 
+          bonusTestSuiteResult, 
+          remainingBonusTasksCount: remainingBonusTasksCount ?? 0 
+        },
         false,
         'exercise/setTestSuiteResult'
       )

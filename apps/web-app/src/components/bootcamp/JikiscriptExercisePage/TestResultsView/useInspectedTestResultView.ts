@@ -1,17 +1,17 @@
-import React from 'react'
+
 import { diffChars, diffWords, type Change } from 'diff'
 import { useRef, useEffect, useMemo } from 'react'
 import useTestStore from '../store/testStore'
-import { formatJikiObject } from '@/interpreter/helpers'
+import { formatJikiObject } from '@/lib/interpreter/helpers'
 
 export type ProcessedExpect = {
   diff: Change[]
   type: TestsType
-  actual: any
+  actual: unknown
   pass: boolean
   codeRun?: string
   errorHtml?: string
-  expected?: any
+  expected?: unknown
 }
 
 export type ProcessedExpects = ProcessedExpect[]
@@ -55,11 +55,11 @@ export function useInspectedTestResultView() {
 
   const processedExpects = useMemo(
     () => processExpects(result),
-    [result?.expects]
+    [result]
   )
   const firstFailingExpect = useMemo(
     () => getfirstFailingExpect(result),
-    [result?.expects]
+    [result]
   )
 
   return {
@@ -79,7 +79,7 @@ function getfirstFailingExpect(
     if (expect.pass === false) {
       if (result.type === 'state') {
         return {
-          errorHtml: expect.errorHtml,
+          errorHtml: expect.errorHtml || '',
           type: result.type,
           actual: expect.actual,
           pass: expect.pass,
@@ -104,7 +104,7 @@ function processExpects(result: NewTestResult | null): ProcessedExpects {
     if (result.type === 'state') {
       // state expect
       return {
-        errorHtml: expect.errorHtml,
+        errorHtml: expect.errorHtml || '',
         type: 'state',
         actual: expect.actual,
         pass: expect.pass,
@@ -124,8 +124,8 @@ function processExpects(result: NewTestResult | null): ProcessedExpects {
 
 export function getDiffOfExpectedAndActual(
   passed: boolean,
-  expected: any,
-  actual: any
+  expected: unknown,
+  actual: unknown
 ): Change[] {
   if (passed) {
     return diffChars(formatJikiObject(expected), formatJikiObject(actual))
