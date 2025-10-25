@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
-import { withErrorHandling, withAuth } from '@/lib/api/middleware'
+import { NextResponse } from 'next/server'
+import { withErrorHandling, withAuth, type AuthenticatedRequest } from '@/lib/api/middleware'
 
-async function getAdminStats(_request: NextRequest) {
-  const session = await getServerAuthSession()
-  
-  if (!session?.user || !session.user.isInsider) {
+async function getAdminStats(req: AuthenticatedRequest) {
+  if (!req.user || !req.user.isInsider) {
     return NextResponse.json(
       { error: 'Admin access required' },
       { status: 403 }

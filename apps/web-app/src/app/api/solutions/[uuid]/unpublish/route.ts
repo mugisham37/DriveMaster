@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/config'
 
 export async function PATCH(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { uuid: string } }
 ) {
   try {

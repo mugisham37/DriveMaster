@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api/middleware';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/middleware';
 
 async function resetTrackHandler(
-  request: NextRequest,
+  _request: AuthenticatedRequest,
   { params }: { params: { slug: string } }
 ) {
   try {

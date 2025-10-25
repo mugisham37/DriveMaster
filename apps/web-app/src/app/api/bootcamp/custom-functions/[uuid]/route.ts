@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { uuid: string } }
 ) {
   const session = await getServerSession(authOptions)
@@ -58,10 +58,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { uuid: string } }
-) {
+export async function DELETE() {
   const session = await getServerSession(authOptions)
   
   if (!session?.user) {

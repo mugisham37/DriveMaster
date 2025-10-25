@@ -4,7 +4,7 @@ import { withErrorHandling } from '@/lib/api/middleware'
 async function handleUnsubscribe(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, token, type, preferences } = body
+    const { email, token: _token, type, preferences } = body
 
     // TODO: Implement actual unsubscribe logic
     // This would typically:

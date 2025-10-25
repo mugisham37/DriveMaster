@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsTestResponse } from '@/types/api'
 
 /**
  * Test run API proxy endpoint
@@ -9,7 +10,7 @@ import { getServerAuthSession } from '@/lib/auth'
 const RAILS_API_URL = process.env.RAILS_API_URL || 'http://localhost:3000'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { uuid: string } }
 ) {
   try {
@@ -58,7 +59,7 @@ export async function GET(
       messageHtml: data.message_html,
       output: data.output,
       outputHtml: data.output_html,
-      tests: data.tests?.map((test: any) => ({
+      tests: data.tests?.map((test: RailsTestResponse) => ({
         name: test.name,
         status: test.status,
         message: test.message,

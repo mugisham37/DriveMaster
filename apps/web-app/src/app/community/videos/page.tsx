@@ -45,7 +45,15 @@ export default function CommunityVideosPage() {
       <div className="lg-container">
         <div className="flex pt-32 xl:gap-64 lg:gap-32 gap-64 lg:flex-row flex-col">
           <div className="flex-grow">
-            <VideoGrid itemsPerRow={3} />
+            <VideoGrid 
+              itemsPerRow={3} 
+              tracks={[]}
+              request={{
+                endpoint: '/api/community/videos',
+                query: {},
+                options: {}
+              }}
+            />
           </div>
           
           <div className="flex-shrink-0 pt-8 max-w-[380px]">

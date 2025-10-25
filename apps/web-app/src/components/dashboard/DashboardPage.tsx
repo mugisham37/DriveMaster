@@ -1,6 +1,6 @@
 'use client'
 
-import { User } from 'next-auth'
+import { ExercismUser } from '@/lib/auth/config'
 import { DashboardData } from '@/lib/api/dashboard'
 import { Layout } from '@/components/layout/Layout'
 import { DashboardSummaryBar } from './DashboardSummaryBar'
@@ -11,7 +11,7 @@ import { SenioritySurveyModal } from '@/components/modals/SenioritySurveyModal'
 import { BegModal } from '@/components/modals/BegModal'
 
 interface DashboardPageProps extends DashboardData {
-  user: User
+  user: ExercismUser
 }
 
 export function DashboardPage(props: DashboardPageProps) {

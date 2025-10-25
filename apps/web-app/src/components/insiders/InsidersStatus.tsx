@@ -34,7 +34,7 @@ const STATUS_DATA = {
   },
 }
 
-type InsidersStatus = 'eligible' | 'eligible_lifetime' | 'unset' | 'ineligible'
+type InsidersStatus = 'eligible' | 'eligible_lifetime' | 'unset' | 'ineligible' | 'active' | 'active_lifetime'
 export type InsidersStatusData = {
   status: InsidersStatus
   insidersStatusRequest: string

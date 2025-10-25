@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsExerciseResponse } from '@/types/api'
 
 /**
  * Track exercises API route matching Rails exercises controller
@@ -55,7 +56,7 @@ export async function GET(
       
       // Return exercises data in Rails-compatible format
       return NextResponse.json({
-        exercises: exercisesData.exercises.map((exercise: any) => ({
+        exercises: exercisesData.exercises.map((exercise: RailsExerciseResponse) => ({
           slug: exercise.slug,
           title: exercise.title,
           iconUrl: exercise.icon_url,

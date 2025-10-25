@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -44,7 +44,7 @@ export default function SignInPage() {
           router.push(callbackUrl)
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -55,7 +55,7 @@ export default function SignInPage() {
     setIsLoading(true)
     try {
       await signIn('github', { callbackUrl })
-    } catch (err) {
+    } catch (_err) {
       setError('There was a problem signing you in with GitHub. Please try again.')
       setIsLoading(false)
     }
@@ -196,13 +196,13 @@ export default function SignInPage() {
               href="/auth/confirm-email" 
               className="font-medium text-indigo-600 hover:text-indigo-500 block text-sm"
             >
-              Didn't receive confirmation email?
+              Didn&apos;t receive confirmation email?
             </Link>
             <Link 
               href="/auth/unlock-account" 
               className="font-medium text-indigo-600 hover:text-indigo-500 block text-sm"
             >
-              Didn't receive unlock instructions?
+              Didn&apos;t receive unlock instructions?
             </Link>
           </div>
         </div>

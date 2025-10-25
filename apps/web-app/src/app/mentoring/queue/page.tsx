@@ -35,6 +35,7 @@ export default async function MentoringQueuePage({
   // Mock default track and exercise data - in real implementation, 
   // this would come from the server-side API call
   const defaultTrack = {
+    id: '1',
     slug: searchParams.track_slug || 'javascript',
     title: 'JavaScript',
     iconUrl: '/assets/tracks/javascript.svg',
@@ -43,6 +44,8 @@ export default async function MentoringQueuePage({
   }
 
   const defaultExercise = searchParams.exercise_slug ? {
+    id: '1',
+    trackId: '1',
     slug: searchParams.exercise_slug,
     title: searchParams.exercise_slug.replace(/-/g, ' '),
     iconUrl: '/assets/exercises/default.svg'

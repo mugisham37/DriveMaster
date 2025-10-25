@@ -805,7 +805,22 @@
     "acorn",
     "astring",
     "loopguards",
-    "Loopguards"
+    "Loopguards",
+    "reimagining",
+    "kytrinyx",
+    "coldfusion",
+    "vimscript",
+    "flexbox",
+    "SJYRHA",
+    "testuser",
+    "notif",
+    "maxage",
+    "RAII",
+    "Functors",
+    "    "mockuser",
+    "metaprogramming",
+    "rubydev",
+    "jsmaster""
   ],
   "ignorePaths": [
     "node_modules/**",

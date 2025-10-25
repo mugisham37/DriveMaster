@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsMentorDiscussionResponse } from '@/types/api'
 
 /**
  * Mentoring discussions API route matching Rails mentoring/discussions controller
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       
       // Return discussions data in Rails-compatible format
       return NextResponse.json({
-        discussions: discussionsData.discussions?.map((discussion: any) => ({
+        discussions: discussionsData.discussions?.map((discussion: RailsMentorDiscussionResponse) => ({
           uuid: discussion.uuid,
           student: {
             handle: discussion.student?.handle,

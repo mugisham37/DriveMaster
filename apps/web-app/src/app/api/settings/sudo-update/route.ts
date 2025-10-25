@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest) {
     
     // Handle sensitive updates that require password confirmation
     const sensitiveFields = ['email', 'handle', 'current_password', 'password']
-    const updateData: Record<string, any> = {}
+    const updateData: Record<string, unknown> = {}
     
     for (const [key, value] of Object.entries(body)) {
       if (sensitiveFields.includes(key) && key !== 'password') {

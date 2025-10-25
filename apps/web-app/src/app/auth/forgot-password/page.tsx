@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
 
       setSuccess(data.message)
       setEmail('') // Clear the form
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

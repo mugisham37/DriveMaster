@@ -18,11 +18,22 @@ export default async function Dashboard() {
     redirect('/auth/signin')
   }
 
-  const dashboardData = await getDashboardData(session.user.id)
+  const dashboardData = await getDashboardData()
+
+  // Ensure user has all required properties for ExercismUser
+  const exercismUser = {
+    ...session.user,
+    preferences: {
+      theme: 'light' as const,
+      emailNotifications: true,
+      mentorNotifications: true
+    },
+    tracks: []
+  }
 
   return (
     <>
-      <DashboardPage {...dashboardData} user={session.user} />
+      <DashboardPage {...dashboardData} user={exercismUser} />
       <ModalManager />
     </>
   )

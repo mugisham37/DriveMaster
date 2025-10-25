@@ -38,7 +38,7 @@ export default function UnlockAccountPage() {
 
       setSuccess('Unlock instructions sent! Please check your email.')
       setEmail('')
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -59,7 +59,7 @@ export default function UnlockAccountPage() {
               Resend unlock instructions
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Enter your email address and we'll send you instructions to unlock your account.
+              Enter your email address and we&apos;ll send you instructions to unlock your account.
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export default function UnlockAccountPage() {
                 href="/auth/signup" 
                 className="font-medium text-indigo-600 hover:text-indigo-500 block"
               >
-                Don't have an account? Sign up
+                Don&apos;t have an account? Sign up
               </Link>
             </div>
           </form>

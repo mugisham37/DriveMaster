@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsTrackResponse } from '@/types/api'
 
 /**
  * Tracks API route matching Rails tracks controller
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       
       // Return tracks data in Rails-compatible format
       return NextResponse.json({
-        tracks: tracksData.tracks.map((track: any) => ({
+        tracks: tracksData.tracks.map((track: RailsTrackResponse) => ({
           slug: track.slug,
           title: track.title,
           iconUrl: track.icon_url,

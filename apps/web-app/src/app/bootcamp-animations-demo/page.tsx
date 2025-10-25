@@ -1,14 +1,13 @@
 import { Metadata } from 'next'
 import { 
   ArrowAnimation, 
-  HamsterAnimation, 
   RoughHighlight, 
   RoughUnderline, 
   WavingHand,
   ConfettiFooterAnimation,
-  EnhancedMarqueeAnimation,
-  ScrollingTestimonials
+  EnhancedMarqueeAnimation
 } from '@/components/bootcamp'
+import { BootcampScrollingTestimonials as ScrollingTestimonials } from '@/components/bootcamp'
 
 export const metadata: Metadata = {
   title: 'Bootcamp Animations Demo - Exercism',

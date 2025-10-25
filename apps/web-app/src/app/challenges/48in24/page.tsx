@@ -2,7 +2,7 @@ import React from 'react'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
+
 import { YoutubePlayer } from '@/components/common/YoutubePlayer'
 
 export const metadata: Metadata = {
@@ -93,7 +93,7 @@ async function get48in24Data() {
 }
 
 export default async function Challenge48in24Page() {
-  const { week, exercises, liveExercises, featuredExercise, tracks, numPlaceholders } = await get48in24Data()
+  const { week, exercises: _exercises, liveExercises, featuredExercise, tracks, numPlaceholders } = await get48in24Data()
 
   return (
     <div id="challenge-48in24-page">
@@ -257,7 +257,7 @@ export default async function Challenge48in24Page() {
           <div className="flex text-center flex-col items-center">
             <h1 className="text-h1 mb-16">Your #48in24 Progress</h1>
             <p className="text-p-xlarge">
-              Below you'll see a list of all the featured exercises for #48in24, along with your progress for each. Click to jump to the exercise or featured tracks.
+              Below you&apos;ll see a list of all the featured exercises for #48in24, along with your progress for each. Click to jump to the exercise or featured tracks.
             </p>
             <p className="text-p-large cta">
               Read the instructions at the top-right of this page to understand how everything works.

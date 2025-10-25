@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
 
+interface RailsIterationResponse {
+  uuid: string
+  submission_uuid: string
+  idx: number
+  status: string
+  num_essential_automated_comments: number
+  num_actionable_automated_comments: number
+  num_non_actionable_automated_comments: number
+  submission_method: string
+  created_at: string
+  submitted_at?: string
+  tests_status: string
+  representation_status: string
+  analysis_status: string
+  files?: unknown[]
+  links?: {
+    self?: string
+    solution?: string
+    test_run?: string
+    files?: string
+  }
+}
+
 /**
  * Iterations API proxy endpoint
  * Handles iteration submission and test running with Rails backend
@@ -135,7 +158,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     
     return NextResponse.json({
-      iterations: data.iterations?.map((iteration: any) => ({
+      iterations: data.iterations?.map((iteration: RailsIterationResponse) => ({
         uuid: iteration.uuid,
         submissionUuid: iteration.submission_uuid,
         idx: iteration.idx,

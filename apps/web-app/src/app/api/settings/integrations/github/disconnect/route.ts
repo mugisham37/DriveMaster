@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, withErrorHandling } from '@/lib/api/middleware'
 
-async function disconnectGitHub(request: NextRequest) {
+async function disconnectGitHub(_request: NextRequest) {
   try {
     // TODO: Implement GitHub disconnection
     // This would typically:

@@ -63,7 +63,7 @@ export default async function InsidersPage() {
             <div className="feature p-6 bg-white rounded-lg shadow">
               <GraphicalIcon icon="feature-early-access" className="filter-yellowPrompt mb-4" />
               <h4 className="text-h4 mb-2">Early Access</h4>
-              <p>Get early access to new features and tracks before they're released to the public.</p>
+              <p>Get early access to new features and tracks before they&apos;re released to the public.</p>
             </div>
             
             <div className="feature p-6 bg-white rounded-lg shadow">

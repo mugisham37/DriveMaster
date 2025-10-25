@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { ExtendedNextRequest } from '@/types/api'
 
 /**
  * API proxy endpoint for existing Rails API integration
@@ -68,7 +69,11 @@ async function proxyRequest(
     }
     
     // Add Rails-specific headers
-    headers.set('X-Forwarded-For', request.ip || 'unknown')
+    const clientIp = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     (request as ExtendedNextRequest).ip || 
+                     'unknown'
+    headers.set('X-Forwarded-For', clientIp)
     headers.set('X-Forwarded-Proto', 'https')
     headers.set('X-Forwarded-Host', request.headers.get('host') || 'localhost')
     
@@ -181,8 +186,8 @@ export const DELETE = proxyRequest
 
 // Handle preflight requests
 export async function OPTIONS(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
+  _request: NextRequest,
+  _params: { params: { path: string[] } }
 ) {
   return new NextResponse(null, {
     status: 200,

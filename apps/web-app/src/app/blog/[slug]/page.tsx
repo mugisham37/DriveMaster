@@ -1,38 +1,39 @@
-import React from 'react'
-import { Metadata } from 'next'
-import Link from 'next/link'
-import Image from 'next/image'
-import { notFound } from 'next/navigation'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
-import { Avatar } from '@/components/common/Avatar'
-import { YoutubePlayer } from '@/components/common/YoutubePlayer'
-import { ShareButton } from '@/components/common/ShareButton'
+import React from "react";
+import { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { GraphicalIcon } from "@/components/common/GraphicalIcon";
+import { Avatar } from "@/components/common/Avatar";
+import { YoutubePlayer } from "@/components/common/YoutubePlayer";
+import { ShareButton } from "@/components/common/ShareButton";
+import { SHARE_PLATFORMS } from "@/lib/config/share-platforms";
 
 interface BlogPost {
-  id: number
-  title: string
-  slug: string
-  content: string
-  contentHtml: string
-  marketingCopy: string
-  publishedAt: string
-  imageUrl?: string
-  video?: boolean
-  youtubeId?: string
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  contentHtml: string;
+  marketingCopy: string;
+  publishedAt: string;
+  imageUrl?: string;
+  video?: boolean;
+  youtubeId?: string;
   author: {
-    id: number
-    handle: string
-    name: string
-    avatarUrl: string
-    reputation?: string
-    profile?: boolean
-  }
+    id: number;
+    handle: string;
+    name: string;
+    avatarUrl: string;
+    reputation?: string;
+    profile?: boolean;
+  };
 }
 
 async function getBlogPost(slug: string): Promise<BlogPost | null> {
   // Mock data - in real implementation, this would fetch from API
   const posts: Record<string, BlogPost> = {
-    'introducing-exercism-v3': {
+    "introducing-exercism-v3": {
       id: 1,
       title: "Introducing Exercism v3: A New Era of Programming Education",
       slug: "introducing-exercism-v3",
@@ -90,26 +91,30 @@ Thank you to everyone who has supported us on this journey. The future of progra
 <li>Community challenges and events</li>
 </ul>
 <p>Thank you to everyone who has supported us on this journey. The future of programming education is bright!</p>`,
-      marketingCopy: "After years of development, we're thrilled to introduce Exercism v3 with revolutionary features that will transform how you learn programming.",
+      marketingCopy:
+        "After years of development, we're thrilled to introduce Exercism v3 with revolutionary features that will transform how you learn programming.",
       publishedAt: "2024-01-15T10:00:00Z",
-      imageUrl: "https://assets.exercism.org/images/blog/exercism-v3-launch.jpg",
+      imageUrl:
+        "https://assets.exercism.org/images/blog/exercism-v3-launch.jpg",
       video: false,
       author: {
         id: 1,
         handle: "iHiD",
         name: "Jeremy Walker",
-        avatarUrl: "https://assets.exercism.org/images/avatars/jeremy-walker.jpg",
+        avatarUrl:
+          "https://assets.exercism.org/images/avatars/jeremy-walker.jpg",
         reputation: "142,567",
-        profile: true
-      }
+        profile: true,
+      },
     },
-    'power-of-mentoring': {
+    "power-of-mentoring": {
       id: 2,
       title: "The Power of Mentoring in Programming Education",
       slug: "power-of-mentoring",
       content: "Content about mentoring...",
       contentHtml: "<p>Content about mentoring...</p>",
-      marketingCopy: "Learn about the impact of mentoring on programming education and how it accelerates learning.",
+      marketingCopy:
+        "Learn about the impact of mentoring on programming education and how it accelerates learning.",
       publishedAt: "2024-01-10T14:30:00Z",
       imageUrl: "https://assets.exercism.org/images/blog/mentoring-impact.jpg",
       video: true,
@@ -118,41 +123,48 @@ Thank you to everyone who has supported us on this journey. The future of progra
         id: 2,
         handle: "kytrinyx",
         name: "Katrina Owen",
-        avatarUrl: "https://assets.exercism.org/images/avatars/katrina-owen.jpg",
+        avatarUrl:
+          "https://assets.exercism.org/images/avatars/katrina-owen.jpg",
         reputation: "98,432",
-        profile: true
-      }
-    }
-  }
+        profile: true,
+      },
+    },
+  };
 
-  return posts[slug] || null
+  return posts[slug] || null;
 }
 
-async function getOtherPosts(excludeId: number) {
+async function getOtherPosts(_excludeId: number) {
   // Mock data for other posts
   return [
     {
       id: 3,
       title: "Building Better Code Through Practice",
       slug: "building-better-code",
-      excerpt: "Explore how consistent practice with our exercises helps developers write cleaner, more maintainable code.",
+      excerpt:
+        "Explore how consistent practice with our exercises helps developers write cleaner, more maintainable code.",
       imageUrl: "https://assets.exercism.org/images/blog/better-code.jpg",
       author: {
         handle: "erikschierboom",
         name: "Erik Schierboom",
-        avatarUrl: "https://assets.exercism.org/images/avatars/erik-schierboom.jpg"
-      }
-    }
-  ]
+        avatarUrl:
+          "https://assets.exercism.org/images/avatars/erik-schierboom.jpg",
+      },
+    },
+  ];
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getBlogPost(params.slug)
-  
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const post = await getBlogPost(params.slug);
+
   if (!post) {
     return {
-      title: 'Post Not Found - Exercism Blog'
-    }
+      title: "Post Not Found - Exercism Blog",
+    };
   }
 
   return {
@@ -162,26 +174,30 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: post.title,
       description: post.marketingCopy,
       images: post.imageUrl ? [post.imageUrl] : undefined,
-    }
-  }
+    },
+  };
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = await getBlogPost(params.slug)
-  
+export default async function BlogPostPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await getBlogPost(params.slug);
+
   if (!post) {
-    notFound()
+    notFound();
   }
 
-  const otherPosts = await getOtherPosts(post.id)
+  const otherPosts = await getOtherPosts(post.id);
 
   return (
     <div id="page-blog-post" className="pb-80">
@@ -202,10 +218,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       <div className="md-container mb-32 md:mb-48 flex gap-32">
         <article className="shadow-lg bg-backgroundColorA rounded-8 md:max-w-[840px] max-w-[100%]">
           <div className="share-bar border-b-1 border-borderColor6 py-12 md:py-16 px-24 md:px-32 flex items-center">
-            <GraphicalIcon 
-              icon="lightbulb" 
-              category="graphics" 
-              className="main-graphic hidden md:block" 
+            <GraphicalIcon
+              icon="lightbulb"
+              category="graphics"
+              className="main-graphic hidden md:block"
             />
             <div className="info md:hidden">
               <h3 className="text-h6 mb-2">Was this useful?</h3>
@@ -213,13 +229,18 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </div>
             <div className="info hidden md:block mr-auto">
               <h3 className="text-h5 mb-2">Did you find this post useful?</h3>
-              <p className="text-p-base">Share it with others who might benefit!</p>
+              <p className="text-p-base">
+                Share it with others who might benefit!
+              </p>
             </div>
 
-            <ShareButton 
-              url={`/blog/${post.slug}`}
+            <ShareButton
+              shareLink={`/blog/${post.slug}`}
               title={post.title}
-              text={post.marketingCopy}
+              shareTitle={post.marketingCopy}
+              platforms={SHARE_PLATFORMS.filter((p) =>
+                ["Twitter", "Facebook", "LinkedIn"].includes(p.name)
+              )}
             />
           </div>
 
@@ -230,7 +251,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               </div>
             )}
 
-            <div 
+            <div
               className="c-textual-content --large"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
             />
@@ -239,12 +260,15 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               {formatDate(post.publishedAt)}
               &middot;
               <span className="ml-4">
-                Was this useful?{' '}
-                <ShareButton 
-                  url={`/blog/${post.slug}`}
+                Was this useful?{" "}
+                <ShareButton
+                  shareLink={`/blog/${post.slug}`}
                   title={post.title}
-                  text="Share it!"
-                  variant="link"
+                  shareTitle="Share it!"
+                  platforms={SHARE_PLATFORMS.filter((p) =>
+                    ["Twitter", "Facebook", "LinkedIn"].includes(p.name)
+                  )}
+                  className="link"
                 />
               </span>
             </div>
@@ -253,14 +277,20 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               <div className="flex items-center">
                 <Avatar user={post.author} />
                 <div className="info ml-12">
-                  <div className="text-16 leading-150 text-textColor6 mb-2">Published by</div>
+                  <div className="text-16 leading-150 text-textColor6 mb-2">
+                    Published by
+                  </div>
                   <div className="sm:flex hidden items-center mb-4">
                     <div className="text-h4 mr-16">@{post.author.handle}</div>
                     {post.author.reputation && (
-                      <div className="text-14 text-textColor6">{post.author.reputation} reputation</div>
+                      <div className="text-14 text-textColor6">
+                        {post.author.reputation} reputation
+                      </div>
                     )}
                   </div>
-                  <div className="text-16 leading-150 font-semibold text-textColor6">{post.author.name}</div>
+                  <div className="text-16 leading-150 font-semibold text-textColor6">
+                    {post.author.name}
+                  </div>
                 </div>
               </div>
             </div>
@@ -270,19 +300,24 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         <div className="hidden mxl:flex flex-col pt-32 gap-20">
           <h4 className="text-h4">More from our blog</h4>
           {otherPosts.map((otherPost) => (
-            <article key={otherPost.id} className="bg-backgroundColorA rounded-8 shadow-base">
+            <article
+              key={otherPost.id}
+              className="bg-backgroundColorA rounded-8 shadow-base"
+            >
               <Link href={`/blog/${otherPost.slug}`} className="block p-16">
                 {otherPost.imageUrl && (
-                  <Image 
-                    src={otherPost.imageUrl} 
-                    alt="" 
+                  <Image
+                    src={otherPost.imageUrl}
+                    alt=""
                     width={200}
                     height={120}
-                    className="w-full h-24 object-cover rounded-4 mb-12" 
+                    className="w-full h-24 object-cover rounded-4 mb-12"
                   />
                 )}
                 <h5 className="text-h6 mb-8 line-clamp-2">{otherPost.title}</h5>
-                <p className="text-p-small text-textColor6 line-clamp-2">{otherPost.excerpt}</p>
+                <p className="text-p-small text-textColor6 line-clamp-2">
+                  {otherPost.excerpt}
+                </p>
               </Link>
             </article>
           ))}
@@ -293,20 +328,27 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         <h2 className="text-h3 mb-24">Community Posts</h2>
         <div className="grid gap-24 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-32">
           {otherPosts.map((otherPost) => (
-            <article key={otherPost.id} className="bg-backgroundColorA rounded-8 shadow-base">
+            <article
+              key={otherPost.id}
+              className="bg-backgroundColorA rounded-8 shadow-base"
+            >
               <Link href={`/blog/${otherPost.slug}`} className="block">
                 {otherPost.imageUrl && (
-                  <Image 
-                    src={otherPost.imageUrl} 
-                    alt="" 
+                  <Image
+                    src={otherPost.imageUrl}
+                    alt=""
                     width={300}
                     height={160}
-                    className="w-full h-40 object-cover rounded-t-8" 
+                    className="w-full h-40 object-cover rounded-t-8"
                   />
                 )}
                 <div className="p-16">
-                  <h3 className="text-h6 mb-8 line-clamp-2">{otherPost.title}</h3>
-                  <p className="text-p-small text-textColor6 mb-12 line-clamp-3">{otherPost.excerpt}</p>
+                  <h3 className="text-h6 mb-8 line-clamp-2">
+                    {otherPost.title}
+                  </h3>
+                  <p className="text-p-small text-textColor6 mb-12 line-clamp-3">
+                    {otherPost.excerpt}
+                  </p>
                   <div className="flex items-center text-12 text-textColor6">
                     <Avatar user={otherPost.author} size="small" />
                     <span className="ml-6">{otherPost.author.name}</span>
@@ -325,5 +367,5 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         </div>
       </div>
     </div>
-  )
+  );
 }

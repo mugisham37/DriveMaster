@@ -33,14 +33,14 @@ export default function ConfirmationRequiredPage() {
               <div className="ml-3">
                 <div className="text-sm text-blue-700 space-y-3">
                   <p className="font-medium">
-                    We've sent you an email with a confirmation link.
+                    We&apos;ve sent you an email with a confirmation link.
                   </p>
                   <p>
                     Please check your email and click the confirmation link to activate your account. 
                     This helps us verify that the email address belongs to you.
                   </p>
                   <p>
-                    Didn't receive the email? Check your spam folder or{' '}
+                    Didn&apos;t receive the email? Check your spam folder or{' '}
                     <Link 
                       href="/auth/confirm-email" 
                       className="font-medium text-blue-600 hover:text-blue-500 underline"

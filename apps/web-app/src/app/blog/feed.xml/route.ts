@@ -37,7 +37,7 @@ async function getBlogPosts(): Promise<BlogPost[]> {
   ]
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const posts = await getBlogPosts()
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://exercism.org'
 

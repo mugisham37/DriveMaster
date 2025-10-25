@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
+
 
 export const metadata: Metadata = {
   title: 'Functional February - Exercism Challenges',
@@ -53,7 +53,7 @@ export default function FunctionalFebruaryPage() {
                 <li className="flex items-start">
                   <span className="text-20 mr-12">🚫</span>
                   <div>
-                    <strong>No Side Effects:</strong> Functions don't modify external state
+                    <strong>No Side Effects:</strong> Functions don&apos;t modify external state
                   </div>
                 </li>
               </ul>

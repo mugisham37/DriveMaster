@@ -1,15 +1,13 @@
 import { Metadata } from 'next'
 import { getServerAuthSession } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
-import { Session } from '@/components/mentoring/Session'
+import Session from '@/components/mentoring/Session'
 
 interface MentoringDiscussionPageProps {
   params: { uuid: string }
 }
 
-export async function generateMetadata({
-  params
-}: MentoringDiscussionPageProps): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Mentoring Discussion - Exercism`,
     description: 'Mentor a student and help them improve their coding skills',

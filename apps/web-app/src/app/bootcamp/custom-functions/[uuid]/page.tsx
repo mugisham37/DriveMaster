@@ -38,14 +38,22 @@ export default async function CustomFunctionEditorPage({
       tests: [
         {
           uuid: "test-1",
-          name: "Test 1",
-          code: "myCustomFunction()",
+          args: "",
           expected: "Hello World",
         },
       ],
     };
 
-    const customFunctions = [customFunction];
+    const customFunctions = {
+      selected: [customFunction.uuid],
+      forInterpreter: [{
+        name: customFunction.name,
+        arity: 0, // Default arity
+        code: customFunction.code,
+        description: customFunction.description,
+        dependencies: []
+      }]
+    };
 
     const links = {
       updateCustomFns: `/api/bootcamp/custom-functions/${params.uuid}`,

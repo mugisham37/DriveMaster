@@ -81,7 +81,7 @@ export default function SignUpPage() {
       } else if (result?.ok) {
         router.push(callbackUrl)
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -92,7 +92,7 @@ export default function SignUpPage() {
     setIsLoading(true)
     try {
       await signIn('github', { callbackUrl })
-    } catch (err) {
+    } catch (_err) {
       setError('There was a problem signing you up with GitHub. Please try again.')
       setIsLoading(false)
     }

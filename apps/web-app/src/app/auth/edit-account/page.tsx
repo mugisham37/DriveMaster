@@ -89,7 +89,7 @@ export default function EditAccountPage() {
         passwordConfirmation: '',
         currentPassword: ''
       }))
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -118,7 +118,7 @@ export default function EditAccountPage() {
         const data = await response.json()
         setError(data.error || 'Failed to delete account')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred. Please try again.')
     }
   }
@@ -213,7 +213,7 @@ export default function EditAccountPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 New Password
               </label>
-              <p className="text-xs text-gray-500 mb-1">Leave blank if you don't want to change it</p>
+              <p className="text-xs text-gray-500 mb-1">Leave blank if you don&apos;t want to change it</p>
               <input
                 id="password"
                 name="password"

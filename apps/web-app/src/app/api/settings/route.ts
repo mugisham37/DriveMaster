@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest) {
       'pronoun_parts', 'show_on_supporters_page'
     ]
     
-    const updateData: Record<string, any> = {}
+    const updateData: Record<string, unknown> = {}
     
     for (const [key, value] of Object.entries(body)) {
       if (allowedFields.includes(key)) {

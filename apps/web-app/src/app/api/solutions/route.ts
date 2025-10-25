@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsSolutionResponse } from '@/types/api'
 
 /**
  * Solutions API proxy endpoint
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     
     return NextResponse.json({
-      solutions: data.solutions?.map((solution: any) => ({
+      solutions: data.solutions?.map((solution: RailsSolutionResponse) => ({
         uuid: solution.uuid,
         exercise: {
           slug: solution.exercise?.slug,

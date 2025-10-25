@@ -7,7 +7,7 @@ import { getServerAuthSession } from '@/lib/auth'
  */
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { slug: string } }
 ) {
   try {

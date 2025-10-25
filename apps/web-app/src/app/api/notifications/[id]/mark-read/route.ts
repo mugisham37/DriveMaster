@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
-import { withErrorHandling, withAuth } from '@/lib/api/middleware'
 
-async function markNotificationAsRead(
-  request: NextRequest,
+export async function PATCH(
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerAuthSession()
-  
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    )
-  }
-
   try {
+    const session = await getServerAuthSession()
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
     const notificationId = params.id
 
     // In real implementation, this would update the database
@@ -40,5 +39,3 @@ async function markNotificationAsRead(
     )
   }
 }
-
-export const PATCH = withErrorHandling(withAuth(markNotificationAsRead))

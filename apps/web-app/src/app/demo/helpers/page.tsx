@@ -1,9 +1,16 @@
 'use client'
 
 import React from 'react'
-import { FlashMessages, useFlashMessageManager, ExternalLink } from '@/components/common'
 import { emailButtonTo, EmailButton } from '@/lib/email/button-helper'
-import { getUserTrackCompletedPercentageText, getCompletionMessage, useCompletionText } from '@/lib/user-tracks/completion-text'
+import { getCompletionMessage, useCompletionText } from '@/lib/user-tracks/completion-text'
+import ExternalLink from '@/components/common/ExternalLink'
+import ExternalLink from '@/components/common/ExternalLink'
+import ExternalLink from '@/components/common/ExternalLink'
+import ExternalLink from '@/components/common/ExternalLink'
+import ExternalLink from '@/components/common/ExternalLink'
+import ExternalLink from '@/components/common/ExternalLink'
+import FlashMessages from '@/components/common/FlashMessages'
+import { useFlashMessageManager } from '@/components/common/FlashMessages'
 
 /**
  * Demo page showing migrated helper functionality

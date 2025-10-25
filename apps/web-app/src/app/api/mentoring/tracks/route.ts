@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsMentoringTrackResponse } from '@/types/api'
 
 /**
  * Mentoring tracks API route matching Rails mentoring/tracks controller
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
       
       // Return tracks data in Rails-compatible format
       return NextResponse.json({
-        tracks: tracksData.tracks?.map((track: any) => ({
+        tracks: tracksData.tracks?.map((track: RailsMentoringTrackResponse) => ({
           slug: track.slug,
           title: track.title,
           iconUrl: track.icon_url,

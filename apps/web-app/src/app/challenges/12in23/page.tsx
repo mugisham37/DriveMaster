@@ -84,7 +84,7 @@ async function get12in23Data() {
     slug: exercise.slug,
     title: exercise.title,
     trackSlugs: ['javascript', 'python', 'ruby'],
-    earnedFor: trackCounts['javascript'] >= 5 ? 'javascript' : null
+    earnedFor: (trackCounts?.['javascript'] ?? 0) >= 5 ? 'javascript' : null
   }))
 
   return {
@@ -101,7 +101,7 @@ async function get12in23Data() {
 
 export default async function Challenge12in23Page() {
   const { 
-    currentMonth, 
+    currentMonth: _currentMonth, 
     decemberTracks, 
     featuredExercises, 
     trackCounts, 
@@ -123,8 +123,8 @@ export default async function Challenge12in23Page() {
               </div>
               <h1 className="text-h1 mb-8">It's December Diversions! ✨</h1>
               <p className="text-p-xlarge mb-20">
-                This month for #12in23 we're exploring these.
-                We're digging into the following languages: ColdFusion, Groovy, Lua, VimScript and Wren, with interviews and live streaming and lots of fun exercises for you to complete!
+                This month for #12in23 we&apos;re exploring these.
+                We&apos;re digging into the following languages: ColdFusion, Groovy, Lua, VimScript and Wren, with interviews and live streaming and lots of fun exercises for you to complete!
               </p>
 
               <div className="shadow-baseZ1 grid grid-cols-2 gap-20 py-20 px-20 rounded-8 bg-backgroundColorB">
@@ -367,7 +367,7 @@ export default async function Challenge12in23Page() {
               Aim to complete 12 languages by the end of the year!
             </p>
             <p className="text-p-large cta">
-              Submit 5 exercises (not including "Hello World") in a track to tick off that language!
+              Submit 5 exercises (not including "Hello World&quot;) in a track to tick off that language!
             </p>
           </div>
 

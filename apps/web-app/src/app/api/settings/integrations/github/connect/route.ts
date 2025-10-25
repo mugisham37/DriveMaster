@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, withErrorHandling } from '@/lib/api/middleware'
 
-async function connectGitHub(request: NextRequest) {
+async function connectGitHub(_request: NextRequest) {
   try {
     // TODO: Implement GitHub OAuth flow
     // This would typically:

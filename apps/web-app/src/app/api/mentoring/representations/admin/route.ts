@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsMentoringRepresentationResponse } from '@/types/api'
 
 /**
  * Mentoring representations admin API route
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       
       // Return representations data in Rails-compatible format
       return NextResponse.json({
-        results: representationsData.representations?.map((representation: any) => ({
+        results: representationsData.representations?.map((representation: RailsMentoringRepresentationResponse) => ({
           id: representation.id,
           exercise: {
             title: representation.exercise?.title,

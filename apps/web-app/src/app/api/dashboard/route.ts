@@ -1,12 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { 
+  DashboardResponse, 
+  RailsDashboardResponse,
+  RailsBadgeResponse,
+  RailsBlogPostResponse,
+  RailsUpdateResponse,
+  RailsScheduledEventResponse,
+  RailsUserTrackResponse,
+  RailsMentorDiscussionResponse
+} from '@/types/api'
 
 /**
  * Dashboard API route matching Rails dashboard controller
  * GET /api/dashboard - Get user dashboard data
  */
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerAuthSession()
     
@@ -38,11 +48,11 @@ export async function GET(_request: NextRequest) {
         )
       }
       
-      const dashboardData = await response.json()
+      const dashboardData: RailsDashboardResponse = await response.json()
       
       // Return dashboard data in Rails-compatible format
-      return NextResponse.json({
-        featuredBadges: dashboardData.featured_badges?.map((badge: any) => ({
+      return NextResponse.json<DashboardResponse>({
+        featuredBadges: dashboardData.featured_badges?.map((badge: RailsBadgeResponse) => ({
           uuid: badge.uuid,
           rarity: badge.rarity,
           iconName: badge.icon_name,
@@ -57,7 +67,7 @@ export async function GET(_request: NextRequest) {
           }
         })) || [],
         numBadges: dashboardData.num_badges || 0,
-        blogPosts: dashboardData.blog_posts?.map((post: any) => ({
+        blogPosts: dashboardData.blog_posts?.map((post: RailsBlogPostResponse) => ({
           id: post.id,
           title: post.title,
           slug: post.slug,
@@ -72,7 +82,7 @@ export async function GET(_request: NextRequest) {
             self: `/blog/${post.slug}`
           }
         })) || [],
-        updates: dashboardData.updates?.map((update: any) => ({
+        updates: dashboardData.updates?.map((update: RailsUpdateResponse) => ({
           id: update.id,
           text: update.text,
           icon: update.icon,
@@ -86,25 +96,25 @@ export async function GET(_request: NextRequest) {
           title: dashboardData.live_event.title,
           description: dashboardData.live_event.description,
           startsAt: dashboardData.live_event.starts_at,
-          youtubeId: dashboardData.live_event.youtube_id,
-          thumbnailUrl: dashboardData.live_event.thumbnail_url,
-          youtube: dashboardData.live_event.youtube
+          ...(dashboardData.live_event.youtube_id && { youtubeId: dashboardData.live_event.youtube_id }),
+          ...(dashboardData.live_event.thumbnail_url && { thumbnailUrl: dashboardData.live_event.thumbnail_url }),
+          ...(dashboardData.live_event.youtube !== undefined && { youtube: dashboardData.live_event.youtube })
         } : undefined,
         featuredEvent: dashboardData.featured_event ? {
           id: dashboardData.featured_event.id,
           title: dashboardData.featured_event.title,
           description: dashboardData.featured_event.description,
           startsAt: dashboardData.featured_event.starts_at,
-          youtubeId: dashboardData.featured_event.youtube_id,
-          thumbnailUrl: dashboardData.featured_event.thumbnail_url,
-          youtube: dashboardData.featured_event.youtube
+          ...(dashboardData.featured_event.youtube_id && { youtubeId: dashboardData.featured_event.youtube_id }),
+          ...(dashboardData.featured_event.thumbnail_url && { thumbnailUrl: dashboardData.featured_event.thumbnail_url }),
+          ...(dashboardData.featured_event.youtube !== undefined && { youtube: dashboardData.featured_event.youtube })
         } : undefined,
-        scheduledEvents: dashboardData.scheduled_events?.map((event: any) => ({
+        scheduledEvents: dashboardData.scheduled_events?.map((event: RailsScheduledEventResponse) => ({
           id: event.id,
           title: event.title,
           startsAt: event.starts_at
         })) || [],
-        userTracks: dashboardData.user_tracks?.map((track: any) => ({
+        userTracks: dashboardData.user_tracks?.map((track: RailsUserTrackResponse) => ({
           slug: track.slug,
           title: track.title,
           iconUrl: track.icon_url,
@@ -118,20 +128,20 @@ export async function GET(_request: NextRequest) {
           }
         })) || [],
         numUserTracks: dashboardData.num_user_tracks || 0,
-        mentorDiscussions: dashboardData.mentor_discussions?.map((discussion: any) => ({
+        mentorDiscussions: dashboardData.mentor_discussions?.map((discussion: RailsMentorDiscussionResponse) => ({
           uuid: discussion.uuid,
           student: {
-            handle: discussion.student?.handle,
-            avatarUrl: discussion.student?.avatar_url,
+            handle: discussion.student?.handle || '',
+            avatarUrl: discussion.student?.avatar_url || '',
             flair: discussion.student?.flair
           },
           exercise: {
-            title: discussion.exercise?.title,
-            iconUrl: discussion.exercise?.icon_url
+            title: discussion.exercise?.title || '',
+            iconUrl: discussion.exercise?.icon_url || ''
           },
           track: {
-            title: discussion.track?.title,
-            iconUrl: discussion.track?.icon_url
+            title: discussion.track?.title || '',
+            iconUrl: discussion.track?.icon_url || ''
           },
           isFinished: discussion.is_finished,
           postsCount: discussion.posts_count,
@@ -147,7 +157,7 @@ export async function GET(_request: NextRequest) {
       console.error('Rails API connection error:', fetchError)
       
       // Fallback mock data for development
-      return NextResponse.json({
+      return NextResponse.json<DashboardResponse>({
         featuredBadges: [
           {
             uuid: '1',

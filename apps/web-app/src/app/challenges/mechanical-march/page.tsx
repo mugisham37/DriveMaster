@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
+
 
 export const metadata: Metadata = {
   title: 'Mechanical March - Exercism Challenges',

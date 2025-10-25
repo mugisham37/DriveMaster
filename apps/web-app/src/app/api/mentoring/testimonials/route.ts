@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
+import type { RailsMentoringTestimonialResponse } from '@/types/api'
 
 /**
  * Mentoring testimonials API route matching Rails mentoring/testimonials controller
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       
       // Return testimonials data in Rails-compatible format
       return NextResponse.json({
-        results: testimonialsData.testimonials?.map((testimonial: any) => ({
+        results: testimonialsData.testimonials?.map((testimonial: RailsMentoringTestimonialResponse) => ({
           uuid: testimonial.uuid,
           content: testimonial.content,
           student: {

@@ -131,7 +131,7 @@ export default async function BlogPage({
           />
           <div className="flex flex-col md:mr-auto">
             <h1 className="text-h1 mb-8 text-center md:text-left">
-              Exercism's Blog
+              Exercism&apos;s Blog
             </h1>
             <p className="text-p-large mb-20 md:mb-0">
               Updates from our incredible{' '}
