@@ -302,7 +302,7 @@ export function useScrubber({
       // This helps us not reset to the initial state accidently later.
       // onUpdate calls when the animation starts before anything has
       // happened, so we guard against progres being 0.
-      if ((anime as any).progress > 0) {
+      if ((anime as { progress: number }).progress > 0) {
         animationTimeline.hasPlayedOrScrubbed = true
       }
 
@@ -521,7 +521,7 @@ export function useScrubber({
   // But when they let go of the mouse we need to lock onto a frame. So this
   // does that. It grabs the nearest frame to the current scrub and moves to it.
   const handleOnMouseUp = useCallback(
-    (animationTimeline: AnimationTimeline, _frames: EnhancedFrame[]) => {
+    (animationTimeline: AnimationTimeline) => {
       const newFrame = findFrameNearestTimelineTime(timelineValue)
       if (newFrame === undefined) return
 
@@ -593,12 +593,11 @@ export function useScrubber({
       findPrevFrameIdx,
       moveToFrame,
       setShouldShowInformationWidget,
-      frames,
     ]
   )
 
   const handleGoToNextFrame = useCallback(
-    (animationTimeline: AnimationTimeline, _frames: EnhancedFrame[]) => {
+    (animationTimeline: AnimationTimeline) => {
       const currentFrameIdx = findFrameIdxNearestTimelineTime(timelineValue)
 
       // If there's no current frame, something has gone very

@@ -33,7 +33,7 @@ export function CompletedExerciseView() {
       ) : (
         <>
           <p className="text-18 leading-140 mb-20">
-            Well done! You've finished all the exercises available to you right
+            Well done! You&apos;ve finished all the exercises available to you right
             now.
           </p>
 

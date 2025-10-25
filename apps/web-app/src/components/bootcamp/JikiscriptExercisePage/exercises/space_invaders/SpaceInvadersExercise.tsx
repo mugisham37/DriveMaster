@@ -269,7 +269,7 @@ export default class SpaceInvadersExercise extends Exercise {
     this.addAnimation({
       targets: `#${this.view.id} #${shot.id}`,
       duration: duration,
-      transformations: { top: targetTop as any },
+      transformations: { top: targetTop as number },
       offset: executionCtx.getCurrentTime(),
       easing: 'linear',
     })
@@ -334,7 +334,7 @@ export default class SpaceInvadersExercise extends Exercise {
     return new Jiki.JikiList(
       rowData
         .map((alien: Alien | null) => alien !== null)
-        .map((alive: boolean) => new Jiki.JikiBoolean(alive) as any)
+        .map((alive: boolean) => ({ type: 'Boolean', value: alive } as Jiki.JikiObject))
     )
   }
 

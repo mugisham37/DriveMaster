@@ -57,7 +57,7 @@ const baseTheme = EditorView.baseTheme({
 })
 
 // Decoration for highlighting a line
-function stripe(color: string) {
+function stripe() {
   return Decoration.line({
     attributes: {
       class: 'cm-highlightedLine',
@@ -67,15 +67,14 @@ function stripe(color: string) {
 
 // Function to create line decorations based on the current state
 function stripeDeco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
+  const builder = new RangeSetBuilder<Decoration>()
   const lineNumber = view.state.field(highlightedLineField)
-  const color = view.state.field(highlightColorField)
 
-  for (let { from, to } of view.visibleRanges) {
+  for (const { from, to } of view.visibleRanges) {
     for (let pos = from; pos <= to; ) {
-      let line = view.state.doc.lineAt(pos)
+      const line = view.state.doc.lineAt(pos)
       if (line.number == lineNumber)
-        builder.add(line.from, line.from, stripe(color))
+        builder.add(line.from, line.from, stripe())
       pos = line.to + 1
     }
   }

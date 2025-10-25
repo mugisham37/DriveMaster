@@ -16,7 +16,7 @@ export const breakpointState = StateField.define<RangeSet<GutterMarker>>({
   },
   update(set, transaction) {
     set = set.map(transaction.changes)
-    for (let e of transaction.effects) {
+    for (const e of transaction.effects) {
       if (e.is(breakpointEffect)) {
         if (e.value.on) {
           set = set.update({ add: [breakpointMarker.range(e.value.pos)] })
@@ -30,7 +30,7 @@ export const breakpointState = StateField.define<RangeSet<GutterMarker>>({
 })
 
 function toggleBreakpoint(view: EditorView, pos: number) {
-  let breakpoints = view.state.field(breakpointState)
+  const breakpoints = view.state.field(breakpointState)
   let hasBreakpoint = false
 
   breakpoints.between(pos, pos, () => {
@@ -43,7 +43,7 @@ function toggleBreakpoint(view: EditorView, pos: number) {
 }
 
 const breakpointMarker = new (class extends GutterMarker {
-  toDOM() {
+  override toDOM() {
     const dot = document.createElement('div')
     dot.classList.add('cm-breakpoint-marker')
     dot.title = 'Remove breakpoint'
@@ -52,7 +52,7 @@ const breakpointMarker = new (class extends GutterMarker {
 })()
 
 class IdleMarker extends GutterMarker {
-  toDOM() {
+  override toDOM() {
     const dot = document.createElement('div')
     dot.classList.add('cm-idle-marker')
     dot.title = 'Add breakpoint'
@@ -68,7 +68,7 @@ export const breakpointGutter = [
     class: 'cm-breakpoint-gutter',
     markers: (view) => {
       const breakpoints = view.state.field(breakpointState)
-      const markers: any[] = []
+      const markers: Array<{ from: number; to: number; value: GutterMarker }> = []
 
       for (let i = 1; i <= view.state.doc.lines; i++) {
         const pos = view.state.doc.line(i).from

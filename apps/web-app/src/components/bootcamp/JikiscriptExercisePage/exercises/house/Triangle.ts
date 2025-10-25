@@ -11,16 +11,16 @@ function fn(this: HouseExercise) {
   ) => {
     this.fillColorHex(
       executionCtx,
-      triangle.getField('fillColorHex') as Jiki.String
+      triangle.getField('fillColorHex') as Jiki.JikiObject
     )
     this.triangle(
       executionCtx,
-      triangle.getField('x1') as Jiki.Number,
-      triangle.getField('y1') as Jiki.Number,
-      triangle.getField('x2') as Jiki.Number,
-      triangle.getField('y2') as Jiki.Number,
-      triangle.getField('x3') as Jiki.Number,
-      triangle.getField('y3') as Jiki.Number
+      triangle.getField('x1') as Jiki.JikiObject,
+      triangle.getField('y1') as Jiki.JikiObject,
+      triangle.getField('x2') as Jiki.JikiObject,
+      triangle.getField('y2') as Jiki.JikiObject,
+      triangle.getField('x3') as Jiki.JikiObject,
+      triangle.getField('y3') as Jiki.JikiObject
     )
     storeShape(this, triangle)
   }
@@ -91,6 +91,6 @@ function fn(this: HouseExercise) {
   return Triangle
 }
 
-export function buildTriangle(binder: any) {
+export function buildTriangle(binder: unknown) {
   return fn.bind(binder)()
 }

@@ -11,7 +11,7 @@ import { FinishLessonModal } from './FinishLessonModal/FinishLessonModal'
 
 export type StudentCodeGetter = () => string | undefined
 
-function _Header() {
+function HeaderComponent() {
   const { links } = useContext(FrontendExercisePageContext)
 
   const { setIsFinishLessonModalOpen, isFinishLessonModalOpen } =
@@ -74,4 +74,4 @@ function _Header() {
   )
 }
 
-export const Header = wrapWithErrorBoundary(_Header)
+export const Header = wrapWithErrorBoundary(HeaderComponent)

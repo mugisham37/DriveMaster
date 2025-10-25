@@ -5,6 +5,7 @@ import React, {
   type ForwardedRef,
   useMemo,
   useContext,
+  useCallback,
 } from 'react'
 import { EditorView, ViewUpdate } from '@codemirror/view'
 import {
@@ -78,7 +79,7 @@ function onFoldChange(...cb: Array<(update: ViewUpdate) => void>) {
 }
 
 function onViewChange(
-  effectTypes: StateEffectType<any>[],
+  effectTypes: StateEffectType<unknown>[],
   ...cb: Array<(update: ViewUpdate) => void>
 ) {
   return EditorView.updateListener.of((update) => {
@@ -93,7 +94,7 @@ function onViewChange(
   })
 }
 
-export const CodeMirror = forwardRef(function _CodeMirror(
+export const CodeMirror = forwardRef(function CodeMirrorComponent(
   {
     editorDidMount,
     handleRunCode,
@@ -136,7 +137,7 @@ export const CodeMirror = forwardRef(function _CodeMirror(
   const [textarea, setTextarea] = useState<HTMLDivElement | null>(null)
 
   const updateLocalStorageValueOnDebounce = useMemo(() => {
-    return debounce((value: string, view) => {
+    return debounce((value: string, view: EditorView) => {
       if (!setExerciseLocalStorageData) {
         return
       }
@@ -152,17 +153,17 @@ export const CodeMirror = forwardRef(function _CodeMirror(
         readonlyRanges: readonlyRanges,
       })
     }, 500)
-  }, [setExerciseLocalStorageData, readOnlyRangesStateField])
+  }, [setExerciseLocalStorageData])
 
   let value = defaultCode
 
-  const getEditorView = (): EditorView | null => {
+  const getEditorView = useCallback((): EditorView | null => {
     if (typeof ref === 'function') {
       throw new Error('Callback refs are not supported.')
     }
     if (ref === null) return null
     return ref.current
-  }
+  }, [ref])
 
   const setValue = (text: string) => {
     const editorView = getEditorView()
@@ -191,7 +192,7 @@ export const CodeMirror = forwardRef(function _CodeMirror(
       return
     }
 
-    const view = new EditorView({
+    const view: EditorView = new EditorView({
       state: EditorState.create({
         doc: value,
         extensions: [
@@ -308,7 +309,7 @@ export const CodeMirror = forwardRef(function _CodeMirror(
     editorView.dispatch({
       effects: Ext.showInfoWidgetEffect.of(shouldShowInformationWidget),
     })
-  }, [shouldShowInformationWidget])
+  }, [shouldShowInformationWidget, getEditorView])
 
   useEffect(() => {
     const editorView = getEditorView()
@@ -317,7 +318,7 @@ export const CodeMirror = forwardRef(function _CodeMirror(
     editorView.dispatch({
       effects: Ext.informationWidgetDataEffect.of(informationWidgetData),
     })
-  }, [informationWidgetData?.html, informationWidgetData?.line])
+  }, [informationWidgetData, getEditorView])
 
   return (
     <div className="editor-wrapper" style={style}>

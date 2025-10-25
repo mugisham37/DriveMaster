@@ -13,7 +13,7 @@ export function ResetButton() {
   const handleResetExercise = useCallback(() => {
     resetEditors()
     setShouldOpenConfirmationModal(false)
-  }, [])
+  }, [resetEditors])
 
   return (
     <>
@@ -24,7 +24,7 @@ export function ResetButton() {
         Reset
       </button>
 
-      {/* @ts-ignore */}
+      {/* @ts-expect-error - Modal component type issue */}
       <Modal
         ariaHideApp={false}
         isOpen={shouldOpenConfirmationModal}
@@ -35,7 +35,7 @@ export function ResetButton() {
           Are you sure?
         </h2>
         <p className="text-18 leading-140 mb-16">
-          Are you sure you want to reset to the starting code? You'll lose your
+          Are you sure you want to reset to the starting code? You&apos;ll lose your
           progress on this exercise.
         </p>
 

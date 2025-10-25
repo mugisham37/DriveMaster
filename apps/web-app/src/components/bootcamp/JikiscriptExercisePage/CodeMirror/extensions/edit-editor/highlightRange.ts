@@ -19,7 +19,7 @@ export const highlightField = StateField.define<DecorationSet>({
     }
 
     highlights = highlights.map(tr.changes)
-    for (let e of tr.effects)
+    for (const e of tr.effects)
       if (e.is(addHighlight)) {
         highlights = highlights.update({
           add: [highlightMark.range(e.value.from, e.value.to)],

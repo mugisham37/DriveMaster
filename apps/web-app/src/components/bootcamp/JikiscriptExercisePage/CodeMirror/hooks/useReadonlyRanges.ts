@@ -14,5 +14,5 @@ export function useReadonlyRanges(
     editorView.dispatch({
       effects: updateReadOnlyRangesEffect.of(readonlyRanges),
     })
-  }, [readonlyRanges])
+  }, [readonlyRanges, editorView])
 }

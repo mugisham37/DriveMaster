@@ -69,7 +69,7 @@ export function backspaceLines(
   return new Promise((resolve) => {
     const startPosObj = view.state.doc.line(from)
     const endPosObj = view.state.doc.line(to)
-    let posStart = startPosObj.from
+    const posStart = startPosObj.from
     let posEnd = endPosObj.to
 
     view.focus()
@@ -177,7 +177,7 @@ export function removeLine(
 ): Promise<void> {
   return new Promise((resolve) => {
     const lineObj = view.state.doc.line(line)
-    let from = lineObj.from
+    const from = lineObj.from
     let to = lineObj.to
     if (line < view.state.doc.lines) {
       to += 1
@@ -302,7 +302,7 @@ export function removeLineContent(
 ): Promise<void> {
   return new Promise((resolve) => {
     const lineObj = view.state.doc.line(line)
-    let from = lineObj.from
+    const from = lineObj.from
     let to = lineObj.to
 
     let insert = ''

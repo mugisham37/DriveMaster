@@ -10,8 +10,8 @@ export function extractLineAndColumnFromStack(stack?: string): {
 
   if (match) {
     return {
-      line: parseInt(match[1], 10),
-      column: parseInt(match[2], 10),
+      line: parseInt(match[1] || '1', 10),
+      column: parseInt(match[2] || '1', 10),
     }
   }
 

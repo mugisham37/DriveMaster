@@ -50,7 +50,7 @@ export function showJsError(
 }
 
 export function describeJSError(error: { message: string }) {
-  let errorHeading = "Something didn't go as expected!"
+  const errorHeading = "Something didn't go as expected!"
 
   let output = `<h2>${errorHeading}</h2>`
   output += `<div class="content">${

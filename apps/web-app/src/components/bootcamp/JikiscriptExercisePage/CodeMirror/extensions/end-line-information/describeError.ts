@@ -7,7 +7,6 @@
 import { marked } from 'marked'
 
 import type { InterpreterError as StaticError } from '@/lib/interpreter/error'
-import { InterpreterError as SyntaxError } from '@/lib/interpreter/error'
 
 export function describeError(
   error: StaticError,
@@ -29,7 +28,7 @@ export function describeError(
 
   const renderer = new marked.Renderer()
 
-  renderer.code = (code) => {
+  renderer.code = (code: { text: string }) => {
     return `<pre><code class="language-jikiscript hljs">${code.text}</code></pre>`
   }
   marked.setOptions({ renderer })

@@ -17,5 +17,5 @@ export function useHighlightLineColor(
         effects: changeColorEffect.of(highlightedLineColor),
       })
     }
-  }, [highlightedLineColor])
+  }, [highlightedLineColor, editorView])
 }

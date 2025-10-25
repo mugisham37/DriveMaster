@@ -169,7 +169,7 @@ export class InformationWidget extends WidgetType {
         shift({ padding: 0, boundary: (editor as Boundary) ?? undefined }),
         arrow({ element: this.arrowElement! }),
       ],
-    }).then(({ y, middlewareData }) => {
+    }).then(({ y, middlewareData }: { y: number; middlewareData: { arrow?: { x?: number; y?: number } } }) => {
       // attach to actual editor's right side instead of a random external store value - like panel's location
       const editorRect = editor.getBoundingClientRect()
       const x = editorRect.right + 10

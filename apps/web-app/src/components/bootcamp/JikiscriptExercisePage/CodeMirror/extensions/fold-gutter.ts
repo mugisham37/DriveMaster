@@ -59,7 +59,7 @@ const getFunctionIdentifier = (node: SyntaxNode, state: EditorState) => {
   return null
 }
 
-const isFunctionNode = (node: any) => {
+const isFunctionNode = (node: SyntaxNode) => {
   return node.name === 'FunctionDefinition'
 }
 

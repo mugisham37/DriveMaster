@@ -54,7 +54,7 @@ export class AnimationTimeline {
 
   public destroy() {
     this.animationTimeline.pause();
-    // @ts-ignore
+    // @ts-expect-error - Setting to null for cleanup
     this.animationTimeline = null;
   }
 

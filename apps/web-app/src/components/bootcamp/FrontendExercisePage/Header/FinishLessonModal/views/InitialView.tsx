@@ -7,7 +7,7 @@ export function InitialView() {
 
   const handleTweakFurther = useCallback(() => {
     setIsOpen(false)
-  }, [])
+  }, [setIsOpen])
 
   return (
     <>
@@ -16,7 +16,7 @@ export function InitialView() {
       </h2>
 
       <p className="text-18 leading-150 mb-20">
-        In this exercise, you decide when you're happy to finish the exercise.
+        In this exercise, you decide when you&apos;re happy to finish the exercise.
         Your aim is to have it look and function the same as the example
         solution.
       </p>

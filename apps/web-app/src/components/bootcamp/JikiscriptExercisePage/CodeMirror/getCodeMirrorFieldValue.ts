@@ -1,10 +1,10 @@
 import type { StateField } from '@codemirror/state'
 import type { EditorView } from 'codemirror'
 
-export function getCodeMirrorFieldValue(
+export function getCodeMirrorFieldValue<T>(
   view: EditorView | null,
-  field: StateField<any>
-): any {
-  if (!view) return
+  field: StateField<T>
+): T | undefined {
+  if (!view) return undefined
   return view.state.field(field)
 }

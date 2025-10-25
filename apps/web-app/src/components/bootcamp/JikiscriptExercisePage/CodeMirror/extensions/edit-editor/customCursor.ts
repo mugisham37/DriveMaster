@@ -13,7 +13,7 @@ export const cursorTooltipField = StateField.define<TooltipState>({
   },
 
   update(value, tr) {
-    let showTutorEffect = tr.effects.find((e) => e.is(showTutorTooltip))
+    const showTutorEffect = tr.effects.find((e) => e.is(showTutorTooltip))
     const newTooltip = { ...value }
 
     if (showTutorEffect !== undefined) {
@@ -46,7 +46,7 @@ function getCursorTooltips(state: EditorState): readonly Tooltip[] {
         strictSide: false,
         arrow: true,
         create: () => {
-          let dom = document.createElement('div')
+          const dom = document.createElement('div')
           dom.innerHTML = `
           <img src="src/assets/robot.png" width='50' height='50' class='rounded-8'>
           `

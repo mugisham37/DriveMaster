@@ -1,6 +1,6 @@
 import { EditorView } from '@codemirror/view'
 import { useEffect } from 'react'
-import { type ViewRef, readonlyCompartment } from '../CodeMirror'
+import { readonlyCompartment } from '../CodeMirror'
 
 export function useReadonlyCompartment(
   editorView: EditorView | null,
@@ -16,5 +16,5 @@ export function useReadonlyCompartment(
         EditorView.editable.of(!readonly),
       ]),
     })
-  }, [readonly])
+  }, [readonly, editorView])
 }

@@ -8,17 +8,17 @@ export function CompletedLevelView() {
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">
-        You've completed level {completedLevelIdx}!
+        You&apos;ve completed level {completedLevelIdx}!
       </h2>
       <p className="text-18 leading-140 mb-8">
         <strong className="font-semibold">
-          Congratulations! That's a big achievement 🎉
+          Congratulations! That&apos;s a big achievement 🎉
         </strong>
       </p>
       {nextLevelIdx ? (
         <>
           <p className="text-18 leading-140 mb-20">
-            You're now onto Level {nextLevelIdx} - a brand new challenge!
+            You&apos;re now onto Level {nextLevelIdx} - a brand new challenge!
             Remember to watch the teaching video in full before starting the
             exercises.
           </p>
@@ -38,7 +38,7 @@ export function CompletedLevelView() {
       ) : (
         <>
           <p className="text-18 leading-140 mb-20">
-            You've completed all the levels available to you right now. Great
+            You&apos;ve completed all the levels available to you right now. Great
             job!
           </p>
 

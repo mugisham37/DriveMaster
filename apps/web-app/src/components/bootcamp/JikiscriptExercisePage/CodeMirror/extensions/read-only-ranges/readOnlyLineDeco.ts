@@ -16,7 +16,7 @@ const baseTheme = EditorView.baseTheme({
 })
 
 class LockMarker extends GutterMarker {
-  toDOM() {
+  override toDOM() {
     const lockContainer = document.createElement('div')
     lockContainer.classList.add('cm-lock-marker')
     Object.assign(lockContainer.style, {
@@ -32,11 +32,11 @@ const gutterDeco = Decoration.line({
 })
 
 function lockedLineDeco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
+  const builder = new RangeSetBuilder<Decoration>()
   const readOnlyRanges = view.state.field(readOnlyRangesStateField)
-  for (let range of readOnlyRanges) {
+  for (const range of readOnlyRanges) {
     for (let i = range.from; i <= range.to; i++) {
-      let linePos = view.state.doc.line(i).from
+      const linePos = view.state.doc.line(i).from
 
       builder.add(linePos, linePos, gutterDeco)
     }
@@ -63,17 +63,17 @@ const showStripes = ViewPlugin.fromClass(
 )
 
 const lockedLineGutterMarker = new (class extends GutterMarker {
-  elementClass = 'cm-lockedGutter'
+  override elementClass = 'cm-lockedGutter'
 })()
 
 const lockedLineGutterHighlighter = gutterLineClass.compute(
   // dependency array
   [readOnlyRangesStateField, 'doc'],
   (state) => {
-    let marks = []
-    for (let range of state.field(readOnlyRangesStateField)) {
+    const marks = []
+    for (const range of state.field(readOnlyRangesStateField)) {
       for (let line = range.from; line <= range.to; line++) {
-        let linePos = state.doc.line(line).from
+        const linePos = state.doc.line(line).from
         marks.push(lockedLineGutterMarker.range(linePos))
       }
     }
@@ -86,7 +86,7 @@ const iconContainerGutter = gutter({
   lineMarker: (view, line) => {
     const readOnlyRanges = view.state.field(readOnlyRangesStateField)
     const lineNumber = view.state.doc.lineAt(line.from).number
-    for (let range of readOnlyRanges) {
+    for (const range of readOnlyRanges) {
       if (lineNumber >= range.from && lineNumber <= range.to) {
         return new LockMarker()
       }

@@ -17,5 +17,5 @@ export function useHighlightLine(
         effects: changeLineEffect.of(highlightedLine),
       })
     }
-  }, [highlightedLine])
+  }, [highlightedLine, editorView])
 }

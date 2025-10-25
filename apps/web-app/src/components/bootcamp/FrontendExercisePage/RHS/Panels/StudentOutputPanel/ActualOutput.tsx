@@ -4,12 +4,13 @@ import { useFrontendExercisePageStore } from '../../../store/frontendExercisePag
 
 export function ActualOutput() {
   const context = React.useContext(FrontendExercisePageContext)
+  const { isDiffActive, isOverlayActive } = useFrontendExercisePageStore()
+  const containerRef = useRef<HTMLDivElement>(null)
+  
   if (!context) {
     return null
   }
   const { actualIFrameRef, expectedReferenceIFrameRef } = context
-  const { isDiffActive, isOverlayActive } = useFrontendExercisePageStore()
-  const containerRef = useRef<HTMLDivElement>(null)
 
   return (
     <div

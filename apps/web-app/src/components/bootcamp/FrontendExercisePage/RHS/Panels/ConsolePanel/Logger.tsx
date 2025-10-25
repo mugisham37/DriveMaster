@@ -29,7 +29,7 @@ export function Logger() {
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [])
+  }, [jsCodeRunId, setLogs])
 
   useEffect(() => {
     const el = document.querySelector('.panels')
@@ -48,7 +48,7 @@ export function Logger() {
             e.g.
           </p>
           <pre className="hljs language-javascript">
-            <code>log("Hello World")</code>
+            <code>log(&quot;Hello World&quot;)</code>
           </pre>
         </div>
       ) : (

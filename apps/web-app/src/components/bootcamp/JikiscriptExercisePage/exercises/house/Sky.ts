@@ -7,9 +7,9 @@ function fn(this: HouseExercise) {
   const drawSky = (executionCtx: ExecutionContext, sky: Jiki.Instance) => {
     this.fillColorHSL(
       executionCtx,
-      sky.getField('hue') as Jiki.Number,
-      new Jiki.Number(70),
-      new Jiki.Number(60)
+      sky.getField('hue') as Jiki.JikiObject,
+      { type: 'Number', value: 70 } as Jiki.JikiObject,
+      { type: 'Number', value: 60 } as Jiki.JikiObject
     )
     this.rectangle(
       executionCtx,
@@ -102,6 +102,6 @@ function fn(this: HouseExercise) {
   return Sky
 }
 
-export function buildSky(binder: any) {
+export function buildSky(binder: unknown) {
   return fn.bind(binder)()
 }

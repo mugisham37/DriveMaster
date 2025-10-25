@@ -56,7 +56,7 @@ function lineInformationWidget(
   view: EditorView,
   onClose: (view: EditorView) => void
 ): DecorationSet {
-  let widgets: any[] = []
+  const widgets: unknown[] = []
 
   const shouldShowWidget = view.state.field(showInfoWidgetField)
   const widgetData = view.state.field(informationWidgetDataField)
@@ -67,11 +67,11 @@ function lineInformationWidget(
 
   const { html, status } = widgetData
 
-  let deco = Decoration.widget({
+  const deco = Decoration.widget({
     widget: new InformationWidget(html, status, view, onClose),
     side: 1,
   })
-  let lastPosOfLine = view.state.doc.line(widgetData.line).to
+  const lastPosOfLine = view.state.doc.line(widgetData.line).to
 
   widgets.push(deco.range(lastPosOfLine))
 

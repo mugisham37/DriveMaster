@@ -783,7 +783,17 @@
     "Pxmxt",
     "Inumwj",
     "iodx",
-    "NSYNC"
+    "NSYNC",
+    "lezer",
+    "Foldables",
+    "autorun",
+    "astring",
+    "eslinter",
+    "resizer",
+    "scrollability",
+    "Kempson",
+    "colours",
+    "LINEFROM"
   ],
   "ignorePaths": [
     "node_modules/**",

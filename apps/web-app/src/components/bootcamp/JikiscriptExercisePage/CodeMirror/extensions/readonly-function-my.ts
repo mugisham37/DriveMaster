@@ -2,7 +2,6 @@ import {
   EditorView,
   Decoration,
   ViewPlugin,
-  ViewUpdate,
   DecorationSet,
 } from '@codemirror/view'
 import { EditorState, Extension } from '@codemirror/state'
@@ -14,13 +13,13 @@ const createReadonlyPlugin = (readonlyLength: number) =>
     class {
       public decorations: DecorationSet
 
-      constructor(view: EditorView) {
+      constructor() {
         this.decorations = Decoration.set([
           readonlyDeco.range(0, readonlyLength),
         ])
       }
 
-      update(update: ViewUpdate) {
+      update() {
         this.decorations = Decoration.set([
           readonlyDeco.range(0, readonlyLength),
         ])

@@ -53,11 +53,11 @@ export function LHS() {
   const handleToggleDiff = useCallback(() => {
     toggleDiffActivity()
     setRHSActiveTab('output')
-  }, [])
+  }, [toggleDiffActivity, setRHSActiveTab])
   const handleToggleOverlay = useCallback(() => {
     toggleOverlayActivity()
     setRHSActiveTab('output')
-  }, [])
+  }, [toggleOverlayActivity, setRHSActiveTab])
 
   const handleRunCode = useCallback(() => {
     if (!jsEditorRef.current || !htmlEditorRef.current) return
@@ -109,9 +109,9 @@ export function LHS() {
       },
       customFunctions: [],
       readonlyRanges: {
-        html: htmlReadonlyRanges,
-        css: cssReadonlyRanges,
-        js: jsReadonlyRanges,
+        html: htmlReadonlyRanges || [],
+        css: cssReadonlyRanges || [],
+        js: jsReadonlyRanges || [],
       },
     })
 
@@ -165,7 +165,21 @@ export function LHS() {
         showJsError(jsView, result.error)
         break
     }
-  }, [RHSActiveTab])
+  }, [
+    actualIFrameRef,
+    code,
+    cssEditorRef,
+    exercise.config.expected,
+    expectedIFrameRef,
+    expectedReferenceIFrameRef,
+    htmlEditorRef,
+    jsCodeRunId,
+    jsEditorRef,
+    links.postSubmission,
+    setLogs,
+    setRHSActiveTab,
+    RHSActiveTab,
+  ])
 
   useHandleJsErrorMessage({ jsViewRef: jsEditorRef, setTab })
 

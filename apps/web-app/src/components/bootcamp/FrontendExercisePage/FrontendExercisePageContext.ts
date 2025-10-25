@@ -9,13 +9,13 @@ type FrontendExercisePageContextType = {
   code: FrontendExercisePageProps['code']
   defaultCode: FrontendExercisePageProps['code']['default']
   resetEditors: () => void
-  actualIFrameRef: React.RefObject<HTMLIFrameElement>
-  expectedIFrameRef: React.RefObject<HTMLIFrameElement>
-  expectedReferenceIFrameRef: React.RefObject<HTMLIFrameElement>
-  htmlEditorRef: React.RefObject<EditorView>
-  cssEditorRef: React.RefObject<EditorView>
-  jsEditorRef: React.RefObject<EditorView>
-  jsCodeRunId: React.MutableRefObject<number>
+  actualIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  expectedIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  expectedReferenceIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  htmlEditorRef: React.RefObject<EditorView | null>
+  cssEditorRef: React.RefObject<EditorView | null>
+  jsEditorRef: React.RefObject<EditorView | null>
+  jsCodeRunId: React.RefObject<number>
   handleHtmlEditorDidMount: (handler: Handler) => void
   handleCssEditorDidMount: (handler: Handler) => void
   handleJsEditorDidMount: (handler: Handler) => void

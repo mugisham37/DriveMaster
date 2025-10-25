@@ -21,7 +21,7 @@ function fn(this: MazeExercise) {
       )
     }
 
-    square.setField('contents', new Jiki.JikiString('') as any)
+    square.setField('contents', { type: 'String', value: '' } as Jiki.JikiObject)
 
     const emojiSelector = `#${this.view.id} .cell-${square.getUnwrappedField(
       'row'
@@ -64,13 +64,13 @@ function fn(this: MazeExercise) {
     if (!(contents instanceof Jiki.JikiString))
       executionContext.logicError('contents must be a Jiki.String')
 
-    object.setField('row', row as unknown as { [key: string]: any })
-    object.setField('col', col as unknown as { [key: string]: any })
-    object.setField('is_start', is_start as unknown as { [key: string]: any })
-    object.setField('is_finish', is_finish as unknown as { [key: string]: any })
-    object.setField('is_wall', is_wall as unknown as { [key: string]: any })
-    object.setField('in_maze', in_maze as unknown as { [key: string]: any })
-    object.setField('contents', contents as unknown as { [key: string]: any })
+    object.setField('row', row as unknown as Jiki.JikiObject)
+    object.setField('col', col as unknown as Jiki.JikiObject)
+    object.setField('is_start', is_start as unknown as Jiki.JikiObject)
+    object.setField('is_finish', is_finish as unknown as Jiki.JikiObject)
+    object.setField('is_wall', is_wall as unknown as Jiki.JikiObject)
+    object.setField('in_maze', in_maze as unknown as Jiki.JikiObject)
+    object.setField('contents', contents as unknown as Jiki.JikiObject)
   })
   Square.addGetter('is_start', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('is_start');

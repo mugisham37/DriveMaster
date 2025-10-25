@@ -23,7 +23,7 @@ export default class BreakoutExercise extends Exercise {
 
   public autoDrawBlock = true
   public gameInstance: GameInstance | undefined
-  private result: 'win' | 'lose' | undefined
+  // private result: 'win' | 'lose' | undefined
 
   public circlePositions: [number, number][]
   public rectangleCircleInteractionCount = 0

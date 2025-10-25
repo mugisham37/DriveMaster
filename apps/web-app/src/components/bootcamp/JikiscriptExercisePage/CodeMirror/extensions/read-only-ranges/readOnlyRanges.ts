@@ -36,7 +36,7 @@ export const readOnlyRangesStateField = StateField.define<ReadOnlyRange[]>({
       })
     }
 
-    for (let effect of tr.effects) {
+    for (const effect of tr.effects) {
       if (effect.is(updateReadOnlyRangesEffect)) {
         return effect.value
       }

@@ -25,7 +25,7 @@ export function CheckScenariosButton({
     cleanUpTestStore()
     cleanUpEditorStore()
     cleanUpErrorStore()
-  }, [])
+  }, [setIsTimelineComplete, cleanUpTestStore, cleanUpEditorStore, cleanUpErrorStore])
 
   return (
     <button

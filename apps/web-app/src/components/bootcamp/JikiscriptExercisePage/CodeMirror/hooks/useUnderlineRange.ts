@@ -23,5 +23,5 @@ export function useUnderlineRange(
         })
       }
     }
-  }, [range])
+  }, [range, editorView])
 }

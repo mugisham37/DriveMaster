@@ -2,8 +2,7 @@ import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { storeShape, changeBrightness } from './Component'
 import HouseExercise from './HouseExercise'
-import { guardValidHex } from './helpers'
-import { buildHSLColor, type HSLColorInstance } from './HSLColor'
+import { type HSLColorInstance } from './HSLColor'
 
 function fn(this: HouseExercise) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -126,17 +125,14 @@ function fn(this: HouseExercise) {
     ) {
       if (
         !(
-          hsl instanceof Jiki.Instance ||
-          (hsl as Jiki.Instance).jikiClass.name != 'HSLColor'
+          Jiki.isInstance(hsl) ||
+          (hsl as Jiki.Instance).type !== 'HSLColor'
         )
       ) {
         return executionCtx.logicError('Ooops! HSL must be an HSL Object.')
       }
-      const hslString = `${hsl.getUnwrappedField(
-        'hue'
-      )}:${hsl.getUnwrappedField('saturation')}:${hsl.getUnwrappedField(
-        'luminosity'
-      )}`
+      const hslInstance = hsl as Jiki.Instance
+      const hslString = `${hslInstance.get('hue')}:${hslInstance.get('saturation')}:${hslInstance.get('luminosity')}`
       exercise.events.push(`rectangle:hsl:${hslString}`)
       object.setField('hsl', hsl)
       changeRectangleHue(executionCtx, object)

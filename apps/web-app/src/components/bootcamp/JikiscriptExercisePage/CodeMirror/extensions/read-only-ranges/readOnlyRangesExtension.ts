@@ -57,15 +57,15 @@ export const preventModifyTargetRanges = (
 
       for (let i = 0; i < readOnlyRangesBeforeTransaction.length; i++) {
         const targetFromBeforeTransaction =
-          readOnlyRangesBeforeTransaction[i].from ?? 0
+          readOnlyRangesBeforeTransaction[i]?.from ?? 0
         const targetToBeforeTransaction =
-          readOnlyRangesBeforeTransaction[i].to ??
+          readOnlyRangesBeforeTransaction[i]?.to ??
           tr.startState.doc.line(tr.startState.doc.lines).to
 
         const targetFromAfterTransaction =
-          readOnlyRangesAfterTransaction[i].from ?? 0
+          readOnlyRangesAfterTransaction[i]?.from ?? 0
         const targetToAfterTransaction =
-          readOnlyRangesAfterTransaction[i].to ??
+          readOnlyRangesAfterTransaction[i]?.to ??
           tr.state.doc.line(tr.state.doc.lines).to
 
         if (
@@ -81,7 +81,7 @@ export const preventModifyTargetRanges = (
           return false
         }
       }
-    } catch (e) {
+    } catch {
       return false
     }
     return true
@@ -94,7 +94,7 @@ export const smartPaste = (
 ) =>
   EditorView.domEventHandlers({
     paste(event, view) {
-      const clipboardData = event.clipboardData || (window as any).clipboardData
+      const clipboardData = event.clipboardData || (window as { clipboardData?: DataTransfer }).clipboardData
       const pastedData = clipboardData.getData('Text')
       const initialSelections = view.state.selection.ranges.map((range) => ({
         from: range.from,
@@ -114,8 +114,8 @@ export const smartPaste = (
         if (result.length > 0) {
           view.dispatch({
             changes: {
-              from: result[0].from,
-              to: result[0].to,
+              from: result[0]?.from ?? 0,
+              to: result[0]?.to ?? 0,
               insert: pastedData,
             },
             annotations: Transaction.userEvent.of(`input.paste.smart`),

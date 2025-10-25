@@ -31,11 +31,11 @@ export function CSSEditor() {
 
   const updateLocalStorageValueOnDebounce = useMemo(() => {
     return createUpdateLocalStorageValueOnDebounce()
-  }, [setEditorCodeLocalStorage])
+  }, [])
 
   return (
     <SimpleCodeMirror
-      defaultCode={defaultCode.css}
+      defaultCode={defaultCode.css || ''}
       style={{ width: LHSWidth, height: EDITOR_HEIGHT }}
       editorDidMount={handleCssEditorDidMount}
       extensions={[

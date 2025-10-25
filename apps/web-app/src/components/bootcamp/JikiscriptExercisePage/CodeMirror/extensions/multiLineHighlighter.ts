@@ -50,19 +50,19 @@ function stripe(color: string) {
 }
 
 function stripeDeco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
+  const builder = new RangeSetBuilder<Decoration>()
   const lineNumberRange = view.state.field(multiHighlightedLineField)
   const color = view.state.field(highlightColorField)
 
-  let { from, to } = lineNumberRange
+  const { from, to: toRange } = lineNumberRange
   if (from === 0) return builder.finish()
-  to = to > view.state.doc.lines ? view.state.doc.lines : to
+  const to = toRange > view.state.doc.lines ? view.state.doc.lines : toRange
   console.log('from', from, 'to', to, 'color', color)
   if (from === to) {
     builder.add(from, from, stripe(color))
   } else {
     for (let i = lineNumberRange.from; i <= lineNumberRange.to; i++) {
-      let line = view.state.doc.line(i)
+      const line = view.state.doc.line(i)
       builder.add(line.from, line.from, stripe(color))
     }
   }

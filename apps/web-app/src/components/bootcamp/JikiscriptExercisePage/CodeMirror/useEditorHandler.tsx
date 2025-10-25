@@ -58,7 +58,10 @@ export function useEditorHandler({
       setupEditor(
         editorViewRef.current,
         unfoldableFunctionNames,
-        exerciseLocalStorageData
+        {
+          code: exerciseLocalStorageData.code,
+          readonlyRanges: exerciseLocalStorageData.readonlyRanges || []
+        }
       )
     }
 
@@ -86,7 +89,7 @@ export function useEditorHandler({
       })
       setupEditor(editorViewRef.current, unfoldableFunctionNames, {
         code: code.stub,
-        readonlyRanges: code.defaultReadonlyRanges,
+        readonlyRanges: code.defaultReadonlyRanges || [],
       })
     }
   }

@@ -21,7 +21,7 @@ export const underlineField = StateField.define<DecorationSet>({
       return Decoration.none
     }
     let updatedUnderlines = underlines.map(tr.changes)
-    for (let e of tr.effects) {
+    for (const e of tr.effects) {
       if (e.is(cleanUpEditorEffect)) {
         updatedUnderlines = Decoration.none
       }

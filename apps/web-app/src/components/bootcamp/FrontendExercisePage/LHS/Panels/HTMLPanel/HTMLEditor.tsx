@@ -16,7 +16,6 @@ import {
   lintTooltipTheme,
 } from '@/components/bootcamp/CSSExercisePage/SimpleCodeMirror/extensions/htmlLinter'
 import { htmlTheme } from '@/components/bootcamp/CSSExercisePage/LHS/htmlTheme'
-import { EditorView } from 'codemirror'
 
 export function HTMLEditor() {
   const {
@@ -35,11 +34,11 @@ export function HTMLEditor() {
 
   const updateLocalStorageValueOnDebounce = useMemo(() => {
     return createUpdateLocalStorageValueOnDebounce()
-  }, [setEditorCodeLocalStorage])
+  }, [])
 
   return (
     <SimpleCodeMirror
-      defaultCode={defaultCode.html}
+      defaultCode={defaultCode.html || ''}
       style={{ width: LHSWidth, height: EDITOR_HEIGHT }}
       ref={htmlEditorRef}
       editorDidMount={handleHtmlEditorDidMount}

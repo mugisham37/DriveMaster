@@ -10,13 +10,14 @@ export function parseJS(code: string | undefined) {
     return {
       status: 'success' as const,
     }
-  } catch (err: any) {
-    const loc = err.loc || { line: 1, column: 0 }
+  } catch (err: unknown) {
+    const error = err as { loc?: { line: number; column: number }; message?: string }
+    const loc = error.loc || { line: 1, column: 0 }
     return {
       status: 'error' as const,
       cleanup: () => {},
       error: {
-        message: err.message.replace(/\s*\(\d+:\d+\)$/, ''),
+        message: (error.message || 'Unknown error').replace(/\s*\(\d+:\d+\)$/, ''),
         lineNumber: loc.line,
         colNumber: loc.column,
         type: err.name,

@@ -34,11 +34,11 @@ export function JavaScriptEditor() {
 
   const updateLocalStorageValueOnDebounce = useMemo(() => {
     return createUpdateLocalStorageValueOnDebounce()
-  }, [setEditorCodeLocalStorage])
+  }, [])
 
   return (
     <SimpleCodeMirror
-      defaultCode={defaultCode.js}
+      defaultCode={defaultCode.js || ''}
       style={{ width: LHSWidth, height: EDITOR_HEIGHT }}
       editorDidMount={handleJsEditorDidMount}
       extensions={[

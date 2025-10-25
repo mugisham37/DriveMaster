@@ -111,7 +111,8 @@ export function updateIFrame(
     </html>`
 
   try {
-    iframeElement.onload = () => {
+    if (iframeElement) {
+      iframeElement.onload = () => {
       try {
         const runCode = (
           iframeElement.contentWindow as Window & { runCode?: () => void }
@@ -125,7 +126,8 @@ export function updateIFrame(
         console.error('Failed to execute runCode:', err)
       }
     }
-    iframeElement.srcdoc = iframeHtml
+      iframeElement.srcdoc = iframeHtml
+    }
   } catch (err) {
     window.postMessage(
       {

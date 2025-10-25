@@ -8,12 +8,12 @@ function fn(this: HouseExercise) {
     this.fillColorHex(executionCtx, new Jiki.String('#8b4513'))
     this.triangle(
       executionCtx,
-      roof.getField('left') as Jiki.Number,
-      roof.getField('bottom') as Jiki.Number,
-      roof.getField('center') as Jiki.Number,
-      roof.getField('top') as Jiki.Number,
-      roof.getField('right') as Jiki.Number,
-      roof.getField('bottom') as Jiki.Number
+      roof.getField('left') as Jiki.JikiObject,
+      roof.getField('bottom') as Jiki.JikiObject,
+      roof.getField('center') as Jiki.JikiObject,
+      roof.getField('top') as Jiki.JikiObject,
+      roof.getField('right') as Jiki.JikiObject,
+      roof.getField('bottom') as Jiki.JikiObject
     )
     storeShape(this, roof)
   }
@@ -77,6 +77,6 @@ function fn(this: HouseExercise) {
   return Roof
 }
 
-export function buildRoof(binder: any) {
+export function buildRoof(binder: unknown) {
   return fn.bind(binder)()
 }

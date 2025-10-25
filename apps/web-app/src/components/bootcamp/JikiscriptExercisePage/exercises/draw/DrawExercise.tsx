@@ -1,16 +1,16 @@
-import { Exercise } from '../Exercise'
-import { aToR, rToA } from './utils'
-import * as Shapes from './shapes'
-import * as Jiki from '@/interpreter/jikiObjects'
-import type { ExecutionContext } from '@/interpreter/executor'
-import { InterpretResult } from '@/interpreter/interpreter'
+import { Exercise } from "../Exercise";
+import { aToR, rToA } from "./utils";
+import * as Shapes from "./shapes";
+import * as Jiki from "@/lib/interpreter/jikiObjects";
+import type { ExecutionContext } from "@/lib/interpreter/executor";
+import { InterpretResult } from "@/lib/interpreter/interpreter";
 import {
   assertAllArgumentsAreVariables,
   checkCanvasCoverage,
   checkUniqueColoredLines,
   checkUniqueColoredCircles,
   checkUniqueColoredRectangles,
-} from './checks'
+} from "./checks";
 import {
   Shape,
   Circle,
@@ -19,112 +19,116 @@ import {
   Triangle,
   Color,
   Ellipse,
-} from './shapes'
+} from "./shapes";
 import {
   getCircleAt,
   getLineAt,
   getEllipseAt,
   getRectangleAt,
   getTriangleAt,
-} from './retrievers'
+} from "./retrievers";
 
 export default class DrawExercise extends Exercise {
-  private canvas: HTMLDivElement
-  protected shapes: Shape[] = []
-  private visibleShapes: Shape[] = []
+  private canvas: HTMLDivElement;
+  protected shapes: Shape[] = [];
+  private visibleShapes: Shape[] = [];
 
-  protected strokeColor: Color = { type: 'hex', color: '#333333' }
-  protected strokeWidth = 0
-  protected fillColor: Color = { type: 'hex', color: '#ff0000' }
+  protected strokeColor: Color = { type: "hex", color: "#333333" };
+  protected strokeWidth = 0;
+  protected fillColor: Color = { type: "hex", color: "#ff0000" };
 
-  constructor(slug = 'draw') {
-    super(slug)
-    this.showAnimationsOnInfiniteLoops = false
+  constructor(slug = "draw") {
+    super(slug);
+    this.showAnimationsOnInfiniteLoops = false;
 
     Object.assign(this.view.style, {
-      display: 'none',
-      position: 'relative',
-    })
+      display: "none",
+      position: "relative",
+    });
 
-    this.canvas = document.createElement('div')
-    this.canvas.classList.add('canvas')
-    this.canvas.style.position = 'relative'
-    this.view.appendChild(this.canvas)
+    this.canvas = document.createElement("div");
+    this.canvas.classList.add("canvas");
+    this.canvas.style.position = "relative";
+    this.view.appendChild(this.canvas);
 
-    this.tooltip = document.createElement('div')
-    this.tooltip.classList.add('tooltip')
+    this.tooltip = document.createElement("div");
+    this.tooltip.classList.add("tooltip");
     Object.assign(this.tooltip.style, {
-      whiteSpace: 'nowrap',
-      position: 'absolute',
-      background: '#333',
-      color: '#fff',
-      padding: '4px',
-      borderRadius: '4px',
-      fontSize: '12px',
-      zIndex: '99999',
-      pointerEvents: 'none',
-      display: 'none',
-    })
-    this.view.appendChild(this.tooltip)
+      whiteSpace: "nowrap",
+      position: "absolute",
+      background: "#333",
+      color: "#fff",
+      padding: "4px",
+      borderRadius: "4px",
+      fontSize: "12px",
+      zIndex: "99999",
+      pointerEvents: "none",
+      display: "none",
+    });
+    this.view.appendChild(this.tooltip);
 
-    this.canvas.addEventListener('mousemove', this.showTooltip.bind(this))
-    this.canvas.addEventListener('mouseleave', this.hideTooltip.bind(this))
-    this.setBackgroundImage = this.setBackgroundImage.bind(this)
+    this.canvas.addEventListener("mousemove", this.showTooltip.bind(this));
+    this.canvas.addEventListener("mouseleave", this.hideTooltip.bind(this));
+    this.setBackgroundImage = this.setBackgroundImage.bind(this);
   }
 
   showTooltip(event: MouseEvent) {
-    const rect = this.canvas.getBoundingClientRect()
-    const canvasWidth = rect.width
-    const canvasHeight = rect.height
+    const rect = this.canvas.getBoundingClientRect();
+    const canvasWidth = rect.width;
+    const canvasHeight = rect.height;
 
-    const absX = event.clientX - rect.left
-    const absY = event.clientY - rect.top
+    const absX = event.clientX - rect.left;
+    const absY = event.clientY - rect.top;
 
-    const relX = Math.round(aToR(absX, canvasWidth))
-    const relY = Math.round(aToR(absY, canvasHeight))
+    const relX = Math.round(aToR(absX, canvasWidth));
+    const relY = Math.round(aToR(absY, canvasHeight));
 
-    let tooltipX = absX + 10
-    let tooltipY = absY + 10
+    let tooltipX = absX + 10;
+    let tooltipY = absY + 10;
 
     // providing these as constant values saves us from recalculating them every time
     // update these values if the tooltip style changes
     // measure max tooltip width/height with the fn below
-    const maxTooltipWidth = 75
-    const maxTooltipHeight = 32
+    const maxTooltipWidth = 75;
+    const maxTooltipHeight = 32;
     // handle tooltip overflow-x
     if (tooltipX + maxTooltipWidth + 5 > canvasWidth) {
-      tooltipX = absX - maxTooltipWidth - 10
+      tooltipX = absX - maxTooltipWidth - 10;
     }
 
     // handle tooltip overflow-y
     if (tooltipY + maxTooltipHeight + 5 > canvasHeight) {
-      tooltipY = absY - maxTooltipHeight - 10
+      tooltipY = absY - maxTooltipHeight - 10;
     }
 
-    this.tooltip.textContent = `X: ${relX}, Y: ${relY}`
-    this.tooltip.style.left = `${tooltipX}px`
-    this.tooltip.style.top = `${tooltipY}px`
-    this.tooltip.style.display = 'block'
+    if (this.tooltip) {
+      this.tooltip.textContent = `X: ${relX}, Y: ${relY}`;
+      this.tooltip.style.left = `${tooltipX}px`;
+      this.tooltip.style.top = `${tooltipY}px`;
+      this.tooltip.style.display = "block";
+    }
   }
 
   hideTooltip() {
-    this.tooltip.style.display = 'none'
+    if (this.tooltip) {
+      this.tooltip.style.display = "none";
+    }
   }
 
   public getState() {
-    return {}
+    return {};
   }
   public numElements(_: InterpretResult) {
-    return this.shapes.length
+    return this.shapes.length;
   }
   public getLineAt(
-    _: InterpretResult,
+    _interpreterResult: InterpretResult,
     x1: number,
     y1: number,
     x2: number,
     y2: number
   ) {
-    return getLineAt(this.shapes, x1, y1, x2, y2)
+    return getLineAt(this.shapes, x1, y1, x2, y2);
   }
   public getRectangleAt(
     _: InterpretResult,
@@ -133,7 +137,7 @@ export default class DrawExercise extends Exercise {
     width: number,
     height: number
   ) {
-    return getRectangleAt(this.shapes, x, y, width, height)
+    return getRectangleAt(this.shapes, x, y, width, height);
   }
   public getCircleAt(
     _: InterpretResult,
@@ -141,7 +145,7 @@ export default class DrawExercise extends Exercise {
     cy: number,
     radius: number
   ) {
-    return getCircleAt(this.shapes, cx, cy, radius)
+    return getCircleAt(this.shapes, cx, cy, radius);
   }
   public getEllipseAt(
     _: InterpretResult,
@@ -150,7 +154,7 @@ export default class DrawExercise extends Exercise {
     rx: number,
     ry: number
   ) {
-    return getEllipseAt(this.shapes, x, y, rx, ry)
+    return getEllipseAt(this.shapes, x, y, rx, ry);
   }
   public getTriangleAt(
     _: InterpretResult,
@@ -161,40 +165,40 @@ export default class DrawExercise extends Exercise {
     x3: number,
     y3: number
   ) {
-    return getTriangleAt(this.shapes, x1, y1, x2, y2, x3, y3)
+    return getTriangleAt(this.shapes, x1, y1, x2, y2, x3, y3);
   }
 
   // These all delegate to checks.
   public checkUniqueColoredLines(_: InterpretResult, count: number) {
-    return checkUniqueColoredLines(this.shapes, count)
+    return checkUniqueColoredLines(this.shapes, count);
   }
 
   public checkUniqueColoredRectangles(_: InterpretResult, count: number) {
-    return checkUniqueColoredRectangles(this.shapes, count)
+    return checkUniqueColoredRectangles(this.shapes, count);
   }
 
   public checkUniqueColoredCircles(_: InterpretResult, count: number) {
-    return checkUniqueColoredCircles(this.shapes, count)
+    return checkUniqueColoredCircles(this.shapes, count);
   }
 
-  public checkCanvasCoverage(_: InterpretResult, requiredPercentage) {
-    return checkCanvasCoverage(this.shapes, requiredPercentage)
+  public checkCanvasCoverage(_: InterpretResult, requiredPercentage: number) {
+    return checkCanvasCoverage(this.shapes, requiredPercentage);
   }
 
   public assertAllArgumentsAreVariables(interpreterResult: InterpretResult) {
-    return assertAllArgumentsAreVariables(interpreterResult)
+    return assertAllArgumentsAreVariables(interpreterResult);
   }
   public strokeColorHex(_: ExecutionContext, color: Jiki.String) {
-    this.strokeColor = { type: 'hex', color: color.value }
+    this.strokeColor = { type: "hex", color: color.value };
   }
   public setStrokeWidth(_: ExecutionContext, width: Jiki.Number) {
-    this.strokeWidth = width.value
+    this.strokeWidth = width.value;
   }
   public changeStrokeWidth(_: ExecutionContext, width: number) {
-    this.strokeWidth = width
+    this.strokeWidth = width;
   }
   public fillColorHex(_: ExecutionContext, color: Jiki.String) {
-    this.fillColor = { type: 'hex', color: color.value }
+    this.fillColor = { type: "hex", color: color.value };
   }
   public fillColorRGB(
     executionCtx: ExecutionContext,
@@ -207,21 +211,21 @@ export default class DrawExercise extends Exercise {
       !(green instanceof Jiki.Number) ||
       !(blue instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     if (red.value < 0 || red.value > 255) {
-      return executionCtx.logicError('Red must be between 0 and 255')
+      return executionCtx.logicError("Red must be between 0 and 255");
     }
     if (green.value < 0 || green.value > 255) {
-      return executionCtx.logicError('Green must be between 0 and 255')
+      return executionCtx.logicError("Green must be between 0 and 255");
     }
     if (blue.value < 0 || blue.value > 255) {
-      return executionCtx.logicError('Blue must be between 0 and 255')
+      return executionCtx.logicError("Blue must be between 0 and 255");
     }
     this.fillColor = {
-      type: 'rgb',
+      type: "rgb",
       color: [red.value, green.value, blue.value],
-    }
+    };
   }
   public fillColorRGBA(
     executionCtx: ExecutionContext,
@@ -236,24 +240,24 @@ export default class DrawExercise extends Exercise {
       !(blue instanceof Jiki.Number) ||
       !(alpha instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     if (red.value < 0 || red.value > 255) {
-      return executionCtx.logicError('Red must be between 0 and 255')
+      return executionCtx.logicError("Red must be between 0 and 255");
     }
     if (green.value < 0 || green.value > 255) {
-      return executionCtx.logicError('Green must be between 0 and 255')
+      return executionCtx.logicError("Green must be between 0 and 255");
     }
     if (blue.value < 0 || blue.value > 255) {
-      return executionCtx.logicError('Blue must be between 0 and 255')
+      return executionCtx.logicError("Blue must be between 0 and 255");
     }
     if (alpha.value < 0 || alpha.value > 1) {
-      return executionCtx.logicError('Alpha must be between 0 and 1')
+      return executionCtx.logicError("Alpha must be between 0 and 1");
     }
     this.fillColor = {
-      type: 'rgba',
+      type: "rgba",
       color: [red.value, green.value, blue.value, alpha.value],
-    }
+    };
   }
   public fillColorHSL(
     executionCtx: ExecutionContext,
@@ -266,18 +270,18 @@ export default class DrawExercise extends Exercise {
       !(s instanceof Jiki.Number) ||
       !(l instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     if (h.value < 0 || h.value > 360) {
-      return executionCtx.logicError('Hue must be between 0 and 360')
+      return executionCtx.logicError("Hue must be between 0 and 360");
     }
     if (s.value < 0 || s.value > 100) {
-      return executionCtx.logicError('Saturation must be between 0 and 100')
+      return executionCtx.logicError("Saturation must be between 0 and 100");
     }
     if (l.value < 0 || l.value > 100) {
-      return executionCtx.logicError('Luminosity must be between 0 and 100')
+      return executionCtx.logicError("Luminosity must be between 0 and 100");
     }
-    this.fillColor = { type: 'hsl', color: [h.value, s.value, l.value] }
+    this.fillColor = { type: "hsl", color: [h.value, s.value, l.value] };
   }
   public rectangle(
     executionCtx: ExecutionContext,
@@ -292,20 +296,20 @@ export default class DrawExercise extends Exercise {
       !(width instanceof Jiki.Number) ||
       !(height instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     if (width.value < 0) {
-      return executionCtx.logicError('Width must be greater than 0')
+      return executionCtx.logicError("Width must be greater than 0");
     }
     if (height.value < 0) {
-      return executionCtx.logicError('Height must be greater than 0')
+      return executionCtx.logicError("Height must be greater than 0");
     }
     const [absX, absY, absWidth, absHeight] = [
       x.value,
       y.value,
       width.value,
       height.value,
-    ].map((val) => rToA(val))
+    ].map((val) => rToA(val ?? 0));
 
     const elem = Shapes.rect(
       absX,
@@ -315,8 +319,8 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.strokeWidth,
       this.fillColor
-    )
-    this.canvas.appendChild(elem)
+    );
+    this.canvas.appendChild(elem);
 
     const rect = new Rectangle(
       x.value,
@@ -326,10 +330,10 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.fillColor,
       elem
-    )
-    this.shapes.push(rect)
-    this.visibleShapes.push(rect)
-    this.animateShapeIntoView(executionCtx, elem)
+    );
+    this.shapes.push(rect);
+    this.visibleShapes.push(rect);
+    this.animateShapeIntoView(executionCtx, elem);
     // return rect
   }
   public line(
@@ -345,14 +349,14 @@ export default class DrawExercise extends Exercise {
       !(x2 instanceof Jiki.Number) ||
       !(y2 instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     const [absX1, absY1, absX2, absY2] = [
       x1.value,
       y1.value,
       x2.value,
       y2.value,
-    ].map((val) => rToA(val))
+    ].map((val) => rToA(val ?? 0));
 
     const elem = Shapes.line(
       absX1,
@@ -362,8 +366,8 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.strokeWidth,
       this.fillColor
-    )
-    this.canvas.appendChild(elem)
+    );
+    this.canvas.appendChild(elem);
 
     const line = new Line(
       x1.value,
@@ -373,10 +377,10 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.fillColor,
       elem
-    )
-    this.shapes.push(line)
-    this.visibleShapes.push(line)
-    this.animateShapeIntoView(executionCtx, elem)
+    );
+    this.shapes.push(line);
+    this.visibleShapes.push(line);
+    this.animateShapeIntoView(executionCtx, elem);
   }
 
   public circle(
@@ -390,11 +394,11 @@ export default class DrawExercise extends Exercise {
       !(y instanceof Jiki.Number) ||
       !(radius instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     const [absX, absY, absRadius] = [x.value, y.value, radius.value].map(
-      (val) => rToA(val)
-    )
+      (val) => rToA(val ?? 0)
+    );
 
     const elem = Shapes.circle(
       absX,
@@ -403,8 +407,8 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.strokeWidth,
       this.fillColor
-    )
-    this.canvas.appendChild(elem)
+    );
+    this.canvas.appendChild(elem);
 
     const circle = new Circle(
       x.value,
@@ -413,10 +417,10 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.fillColor,
       elem
-    )
-    this.shapes.push(circle)
-    this.visibleShapes.push(circle)
-    this.animateShapeIntoView(executionCtx, elem)
+    );
+    this.shapes.push(circle);
+    this.visibleShapes.push(circle);
+    this.animateShapeIntoView(executionCtx, elem);
     // return circle
   }
 
@@ -433,7 +437,7 @@ export default class DrawExercise extends Exercise {
       !(rx instanceof Jiki.Number) ||
       !(ry instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
 
     const [absX, absY, absRx, absRy] = [
@@ -441,7 +445,7 @@ export default class DrawExercise extends Exercise {
       y.value,
       rx.value,
       ry.value,
-    ].map((val) => rToA(val))
+    ].map((val) => rToA(val ?? 0));
 
     const elem = Shapes.ellipse(
       absX,
@@ -451,8 +455,8 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.strokeWidth,
       this.fillColor
-    )
-    this.canvas.appendChild(elem)
+    );
+    this.canvas.appendChild(elem);
 
     const ellipse = new Ellipse(
       x.value,
@@ -462,10 +466,10 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.fillColor,
       elem
-    )
-    this.shapes.push(ellipse)
-    this.visibleShapes.push(ellipse)
-    this.animateShapeIntoView(executionCtx, elem)
+    );
+    this.shapes.push(ellipse);
+    this.visibleShapes.push(ellipse);
+    this.animateShapeIntoView(executionCtx, elem);
     // return ellipse
   }
 
@@ -486,7 +490,7 @@ export default class DrawExercise extends Exercise {
       !(x3 instanceof Jiki.Number) ||
       !(y3 instanceof Jiki.Number)
     ) {
-      return executionCtx.logicError('All inputs must be numbers')
+      return executionCtx.logicError("All inputs must be numbers");
     }
     const [absX1, absY1, absX2, absY2, absX3, absY3] = [
       x1.value,
@@ -495,7 +499,7 @@ export default class DrawExercise extends Exercise {
       y2.value,
       x3.value,
       y3.value,
-    ].map((val) => rToA(val))
+    ].map((val) => rToA(val ?? 0));
 
     const elem = Shapes.triangle(
       absX1,
@@ -507,8 +511,8 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.strokeWidth,
       this.fillColor
-    )
-    this.canvas.appendChild(elem)
+    );
+    this.canvas.appendChild(elem);
 
     const triangle = new Triangle(
       x1.value,
@@ -520,10 +524,10 @@ export default class DrawExercise extends Exercise {
       this.strokeColor,
       this.fillColor,
       elem
-    )
-    this.shapes.push(triangle)
-    this.visibleShapes.push(triangle)
-    this.animateShapeIntoView(executionCtx, elem)
+    );
+    this.shapes.push(triangle);
+    this.visibleShapes.push(triangle);
+    this.animateShapeIntoView(executionCtx, elem);
     // return triangle
   }
 
@@ -531,17 +535,17 @@ export default class DrawExercise extends Exercise {
     executionCtx: ExecutionContext,
     elem: SVGElement
   ) {
-    this.animateIntoView(executionCtx, `#${this.view.id} #${elem.id}`)
+    this.animateIntoView(executionCtx, `#${this.view.id} #${elem.id}`);
   }
   protected animateShapeOutOfView(
     executionCtx: ExecutionContext,
     elem: SVGElement
   ) {
-    this.animateOutOfView(executionCtx, `#${this.view.id} #${elem.id}`)
+    this.animateOutOfView(executionCtx, `#${this.view.id} #${elem.id}`);
   }
 
   public clear(executionCtx: ExecutionContext) {
-    const duration = 1
+    const duration = 1;
     this.visibleShapes.forEach((shape) => {
       this.addAnimation({
         targets: `#${this.view.id} #${shape.element.id}`,
@@ -550,78 +554,78 @@ export default class DrawExercise extends Exercise {
           opacity: 0,
         },
         offset: executionCtx.getCurrentTime(),
-      })
-    })
-    executionCtx.fastForward(duration)
+      });
+    });
+    executionCtx.fastForward(duration);
 
-    this.visibleShapes = []
+    this.visibleShapes = [];
   }
 
   public setBackgroundImage(_: ExecutionContext, imageUrl: string | null) {
     if (imageUrl) {
-      this.canvas.style.backgroundImage = 'url(' + imageUrl + ')'
-      this.canvas.style.backgroundSize = 'cover'
-      this.canvas.style.backgroundPosition = 'center'
+      this.canvas.style.backgroundImage = "url(" + imageUrl + ")";
+      this.canvas.style.backgroundSize = "cover";
+      this.canvas.style.backgroundPosition = "center";
     } else {
-      this.canvas.style.backgroundImage = 'none'
+      this.canvas.style.backgroundImage = "none";
     }
   }
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
-      name: 'random_number',
-      func: (_: any, min: Jiki.Number, max: Jiki.Number): Jiki.Number => {
+      name: "random_number",
+      func: (_: unknown, min: Jiki.Number, max: Jiki.Number): Jiki.Number => {
         return new Jiki.Number(
           Math.floor(Math.random() * (max.value - min.value + 1)) + min.value
-        )
+        );
       },
-      description: 'generated a random number between ${arg1} and ${arg2}',
+      description: "generated a random number between ${arg1} and ${arg2}",
     },
 
     {
-      name: 'rectangle',
+      name: "rectangle",
       func: this.rectangle.bind(this),
       description:
-        'drew a rectangle at coordinates (${arg1}, ${arg2}) with a width of ${arg3} and a height of ${arg4}',
+        "drew a rectangle at coordinates (${arg1}, ${arg2}) with a width of ${arg3} and a height of ${arg4}",
     },
     {
-      name: 'triangle',
+      name: "triangle",
       func: this.triangle.bind(this),
       description:
-        'drew a rectangle with three points: (${arg1}, ${arg2}), (${arg3}, ${arg4}), and (${arg5}, ${arg6})',
+        "drew a rectangle with three points: (${arg1}, ${arg2}), (${arg3}, ${arg4}), and (${arg5}, ${arg6})",
     },
     {
-      name: 'circle',
+      name: "circle",
       func: this.circle.bind(this),
       description:
-        'drew a circle with its center at (${arg1}, ${arg2}), and a radius of ${arg3}',
+        "drew a circle with its center at (${arg1}, ${arg2}), and a radius of ${arg3}",
     },
     {
-      name: 'ellipse',
+      name: "ellipse",
       func: this.ellipse.bind(this),
       description:
-        'drew an ellipse with its center at (${arg1}, ${arg2}), a radial width of ${arg3}, and a radial height of ${arg4}',
+        "drew an ellipse with its center at (${arg1}, ${arg2}), a radial width of ${arg3}, and a radial height of ${arg4}",
     },
     {
-      name: 'clear',
+      name: "clear",
       func: this.clear.bind(this),
-      description: 'cleared the canvas',
+      description: "cleared the canvas",
     },
     {
-      name: 'fill_color_hex',
+      name: "fill_color_hex",
       func: this.fillColorHex.bind(this),
-      description: 'changed the fill color using a hex string',
+      description: "changed the fill color using a hex string",
     },
     {
-      name: 'fill_color_rgb',
+      name: "fill_color_rgb",
       func: this.fillColorRGB.bind(this),
-      description: 'changed the fill color using red, green and blue values',
+      description: "changed the fill color using red, green and blue values",
     },
     {
-      name: 'fill_color_hsl',
+      name: "fill_color_hsl",
       func: this.fillColorHSL.bind(this),
       description:
-        'changed the fill color using hue, saturation and lumisity values',
+        "changed the fill color using hue, saturation and lumisity values",
     },
-  ]
+  ];
 }

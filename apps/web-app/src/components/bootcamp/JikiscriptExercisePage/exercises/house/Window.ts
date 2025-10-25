@@ -1,6 +1,6 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import { changeBrightness, storeShape } from './Component'
+import { storeShape } from './Component'
 import HouseExercise from './HouseExercise'
 
 function fn(this: HouseExercise) {
@@ -8,20 +8,21 @@ function fn(this: HouseExercise) {
     executionCtx: ExecutionContext,
     window: Jiki.Instance
   ) => {
-    if (window['shape']) {
-      this.animateShapeOutOfView(executionCtx, window['shape'].element)
+    if (window['shape'] && (window['shape'] as { element?: unknown }).element) {
+      this.animateShapeOutOfView(executionCtx, (window['shape'] as { element: unknown }).element)
     }
 
-    const hex = new Jiki.String(
-      window.getUnwrappedField('lights') ? '#FFFF00' : '#FFFFFF'
-    )
+    const hex = { 
+      type: 'String', 
+      value: (window as Jiki.Instance).get('lights') ? '#FFFF00' : '#FFFFFF' 
+    } as Jiki.JikiObject
     this.fillColorHex(executionCtx, hex)
     this.rectangle(
       executionCtx,
-      window.getField('left') as Jiki.Number,
-      window.getField('top') as Jiki.Number,
-      window.getField('width') as Jiki.Number,
-      window.getField('height') as Jiki.Number
+      window.getField('left') as Jiki.JikiObject,
+      window.getField('top') as Jiki.JikiObject,
+      window.getField('width') as Jiki.JikiObject,
+      window.getField('height') as Jiki.JikiObject
     )
     storeShape(this, window)
   }
@@ -93,6 +94,6 @@ function fn(this: HouseExercise) {
   return Window
 }
 
-export function buildWindow(binder: any) {
+export function buildWindow(binder: unknown) {
   return fn.bind(binder)()
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Toaster } from 'react-hot-toast'
 import { Resizer } from '../JikiscriptExercisePage/hooks/useResize'
 import { Header } from './Header/Header'
