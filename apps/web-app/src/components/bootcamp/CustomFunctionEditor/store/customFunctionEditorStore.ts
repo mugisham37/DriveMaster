@@ -166,7 +166,7 @@ const customFunctionEditorStore = create<CustomFunctionEditorStoreState>(
 
       set((state) => {
         const results = state.results
-        const inspectedFrames = results[uuid] ? results[uuid]?.frames : []
+        const inspectedFrames = results[uuid] ? results[uuid]?.frames || [] : []
         return { inspectedTest: uuid, inspectedFrames }
       })
     },
@@ -285,7 +285,7 @@ const customFunctionEditorStore = create<CustomFunctionEditorStoreState>(
   })
 )
 
-function extractFunctionName(code: string): string | null {
+function extractFunctionName(code: string): string | null | undefined {
   const match = code.match(/function\s+(my#[a-zA-Z_$][a-zA-Z0-9_$]*)/)
   return match ? match[1] : null
 }

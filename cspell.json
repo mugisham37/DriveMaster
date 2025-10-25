@@ -796,7 +796,12 @@
     "LINEFROM",
     "conten",
     "Autoselect",
-    "Jiki"
+    "Jiki",
+    "Építészeti",
+    "kiállítás",
+    "csslint",
+    "htmlhint",
+    "Interactor"
   ],
   "ignorePaths": [
     "node_modules/**",

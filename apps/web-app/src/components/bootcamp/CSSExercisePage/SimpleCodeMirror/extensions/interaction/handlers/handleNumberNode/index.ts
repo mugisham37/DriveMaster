@@ -14,7 +14,7 @@ export function handleNumberNode(node: SyntaxNode, view: EditorView) {
   }
 
   const { numberText, unit } = extractNumberAndUnit(view, node)
-  let originalValue = parseFloat(numberText)
+  const originalValue = parseFloat(numberText)
   if (isNaN(originalValue)) return
 
   const existing = document.getElementById(FAUX_RANGE_INPUT_ID)

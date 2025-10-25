@@ -7,6 +7,10 @@ export function checkNonVoidSelfClose(html: string): void {
   while ((match = selfClosingRegex.exec(html)) !== null) {
     const tagName = match[1]
 
+    if (!tagName) {
+      continue // Skip if tagName is undefined
+    }
+
     if (!isVoidElement(tagName)) {
       throw new Error(`Non-void element <${tagName}/> cannot be self-closed.`)
     }

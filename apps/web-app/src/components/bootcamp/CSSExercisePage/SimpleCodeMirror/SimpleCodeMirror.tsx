@@ -104,7 +104,7 @@ export const SimpleCodeMirror = forwardRef(function (
         ref.current = null
       }
     }
-  }, [textarea])
+  }, [textarea, editorDidMount, extensions, onEditorChangeCallback, ref])
 
   return (
     <div className="editor-wrapper" style={{ height: '100%', ...style }}>

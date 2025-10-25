@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react'
 import Modal from 'react-modal'
 import useCustomFunctionStore from '../store/customFunctionsStore'
-import { JikiscriptExercisePageContext } from '../../JikiscriptExercisePage/JikiscriptExercisePageContextWrapper'
 import { GraphicalIcon } from '@/components/common'
 import { CustomFunctionContext } from '../CustomFunctionEditor'
 import { assembleClassNames } from '@/utils/assemble-classnames'
@@ -20,7 +19,7 @@ export function ManageCustomFunctionsModal({
 }: {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  onChange?: () => void
+  onChange?: (() => void) | undefined
 }) {
   const {
     availableCustomFunctions,
@@ -29,7 +28,7 @@ export function ManageCustomFunctionsModal({
     deactivateCustomFunction,
   } = useCustomFunctionStore()
 
-  const { links } = useContext(JikiscriptExercisePageContext)
+  // Note: links removed as it was unused
 
   const hasMetadata = useMemo(
     () => Object.keys(availableCustomFunctions).length > 0,
@@ -56,7 +55,6 @@ export function ManageCustomFunctionsModal({
   )
 
   return (
-    {/* @ts-expect-error - Modal component type issue */}
     <Modal
       isOpen={isOpen}
       className="solve-exercise-page-react-modal-content custom-function-selector flex flex-col w-fill max-w-[540px]"

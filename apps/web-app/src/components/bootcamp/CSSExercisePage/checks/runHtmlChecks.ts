@@ -2,7 +2,7 @@ import { numTagsUsed } from './html/numTagsUsed'
 import { tagOccursNoMoreThan } from './html/tagOccursNoMoreThan'
 import { Check, ChecksResult, runChecks } from './runChecks'
 
-const htmlCheckFunctions: Record<string, Function> = {
+const htmlCheckFunctions: Record<string, (...args: unknown[]) => unknown> = {
   tagOccursNoMoreThan,
   numTagsUsed,
 }

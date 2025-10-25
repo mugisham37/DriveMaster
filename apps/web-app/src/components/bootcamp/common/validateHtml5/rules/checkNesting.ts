@@ -9,6 +9,10 @@ export function checkNesting(html: string): void {
     const fullMatch = match[0]
     const tagName = match[1]
 
+    if (!tagName) {
+      continue // Skip if tagName is undefined
+    }
+
     const isClosing = fullMatch.startsWith('</')
 
     if (isClosing) {

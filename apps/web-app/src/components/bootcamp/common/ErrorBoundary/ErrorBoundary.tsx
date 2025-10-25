@@ -5,7 +5,7 @@ class ErrorBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null }
 > {
-  state = {
+  override state = {
     hasError: false,
     error: null as Error | null,
     errorInfo: null as ErrorInfo | null,
@@ -15,7 +15,7 @@ class ErrorBoundary extends Component<
     return { hasError: true }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Caught error:', error)
     console.error('Error details:', errorInfo)
     this.setState({ error, errorInfo })
@@ -25,7 +25,7 @@ class ErrorBoundary extends Component<
     this.setState({ hasError: false, error: null, errorInfo: null })
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // generic fallback UI
       return (

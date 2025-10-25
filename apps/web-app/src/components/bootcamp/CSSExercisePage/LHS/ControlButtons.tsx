@@ -42,11 +42,11 @@ export function ControlButtons({
     const cssReadonlyRanges = getCodeMirrorFieldValue(
       cssEditorRef.current,
       readOnlyRangesStateField
-    )
+    ) || []
     const htmlReadonlyRanges = getCodeMirrorFieldValue(
       htmlEditorRef.current,
       readOnlyRangesStateField
-    )
+    ) || []
     const code = JSON.stringify({ css: cssValue, html: htmlValue })
 
     const percentage = await handleCompare()
@@ -105,9 +105,9 @@ export function ControlButtons({
     getEditorValues,
     handleCompare,
     links.postSubmission,
-    showResultToast,
     updateAssertionStatus,
-    submitCode,
+    cssEditorRef,
+    htmlEditorRef,
   ])
 
   const {

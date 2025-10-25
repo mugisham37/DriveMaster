@@ -5,8 +5,13 @@ export function formatColorInputDefaultValue(input: string): string {
 
   const match = input.match(/rgb\s*\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)\s*\)/)
   if (match) {
-    const [r, g, b] = match.slice(1).map(Number)
-    return rgb2hex(r, g, b)
+    const [, r, g, b] = match
+    if (r && g && b) {
+      const rNum = parseInt(r, 10)
+      const gNum = parseInt(g, 10)
+      const bNum = parseInt(b, 10)
+      return rgb2hex(rNum, gNum, bNum)
+    }
   }
 
   return '#000000'

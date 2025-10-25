@@ -9,8 +9,10 @@ export function tagOccursNoMoreThan(
 
   for (const tag in tagLimits) {
     const elements = doc.getElementsByTagName(tag)
-    tagCounts[tag] = elements.length
-    if (tagCounts[tag] > tagLimits[tag]) {
+    const count = elements.length
+    tagCounts[tag] = count
+    const limit = tagLimits[tag]
+    if (limit !== undefined && count > limit) {
       return false
     }
   }

@@ -36,8 +36,11 @@ export function DrawingPage({
     executionResult,
     lastError,
     clearCanvas
-  } = useJikiscriptExecution({
-    canvasContext: canvasContext || undefined,
+  } = useJikiscriptExecution(canvasContext ? {
+    canvasContext,
+    enableDrawingFunctions: true,
+    enableMathFunctions: true
+  } : {
     enableDrawingFunctions: true,
     enableMathFunctions: true
   })

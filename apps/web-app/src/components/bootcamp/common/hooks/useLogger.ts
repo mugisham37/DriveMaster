@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
-export function useLogger(label: string, value: any) {
+export function useLogger(label: string, value: unknown) {
   useEffect(() => {
     console.log(label, value)
-  }, [value])
+  }, [label, value])
 }

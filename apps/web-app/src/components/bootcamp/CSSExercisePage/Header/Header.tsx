@@ -1,24 +1,24 @@
-import React, { useContext } from 'react'
-import { wrapWithErrorBoundary } from '@/components/bootcamp/common/ErrorBoundary/wrapWithErrorBoundary'
-import { assembleClassNames } from '@/utils/assemble-classnames'
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
-import { ResetButton } from './ResetButton'
-import { CSSExercisePageContext } from '../CSSExercisePageContext'
-import { useHandleCompletingSolution } from './useHandleCompletingSolution'
-import { FinishLessonModal } from '../FinishLessonModal/FinishLessonModal'
-import { FinishLessonModalContext } from '../FinishLessonModal/FinishLessonModalContext'
-import { useCSSExercisePageStore } from '../store/cssExercisePageStore'
+import React, { useContext } from "react";
+import { wrapWithErrorBoundary } from "@/components/bootcamp/common/ErrorBoundary/wrapWithErrorBoundary";
+import { assembleClassNames } from "@/utils/assemble-classnames";
+import { GraphicalIcon } from "@/components/common/GraphicalIcon";
+import { ResetButton } from "./ResetButton";
+import { CSSExercisePageContext } from "../CSSExercisePageContext";
+import { useHandleCompletingSolution } from "./useHandleCompletingSolution";
+import { FinishLessonModal } from "../FinishLessonModal/FinishLessonModal";
+import { FinishLessonModalContext } from "../FinishLessonModal/FinishLessonModalContext";
+import { useCSSExercisePageStore } from "../store/cssExercisePageStore";
 
-export type StudentCodeGetter = () => string | undefined
+export type StudentCodeGetter = () => string | undefined;
 
-function _Header() {
-  const { solution, links } = useContext(CSSExercisePageContext)
+function HeaderComponent() {
+  const { solution, links } = useContext(CSSExercisePageContext);
 
   const {
     assertionStatus,
     setIsFinishLessonModalOpen,
     isFinishLessonModalOpen,
-  } = useCSSExercisePageStore()
+  } = useCSSExercisePageStore();
 
   const {
     modalView,
@@ -30,7 +30,7 @@ function _Header() {
     isFinishModalOpen: isFinishLessonModalOpen,
     setIsFinishModalOpen: setIsFinishLessonModalOpen,
     completeSolutionLink: links.completeSolution,
-  })
+  });
 
   return (
     <div className="page-header justify-between">
@@ -43,19 +43,19 @@ function _Header() {
 
       <div className="flex items-center gap-8">
         <ResetButton />
-        {solution.status === 'in_progress' && (
+        {solution.status === "in_progress" && (
           <button
             onClick={handleCompleteSolution}
-            disabled={assertionStatus === 'fail'}
+            disabled={assertionStatus === "fail"}
             className={assembleClassNames(
-              'btn-primary btn-xxs',
-              assertionStatus === 'fail' ? 'disabled cursor-not-allowed' : ''
+              "btn-primary btn-xxs",
+              assertionStatus === "fail" ? "disabled cursor-not-allowed" : ""
             )}
           >
             Complete Exercise
           </button>
         )}
-        {assertionStatus !== 'fail' && (
+        {assertionStatus !== "fail" && (
           <>
             <FinishLessonModalContext.Provider
               value={{
@@ -76,13 +76,13 @@ function _Header() {
 
         <a
           href={links.dashboardIndex}
-          className={assembleClassNames('btn-secondary btn-xxs')}
+          className={assembleClassNames("btn-secondary btn-xxs")}
         >
           Back
         </a>
       </div>
     </div>
-  )
+  );
 }
 
-export const Header = wrapWithErrorBoundary(_Header)
+export const Header = wrapWithErrorBoundary(HeaderComponent);

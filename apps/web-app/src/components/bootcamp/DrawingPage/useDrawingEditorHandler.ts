@@ -53,7 +53,10 @@ export function useDrawingEditorHandler() {
       const value = editorHandler.current.getValue()
       setLatestValueSnapshot(value)
       // value is studentCode
-      const evaluated = interpret(value, {})
+      const evaluated = interpret(value, {
+        variables: new Map(),
+        functions: new Map()
+      })
 
       const { frames } = evaluated
       setFrames(frames)
@@ -61,7 +64,7 @@ export function useDrawingEditorHandler() {
       const { animations } = drawExerciseInstance
       const animationTimeline =
         animations.length > 0
-          ? new AnimationTimeline({}, '').populateTimeline(animations, '')
+          ? new AnimationTimeline({}, []).populateTimeline(animations, false)
           : null
 
       if (animationTimeline) {

@@ -7,7 +7,7 @@ import {
   PASS_THRESHOLD,
 } from '../store/cssExercisePageStore'
 import { CheckResult } from '../checks/runChecks'
-import GraphicalIcon from '@/components/common/GraphicalIcon'
+import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 
 const STATUS_COLORS: Record<AssertionStatus, { border: string; text: string }> =
   {
@@ -28,7 +28,7 @@ const STATUS_COLORS: Record<AssertionStatus, { border: string; text: string }> =
 export function showResultToast(
   status: AssertionStatus,
   percentage: number,
-  firstFailingCheck?: CheckResult | null
+  firstFailingCheck?: CheckResult | null | undefined
 ) {
   toast.custom(
     (t) => (
@@ -65,7 +65,7 @@ function ToastText({
 }: {
   status: AssertionStatus
   percentage: number
-  firstFailingCheck?: CheckResult | null
+  firstFailingCheck?: CheckResult | null | undefined
 }) {
   if (firstFailingCheck) {
     return (
@@ -92,7 +92,7 @@ function ToastText({
         className={assembleClassNames('font-medium px-8 py-4')}
       >
         <p className="text-14 leading-160">
-          You're currently at {percentage}%. You can <strong> complete </strong>{' '}
+          You&apos;re currently at {percentage}%. You can <strong> complete </strong>{' '}
           the exercise if you have invested as much energy as you want to into
           it. But you might like to try to get to <strong>100%</strong> still!
         </p>

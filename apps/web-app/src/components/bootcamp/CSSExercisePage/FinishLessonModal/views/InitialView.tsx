@@ -9,7 +9,7 @@ export function InitialView() {
 
   const handleTweakFurther = useCallback(() => {
     setIsOpen(false)
-  }, [])
+  }, [setIsOpen])
 
   return (
     <>
@@ -38,7 +38,7 @@ export function InitialView() {
       </div>
       <p className="mt-12 text-15 leading-140 text-textColor6 text-balance">
         (If you tweak further, you can complete the exercise using the button at
-        the right when you're done)
+        the right when you&apos;re done)
       </p>
     </>
   )

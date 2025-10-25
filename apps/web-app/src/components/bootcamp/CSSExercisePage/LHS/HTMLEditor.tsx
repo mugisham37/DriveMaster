@@ -43,12 +43,12 @@ export function HTMLEditor({ defaultCode }: { defaultCode: string }) {
       const htmlReadonlyRanges = getCodeMirrorFieldValue(
         view,
         readOnlyRangesStateField
-      )
+      ) || []
 
       const cssReadonlyRanges = getCodeMirrorFieldValue(
         cssEditorRef.current,
         readOnlyRangesStateField
-      )
+      ) || []
 
       setEditorCodeLocalStorage({
         cssEditorContent: cssEditorRef.current?.state.doc.toString() || '',
@@ -60,7 +60,7 @@ export function HTMLEditor({ defaultCode }: { defaultCode: string }) {
         },
       })
     }, 500)
-  }, [setEditorCodeLocalStorage, readOnlyRangesStateField])
+  }, [setEditorCodeLocalStorage, cssEditorRef])
 
   const updateEditorHashOnDebounce = useMemo(() => {
     return debounce((view: EditorView) => {
@@ -71,7 +71,7 @@ export function HTMLEditor({ defaultCode }: { defaultCode: string }) {
 
       setStudentCodeHash(hash)
     }, 500)
-  }, [setEditorCodeLocalStorage, readOnlyRangesStateField])
+  }, [cssEditorRef, setStudentCodeHash])
 
   return (
     <SimpleCodeMirror

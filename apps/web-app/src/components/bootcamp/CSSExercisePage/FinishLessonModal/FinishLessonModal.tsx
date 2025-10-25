@@ -1,18 +1,18 @@
-import React from 'react'
-import Modal from 'react-modal'
-import { FinishLessonModalContext } from './FinishLessonModalContext'
-import { useContext } from 'react'
-import { NextExercise } from '../../JikiscriptExercisePage/Tasks/completeSolution'
-import { InitialView } from './views/InitialView'
+import React from "react";
+import Modal from "react-modal";
+import { FinishLessonModalContext } from "./FinishLessonModalContext";
+import { useContext } from "react";
+import { NextExercise } from "../../JikiscriptExercisePage/Tasks/completeSolution";
+import { InitialView } from "./views/InitialView";
 
-Modal.setAppElement('body')
+Modal.setAppElement("body");
 export function FinishLessonModal() {
   const { isFinishLessonModalOpen: isOpen } = useContext(
     FinishLessonModalContext
-  )
+  );
 
   return (
-    // @ts-ignore
+    // @ts-expect-error - Modal component has type issues with className prop
     <Modal
       isOpen={isOpen}
       className="solve-exercise-page-react-modal-content flex flex-col items-center justify-center text-center max-w-[540px]"
@@ -20,47 +20,49 @@ export function FinishLessonModal() {
     >
       <Inner />
     </Modal>
-  )
+  );
 }
 
 function Inner() {
   const { modalView, nextLevelIdx, nextExerciseData } = useContext(
     FinishLessonModalContext
-  )
+  );
   switch (modalView) {
-    case 'initial':
-      return <InitialView />
-    case 'completedExercise':
+    case "initial":
+      return <InitialView />;
+    case "completedExercise":
       if (nextExerciseData) {
-        return <CompletedExerciseView nextExerciseData={nextExerciseData} />
+        return <CompletedExerciseView nextExerciseData={nextExerciseData} />;
       } else {
-        return <CompletedEverythingView />
+        return <CompletedEverythingView />;
       }
-    case 'completedLevel':
+    case "completedLevel":
       if (nextLevelIdx) {
-        return <CompletedLevelView nextLevelIdx={nextLevelIdx} />
+        return <CompletedLevelView nextLevelIdx={nextLevelIdx} />;
       }
 
       if (nextExerciseData) {
-        return <CompletedAllLevelsView nextExerciseData={nextExerciseData} />
+        return <CompletedAllLevelsView nextExerciseData={nextExerciseData} />;
       } else {
-        return <CompletedEverythingView />
+        return <CompletedEverythingView />;
       }
+    default:
+      return <CompletedEverythingView />;
   }
 }
 
 function CompletedExerciseView({
   nextExerciseData,
 }: {
-  nextExerciseData: NextExercise
+  nextExerciseData: NextExercise;
 }) {
-  const { links } = useContext(FinishLessonModalContext)
+  const { links } = useContext(FinishLessonModalContext);
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">Congratulations!</h2>
 
       <p className="text-18 leading-140 mb-8">
-        The next exercise is{' '}
+        The next exercise is{" "}
         <strong className="font-semibold">{nextExerciseData.title}.</strong>
       </p>
       <p className="text-18 leading-140 mb-20">
@@ -80,57 +82,57 @@ function CompletedExerciseView({
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 function CompletedLevelView({ nextLevelIdx }: { nextLevelIdx: number }) {
-  const { completedLevelIdx, links } = useContext(FinishLessonModalContext)
+  const { completedLevelIdx, links } = useContext(FinishLessonModalContext);
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">
-        You've completed level {completedLevelIdx}!
+        You&apos;ve completed level {completedLevelIdx}!
       </h2>
       <p className="text-18 leading-140 mb-8">
         <strong className="font-semibold">
-          Congratulations! That's a big achievement 🎉
+          Congratulations! That&apos;s a big achievement 🎉
         </strong>
       </p>
       <p className="text-18 leading-140 mb-20">
-        You're now onto Level {nextLevelIdx} - a brand new challenge! Remember
+        You&apos;re now onto Level {nextLevelIdx} - a brand new challenge! Remember
         to watch the teaching video in full before starting the exercises.
       </p>
 
       <div className="flex items-center gap-8 self-stretch">
         <a
-          href={links.bootcampLevelUrl.replace('idx', nextLevelIdx.toString())}
+          href={links.bootcampLevelUrl.replace("idx", nextLevelIdx.toString())}
           className="btn-l btn-primary flex-grow"
         >
           Start Level {nextLevelIdx}
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 function CompletedAllLevelsView({
   nextExerciseData,
 }: {
-  nextExerciseData: NextExercise
+  nextExerciseData: NextExercise;
 }) {
-  const { completedLevelIdx, links } = useContext(FinishLessonModalContext)
+  const { completedLevelIdx, links } = useContext(FinishLessonModalContext);
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">
-        You've completed level {completedLevelIdx}!
+        You&apos;ve completed level {completedLevelIdx}!
       </h2>
       <p className="text-18 leading-140 mb-8">
         <strong className="font-semibold">
-          Congratulations! That's a big achievement 🎉
+          Congratulations! That&apos;s a big achievement 🎉
         </strong>
       </p>
       <p className="text-18 leading-140 mb-20">
-        You've completed all the levels available to you right now, but you
-        still have some exercises outstanding. The next exercise is{' '}
+        You&apos;ve completed all the levels available to you right now, but you
+        still have some exercises outstanding. The next exercise is{" "}
         <strong className="font-semibold">{nextExerciseData.title}.</strong>
       </p>
       <p className="text-18 leading-140 mb-20">
@@ -150,17 +152,17 @@ function CompletedAllLevelsView({
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 function CompletedEverythingView() {
-  const { links } = useContext(FinishLessonModalContext)
+  const { links } = useContext(FinishLessonModalContext);
 
   return (
     <div>
       <h2 className="text-[25px] mb-12 font-semibold">Congratulations!</h2>
       <p className="text-18 leading-140 mb-20">
-        Well done! You've finished all the exercises available to you right now.
+        Well done! You&apos;ve finished all the exercises available to you right now.
       </p>
 
       <div className="flex flex-col items-stretch self-stretch">
@@ -169,5 +171,5 @@ function CompletedEverythingView() {
         </a>
       </div>
     </div>
-  )
+  );
 }

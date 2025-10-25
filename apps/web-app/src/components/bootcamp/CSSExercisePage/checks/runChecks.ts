@@ -32,7 +32,7 @@ export function evaluateMatch(result: boolean, matcher: string): boolean {
 export async function runChecks(
   checks: Check[],
   value: string,
-  checkFunctions: Record<string, Function>
+  checkFunctions: Record<string, (...args: unknown[]) => unknown>
 ): Promise<ChecksResult> {
   const resultPromises: Promise<CheckResult>[] = checks.map(async (check) => {
     try {
@@ -44,14 +44,19 @@ export async function runChecks(
 
       const funcName = funcMatch[1]
       const argsString = funcMatch[2]
-      let args: any
+
+      if (!funcName) {
+        throw new Error(`Invalid function name: ${check.function}`)
+      }
+
+      let args: unknown
 
       try {
         const safe_eval = eval
-        args = argsString.trim().startsWith('(')
+        args = argsString?.trim().startsWith('(')
           ? safe_eval(`${argsString}`)
           : safe_eval(`(${argsString})`)
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid arguments format: ${argsString}`)
       }
 
@@ -70,11 +75,12 @@ export async function runChecks(
           ? null
           : check.errorHtml.replaceAll('%result%', result),
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       return {
         result: null,
         passes: false,
-        error_html: `Error evaluating check: ${error.message}`,
+        error_html: `Error evaluating check: ${errorMessage}`,
       }
     }
   })

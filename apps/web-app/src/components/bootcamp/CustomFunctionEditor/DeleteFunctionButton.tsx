@@ -18,7 +18,7 @@ export function DeleteFunctionButton({ predefined }: { predefined: boolean }) {
           )
           setTimeout(() => redirectTo(customFnDashboardUrl), 1000)
         })
-        .catch((e) => {
+        .catch(() => {
           toast.error("Couldn't delete custom function. Please try it again.")
         })
     }

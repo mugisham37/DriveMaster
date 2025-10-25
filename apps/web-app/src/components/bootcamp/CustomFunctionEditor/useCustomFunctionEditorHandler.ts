@@ -64,8 +64,7 @@ export function useCustomFunctionEditorHandler({
   } = useEditorStore()
 
   const handleRunCode = () => {
-    const { tests, customFunctionName: functionName } =
-      customFunctionEditorStore.getState()
+    const { tests } = customFunctionEditorStore.getState()
 
     if (!tests || tests.length === 0) {
       return
@@ -78,8 +77,8 @@ export function useCustomFunctionEditorHandler({
 
     if (editorHandler.current) {
       const context: EvaluationContext = {
-        customFunctions: Object.values(customFunctions),
-        externalFunctions: StdlibFunctionsForLibrary,
+        variables: new Map(),
+        functions: new Map(Object.values(customFunctions).concat(StdlibFunctionsForLibrary).map(fn => [fn.name, fn])),
       }
       const value = editorHandler.current.getValue()
       setLatestValueSnapshot(value)

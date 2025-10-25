@@ -218,7 +218,7 @@ export function JikiscriptExercisePage({
             <div className="test-output">
               {testOutput.error ? (
                 <div className="error-message" style={{ color: 'red' }}>
-                  <strong>Execution Error:</strong> {testOutput.error}
+                  <strong>Execution Error:</strong> {String(testOutput.error)}
                 </div>
               ) : (
                 <>
@@ -226,13 +226,13 @@ export function JikiscriptExercisePage({
                     <div className="test-results">
                       <h4>Test Results:</h4>
                       {testOutput.test_results.map((test: Record<string, unknown>, index: number) => (
-                        <div key={index} className={`test-result ${test.passed ? 'passed' : 'failed'}`}>
-                          <span className="test-name">{String(test.name || '')}</span>
-                          <span className={`test-status ${test.passed ? 'pass' : 'fail'}`}>
-                            {test.passed ? '✓ PASS' : '✗ FAIL'}
+                        <div key={index} className={`test-result ${(test.passed as boolean) ? 'passed' : 'failed'}`}>
+                          <span className="test-name">{(test.name as string) || ''}</span>
+                          <span className={`test-status ${(test.passed as boolean) ? 'pass' : 'fail'}`}>
+                            {(test.passed as boolean) ? <>✓ PASS</> : <>✗ FAIL</>}
                           </span>
-                          {test.message && <div className="test-message">{String(test.message || '')}</div>}
-                          {test.error && typeof test.error === 'object' && test.error !== null && 'message' in test.error && <div className="test-error">{String((test.error as any).message)}</div>}
+                          {test.message && <div className="test-message">{String(test.message)}</div>}
+                          {test.error && typeof test.error === 'object' && test.error !== null && 'message' in test.error && <div className="test-error">{(test.error as any).message as string}</div>}
                         </div>
                       ))}
                     </div>
@@ -243,9 +243,9 @@ export function JikiscriptExercisePage({
                       <h4>Interpreter Output:</h4>
                       <div className="frames-output">
                         {Array.isArray((testOutput.interpreter_result as any)?.frames) && (testOutput.interpreter_result as any).frames.map((frame: Record<string, unknown>, index: number) => (
-                          <div key={index} className={`frame ${frame.status}`}>
+                          <div key={index} className={`frame ${frame.status as string}`}>
                             <span className="frame-location">Line {(frame.location as any)?.line || 'unknown'}</span>
-                            <span className="frame-status">{String(frame.status || '')}</span>
+                            <span className="frame-status">{String(frame.status)}</span>
                             {frame.result && (
                               <div className="frame-result">
                                 Result: {JSON.stringify(frame.result)}

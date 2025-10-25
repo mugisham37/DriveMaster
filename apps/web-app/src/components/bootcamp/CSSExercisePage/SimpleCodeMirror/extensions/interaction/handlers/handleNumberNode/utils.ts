@@ -5,7 +5,7 @@ import { FAUX_RANGE_INPUT_ID } from '.'
 
 // === Scrubber utils ===
 
-export function getSensitivity(value: number): number {
+export function getSensitivity(_value: number): number {
   // we can add multiple rules like this and chain them
   // return Math.abs(value) >= 10 ? 1: 0.5
   return 1

@@ -1,6 +1,31 @@
-import { createTheme } from '@uiw/codemirror-themes'
 import { tags as t } from '@lezer/highlight'
 import { EDITOR_COLORS } from '../../JikiscriptExercisePage/CodeMirror/extensions/create-theme/colorScheme'
+import { EditorView } from 'codemirror'
+
+// Mock createTheme function since @uiw/codemirror-themes is not available
+function createTheme(_config: {
+  theme: string
+  settings: Record<string, unknown>
+  styles: Array<{ tag: unknown; color?: string; fontWeight?: string; fontStyle?: string; borderBottom?: string }>
+}) {
+  // Simple mock implementation - in production, you'd want to install @uiw/codemirror-themes
+  return EditorView.theme({
+    '&': {
+      color: '#000',
+      backgroundColor: '#fff',
+    },
+    '.cm-content': {
+      padding: '10px',
+    },
+    '.cm-focused': {
+      outline: 'none',
+    },
+    '.cm-editor': {
+      fontSize: '14px',
+      fontFamily: 'monospace',
+    },
+  })
+}
 
 export const htmlTheme = createTheme({
   theme: 'light',

@@ -49,7 +49,7 @@ export function useSetupEditors(
       },
       code
     )
-  }, [])
+  }, [actualIFrameRef, code, editorCode.cssEditorContent, editorCode.htmlEditorContent])
 
   const {
     editorViewRef: htmlEditorViewRef,
@@ -157,7 +157,7 @@ export function useSetupEditors(
       stubEditorCode.htmlEditorContent,
       stubEditorCode.readonlyRanges.html
     )
-  }, [])
+  }, [code.defaultReadonlyRanges?.css, code.defaultReadonlyRanges?.html, code.stub.css, code.stub.html, cssEditorViewRef, htmlEditorViewRef, setEditorCode])
 
   return {
     htmlEditorViewRef,
