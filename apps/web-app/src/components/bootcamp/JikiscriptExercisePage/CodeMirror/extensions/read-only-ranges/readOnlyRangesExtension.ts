@@ -19,9 +19,12 @@ export const smartDelete = (
 
       if (initialSelections.length > 0) {
         const readOnlyRanges = getReadOnlyRanges(tr.startState)
+        const firstSelection = initialSelections[0]
+        if (!firstSelection) return tr
+        
         const result = getAvailableRanges(
           readOnlyRanges,
-          initialSelections[0],
+          firstSelection,
           {
             from: 0,
             to: tr.startState.doc.line(tr.startState.doc.lines).to,
@@ -95,6 +98,7 @@ export const smartPaste = (
   EditorView.domEventHandlers({
     paste(event, view) {
       const clipboardData = event.clipboardData || (window as { clipboardData?: DataTransfer }).clipboardData
+      if (!clipboardData) return false
       const pastedData = clipboardData.getData('Text')
       const initialSelections = view.state.selection.ranges.map((range) => ({
         from: range.from,
@@ -103,9 +107,12 @@ export const smartPaste = (
 
       if (initialSelections.length > 0) {
         const readOnlyRanges = getReadOnlyRanges(view.state)
+        const firstSelection = initialSelections[0]
+        if (!firstSelection) return false
+        
         const result = getAvailableRanges(
           readOnlyRanges,
-          initialSelections[0],
+          firstSelection,
           {
             from: 0,
             to: view.state.doc.line(view.state.doc.lines).to,

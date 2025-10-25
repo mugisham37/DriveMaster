@@ -1,6 +1,7 @@
 import React, {
   ForwardedRef,
   forwardRef,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -13,7 +14,7 @@ import { keymap } from '@codemirror/view'
 import { indentWithTab } from '@codemirror/commands'
 import { defaultKeymap, historyKeymap } from '@codemirror/commands'
 
-export const SimpleCodeMirror = forwardRef(function (
+export const SimpleCodeMirror = forwardRef(function SimpleCodeMirror(
   {
     editorDidMount,
     style,
@@ -41,7 +42,7 @@ export const SimpleCodeMirror = forwardRef(function (
     return ref.current
   }
 
-  const setValue = (text: string) => {
+  const setValue = useCallback((text: string) => {
     const editorView = getEditorView()
     if (!editorView) {
       return
@@ -56,12 +57,12 @@ export const SimpleCodeMirror = forwardRef(function (
     })
 
     editorView.dispatch(transaction)
-  }
+  }, [getEditorView])
 
-  const getValue = () => {
+  const getValue = useCallback(() => {
     const editorView = getEditorView()
     return (value.current = editorView?.state.doc.toString() || '')
-  }
+  }, [getEditorView])
 
   const initializedRef = useRef(false)
 

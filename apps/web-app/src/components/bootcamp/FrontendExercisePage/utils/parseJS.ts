@@ -20,7 +20,7 @@ export function parseJS(code: string | undefined) {
         message: (error.message || 'Unknown error').replace(/\s*\(\d+:\d+\)$/, ''),
         lineNumber: loc.line,
         colNumber: loc.column,
-        type: err.name,
+        type: (err as Error).name,
       },
     }
   }

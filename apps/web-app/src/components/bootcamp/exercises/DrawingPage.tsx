@@ -7,7 +7,7 @@ import { useJikiscriptExecution } from '@/hooks/useJikiscriptExecution'
 interface DrawingPageProps {
   drawing: BootcampDrawing
   code: {
-    code: any
+    code: string
     stored_at: string
   }
   backgrounds: BootcampBackground[]
@@ -72,7 +72,7 @@ export function DrawingPage({
   // Execute drawing code when it changes
   useEffect(() => {
     executeDrawingCode()
-  }, [drawingCode, selectedBackground, executeDrawingCode])
+  }, [drawingCode, selectedBackground, executeDrawingCode, executeUserCode])
 
   const executeUserCode = useCallback(async () => {
     if (!drawingCode.trim()) return

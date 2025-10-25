@@ -56,7 +56,7 @@ export function HTMLEditor() {
           actualIFrameRef,
           {
             html: view.state.doc.toString(),
-            css: cssEditorRef.current?.state.doc.toString(),
+            css: cssEditorRef.current?.state.doc.toString() ?? '',
             script: '',
           },
           code

@@ -7,7 +7,7 @@ interface CSSExercisePageProps {
   project: BootcampProject
   exercise: BootcampExercise
   solution: BootcampSolution
-  test_results?: any
+  test_results?: unknown
   code: BootcampCode
   links: BootcampLinks
 }

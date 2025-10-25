@@ -15,17 +15,17 @@ export function injectLoopGuards(code: string): string {
     WhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as any, ancestors as any, id)
+      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
     },
     ForStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as any, ancestors as any, id)
+      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
     },
     DoWhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as any, ancestors as any, id)
+      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
     },
   })
 
@@ -34,13 +34,13 @@ export function injectLoopGuards(code: string): string {
   const finalCode = `
     const __MAX_ITERATIONS = 10000;
     ${guardVars}
-    ${generate(ast as any)}
+    ${generate(ast as acorn.Node)}
   `
 
   return finalCode
 }
 
-function guardLoop(node: any, ancestors: any[], loopVar: string) {
+function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Node[], loopVar: string) {
   /**
     AST of
     let ${loopVar} = 0;
@@ -116,11 +116,11 @@ function guardLoop(node: any, ancestors: any[], loopVar: string) {
   }
 }
 
-function findNearestBody(ancestors: any[]): any[] | null {
+function findNearestBody(ancestors: acorn.Node[]): acorn.Node[] | null {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i]
-    if (parent && parent.type === 'BlockStatement' && Array.isArray(parent.body)) {
-      return parent.body
+    if (parent && parent.type === 'BlockStatement' && Array.isArray((parent as { body?: acorn.Node[] }).body)) {
+      return (parent as { body: acorn.Node[] }).body
     }
   }
   return null

@@ -60,7 +60,7 @@ export function CSSEditor() {
           actualIFrameRef,
           {
             css: view.state.doc.toString(),
-            html: htmlEditorRef.current?.state.doc.toString(),
+            html: htmlEditorRef.current?.state.doc.toString() ?? '',
             script: '',
           },
           code

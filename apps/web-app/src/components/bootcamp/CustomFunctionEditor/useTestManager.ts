@@ -8,7 +8,7 @@ export type CustomTests = { args: string; expected: string; uuid: string }[]
 
 export type Results = Record<
   string,
-  { actual: any; frames: Frame[]; pass: boolean }
+  { actual: unknown; frames: Frame[]; pass: boolean }
 >
 
 export function useTestManager(customFunction: CustomFunction) {

@@ -78,7 +78,7 @@ export function useCustomFunctionEditorHandler({
     if (editorHandler.current) {
       const context: EvaluationContext = {
         variables: new Map(),
-        functions: new Map(Object.values(customFunctions).concat(StdlibFunctionsForLibrary).map(fn => [fn.name, fn])),
+        functions: new Map(Object.values(customFunctions).concat(StdlibFunctionsForLibrary).map(fn => [fn.name, fn as (...args: unknown[]) => unknown])),
       }
       const value = editorHandler.current.getValue()
       setLatestValueSnapshot(value)
@@ -86,7 +86,7 @@ export function useCustomFunctionEditorHandler({
       const evaluated = interpret(value, context)
       if (evaluated.error) {
         showError({
-          error: evaluated.error as any,
+          error: evaluated.error as Error,
           editorView: editorViewRef.current,
           setHighlightedLine,
           setHighlightedLineColor,
@@ -100,7 +100,7 @@ export function useCustomFunctionEditorHandler({
       const fnStatement = evaluated.meta.statements[0] as FunctionStatement
       setArity(fnStatement.parameters.length)
 
-      const results: Record<string, any> = {}
+      const results: Record<string, unknown> = {}
       let errorOccurred: boolean = false
       for (const test of tests) {
         const args = test.args
@@ -108,7 +108,7 @@ export function useCustomFunctionEditorHandler({
         let safeArgs
         try {
           safeArgs = safe_eval(`[${args}]`)
-        } catch (e) {
+        } catch {
           setSyntaxErrorInTest({
             message: `<div><div class="mb-6 font-semibold leading-140">Oh no! Jiki couldn't understand this code:</div>
                 <pre class="bg-white"><code class="lang-jikiscript hljs">${args}</code></pre>
@@ -129,7 +129,7 @@ export function useCustomFunctionEditorHandler({
 
         try {
           expected = safe_eval(`[${test.expected}]`)[0]
-        } catch (e) {
+        } catch {
           setSyntaxErrorInTest({
             message: `<div><div class="mb-6 font-semibold leading-140">Oh no! Jiki couldn't understand your expected value:</div>
                 <pre class="bg-white"><code class="lang-jikiscript hljs">${test.expected}</code></pre>

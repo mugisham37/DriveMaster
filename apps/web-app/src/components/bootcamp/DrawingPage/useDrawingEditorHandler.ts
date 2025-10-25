@@ -73,7 +73,7 @@ export function useDrawingEditorHandler() {
 
       if (evaluated.error) {
         showError({
-          error: evaluated.error as any,
+          error: evaluated.error as Error,
           setHighlightedLine,
           setHighlightedLineColor,
           setInformationWidgetData,
@@ -102,7 +102,7 @@ export function useDrawingEditorHandler() {
         viewContainerRef.current.appendChild(view)
         view.style.display = 'block'
         setBackgroundImageRef.current = (url: string | null) => 
-          drawExerciseInstance.setBackgroundImage({} as any, url)
+          drawExerciseInstance.setBackgroundImage({} as Record<string, unknown>, url)
       }
     }
   }

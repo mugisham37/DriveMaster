@@ -16,7 +16,7 @@ export type CustomTests = {
 export type Results = Record<
   string,
   {
-    actual: any
+    actual: unknown
     frames: Frame[]
     pass: boolean
     animationTimeline: AnimationTimeline

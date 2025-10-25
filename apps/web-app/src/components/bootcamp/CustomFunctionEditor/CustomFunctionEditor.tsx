@@ -181,7 +181,7 @@ export default function CustomFunctionEditor({
                     results[inspectedTest]?.animationTimeline && (
                       <Scrubber
                         animationTimeline={
-                          results[inspectedTest]?.animationTimeline!
+                          results[inspectedTest]?.animationTimeline ?? null
                         }
                         frames={inspectedFrames}
                         context={`Test ${inspectedTestIdx + 1}`}

@@ -5,6 +5,7 @@ import {
   ViewPlugin,
   ViewUpdate,
 } from '@codemirror/view'
+import type { Range } from '@codemirror/state'
 import { StateEffect, StateField } from '@codemirror/state'
 import { placeholderTheme } from '../placeholder-widget'
 import { InformationWidget } from './information-widget'
@@ -56,7 +57,7 @@ function lineInformationWidget(
   view: EditorView,
   onClose: (view: EditorView) => void
 ): DecorationSet {
-  const widgets: unknown[] = []
+  const widgets: Range<Decoration>[] = []
 
   const shouldShowWidget = view.state.field(showInfoWidgetField)
   const widgetData = view.state.field(informationWidgetDataField)

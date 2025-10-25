@@ -12,7 +12,7 @@ export function FinishLessonModal() {
   );
 
   return (
-    // @ts-expect-error - Modal component has type issues with className prop
+
     <Modal
       isOpen={isOpen}
       className="solve-exercise-page-react-modal-content flex flex-col items-center justify-center text-center max-w-[540px]"

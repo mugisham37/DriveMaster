@@ -1,5 +1,5 @@
 export type CheckResult = {
-  result: boolean | null
+  result: unknown
   passes: boolean
   error_html: string | null
 }
@@ -15,7 +15,7 @@ export type Check = {
   errorHtml: string
 }
 
-export function evaluateMatch(result: boolean, matcher: string): boolean {
+export function evaluateMatch(result: unknown, matcher: string): boolean {
   switch (matcher) {
     case 'toBeTrue':
       return result === true
@@ -73,7 +73,7 @@ export async function runChecks(
         passes,
         error_html: passes
           ? null
-          : check.errorHtml.replaceAll('%result%', result),
+          : check.errorHtml.replaceAll('%result%', String(result)),
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'

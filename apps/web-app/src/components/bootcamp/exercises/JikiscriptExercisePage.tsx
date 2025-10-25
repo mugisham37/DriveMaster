@@ -8,7 +8,7 @@ interface JikiscriptExercisePageProps {
   project: BootcampProject
   exercise: BootcampExercise
   solution: BootcampSolution
-  test_results?: any
+  test_results?: unknown
   code: BootcampCode
   custom_functions: BootcampCustomFunction[]
   links: BootcampLinks
@@ -232,7 +232,7 @@ export function JikiscriptExercisePage({
                             {(test.passed as boolean) ? <>✓ PASS</> : <>✗ FAIL</>}
                           </span>
                           {test.message && <div className="test-message">{String(test.message)}</div>}
-                          {test.error && typeof test.error === 'object' && test.error !== null && 'message' in test.error && <div className="test-error">{(test.error as any).message as string}</div>}
+                          {test.error && typeof test.error === 'object' && test.error !== null && 'message' in test.error && <div className="test-error">{String((test.error as { message: unknown }).message)}</div>}
                         </div>
                       ))}
                     </div>
@@ -242,9 +242,9 @@ export function JikiscriptExercisePage({
                     <div className="interpreter-result">
                       <h4>Interpreter Output:</h4>
                       <div className="frames-output">
-                        {Array.isArray((testOutput.interpreter_result as any)?.frames) && (testOutput.interpreter_result as any).frames.map((frame: Record<string, unknown>, index: number) => (
+                        {Array.isArray((testOutput.interpreter_result as { frames?: unknown[] })?.frames) && (testOutput.interpreter_result as { frames: Record<string, unknown>[] }).frames.map((frame: Record<string, unknown>, index: number) => (
                           <div key={index} className={`frame ${frame.status as string}`}>
-                            <span className="frame-location">Line {(frame.location as any)?.line || 'unknown'}</span>
+                            <span className="frame-location">Line {(frame.location as { line?: unknown })?.line || 'unknown'}</span>
                             <span className="frame-status">{String(frame.status)}</span>
                             {frame.result && (
                               <div className="frame-result">
@@ -253,7 +253,7 @@ export function JikiscriptExercisePage({
                             )}
                             {frame.error && typeof frame.error === 'object' && frame.error !== null && 'message' in frame.error && (
                               <div className="frame-error">
-                                Error: {String((frame.error as any).message)}
+                                Error: {String((frame.error as { message: unknown }).message)}
                               </div>
                             )}
                           </div>
