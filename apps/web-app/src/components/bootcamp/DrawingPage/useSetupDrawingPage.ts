@@ -6,9 +6,9 @@ export function useSetupDrawingPage({
   setEditorLocalStorageValue,
   code,
 }: {
-  editorLocalStorageValue: string
-  setEditorLocalStorageValue: (value: string) => void
-  code: string
+  editorLocalStorageValue: { code: string; storedAt: string }
+  setEditorLocalStorageValue: (value: { code: string; storedAt: string }) => void
+  code: { code: string; storedAt: string }
 }) {
   const { setDefaultCode, setShouldAutoRunCode } = useEditorStore()
 

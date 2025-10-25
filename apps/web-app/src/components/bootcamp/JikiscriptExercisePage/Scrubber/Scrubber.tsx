@@ -91,18 +91,18 @@ function Scrubber({
         min={calculateMinInputValue(frames)}
         max={calculateMaxInputValue(animationTimeline)}
         ref={rangeRef}
-        onInput={updateInputBackground}
+        onInput={() => updateInputBackground()}
         value={timelineValue}
         onChange={(event) => {
           handleChange(event, animationTimeline)
           updateInputBackground()
         }}
-        onMouseUp={() => handleOnMouseUp(animationTimeline, frames)}
+        onMouseUp={() => handleOnMouseUp(animationTimeline)}
       />
       <FrameStepperButtons
         timelineTime={timelineValue}
         frames={frames}
-        onNext={() => handleGoToNextFrame(animationTimeline, frames)}
+        onNext={() => handleGoToNextFrame(animationTimeline)}
         onPrev={() => handleGoToPreviousFrame(animationTimeline, frames)}
         disabled={shouldScrubberBeDisabled(
           hasCodeBeenEdited,

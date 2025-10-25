@@ -24,7 +24,6 @@ export function ResetButton() {
         Reset
       </button>
 
-      {/* @ts-expect-error - Modal component has type issues with className prop */}
       <Modal
         ariaHideApp={false}
         isOpen={shouldOpenConfirmationModal}

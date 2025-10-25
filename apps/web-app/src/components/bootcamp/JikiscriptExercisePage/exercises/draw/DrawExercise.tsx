@@ -2,7 +2,7 @@ import { Exercise } from "../Exercise";
 import { aToR, rToA } from "./utils";
 import * as Shapes from "./shapes";
 import * as Jiki from "@/lib/interpreter/jikiObjects";
-import type { ExecutionContext } from "@/lib/interpreter/executor";
+import type { ExecutionContext, ExternalFunction } from "@/lib/interpreter/executor";
 import { InterpretResult } from "@/lib/interpreter/interpreter";
 import {
   assertAllArgumentsAreVariables,
@@ -188,16 +188,16 @@ export default class DrawExercise extends Exercise {
   public assertAllArgumentsAreVariables(interpreterResult: InterpretResult) {
     return assertAllArgumentsAreVariables(interpreterResult);
   }
-  public strokeColorHex(_: ExecutionContext, color: Jiki.String) {
+  public strokeColorHex(_: ExecutionContext, color: Jiki.JikiString) {
     this.strokeColor = { type: "hex", color: color.value };
   }
-  public setStrokeWidth(_: ExecutionContext, width: Jiki.Number) {
+  public setStrokeWidth(_: ExecutionContext, width: Jiki.JikiNumber) {
     this.strokeWidth = width.value;
   }
   public changeStrokeWidth(_: ExecutionContext, width: number) {
     this.strokeWidth = width;
   }
-  public fillColorHex(_: ExecutionContext, color: Jiki.String) {
+  public fillColorHex(_: ExecutionContext, color: Jiki.JikiString) {
     this.fillColor = { type: "hex", color: color.value };
   }
   public fillColorRGB(
@@ -304,12 +304,10 @@ export default class DrawExercise extends Exercise {
     if (height.value < 0) {
       return executionCtx.logicError("Height must be greater than 0");
     }
-    const [absX, absY, absWidth, absHeight] = [
-      x.value,
-      y.value,
-      width.value,
-      height.value,
-    ].map((val) => rToA(val ?? 0));
+    const absX = rToA(x.value ?? 0)
+    const absY = rToA(y.value ?? 0)
+    const absWidth = rToA(width.value ?? 0)
+    const absHeight = rToA(height.value ?? 0);
 
     const elem = Shapes.rect(
       absX,
@@ -351,12 +349,10 @@ export default class DrawExercise extends Exercise {
     ) {
       return executionCtx.logicError("All inputs must be numbers");
     }
-    const [absX1, absY1, absX2, absY2] = [
-      x1.value,
-      y1.value,
-      x2.value,
-      y2.value,
-    ].map((val) => rToA(val ?? 0));
+    const absX1 = rToA(x1.value ?? 0)
+    const absY1 = rToA(y1.value ?? 0)
+    const absX2 = rToA(x2.value ?? 0)
+    const absY2 = rToA(y2.value ?? 0);
 
     const elem = Shapes.line(
       absX1,
@@ -396,9 +392,9 @@ export default class DrawExercise extends Exercise {
     ) {
       return executionCtx.logicError("All inputs must be numbers");
     }
-    const [absX, absY, absRadius] = [x.value, y.value, radius.value].map(
-      (val) => rToA(val ?? 0)
-    );
+    const absX = rToA(x.value ?? 0)
+    const absY = rToA(y.value ?? 0)
+    const absRadius = rToA(radius.value ?? 0);
 
     const elem = Shapes.circle(
       absX,
@@ -440,12 +436,10 @@ export default class DrawExercise extends Exercise {
       return executionCtx.logicError("All inputs must be numbers");
     }
 
-    const [absX, absY, absRx, absRy] = [
-      x.value,
-      y.value,
-      rx.value,
-      ry.value,
-    ].map((val) => rToA(val ?? 0));
+    const absX = rToA(x.value ?? 0)
+    const absY = rToA(y.value ?? 0)
+    const absRx = rToA(rx.value ?? 0)
+    const absRy = rToA(ry.value ?? 0);
 
     const elem = Shapes.ellipse(
       absX,
@@ -492,14 +486,12 @@ export default class DrawExercise extends Exercise {
     ) {
       return executionCtx.logicError("All inputs must be numbers");
     }
-    const [absX1, absY1, absX2, absY2, absX3, absY3] = [
-      x1.value,
-      y1.value,
-      x2.value,
-      y2.value,
-      x3.value,
-      y3.value,
-    ].map((val) => rToA(val ?? 0));
+    const absX1 = rToA(x1.value ?? 0)
+    const absY1 = rToA(y1.value ?? 0)
+    const absX2 = rToA(x2.value ?? 0)
+    const absY2 = rToA(y2.value ?? 0)
+    const absX3 = rToA(x3.value ?? 0)
+    const absY3 = rToA(y3.value ?? 0);
 
     const elem = Shapes.triangle(
       absX1,
@@ -571,10 +563,11 @@ export default class DrawExercise extends Exercise {
     }
   }
 
-  public override availableFunctions = [
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: "random_number",
-      func: (_: unknown, min: Jiki.Number, max: Jiki.Number): Jiki.Number => {
+      func: (...args: unknown[]): unknown => {
+        const [, min, max] = args as [unknown, Jiki.JikiNumber, Jiki.JikiNumber];
         return new Jiki.Number(
           Math.floor(Math.random() * (max.value - min.value + 1)) + min.value
         );
@@ -584,46 +577,46 @@ export default class DrawExercise extends Exercise {
 
     {
       name: "rectangle",
-      func: this.rectangle.bind(this),
+      func: this.rectangle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a rectangle at coordinates (${arg1}, ${arg2}) with a width of ${arg3} and a height of ${arg4}",
     },
     {
       name: "triangle",
-      func: this.triangle.bind(this),
+      func: this.triangle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a rectangle with three points: (${arg1}, ${arg2}), (${arg3}, ${arg4}), and (${arg5}, ${arg6})",
     },
     {
       name: "circle",
-      func: this.circle.bind(this),
+      func: this.circle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a circle with its center at (${arg1}, ${arg2}), and a radius of ${arg3}",
     },
     {
       name: "ellipse",
-      func: this.ellipse.bind(this),
+      func: this.ellipse.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew an ellipse with its center at (${arg1}, ${arg2}), a radial width of ${arg3}, and a radial height of ${arg4}",
     },
     {
       name: "clear",
-      func: this.clear.bind(this),
+      func: this.clear.bind(this) as (...args: unknown[]) => unknown,
       description: "cleared the canvas",
     },
     {
       name: "fill_color_hex",
-      func: this.fillColorHex.bind(this),
+      func: this.fillColorHex.bind(this) as (...args: unknown[]) => unknown,
       description: "changed the fill color using a hex string",
     },
     {
       name: "fill_color_rgb",
-      func: this.fillColorRGB.bind(this),
+      func: this.fillColorRGB.bind(this) as (...args: unknown[]) => unknown,
       description: "changed the fill color using red, green and blue values",
     },
     {
       name: "fill_color_hsl",
-      func: this.fillColorHSL.bind(this),
+      func: this.fillColorHSL.bind(this) as (...args: unknown[]) => unknown,
       description:
         "changed the fill color using hue, saturation and lumisity values",
     },

@@ -77,6 +77,6 @@ function fn(this: HouseExercise) {
   return Roof
 }
 
-export function buildRoof(binder: unknown) {
+export function buildRoof(binder: HouseExercise): Jiki.JikiClass {
   return fn.bind(binder)()
 }

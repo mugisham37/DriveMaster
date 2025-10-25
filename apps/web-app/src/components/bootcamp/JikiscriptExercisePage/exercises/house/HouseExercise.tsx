@@ -1,5 +1,6 @@
 
 import DrawExercise from '../draw'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { buildRoof } from './Roof'
 import { buildFrame } from './Frame'
 import { buildWindow } from './Window'
@@ -13,17 +14,17 @@ import { buildTriangle } from './Triangle'
 import { buildHSLColor } from './HSLColor'
 
 export default class HouseExercise extends DrawExercise {
-  private Roof = buildRoof(this)
-  private Frame = buildFrame(this)
-  private Window = buildWindow(this)
-  private Door = buildDoor(this)
-  private Ground = buildGround(this)
-  private Sky = buildSky(this)
-  private Sun = buildSun(this)
-  private Rectangle = buildRectangle(this)
-  private Circle = buildCircle(this)
-  private Triangle = buildTriangle(this)
-  private HSLColor = buildHSLColor(this)
+  private Roof: Jiki.JikiClass = buildRoof(this)
+  private Frame: Jiki.JikiClass = buildFrame(this)
+  private Window: Jiki.JikiClass = buildWindow(this)
+  private Door: Jiki.JikiClass = buildDoor(this)
+  private Ground: Jiki.JikiClass = buildGround(this)
+  private Sky: Jiki.JikiClass = buildSky(this)
+  private Sun: Jiki.JikiClass = buildSun(this)
+  private Rectangle: Jiki.JikiClass = buildRectangle(this)
+  private Circle: Jiki.JikiClass = buildCircle(this)
+  private Triangle: Jiki.JikiClass = buildTriangle(this)
+  private HSLColor: Jiki.JikiClass = buildHSLColor(this)
 
   public events: string[] = []
 

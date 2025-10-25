@@ -73,7 +73,7 @@ export function useDrawingEditorHandler() {
 
       if (evaluated.error) {
         showError({
-          error: evaluated.error as Error,
+          error: evaluated.error as any,
           setHighlightedLine,
           setHighlightedLineColor,
           setInformationWidgetData,
@@ -102,7 +102,22 @@ export function useDrawingEditorHandler() {
         viewContainerRef.current.appendChild(view)
         view.style.display = 'block'
         setBackgroundImageRef.current = (url: string | null) => 
-          drawExerciseInstance.setBackgroundImage({} as Record<string, unknown>, url)
+          drawExerciseInstance.setBackgroundImage({
+            variables: new Map(),
+            functions: new Map(),
+            currentLine: 0,
+            currentColumn: 0,
+            getCurrentTime: () => 0,
+            fastForward: () => {},
+            logicError: () => {},
+            setVariable: () => {},
+            getVariable: () => undefined,
+            setFunction: () => {},
+            getFunction: () => undefined,
+            updateState: () => {},
+            isRunning: false,
+            hasError: false
+          }, url)
       }
     }
   }

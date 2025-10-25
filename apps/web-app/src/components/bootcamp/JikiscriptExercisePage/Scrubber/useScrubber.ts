@@ -302,7 +302,7 @@ export function useScrubber({
       // This helps us not reset to the initial state accidently later.
       // onUpdate calls when the animation starts before anything has
       // happened, so we guard against progres being 0.
-      if ((anime as { progress: number }).progress > 0) {
+      if ((anime as unknown as { progress: number }).progress > 0) {
         animationTimeline.hasPlayedOrScrubbed = true
       }
 
@@ -678,7 +678,7 @@ export function useScrubber({
         break
 
       case 'ArrowRight':
-        handleGoToNextFrame(animationTimeline, frames)
+        handleGoToNextFrame(animationTimeline)
         break
 
       case 'ArrowDown':

@@ -2,6 +2,7 @@ import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { storeShape, changeBrightness } from './Component'
 import HouseExercise from './HouseExercise'
+import HouseExercise from './HouseExercise'
 import { guardValidHex } from './helpers'
 
 function fn(this: HouseExercise) {
@@ -11,7 +12,7 @@ function fn(this: HouseExercise) {
   ) => {
     this.fillColorHex(
       executionCtx,
-      triangle.getField('fillColorHex') as Jiki.JikiObject
+      triangle.getField('fillColorHex') as Jiki.JikiString
     )
     this.triangle(
       executionCtx,
@@ -91,6 +92,6 @@ function fn(this: HouseExercise) {
   return Triangle
 }
 
-export function buildTriangle(binder: unknown) {
+export function buildTriangle(binder: HouseExercise): Jiki.JikiClass {
   return fn.bind(binder)()
 }

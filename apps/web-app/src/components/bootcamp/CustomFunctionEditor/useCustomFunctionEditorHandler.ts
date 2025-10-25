@@ -9,12 +9,13 @@ import useEditorStore from '../JikiscriptExercisePage/store/editorStore'
 import { showError } from '../JikiscriptExercisePage/utils/showError'
 import { StdlibFunctionsForLibrary } from '@/lib/interpreter/stdlib'
 import { buildAnimationTimeline } from '../JikiscriptExercisePage/test-runner/generateAndRunTestSuite/execTest'
-import { framesSucceeded } from '@/lib/interpreter/frames'
+import { framesSucceeded, Frame } from '@/lib/interpreter/frames'
 import { updateUnfoldableFunctions } from '../JikiscriptExercisePage/CodeMirror/unfoldableFunctionNames'
 import { CustomFunction } from './CustomFunctionEditor'
 import customFunctionEditorStore from './store/customFunctionEditorStore'
 import customFunctionsStore from './store/customFunctionsStore'
 import { FunctionStatement } from '@/lib/interpreter/statement'
+import { AnimationTimeline } from '../JikiscriptExercisePage/AnimationTimeline/AnimationTimeline'
 
 export function useCustomFunctionEditorHandler({
   customFunctionDataFromServer,
@@ -78,7 +79,10 @@ export function useCustomFunctionEditorHandler({
     if (editorHandler.current) {
       const context: EvaluationContext = {
         variables: new Map(),
-        functions: new Map(Object.values(customFunctions).concat(StdlibFunctionsForLibrary).map(fn => [fn.name, fn as (...args: unknown[]) => unknown])),
+        functions: new Map([
+          ...Object.values(customFunctions).map(fn => [fn.name, () => {}] as [string, (...args: unknown[]) => unknown]),
+          ...StdlibFunctionsForLibrary.map(fn => [fn.name, fn.implementation] as [string, (...args: unknown[]) => unknown])
+        ]),
       }
       const value = editorHandler.current.getValue()
       setLatestValueSnapshot(value)
@@ -86,7 +90,7 @@ export function useCustomFunctionEditorHandler({
       const evaluated = interpret(value, context)
       if (evaluated.error) {
         showError({
-          error: evaluated.error as Error,
+          error: evaluated.error as any,
           editorView: editorViewRef.current,
           setHighlightedLine,
           setHighlightedLineColor,
@@ -100,14 +104,18 @@ export function useCustomFunctionEditorHandler({
       const fnStatement = evaluated.meta.statements[0] as FunctionStatement
       setArity(fnStatement.parameters.length)
 
-      const results: Record<string, unknown> = {}
+      const results: Record<string, {
+        actual: unknown;
+        frames: Frame[];
+        pass: boolean;
+        animationTimeline: AnimationTimeline;
+      }> = {}
       let errorOccurred: boolean = false
       for (const test of tests) {
         const args = test.args
         const safe_eval = eval
-        let safeArgs
         try {
-          safeArgs = safe_eval(`[${args}]`)
+          safe_eval(`[${args}]`)
         } catch {
           setSyntaxErrorInTest({
             message: `<div><div class="mb-6 font-semibold leading-140">Oh no! Jiki couldn't understand this code:</div>

@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@/lib/interpreter/executor'
+import { ExecutionContext, ExternalFunction } from '@/lib/interpreter/executor'
 import DrawExercise from '../draw/DrawExercise'
 import { Color } from '../draw/shapes'
 
@@ -48,43 +48,43 @@ export default class TicTacToeExercise extends DrawExercise {
     executionCtx.fastForward(1)
   }
 
-  public override availableFunctions = [
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: 'fill_color_rgba',
-      func: this.fillColorRGBA.bind(this),
+      func: this.fillColorRGBA.bind(this) as (...args: unknown[]) => unknown,
       description:
         'changed the fill color using red, green, blue and alpha values',
     },
     {
       name: 'stroke_color_hex',
-      func: this.strokeColorHex.bind(this),
+      func: this.strokeColorHex.bind(this) as (...args: unknown[]) => unknown,
       description: 'set the stroke color to ${arg1}',
     },
     {
       name: 'stroke_width',
-      func: this.setStrokeWidth.bind(this),
+      func: this.setStrokeWidth.bind(this) as (...args: unknown[]) => unknown,
       description: 'set the stroke width to ${arg1}',
     },
     {
       name: 'line',
-      func: this.line.bind(this),
+      func: this.line.bind(this) as (...args: unknown[]) => unknown,
       description: 'drew a line from (${arg1}, ${arg2}) to (${arg3}, ${arg4})',
     },
     {
       name: 'circle',
-      func: this.circle.bind(this),
+      func: this.circle.bind(this) as (...args: unknown[]) => unknown,
       description:
         'drew a circle with its center at (${arg1}, ${arg2}), and a radius of ${arg3}',
     },
     {
       name: 'rectangle',
-      func: this.rectangle.bind(this),
+      func: this.rectangle.bind(this) as (...args: unknown[]) => unknown,
       description:
         'drew a rectangle at coordinates (${arg1}, ${arg2}) with a width of ${arg3} and a height of ${arg4}',
     },
     {
       name: 'write',
-      func: this.write.bind(this),
+      func: this.write.bind(this) as (...args: unknown[]) => unknown,
       description: 'wrote "${arg1}" on the screen',
     },
   ]

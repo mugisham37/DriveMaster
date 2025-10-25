@@ -97,12 +97,14 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
   //   doSomething();
   // }
   if (node.body.type !== 'BlockStatement') {
-    node.body = {
+    (node as { body: acorn.Node }).body = {
       type: 'BlockStatement',
-      body: [check, node.body],
+      start: 0,
+      end: 0,
+      body: [check, (node as { body: acorn.Node }).body],
     }
   } else {
-    node.body.body.unshift(check)
+    ((node as { body: { body: acorn.Node[] } }).body.body).unshift(check)
   }
 
   // this is needed to make sure loop-guard variable is declared in the parent scope and before the loop
@@ -111,7 +113,7 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
   if (parentBody && Array.isArray(parentBody)) {
     const index = parentBody.indexOf(node)
     if (index !== -1) {
-      parentBody.splice(index, 0, guard)
+      parentBody.splice(index, 0, guard as acorn.Node & { start: number; end: number })
     }
   }
 }
@@ -119,8 +121,8 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
 function findNearestBody(ancestors: acorn.Node[]): acorn.Node[] | null {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i]
-    if (parent && parent.type === 'BlockStatement' && Array.isArray((parent as { body?: acorn.Node[] }).body)) {
-      return (parent as { body: acorn.Node[] }).body
+    if (parent && parent.type === 'BlockStatement' && Array.isArray((parent as unknown as { body?: acorn.Node[] }).body)) {
+      return (parent as unknown as { body: acorn.Node[] }).body
     }
   }
   return null

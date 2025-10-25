@@ -9,13 +9,10 @@ function fn(this: HouseExercise) {
     window: Jiki.Instance
   ) => {
     if (window['shape'] && (window['shape'] as { element?: unknown }).element) {
-      this.animateShapeOutOfView(executionCtx, (window['shape'] as { element: unknown }).element)
+      this.animateShapeOutOfView(executionCtx, (window['shape'] as { element: SVGElement }).element)
     }
 
-    const hex = { 
-      type: 'String', 
-      value: (window as Jiki.Instance).get('lights') ? '#FFFF00' : '#FFFFFF' 
-    } as Jiki.JikiObject
+    const hex = new Jiki.String((window as Jiki.Instance).get('lights') ? '#FFFF00' : '#FFFFFF')
     this.fillColorHex(executionCtx, hex)
     this.rectangle(
       executionCtx,
@@ -94,6 +91,6 @@ function fn(this: HouseExercise) {
   return Window
 }
 
-export function buildWindow(binder: unknown) {
+export function buildWindow(binder: HouseExercise): Jiki.JikiClass {
   return fn.bind(binder)()
 }

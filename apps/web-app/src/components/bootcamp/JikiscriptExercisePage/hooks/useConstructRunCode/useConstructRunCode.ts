@@ -293,7 +293,7 @@ export function useConstructRunCode({
         readonlyRanges: getCodeMirrorFieldValue(
           editorView,
           readOnlyRangesStateField
-        ),
+        ) || [],
       });
     },
     [

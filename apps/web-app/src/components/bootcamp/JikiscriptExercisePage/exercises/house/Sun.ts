@@ -6,10 +6,10 @@ import { storeShape } from './Component'
 function fn(this: HouseExercise) {
   const drawSun = (executionCtx: ExecutionContext, sun: Jiki.Instance) => {
     if (sun['shape'] && (sun['shape'] as { element?: unknown }).element) {
-      this.animateShapeOutOfView(executionCtx, (sun['shape'] as { element: unknown }).element)
+      this.animateShapeOutOfView(executionCtx, (sun['shape'] as { element: SVGElement }).element)
     }
 
-    this.fillColorHex(executionCtx, { type: 'String', value: 'yellow' } as Jiki.JikiObject)
+    this.fillColorHex(executionCtx, new Jiki.String('yellow'))
     this.circle(
       executionCtx,
       sun.getField('cx') as Jiki.JikiObject,
@@ -91,6 +91,6 @@ function fn(this: HouseExercise) {
   return Sun
 }
 
-export function buildSun(binder: unknown) {
+export function buildSun(binder: HouseExercise): Jiki.JikiClass {
   return fn.bind(binder)()
 }

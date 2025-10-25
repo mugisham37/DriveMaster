@@ -170,12 +170,12 @@ export function CSSExercisePage({
         </div>
       </div>
 
-      {test_results && (
+      {test_results ? (
         <div className="test-results">
           <h3>Test Results</h3>
-          <pre>{JSON.stringify(test_results, null, 2)}</pre>
+          <pre>{String(JSON.stringify(test_results, null, 2))}</pre>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

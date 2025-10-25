@@ -24,7 +24,7 @@ function LottieAnimation({ animationData, ...props }: LottieAnimationProps) {
     }
 
     return () => animationInstance.current?.destroy()
-  }, [animationData])
+  }, [animationData, props.loop])
 
   return <div ref={animationContainer} {...props} />
 }

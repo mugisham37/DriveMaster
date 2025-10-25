@@ -13,7 +13,7 @@ function fn(this: HouseExercise) {
       this.animateShapeOutOfView(executionCtx, (circle.shape as { element: SVGElement }).element);
     }
 
-    this.fillColorHex(executionCtx, circle.getField("fill_color_hex"));
+    this.fillColorHex(executionCtx, circle.getField("fill_color_hex") as Jiki.JikiString);
     this.circle(
       executionCtx,
       circle.getField("cx") as Jiki.JikiNumber,

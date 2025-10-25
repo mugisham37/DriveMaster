@@ -2,6 +2,7 @@ import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { storeShape, changeBrightness } from './Component'
 import HouseExercise from './HouseExercise'
+import HouseExercise from './HouseExercise'
 
 function fn(this: HouseExercise) {
   const drawSky = (executionCtx: ExecutionContext, sky: Jiki.Instance) => {
@@ -102,6 +103,6 @@ function fn(this: HouseExercise) {
   return Sky
 }
 
-export function buildSky(binder: unknown) {
+export function buildSky(binder: HouseExercise): Jiki.JikiClass {
   return fn.bind(binder)()
 }

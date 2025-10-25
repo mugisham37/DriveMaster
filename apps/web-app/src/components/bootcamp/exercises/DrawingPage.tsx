@@ -45,6 +45,27 @@ export function DrawingPage({
     enableMathFunctions: true
   })
 
+  const executeUserCode = useCallback(async () => {
+    if (!drawingCode.trim()) return
+
+    try {
+      // Execute the drawing code using the Jikiscript interpreter
+      await executeJikiscript(drawingCode)
+    } catch (error) {
+      console.error('Drawing code execution error:', error)
+      
+      // Display error on canvas
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d')
+      if (ctx) {
+        ctx.fillStyle = 'red'
+        ctx.font = '16px Arial'
+        ctx.fillText('Error in drawing code:', 10, 30)
+        ctx.fillText(error instanceof Error ? error.message : String(error), 10, 50)
+      }
+    }
+  }, [drawingCode, executeJikiscript])
+
   const executeDrawingCode = useCallback(async () => {
     if (!canvasRef.current) return
 
@@ -67,33 +88,12 @@ export function DrawingPage({
     } else {
       await executeUserCode()
     }
-  }, [drawingCode, selectedBackground, backgrounds, clearCanvas])
+  }, [drawingCode, selectedBackground, backgrounds, clearCanvas, executeUserCode])
 
   // Execute drawing code when it changes
   useEffect(() => {
     executeDrawingCode()
-  }, [drawingCode, selectedBackground, executeDrawingCode, executeUserCode])
-
-  const executeUserCode = useCallback(async () => {
-    if (!drawingCode.trim()) return
-
-    try {
-      // Execute the drawing code using the Jikiscript interpreter
-      await executeJikiscript(drawingCode)
-    } catch (error) {
-      console.error('Drawing code execution error:', error)
-      
-      // Display error on canvas
-      const canvas = canvasRef.current
-      const ctx = canvas?.getContext('2d')
-      if (ctx) {
-        ctx.fillStyle = 'red'
-        ctx.font = '16px Arial'
-        ctx.fillText('Error in drawing code:', 10, 30)
-        ctx.fillText(error instanceof Error ? error.message : String(error), 10, 50)
-      }
-    }
-  }, [drawingCode, executeJikiscript])
+  }, [drawingCode, selectedBackground, executeDrawingCode])
 
   const handleSave = async () => {
     setIsSaving(true)
