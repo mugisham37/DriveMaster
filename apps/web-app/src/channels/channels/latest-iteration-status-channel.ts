@@ -3,8 +3,8 @@
  * Handles latest iteration status updates for exercise submissions
  */
 
-import { RealtimeConnection } from '../connection'
-import { globalConnectionPool } from '../connection-pool'
+import { RealtimeConnection } from '../../lib/realtime/connection'
+import { globalConnectionPool } from '../../lib/realtime/connection-pool'
 
 export type IterationStatus = 
   | 'queued'
@@ -48,7 +48,7 @@ export class LatestIterationStatusChannel {
   constructor(uuid: string, onReceive: LatestIterationStatusEventHandler) {
     this.uuid = uuid
     this.onReceive = onReceive
-    this.subscriberId = `latest_iteration_status_${uuid}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `latest_iteration_status_${uuid}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }

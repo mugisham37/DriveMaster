@@ -45,7 +45,7 @@ export class AIHelpRecordsChannel {
   ) {
     this.submissionUuid = submissionUuid
     this.onReceive = onReceive
-    this.subscriberId = `ai_help_records_${submissionUuid}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `ai_help_records_${submissionUuid}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }
@@ -134,7 +134,7 @@ export class AIHelpRecordsChannel {
   private setupConnectionHandlers(): void {
     if (!this.connection) return
 
-    this.connection.on('message', (event) => {
+    this.connection.on('message', (event: { data?: Record<string, unknown> }) => {
       if (event.data) {
         this.handleMessage(event.data)
       }
@@ -148,7 +148,7 @@ export class AIHelpRecordsChannel {
       console.log(`AI help records channel connection lost: ${this.submissionUuid}`)
     })
 
-    this.connection.on('error', (event) => {
+    this.connection.on('error', (event: { error?: Error }) => {
       console.error(`AI help records channel error: ${this.submissionUuid}`, event.error)
     })
   }

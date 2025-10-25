@@ -3,8 +3,8 @@
  * Handles exercise iteration status updates with camelCase conversion
  */
 
-import { RealtimeConnection } from '../connection'
-import { globalConnectionPool } from '../connection-pool'
+import { RealtimeConnection } from '../../lib/realtime/connection'
+import { globalConnectionPool } from '../../lib/realtime/connection-pool'
 import { camelizeKeys } from 'humps'
 
 export interface Iteration {
@@ -51,7 +51,7 @@ export class IterationChannel {
   constructor(uuid: string, onReceive: IterationEventHandler) {
     this.uuid = uuid
     this.onReceive = onReceive
-    this.subscriberId = `iteration_${uuid}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `iteration_${uuid}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }
@@ -140,7 +140,7 @@ export class IterationChannel {
   private setupConnectionHandlers(): void {
     if (!this.connection) return
 
-    this.connection.on('message', (event) => {
+    this.connection.on('message', (event: { data?: Record<string, unknown> }) => {
       if (event.data) {
         this.handleMessage(event.data)
       }
@@ -154,7 +154,7 @@ export class IterationChannel {
       console.log(`Iteration channel connection lost: ${this.uuid}`)
     })
 
-    this.connection.on('error', (event) => {
+    this.connection.on('error', (event: { error?: Error }) => {
       console.error(`Iteration channel error: ${this.uuid}`, event.error)
     })
   }
