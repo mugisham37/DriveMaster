@@ -23,7 +23,7 @@ export default function TestimonialsPage() {
 
           <div className="md-container">
             <article className="testimonials pt-40">
-              <ImpactTestimonialsList />
+              <ImpactTestimonialsList endpoint="/api/impact/testimonials" />
             </article>
           </div>
         </div>

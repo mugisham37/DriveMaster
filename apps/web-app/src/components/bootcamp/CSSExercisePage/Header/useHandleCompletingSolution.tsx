@@ -48,7 +48,7 @@ export function useHandleCompletingSolution({
     } catch (e) {
       console.error("Error completing solution: ", e);
     }
-  }, [completeSolutionLink, nextExerciseData, isFinishModalOpen, setIsFinishModalOpen]);
+  }, [completeSolutionLink, isFinishModalOpen, setIsFinishModalOpen]);
 
   return {
     modalView,

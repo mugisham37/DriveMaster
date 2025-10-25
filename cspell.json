@@ -801,7 +801,11 @@
     "kiállítás",
     "csslint",
     "htmlhint",
-    "Interactor"
+    "Interactor",
+    "acorn",
+    "astring",
+    "loopguards",
+    "Loopguards"
   ],
   "ignorePaths": [
     "node_modules/**",

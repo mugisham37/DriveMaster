@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
 import { withErrorHandling, withAuth } from '@/lib/api/middleware'
 
-async function markAllNotificationsAsRead(request: NextRequest) {
+async function markAllNotificationsAsRead(_request: NextRequest) {
   const session = await getServerAuthSession()
   
   if (!session?.user) {

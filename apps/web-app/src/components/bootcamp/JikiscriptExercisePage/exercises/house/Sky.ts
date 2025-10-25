@@ -2,7 +2,6 @@ import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { storeShape, changeBrightness } from './Component'
 import HouseExercise from './HouseExercise'
-import HouseExercise from './HouseExercise'
 
 function fn(this: HouseExercise) {
   const drawSky = (executionCtx: ExecutionContext, sky: Jiki.Instance) => {
@@ -31,16 +30,18 @@ function fn(this: HouseExercise) {
   }
 
   const changeSkyHue = (executionCtx: ExecutionContext, sky: Jiki.Instance) => {
-    const shape = sky['shape']
-    this.addAnimation({
-      targets: `#${this.view.id} #${shape.element.id} rect`,
-      duration: 1,
-      transformations: {
-        fill: `hsl(${sky.getUnwrappedField('hue')}, 70%, 60%))`,
-      },
-      offset: executionCtx.getCurrentTime(),
-    })
-    executionCtx.fastForward(1)
+    const shape = (sky as unknown as { shape?: { element?: { id?: string } } })['shape']
+    if (shape && shape.element && shape.element.id) {
+      this.addAnimation({
+        targets: `#${this.view.id} #${shape.element.id} rect`,
+        duration: 1,
+        transformations: {
+          fill: `hsl(${sky.getUnwrappedField('hue')}, 70%, 60%))`,
+        },
+        offset: executionCtx.getCurrentTime(),
+      })
+      executionCtx.fastForward(1)
+    }
 
     this.events.push(`sky:hue:${sky.getUnwrappedField('hue')}`)
   }

@@ -2,7 +2,6 @@ import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { storeShape, changeBrightness } from './Component'
 import HouseExercise from './HouseExercise'
-import HouseExercise from './HouseExercise'
 import { guardValidHex } from './helpers'
 
 function fn(this: HouseExercise) {

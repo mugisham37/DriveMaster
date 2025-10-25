@@ -16,6 +16,7 @@ import customFunctionEditorStore from './store/customFunctionEditorStore'
 import customFunctionsStore from './store/customFunctionsStore'
 import { FunctionStatement } from '@/lib/interpreter/statement'
 import { AnimationTimeline } from '../JikiscriptExercisePage/AnimationTimeline/AnimationTimeline'
+import type { InterpreterError as StaticError } from '@/lib/interpreter/error'
 
 export function useCustomFunctionEditorHandler({
   customFunctionDataFromServer,
@@ -90,7 +91,7 @@ export function useCustomFunctionEditorHandler({
       const evaluated = interpret(value, context)
       if (evaluated.error) {
         showError({
-          error: evaluated.error as any,
+          error: evaluated.error as unknown as StaticError | { type: string; message: string; lineNumber: number; colNumber: number },
           editorView: editorViewRef.current,
           setHighlightedLine,
           setHighlightedLineColor,

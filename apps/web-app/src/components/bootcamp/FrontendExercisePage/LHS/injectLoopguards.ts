@@ -2,11 +2,59 @@ import * as acorn from 'acorn'
 import * as walk from 'acorn-walk'
 import { generate } from 'astring'
 
+// Extended types for AST nodes with body property
+interface LoopNode extends acorn.Node {
+  body: acorn.Node
+}
+
+interface BlockStatementNode extends acorn.Node {
+  type: 'BlockStatement'
+  body: acorn.Node[]
+}
+
+interface ASTNode extends acorn.Node {
+  start: number
+  end: number
+}
+
+interface VariableDeclarationNode extends ASTNode {
+  type: 'VariableDeclaration'
+  kind: string
+  declarations: Array<{
+    type: string
+    id: { type: string; name: string }
+    init: { type: string; value: number }
+  }>
+}
+
+interface IfStatementNode extends ASTNode {
+  type: 'IfStatement'
+  test: {
+    type: string
+    operator: string
+    left: {
+      type: string
+      operator: string
+      prefix: boolean
+      argument: { type: string; name: string }
+    }
+    right: { type: string; name: string }
+  }
+  consequent: {
+    type: string
+    argument: {
+      type: string
+      callee: { type: string; name: string }
+      arguments: Array<{ type: string; value: string }>
+    }
+  }
+}
+
 export function injectLoopGuards(code: string): string {
   const ast = acorn.parse(code, {
     ecmaVersion: 2020,
     sourceType: 'module',
-  })
+  }) as ASTNode
 
   let loopId = 0
   const usedGuards: string[] = []
@@ -15,17 +63,17 @@ export function injectLoopGuards(code: string): string {
     WhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
+      guardLoop(node as LoopNode, ancestors, id)
     },
     ForStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
+      guardLoop(node as LoopNode, ancestors, id)
     },
     DoWhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node as acorn.Node & { body: acorn.Node }, ancestors as acorn.Node[], id)
+      guardLoop(node as LoopNode, ancestors, id)
     },
   })
 
@@ -34,18 +82,18 @@ export function injectLoopGuards(code: string): string {
   const finalCode = `
     const __MAX_ITERATIONS = 10000;
     ${guardVars}
-    ${generate(ast as acorn.Node)}
+    ${generate(ast)}
   `
 
   return finalCode
 }
 
-function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Node[], loopVar: string) {
+function guardLoop(node: LoopNode, ancestors: acorn.Node[], loopVar: string) {
   /**
     AST of
     let ${loopVar} = 0;
    */
-  const guard = {
+  const guard: VariableDeclarationNode = {
     type: 'VariableDeclaration',
     kind: 'let',
     declarations: [
@@ -55,13 +103,15 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
         init: { type: 'Literal', value: 0 },
       },
     ],
+    start: 0,
+    end: 0,
   }
 
   /*
   AST of
   if (++${loopVar} > __MAX_ITERATIONS) throw new Error("Infinite loop detected") 
    */
-  const check = {
+  const check: IfStatementNode = {
     type: 'IfStatement',
     test: {
       type: 'BinaryExpression',
@@ -82,6 +132,8 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
         arguments: [{ type: 'Literal', value: 'Infinite loop detected' }],
       },
     },
+    start: 0,
+    end: 0,
   }
 
   // we check if the loop actually has a block body
@@ -97,14 +149,15 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
   //   doSomething();
   // }
   if (node.body.type !== 'BlockStatement') {
-    (node as { body: acorn.Node }).body = {
+    const newBlockBody: BlockStatementNode = {
       type: 'BlockStatement',
       start: 0,
       end: 0,
-      body: [check, (node as { body: acorn.Node }).body],
+      body: [check as acorn.Node, node.body],
     }
+    node.body = newBlockBody as acorn.Node
   } else {
-    ((node as { body: { body: acorn.Node[] } }).body.body).unshift(check)
+    (node.body as BlockStatementNode).body.unshift(check as acorn.Node)
   }
 
   // this is needed to make sure loop-guard variable is declared in the parent scope and before the loop
@@ -113,7 +166,7 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
   if (parentBody && Array.isArray(parentBody)) {
     const index = parentBody.indexOf(node)
     if (index !== -1) {
-      parentBody.splice(index, 0, guard as acorn.Node & { start: number; end: number })
+      parentBody.splice(index, 0, guard as acorn.Node)
     }
   }
 }
@@ -121,8 +174,11 @@ function guardLoop(node: acorn.Node & { body: acorn.Node }, ancestors: acorn.Nod
 function findNearestBody(ancestors: acorn.Node[]): acorn.Node[] | null {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i]
-    if (parent && parent.type === 'BlockStatement' && Array.isArray((parent as unknown as { body?: acorn.Node[] }).body)) {
-      return (parent as unknown as { body: acorn.Node[] }).body
+    if (parent && parent.type === 'BlockStatement') {
+      const blockParent = parent as BlockStatementNode
+      if (Array.isArray(blockParent.body)) {
+        return blockParent.body
+      }
     }
   }
   return null

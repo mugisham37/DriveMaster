@@ -94,7 +94,7 @@ export default function TeamPage() {
                     <p className="mb-16">
                       Katrina accidentally became a developer while pursuing a degree in molecular biology. 
                       She began nitpicking code back in 2006 while volunteering at JavaRanch, and got hooked. 
-                      She's the author of{' '}
+                      She&apos;s the author of{' '}
                       <Link href="https://sandimetz.com/99bottles" className="text-linkColor underline">
                         99 Bottles of OOP
                       </Link>
@@ -140,7 +140,7 @@ export default function TeamPage() {
                     <div className="handle">@iHiD</div>
                     <p className="mb-16">
                       Jeremy is a Ruby and Go developer who loves building things that help people learn and grow. 
-                      He's also the founder of{' '}
+                      He&apos;s also the founder of{' '}
                       <Link href="https://kaido.org" className="text-linkColor underline">
                         Kaido
                       </Link>
@@ -266,7 +266,7 @@ export default function TeamPage() {
                 <GraphicalIcon icon="staff-team" />
                 <h2 className="text-h3 mb-12">Alumni Team</h2>
                 <p className="text-p-large">
-                  These amazing people have contributed significantly to Exercism's development and growth.
+                  These amazing people have contributed significantly to Exercism&apos;s development and growth.
                 </p>
               </header>
 
@@ -282,8 +282,8 @@ export default function TeamPage() {
                   <div className="details">
                     <h3>Nicole Chalmers</h3>
                     <p>
-                      Nicole was instrumental in building Exercism's community and mentoring systems. 
-                      She's now working on{' '}
+                      Nicole was instrumental in building Exercism&apos;s community and mentoring systems. 
+                      She&apos;s now working on{' '}
                       <Link href="https://kaido.org" className="text-linkColor underline">
                         Kaido
                       </Link>
@@ -303,7 +303,7 @@ export default function TeamPage() {
                   <div className="details">
                     <h3>Charles Care</h3>
                     <p>
-                      Charles helped design and implement many of Exercism's core features, 
+                      Charles helped design and implement many of Exercism&apos;s core features, 
                       including the exercise delivery system and automated testing infrastructure.
                     </p>
                   </div>
@@ -320,7 +320,7 @@ export default function TeamPage() {
                   <div className="details">
                     <h3>Karlo Soriano</h3>
                     <p>
-                      Karlo contributed to the platform's user interface and experience design, 
+                      Karlo contributed to the platform&apos;s user interface and experience design, 
                       making Exercism more intuitive and accessible for learners worldwide.
                     </p>
                   </div>
@@ -337,7 +337,7 @@ export default function TeamPage() {
                   <div className="details">
                     <h3>Taiyab Raja</h3>
                     <p>
-                      Taiyab worked on improving the platform's performance and scalability, 
+                      Taiyab worked on improving the platform&apos;s performance and scalability, 
                       ensuring Exercism can serve millions of learners effectively.
                     </p>
                   </div>
@@ -354,7 +354,7 @@ export default function TeamPage() {
                   <div className="details">
                     <h3>Loretta Murray</h3>
                     <p>
-                      Loretta helped establish Exercism's content strategy and community guidelines, 
+                      Loretta helped establish Exercism&apos;s content strategy and community guidelines, 
                       fostering a welcoming environment for learners of all levels.
                     </p>
                   </div>

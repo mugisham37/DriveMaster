@@ -34,13 +34,13 @@ export const SimpleCodeMirror = forwardRef(function SimpleCodeMirror(
 
   const value = useRef(defaultCode)
 
-  const getEditorView = (): EditorView | null => {
+  const getEditorView = useCallback((): EditorView | null => {
     if (typeof ref === 'function') {
       throw new Error('Callback refs are not supported.')
     }
     if (ref === null) return null
     return ref.current
-  }
+  }, [ref])
 
   const setValue = useCallback((text: string) => {
     const editorView = getEditorView()
@@ -105,7 +105,7 @@ export const SimpleCodeMirror = forwardRef(function SimpleCodeMirror(
         ref.current = null
       }
     }
-  }, [textarea, editorDidMount, extensions, onEditorChangeCallback, ref])
+  }, [textarea, editorDidMount, extensions, onEditorChangeCallback, ref, setValue, getValue])
 
   return (
     <div className="editor-wrapper" style={{ height: '100%', ...style }}>

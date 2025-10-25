@@ -114,7 +114,7 @@ export default function AboutPage() {
 
               <h3 className="text-h3 mb-16">Ethical Technology</h3>
               <p className="text-p-xlarge">
-                We believe technology should serve humanity. We're committed to building 
+                We believe technology should serve humanity. We&apos;re committed to building 
                 tools that empower people without exploiting them.
               </p>
             </div>

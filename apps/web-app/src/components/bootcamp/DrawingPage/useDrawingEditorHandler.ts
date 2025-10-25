@@ -7,6 +7,7 @@ import useEditorStore from '../JikiscriptExercisePage/store/editorStore'
 import { showError } from '../JikiscriptExercisePage/utils/showError'
 import { AnimationTimeline } from '../JikiscriptExercisePage/AnimationTimeline/AnimationTimeline'
 import type { Frame } from '@/lib/interpreter/frames'
+import type { InterpreterError as StaticError } from '@/lib/interpreter/error'
 
 export function useDrawingEditorHandler() {
   const editorHandler = useRef<Handler | null>(null)
@@ -73,7 +74,7 @@ export function useDrawingEditorHandler() {
 
       if (evaluated.error) {
         showError({
-          error: evaluated.error as any,
+          error: evaluated.error as unknown as StaticError | { type: string; message: string; lineNumber: number; colNumber: number },
           setHighlightedLine,
           setHighlightedLineColor,
           setInformationWidgetData,

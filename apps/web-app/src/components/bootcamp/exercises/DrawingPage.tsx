@@ -88,7 +88,7 @@ export function DrawingPage({
     } else {
       await executeUserCode()
     }
-  }, [drawingCode, selectedBackground, backgrounds, clearCanvas, executeUserCode])
+  }, [selectedBackground, backgrounds, clearCanvas, executeUserCode])
 
   // Execute drawing code when it changes
   useEffect(() => {

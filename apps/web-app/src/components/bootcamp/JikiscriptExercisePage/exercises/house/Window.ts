@@ -8,8 +8,9 @@ function fn(this: HouseExercise) {
     executionCtx: ExecutionContext,
     window: Jiki.Instance
   ) => {
-    if (window['shape'] && (window['shape'] as { element?: unknown }).element) {
-      this.animateShapeOutOfView(executionCtx, (window['shape'] as { element: SVGElement }).element)
+    const shape = (window as unknown as { shape?: { element?: SVGElement } })['shape']
+    if (shape && shape.element) {
+      this.animateShapeOutOfView(executionCtx, shape.element)
     }
 
     const hex = new Jiki.String((window as Jiki.Instance).get('lights') ? '#FFFF00' : '#FFFFFF')
@@ -25,7 +26,7 @@ function fn(this: HouseExercise) {
   }
 
   const rememberLightsToggle = (
-    executionCtx: ExecutionContext,
+    _executionCtx: ExecutionContext,
     window: Jiki.Instance
   ) => {
     if (window.getUnwrappedField('lights')) {

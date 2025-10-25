@@ -3,8 +3,8 @@
  * Handles ChatGPT feedback integration for submissions
  */
 
-import { RealtimeConnection } from '../connection'
-import { globalConnectionPool } from '../connection-pool'
+import { RealtimeConnection } from '../../lib/realtime/connection'
+import { globalConnectionPool } from '../../lib/realtime/connection-pool'
 
 export interface AIHelpRecordsChannelResponse {
   id: string

@@ -42,19 +42,21 @@ function fn(this: HouseExercise) {
     executionCtx: ExecutionContext,
     rectangle: Jiki.Instance
   ) => {
-    const shape = rectangle['shape']
+    const shape = (rectangle as unknown as { shape?: { element?: { id?: string } } })['shape']
     const hsl = rectangle.getField('hsl') as HSLColorInstance
-    this.addAnimation({
-      targets: `#${this.view.id} #${shape.element.id} rect`,
-      duration: 1,
-      transformations: {
-        fill: `hsl(${hsl.getUnwrappedField('hue')}, ${hsl.getUnwrappedField(
-          'saturation'
-        )}%, ${hsl.getUnwrappedField('luminosity')}%))`,
-      },
-      offset: executionCtx.getCurrentTime(),
-    })
-    executionCtx.fastForward(1)
+    if (shape && shape.element && shape.element.id) {
+      this.addAnimation({
+        targets: `#${this.view.id} #${shape.element.id} rect`,
+        duration: 1,
+        transformations: {
+          fill: `hsl(${hsl.getUnwrappedField('hue')}, ${hsl.getUnwrappedField(
+            'saturation'
+          )}%, ${hsl.getUnwrappedField('luminosity')}%))`,
+        },
+        offset: executionCtx.getCurrentTime(),
+      })
+      executionCtx.fastForward(1)
+    }
 
     this.events.push(`sky:hue:${hsl.getUnwrappedField('hue')}`)
   }
@@ -123,12 +125,7 @@ function fn(this: HouseExercise) {
       object: Jiki.Instance,
       hsl: Jiki.JikiObject
     ) {
-      if (
-        !(
-          Jiki.isInstance(hsl) ||
-          (hsl as Jiki.Instance).type !== 'HSLColor'
-        )
-      ) {
+      if (!Jiki.isInstance(hsl) || (hsl as Jiki.Instance).type !== 'HSLColor') {
         return executionCtx.logicError('Ooops! HSL must be an HSL Object.')
       }
       const hslInstance = hsl as Jiki.Instance

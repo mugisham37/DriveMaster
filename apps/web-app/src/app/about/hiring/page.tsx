@@ -4,7 +4,7 @@ import { AboutNav } from '@/components/about'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 
 export const metadata: Metadata = {
-  title: "Exercism's Hiring - About Exercism",
+  title: "Exercism&apos;s Hiring - About Exercism",
   description: "Come and join a passionate team making programming education fun and effective. Here are some of the roles we're hiring for.",
 }
 
@@ -17,7 +17,7 @@ export default function HiringPage() {
         <header>
           <div className="lg-container c-shapes">
             <GraphicalIcon icon="exercism-face" />
-            <h1 className="text-h1 mb-12">We're not currently hiring.</h1>
+            <h1 className="text-h1 mb-12">We&apos;re not currently hiring.</h1>
             <p className="text-p-2xlarge">Please check back in the future for new roles!</p>
           </div>
         </header>
@@ -30,7 +30,7 @@ export default function HiringPage() {
                 <div className="bg-backgroundColorA rounded-8 p-24">
                   <h3 className="text-h3 mb-16">Mission-Driven</h3>
                   <p className="text-16 leading-150 text-textColor2">
-                    We're passionate about making programming education accessible to everyone, 
+                    We&apos;re passionate about making programming education accessible to everyone, 
                     regardless of their background or financial situation.
                   </p>
                 </div>
@@ -38,7 +38,7 @@ export default function HiringPage() {
                 <div className="bg-backgroundColorA rounded-8 p-24">
                   <h3 className="text-h3 mb-16">Remote-First</h3>
                   <p className="text-16 leading-150 text-textColor2">
-                    Our team is distributed globally, and we've built our culture around 
+                    Our team is distributed globally, and we&apos;ve built our culture around 
                     asynchronous communication and flexible working arrangements.
                   </p>
                 </div>
@@ -82,7 +82,7 @@ export default function HiringPage() {
                   <li className="flex items-start">
                     <span className="text-20 mr-12">🚀</span>
                     <div>
-                      <strong>Growth Mindset:</strong> You're always learning, adapting to new 
+                      <strong>Growth Mindset:</strong> You&apos;re always learning, adapting to new 
                       challenges, and helping others grow alongside you.
                     </div>
                   </li>
@@ -101,7 +101,7 @@ export default function HiringPage() {
               <h2 className="text-h2 mb-24">Stay Updated</h2>
               <div className="bg-backgroundColorA rounded-8 p-32 text-center">
                 <p className="text-18 leading-150 text-textColor2 mb-24">
-                  While we're not actively hiring right now, we're always growing and 
+                  While we&apos;re not actively hiring right now, we&apos;re always growing and 
                   looking for talented people to join our mission.
                 </p>
                 <p className="text-16 leading-150 text-textColor2 mb-32">
@@ -133,7 +133,7 @@ export default function HiringPage() {
               <h2 className="text-h2 mb-24">Contributing</h2>
               <div className="bg-backgroundColorA rounded-8 p-32">
                 <p className="text-16 leading-150 text-textColor2 mb-24">
-                  Even if we're not hiring, there are many ways to get involved with Exercism 
+                  Even if we&apos;re not hiring, there are many ways to get involved with Exercism 
                   and make a meaningful contribution to programming education.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-24">

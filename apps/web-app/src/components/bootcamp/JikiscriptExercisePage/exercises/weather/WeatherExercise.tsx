@@ -1,5 +1,5 @@
 import DrawExercise from "../draw";
-import { ExecutionContext } from "@/lib/interpreter/executor";
+import { ExecutionContext, ExternalFunction } from "@/lib/interpreter/executor";
 
 export default class WeatherExercise extends DrawExercise {
   public constructor() {
@@ -56,49 +56,49 @@ export default class WeatherExercise extends DrawExercise {
   // TODO: How do I get just the ones I want out of DrawExercise
   // (circle, fillColorHex, fillColorRGB, fillColorHSL)
   // and then add the new ones to this?
-  public override availableFunctions = [
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: "clear",
-      func: this.clear.bind(this),
+      func: this.clear.bind(this) as (...args: unknown[]) => unknown,
       description: "Clears the canvas.",
     },
     {
       name: "rectangle",
-      func: this.rectangle.bind(this),
+      func: this.rectangle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a rectangle at coordinates (${arg1}, ${arg2}) with a width of ${arg3} and a height of ${arg4}",
     },
     {
       name: "triangle",
-      func: this.triangle.bind(this),
+      func: this.triangle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a rectangle with three points: (${arg1}, ${arg2}), (${arg3}, ${arg4}), and (${arg5}, ${arg6})",
     },
     {
       name: "circle",
-      func: this.circle.bind(this),
+      func: this.circle.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew a circle with its center at (${arg1}, ${arg2}), and a radius of ${arg3}",
     },
     {
       name: "ellipse",
-      func: this.ellipse.bind(this),
+      func: this.ellipse.bind(this) as (...args: unknown[]) => unknown,
       description:
         "drew an ellipse with its center at (${arg1}, ${arg2}), a radial width of ${arg3}, and a radial height of ${arg4}",
     },
     {
       name: "fill_color_hex",
-      func: this.fillColorHex.bind(this),
+      func: this.fillColorHex.bind(this) as (...args: unknown[]) => unknown,
       description: "Changes the fill color using a hex string",
     },
     {
       name: "fill_color_rgb",
-      func: this.fillColorRGB.bind(this),
+      func: this.fillColorRGB.bind(this) as (...args: unknown[]) => unknown,
       description: "Changes the fill color using red, green and blue values",
     },
     {
       name: "fill_color_hsl",
-      func: this.fillColorHSL.bind(this),
+      func: this.fillColorHSL.bind(this) as (...args: unknown[]) => unknown,
       description:
         "Changes the fill color using hue, saturation and lumisity values",
     },

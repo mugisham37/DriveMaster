@@ -3,17 +3,18 @@ import * as Jiki from '@/lib/interpreter/jikiObjects'
 import WordleExercise from './WordleExercise'
 
 function fn(this: WordleExercise) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const exercise = this;
   const WordleGame = new Jiki.JikiClass('WordleGame');
 
-  (WordleGame as any).addGetter(
+  (WordleGame as Jiki.JikiClass & { addGetter: (name: string, visibility: string, fn: (executionCtx: ExecutionContext, object: Jiki.Instance) => Jiki.JikiString) => void }).addGetter(
     'target_word',
     'public',
     function (_executionCtx: ExecutionContext, _object: Jiki.Instance) {
       return new Jiki.JikiString(exercise.targetWord)
     }
   );
-  (WordleGame as any).addMethod(
+  (WordleGame as Jiki.JikiClass & { addMethod: (name: string, description: string, visibility: string, fn: (executionCtx: ExecutionContext, instance: Jiki.Instance) => void) => void }).addMethod(
     'draw_board',
     'drew the board',
     'public',
@@ -21,7 +22,7 @@ function fn(this: WordleExercise) {
       exercise.setupView(executionCtx)
     }
   );
-  (WordleGame as any).addMethod(
+  (WordleGame as Jiki.JikiClass & { addMethod: (name: string, description: string, visibility: string, fn: (executionCtx: ExecutionContext, instance: Jiki.Instance, row: Jiki.JikiObject, word: Jiki.JikiObject, states: Jiki.JikiObject) => void) => void }).addMethod(
     'add_word',
     'added a word to the board',
     'public',

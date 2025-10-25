@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
 import { withErrorHandling, withAuth } from '@/lib/api/middleware'
 
-async function getAdminStats(request: NextRequest) {
+async function getAdminStats(_request: NextRequest) {
   const session = await getServerAuthSession()
   
   if (!session?.user || !session.user.isInsider) {
