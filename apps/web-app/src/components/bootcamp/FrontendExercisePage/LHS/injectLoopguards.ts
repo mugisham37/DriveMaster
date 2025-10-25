@@ -2,35 +2,30 @@ import * as acorn from 'acorn'
 import * as walk from 'acorn-walk'
 import { generate } from 'astring'
 
-interface ASTNode extends acorn.Node {
-  body?: ASTNode | ASTNode[]
-  [key: string]: unknown
-}
-
 export function injectLoopGuards(code: string): string {
   const ast = acorn.parse(code, {
     ecmaVersion: 2020,
     sourceType: 'module',
-  }) as ASTNode
+  })
 
   let loopId = 0
   const usedGuards: string[] = []
 
   walk.ancestor(ast, {
-    WhileStatement(node: ASTNode, ancestors: ASTNode[]) {
+    WhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node, ancestors, id)
+      guardLoop(node as any, ancestors as any, id)
     },
-    ForStatement(node: ASTNode, ancestors: ASTNode[]) {
+    ForStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node, ancestors, id)
+      guardLoop(node as any, ancestors as any, id)
     },
-    DoWhileStatement(node: ASTNode, ancestors: ASTNode[]) {
+    DoWhileStatement(node: acorn.Node, ancestors: acorn.Node[]) {
       const id = `__loop_guard_${loopId++}`
       usedGuards.push(id)
-      guardLoop(node, ancestors, id)
+      guardLoop(node as any, ancestors as any, id)
     },
   })
 
@@ -39,13 +34,13 @@ export function injectLoopGuards(code: string): string {
   const finalCode = `
     const __MAX_ITERATIONS = 10000;
     ${guardVars}
-    ${generate(ast)}
+    ${generate(ast as any)}
   `
 
   return finalCode
 }
 
-function guardLoop(node: ASTNode, ancestors: ASTNode[], loopVar: string) {
+function guardLoop(node: any, ancestors: any[], loopVar: string) {
   /**
     AST of
     let ${loopVar} = 0;
@@ -116,16 +111,16 @@ function guardLoop(node: ASTNode, ancestors: ASTNode[], loopVar: string) {
   if (parentBody && Array.isArray(parentBody)) {
     const index = parentBody.indexOf(node)
     if (index !== -1) {
-      parentBody.splice(index, 0, guard as ASTNode)
+      parentBody.splice(index, 0, guard)
     }
   }
 }
 
-function findNearestBody(ancestors: ASTNode[]): ASTNode[] | null {
+function findNearestBody(ancestors: any[]): any[] | null {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i]
-    if (parent.type === 'BlockStatement' && Array.isArray(parent.body)) {
-      return parent.body as ASTNode[]
+    if (parent && parent.type === 'BlockStatement' && Array.isArray(parent.body)) {
+      return parent.body
     }
   }
   return null

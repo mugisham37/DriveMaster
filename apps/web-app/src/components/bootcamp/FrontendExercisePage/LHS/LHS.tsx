@@ -134,7 +134,7 @@ export function LHS() {
           {
             script: fullScript,
             html: htmlCode,
-            css: cssCode,
+            css: cssCode || '',
           },
           code
         )

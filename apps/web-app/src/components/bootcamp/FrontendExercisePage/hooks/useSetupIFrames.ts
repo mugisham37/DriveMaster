@@ -13,7 +13,7 @@ export function useSetupIFrames(
   useEffect(() => {
     updateIFrame(expectedIFrameRef, config.expected, code)
     updateIFrame(expectedReferenceIFrameRef, config.expected, code)
-  }, [])
+  }, [code, config.expected])
 
   return {
     actualIFrameRef,

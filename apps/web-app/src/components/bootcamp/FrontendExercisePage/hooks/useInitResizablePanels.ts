@@ -26,7 +26,7 @@ export function useInitResizablePanels() {
       LHSWidth,
       RHSWidth,
     })
-  }, [])
+  }, [LHSWidth, RHSWidth, setPanelSizes])
 
   return {
     LHSWidth,

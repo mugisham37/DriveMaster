@@ -1,25 +1,25 @@
-import React, { useCallback, useContext, useState } from 'react'
-import Modal from 'react-modal'
-import { assembleClassNames } from '@/utils/assemble-classnames'
-import { FrontendExercisePageContext } from '../FrontendExercisePageContext'
+import React, { useCallback, useContext, useState } from "react";
+import Modal from "react-modal";
+import { assembleClassNames } from "@/utils/assemble-classnames";
+import { FrontendExercisePageContext } from "../FrontendExercisePageContext";
 
-Modal.setAppElement('body')
+Modal.setAppElement("body");
 export function ResetButton() {
   const [shouldOpenConfirmationModal, setShouldOpenConfirmationModal] =
-    useState(false)
+    useState(false);
 
-  const { resetEditors } = useContext(FrontendExercisePageContext)
+  const { resetEditors } = useContext(FrontendExercisePageContext);
 
   const handleResetExercise = useCallback(() => {
-    resetEditors()
-    setShouldOpenConfirmationModal(false)
-  }, [resetEditors])
+    resetEditors();
+    setShouldOpenConfirmationModal(false);
+  }, [resetEditors]);
 
   return (
     <>
       <button
         onClick={() => setShouldOpenConfirmationModal(true)}
-        className={assembleClassNames('btn-default btn-xxs')}
+        className={assembleClassNames("btn-default btn-xxs")}
       >
         Reset
       </button>
@@ -35,8 +35,8 @@ export function ResetButton() {
           Are you sure?
         </h2>
         <p className="text-18 leading-140 mb-16">
-          Are you sure you want to reset to the starting code? You&apos;ll lose your
-          progress on this exercise.
+          Are you sure you want to reset to the starting code? You&apos;ll lose
+          your progress on this exercise.
         </p>
 
         <div className="flex items-center gap-8 self-stretch">
@@ -55,5 +55,5 @@ export function ResetButton() {
         </div>
       </Modal>
     </>
-  )
+  );
 }

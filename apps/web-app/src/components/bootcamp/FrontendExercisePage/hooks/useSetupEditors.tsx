@@ -22,7 +22,7 @@ export type FrontendEditorCode = {
 export function useSetupEditors(
   slug: string,
   code: FrontendExercisePageCode,
-  actualIFrameRef: RefObject<HTMLIFrameElement>
+  actualIFrameRef: RefObject<HTMLIFrameElement | null>
 ) {
   const [editorCode, setEditorCode] = useLocalStorage<FrontendEditorCode>(
     `frontend-editor-code-${slug}`,
@@ -51,7 +51,7 @@ export function useSetupEditors(
       },
       code
     )
-  }, [])
+  }, [actualIFrameRef, code, editorCode.cssEditorContent, editorCode.htmlEditorContent])
 
   const {
     editorViewRef: htmlEditorViewRef,
@@ -212,7 +212,18 @@ export function useSetupEditors(
       stubEditorCode.jsEditorContent,
       stubEditorCode.readonlyRanges.js
     )
-  }, [])
+  }, [
+    code.defaultReadonlyRanges?.css,
+    code.defaultReadonlyRanges?.html,
+    code.defaultReadonlyRanges?.js,
+    code.stub.css,
+    code.stub.html,
+    code.stub.js,
+    cssEditorViewRef,
+    htmlEditorViewRef,
+    jsEditorViewRef,
+    setEditorCode,
+  ])
 
   return {
     htmlEditorViewRef,

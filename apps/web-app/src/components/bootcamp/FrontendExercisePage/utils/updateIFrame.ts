@@ -114,6 +114,7 @@ export function updateIFrame(
     if (iframeElement) {
       iframeElement.onload = () => {
       try {
+        if (!iframeElement) return
         const runCode = (
           iframeElement.contentWindow as Window & { runCode?: () => void }
         )?.runCode

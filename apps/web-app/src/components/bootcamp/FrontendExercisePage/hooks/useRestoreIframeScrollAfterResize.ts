@@ -25,7 +25,7 @@ export function useRestoreIframeScrollAfterResize() {
       }
     }
 
-    const handleDragStart = (event: MouseEvent): void => {
+    const handleDragStart = (_event: MouseEvent): void => {
       try {
         isDraggingRef.current = true
 
@@ -39,7 +39,7 @@ export function useRestoreIframeScrollAfterResize() {
       }
     }
 
-    const handleDragEnd = (event: MouseEvent): void => {
+    const handleDragEnd = (_event: MouseEvent): void => {
       try {
         if (!isDraggingRef.current) return
         isDraggingRef.current = false

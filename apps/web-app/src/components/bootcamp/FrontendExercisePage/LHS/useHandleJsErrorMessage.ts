@@ -9,7 +9,7 @@ export function useHandleJsErrorMessage({
   jsViewRef,
   setTab,
 }: {
-  jsViewRef: React.RefObject<EditorView>
+  jsViewRef: React.RefObject<EditorView | null>
   setTab: React.Dispatch<React.SetStateAction<TabIndex>>
 }) {
   useEffect(() => {
@@ -39,5 +39,5 @@ export function useHandleJsErrorMessage({
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [])
+  }, [jsViewRef, setTab])
 }
