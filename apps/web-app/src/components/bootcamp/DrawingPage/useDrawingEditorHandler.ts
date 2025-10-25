@@ -33,6 +33,7 @@ export function useDrawingEditorHandler() {
     if (editorViewRef.current) {
       return editorViewRef.current.state.doc.toString()
     }
+    return undefined
   }
 
   const {
@@ -52,9 +53,7 @@ export function useDrawingEditorHandler() {
       const value = editorHandler.current.getValue()
       setLatestValueSnapshot(value)
       // value is studentCode
-      const evaluated = interpret(value, {
-        externalFunctions: drawExerciseInstance?.availableFunctions,
-      })
+      const evaluated = interpret(value, {})
 
       const { frames } = evaluated
       setFrames(frames)
@@ -62,7 +61,7 @@ export function useDrawingEditorHandler() {
       const { animations } = drawExerciseInstance
       const animationTimeline =
         animations.length > 0
-          ? new AnimationTimeline({}, frames).populateTimeline(animations)
+          ? new AnimationTimeline({}, '').populateTimeline(animations, '')
           : null
 
       if (animationTimeline) {
@@ -71,7 +70,7 @@ export function useDrawingEditorHandler() {
 
       if (evaluated.error) {
         showError({
-          error: evaluated.error,
+          error: evaluated.error as any,
           setHighlightedLine,
           setHighlightedLineColor,
           setInformationWidgetData,
@@ -99,7 +98,8 @@ export function useDrawingEditorHandler() {
         viewContainerRef.current.innerHTML = ''
         viewContainerRef.current.appendChild(view)
         view.style.display = 'block'
-        setBackgroundImageRef.current = drawExerciseInstance.setBackgroundImage
+        setBackgroundImageRef.current = (url: string | null) => 
+          drawExerciseInstance.setBackgroundImage({} as any, url)
       }
     }
   }

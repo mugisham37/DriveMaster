@@ -12,22 +12,16 @@ interface FrontendExercisePageProps {
 }
 
 export function FrontendExercisePage({
-  project,
   exercise,
   solution,
   code,
   links
-}: FrontendExercisePageProps) {
+}: Omit<FrontendExercisePageProps, 'project'>) {
   const [cssCode, setCssCode] = useState(code.stub?.css || '')
   const [htmlCode, setHtmlCode] = useState(code.stub?.html || '')
   const [jsCode, setJsCode] = useState(code.stub?.js || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const previewRef = useRef<HTMLIFrameElement>(null)
-
-  // Update preview when code changes
-  useEffect(() => {
-    updatePreview()
-  }, [cssCode, htmlCode, jsCode])
 
   const updatePreview = useCallback(() => {
     if (!previewRef.current) return
@@ -61,6 +55,11 @@ export function FrontendExercisePage({
     previewDocument.write(fullHTML)
     previewDocument.close()
   }, [cssCode, htmlCode, jsCode, code.normalize_css])
+
+  // Update preview when code changes
+  useEffect(() => {
+    updatePreview()
+  }, [cssCode, htmlCode, jsCode, updatePreview])
 
   const handleSubmit = async () => {
     if (!solution) return

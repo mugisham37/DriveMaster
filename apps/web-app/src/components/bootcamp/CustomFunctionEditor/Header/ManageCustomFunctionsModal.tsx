@@ -43,7 +43,7 @@ export function ManageCustomFunctionsModal({
         onChange()
       }
     },
-    [links, onChange]
+    [activateCustomFunction, onChange]
   )
   const handleDeactivateCustomFunction = useCallback(
     (name: string) => {
@@ -52,11 +52,11 @@ export function ManageCustomFunctionsModal({
         onChange()
       }
     },
-    [onChange]
+    [deactivateCustomFunction, onChange]
   )
 
   return (
-    // @ts-ignore
+    {/* @ts-expect-error - Modal component type issue */}
     <Modal
       isOpen={isOpen}
       className="solve-exercise-page-react-modal-content custom-function-selector flex flex-col w-fill max-w-[540px]"
@@ -74,7 +74,7 @@ export function ManageCustomFunctionsModal({
               <CustomFunctionMetadata
                 key={customFnMetadata.name}
                 dependsOnCurrentFunction={
-                  customFnMetadata.dependsOnCurrentFunction
+                  customFnMetadata.dependsOnCurrentFunction || false
                 }
                 onClick={() => {
                   return getIsFunctionActivated(customFnMetadata.name)
@@ -110,7 +110,7 @@ function CustomFunctionMetadata({
   customFnMetadata: CustomFunctionMetadata
   onClick: () => void
   buttonClass: string
-  dependsOnCurrentFunction?: boolean
+  dependsOnCurrentFunction: boolean
 }) {
   return (
     <button

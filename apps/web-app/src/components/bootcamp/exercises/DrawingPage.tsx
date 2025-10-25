@@ -29,23 +29,18 @@ export function DrawingPage({
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // Initialize Jikiscript interpreter with drawing functions
+  const canvasContext = canvasRef.current?.getContext('2d')
   const {
     executeJikiscript,
     isExecuting,
     executionResult,
     lastError,
-    clearCanvas,
-    clearResults
+    clearCanvas
   } = useJikiscriptExecution({
-    canvasContext: canvasRef.current?.getContext('2d') || undefined,
+    canvasContext: canvasContext || undefined,
     enableDrawingFunctions: true,
     enableMathFunctions: true
   })
-
-  // Execute drawing code when it changes
-  useEffect(() => {
-    executeDrawingCode()
-  }, [drawingCode, selectedBackground])
 
   const executeDrawingCode = useCallback(async () => {
     if (!canvasRef.current) return
@@ -71,7 +66,12 @@ export function DrawingPage({
     }
   }, [drawingCode, selectedBackground, backgrounds, clearCanvas])
 
-  const executeUserCode = async () => {
+  // Execute drawing code when it changes
+  useEffect(() => {
+    executeDrawingCode()
+  }, [drawingCode, selectedBackground, executeDrawingCode])
+
+  const executeUserCode = useCallback(async () => {
     if (!drawingCode.trim()) return
 
     try {
@@ -90,7 +90,7 @@ export function DrawingPage({
         ctx.fillText(error instanceof Error ? error.message : String(error), 10, 50)
       }
     }
-  }
+  }, [drawingCode, executeJikiscript])
 
   const handleSave = async () => {
     setIsSaving(true)

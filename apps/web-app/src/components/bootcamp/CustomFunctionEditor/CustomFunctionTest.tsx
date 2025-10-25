@@ -29,7 +29,7 @@ export function CustomFunctionTest({
   hasResult: boolean
   isInspected: boolean
   name: string
-  actual: any
+  actual: unknown
   testTitle: string
   readonly: boolean | undefined
   syntaxError: string | null
@@ -57,7 +57,7 @@ export function CustomFunctionTest({
     onCancelClick()
     setArgsValue(args)
     setExpectedValue(expected)
-  }, [args, expected])
+  }, [args, expected, onCancelClick, onDeleteClick])
 
   return (
     <div onClick={onTestClick}>
@@ -163,7 +163,7 @@ function ExpandedView({
   expected: string
   editMode: boolean
   name: string
-  actual: any
+  actual: unknown
   testTitle: string
   hasResult: boolean
   passing: boolean
@@ -182,7 +182,7 @@ function ExpandedView({
     <>
       <div className={className}>
         <div className="scenario-lhs">
-          <div className="scenario-lhs-conten">
+          <div className="scenario-lhs-content">
             <div className="header">
               <h3 className="font-semibold text-16 mr-auto">{testTitle}</h3>
               <div className="flex items-center gap-8">
@@ -233,7 +233,7 @@ function ExpandedView({
                     )}
                   </td>
                 </tr>
-                {actual && (
+                {actual !== null && actual !== undefined && (
                   <tr>
                     <th>Actual:</th>
                     <td className="whitespace-pre">{formatActual(actual)}</td>
@@ -271,12 +271,12 @@ function ExpandedView({
   )
 }
 
-function formatActual(actual: string | null | undefined) {
-  if (actual === 'null') {
+function formatActual(actual: unknown): string {
+  if (actual === null || actual === undefined || actual === 'null') {
     return "[Your function didn't return anything]"
   }
 
-  return actual
+  return String(actual)
 }
 
 function TestTopRHS({

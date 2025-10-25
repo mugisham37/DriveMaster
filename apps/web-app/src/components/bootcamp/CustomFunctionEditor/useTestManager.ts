@@ -30,7 +30,7 @@ export function useTestManager(customFunction: CustomFunction) {
 
   useEffect(() => {
     setTestsLocalStorageValue({ tests })
-  }, [tests])
+  }, [tests, setTestsLocalStorageValue])
 
   const [testBeingEdited, setTestBeingEdited] = useState<string>()
 

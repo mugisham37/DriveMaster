@@ -33,14 +33,14 @@ export function CustomFunctionTests() {
                 : null
             }
             passing={
-              results && results[test.uuid] ? results[test.uuid].pass : false
+              results && results[test.uuid] ? results[test.uuid]?.pass || false : false
             }
-            hasResult={!!results[test.uuid]}
+            hasResult={!!results?.[test.uuid]}
             name={customFunctionName}
             isInspected={inspectedTest === test.uuid}
             onTestClick={() => setInspectedTest(test.uuid)}
             actual={
-              results && results[test.uuid] ? results[test.uuid].actual : null
+              results && results[test.uuid] ? results[test.uuid]?.actual : null
             }
             expected={test.expected}
             editMode={testBeingEdited === test.uuid}

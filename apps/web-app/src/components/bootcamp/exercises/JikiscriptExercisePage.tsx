@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState } from 'react'
 import { BootcampExercise, BootcampSolution, BootcampCode, BootcampLinks, BootcampProject, BootcampCustomFunction } from '@/types/bootcamp'
 import { useJikiscriptExecution } from '@/hooks/useJikiscriptExecution'
 
@@ -15,17 +15,16 @@ interface JikiscriptExercisePageProps {
 }
 
 export function JikiscriptExercisePage({
-  project,
   exercise,
   solution,
   test_results,
   code,
   custom_functions,
   links
-}: JikiscriptExercisePageProps) {
+}: Omit<JikiscriptExercisePageProps, 'project'>) {
   const [jikiCode, setJikiCode] = useState(code.stub?.jiki || code.stub?.js || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [testOutput, setTestOutput] = useState<any>(null)
+  const [testOutput, setTestOutput] = useState<Record<string, unknown> | null>(null)
 
   const language = exercise.language || 'jikiscript'
 
@@ -33,9 +32,6 @@ export function JikiscriptExercisePage({
   const {
     executeJikiscript,
     runTests,
-    isExecuting,
-    executionResult,
-    testResults,
     lastError,
     clearResults
   } = useJikiscriptExecution({
@@ -57,11 +53,11 @@ export function JikiscriptExercisePage({
       
       // If we have tests defined in the exercise config, run them
       if (exercise.config?.tests_type && exercise.config?.exercise_functions) {
-        const exerciseTests = exercise.config.exercise_functions.map((func: any, index: number) => ({
-          name: `Test ${index + 1}: ${func.name || 'Function test'}`,
-          code: func.test_code || `${func.name}()`,
-          setup: func.setup_code || '',
-          expectedMessage: func.expected_message
+        const exerciseTests = exercise.config.exercise_functions.map((func: Record<string, unknown>, index: number) => ({
+          name: `Test ${index + 1}: ${String(func.name) || 'Function test'}`,
+          code: String(func.test_code || `${func.name}()`),
+          setup: String(func.setup_code || ''),
+          expectedMessage: String(func.expected_message || '')
         }))
         
         const testResults = await runTests(jikiCode, exerciseTests)
@@ -128,7 +124,7 @@ export function JikiscriptExercisePage({
       <div className="exercise-header">
         <h1>{exercise.title}</h1>
         <div className="exercise-meta">
-          <span className="language-badge">{language}</span>
+          <span className="language-badge">{String(language)}</span>
           <div className="exercise-status">
             Status: {solution.status}
             {solution.passed_basic_tests && <span className="passed">✓ Basic Tests Passed</span>}
@@ -226,17 +222,17 @@ export function JikiscriptExercisePage({
                 </div>
               ) : (
                 <>
-                  {testOutput.test_results && testOutput.test_results.length > 0 && (
+                  {testOutput.test_results && Array.isArray(testOutput.test_results) && testOutput.test_results.length > 0 && (
                     <div className="test-results">
                       <h4>Test Results:</h4>
-                      {testOutput.test_results.map((test: any, index: number) => (
+                      {testOutput.test_results.map((test: Record<string, unknown>, index: number) => (
                         <div key={index} className={`test-result ${test.passed ? 'passed' : 'failed'}`}>
-                          <span className="test-name">{test.name}</span>
+                          <span className="test-name">{String(test.name || '')}</span>
                           <span className={`test-status ${test.passed ? 'pass' : 'fail'}`}>
                             {test.passed ? '✓ PASS' : '✗ FAIL'}
                           </span>
-                          {test.message && <div className="test-message">{test.message}</div>}
-                          {test.error && <div className="test-error">{test.error.message}</div>}
+                          {test.message && <div className="test-message">{String(test.message || '')}</div>}
+                          {test.error && typeof test.error === 'object' && test.error !== null && 'message' in test.error && <div className="test-error">{String((test.error as any).message)}</div>}
                         </div>
                       ))}
                     </div>
@@ -246,18 +242,18 @@ export function JikiscriptExercisePage({
                     <div className="interpreter-result">
                       <h4>Interpreter Output:</h4>
                       <div className="frames-output">
-                        {testOutput.interpreter_result.frames?.map((frame: any, index: number) => (
+                        {Array.isArray((testOutput.interpreter_result as any)?.frames) && (testOutput.interpreter_result as any).frames.map((frame: Record<string, unknown>, index: number) => (
                           <div key={index} className={`frame ${frame.status}`}>
-                            <span className="frame-location">Line {frame.location?.line || 'unknown'}</span>
-                            <span className="frame-status">{frame.status}</span>
+                            <span className="frame-location">Line {(frame.location as any)?.line || 'unknown'}</span>
+                            <span className="frame-status">{String(frame.status || '')}</span>
                             {frame.result && (
                               <div className="frame-result">
                                 Result: {JSON.stringify(frame.result)}
                               </div>
                             )}
-                            {frame.error && (
+                            {frame.error && typeof frame.error === 'object' && frame.error !== null && 'message' in frame.error && (
                               <div className="frame-error">
-                                Error: {frame.error.message}
+                                Error: {String((frame.error as any).message)}
                               </div>
                             )}
                           </div>

@@ -1,6 +1,6 @@
 export function updateIFrame(
   iframeRef:
-    | React.RefObject<HTMLIFrameElement>
+    | React.RefObject<HTMLIFrameElement | null>
     | React.ForwardedRef<HTMLIFrameElement>,
   { html, css }: { html?: string; css?: string },
   code: CSSExercisePageCode

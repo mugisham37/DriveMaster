@@ -25,7 +25,7 @@ import customFunctionEditorStore, {
 } from './store/customFunctionEditorStore'
 import { Toaster } from 'react-hot-toast'
 import useWarnOnUnsavedChanges from './Header/useWarnOnUnsavedChanges'
-import { DeleteFunctionButton } from './DeleteFunctionButton'
+// import { DeleteFunctionButton } from './DeleteFunctionButton'
 
 export type CustomFunction = {
   uuid: string
@@ -95,7 +95,7 @@ export default function CustomFunctionEditor({
   useEffect(() => {
     initializeStore(customFunction)
     setTimeout(() => setHasUnsavedChanges(false), 100)
-  }, [])
+  }, [customFunction, initializeStore, setHasUnsavedChanges])
 
   useWarnOnUnsavedChanges(hasUnsavedChanges)
 
@@ -105,13 +105,13 @@ export default function CustomFunctionEditor({
 
   useEffect(() => {
     setDefaultCode(customFunction.code)
-  }, [])
+  }, [customFunction.code, setDefaultCode])
 
   const handleCheckCode = useCallback(() => {
     flushSync(cleanUpEditorStore)
     flushSync(clearSyntaxErrorInTest)
     handleRunCode()
-  }, [])
+  }, [cleanUpEditorStore, clearSyntaxErrorInTest, handleRunCode])
 
   const inspectedTestIdx = useMemo(
     () => tests.findIndex((test) => test.uuid === inspectedTest),
@@ -178,10 +178,10 @@ export default function CustomFunctionEditor({
                 <div className="flex-grow">
                   {results &&
                     results[inspectedTest] &&
-                    results[inspectedTest].animationTimeline && (
+                    results[inspectedTest]?.animationTimeline && (
                       <Scrubber
                         animationTimeline={
-                          results[inspectedTest].animationTimeline
+                          results[inspectedTest]?.animationTimeline!
                         }
                         frames={inspectedFrames}
                         context={`Test ${inspectedTestIdx + 1}`}

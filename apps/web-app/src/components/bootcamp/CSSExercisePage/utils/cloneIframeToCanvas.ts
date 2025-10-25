@@ -1,8 +1,8 @@
-import { toCanvas } from '@exercism/html-to-image'
+import { toCanvas } from 'html-to-image'
 
 // this is a good debugging util to see output of the pixel-data gained from the iframe
 export async function cloneIframeToCanvas(
-  iframeRef: React.RefObject<HTMLIFrameElement>
+  iframeRef: React.RefObject<HTMLIFrameElement | null>
 ): Promise<HTMLCanvasElement | null> {
   const iframe = iframeRef.current
   if (!iframe) {
@@ -15,10 +15,7 @@ export async function cloneIframeToCanvas(
   }
 
   try {
-    const canvas = await toCanvas(iframeDoc.body, {
-      width: iframe.clientWidth,
-      height: iframe.clientHeight,
-    })
+    const canvas = await toCanvas(iframeDoc.body)
 
     canvas.style.position = 'absolute'
     canvas.style.left = '0'

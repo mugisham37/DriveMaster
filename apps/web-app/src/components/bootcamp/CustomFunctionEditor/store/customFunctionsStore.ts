@@ -58,7 +58,7 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
       const newAvailableCustomFunctions = customFunctions.reduce((acc, fn) => {
         acc[fn.name] = fn
         return acc
-      }, {})
+      }, {} as AvailableCustomFunctions)
 
       return {
         availableCustomFunctions: newAvailableCustomFunctions,
@@ -69,7 +69,7 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
   getSelectedCustomFunctions: () => {
     const activatedCustomFunctions = get().activatedCustomFunctions
     const selectedCustomFunctions = new Set(
-      activatedCustomFunctions.map((fn) => fn[0])
+      activatedCustomFunctions.map((fn) => fn[0]).filter((name): name is string => name !== undefined)
     )
     return Array.from(selectedCustomFunctions)
   },
@@ -106,6 +106,7 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
     } = get()
 
     const customFunction = availableCustomFunctions[name]
+    if (!customFunction) return
 
     const dependencies = customFunction.dependencies
     const linkedFunctions = [name, ...dependencies]
@@ -115,11 +116,9 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
     ]
 
     // we collect functions from the cache by going through the relation array
-    const customFunctionsToBeAddedToTheInterpreter = linkedFunctions.map(
-      (fn) => {
-        return get().availableCustomFunctions[fn]
-      }
-    )
+    const customFunctionsToBeAddedToTheInterpreter = linkedFunctions
+      .map((fn) => get().availableCustomFunctions[fn])
+      .filter((fn): fn is CustomFunctionForInterpreter => fn !== undefined)
 
     addCustomFunctionsForInterpreter(customFunctionsToBeAddedToTheInterpreter)
     set({ activatedCustomFunctions: newActivatedCustomFunctions })
@@ -174,7 +173,7 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
       customFunctionsForInterpreter.reduce((acc, fn) => {
         acc[fn.name] = fn
         return acc
-      }, {})
+      }, {} as Record<string, CustomFunctionForInterpreter>)
 
     set({ customFunctionsForInterpreter: newCustomFunctionsForInterpreter })
   },
@@ -186,7 +185,7 @@ const useCustomFunctionStore = create<CustomFunctionsStore>((set, get) => ({
           acc[fn.name] = fn
           return acc
         },
-        {}
+        {} as Record<string, CustomFunctionForInterpreter>
       )
 
       const existingCustomFnsForInterpreter =

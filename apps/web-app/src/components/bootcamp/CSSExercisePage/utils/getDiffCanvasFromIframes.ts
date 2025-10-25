@@ -2,8 +2,8 @@ import { getDiffCanvasFromPixels } from './getDiffCanvasFromPixels'
 import { getIframePixels } from './getIframePixels'
 
 export async function getDiffCanvasFromIframes(
-  actualIFrameRef: React.RefObject<HTMLIFrameElement>,
-  expectedIFrameRef: React.RefObject<HTMLIFrameElement>
+  actualIFrameRef: React.RefObject<HTMLIFrameElement | null>,
+  expectedIFrameRef: React.RefObject<HTMLIFrameElement | null>
 ) {
   const actualPixels = await getIframePixels(actualIFrameRef)
   const expectedPixels = await getIframePixels(expectedIFrameRef)

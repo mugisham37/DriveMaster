@@ -5,13 +5,11 @@ import { CSSExercisePageContext } from './CSSExercisePageContext'
 import { getDiffCanvasFromIframes } from './utils/getDiffCanvasFromIframes'
 import { debounce } from 'lodash'
 
-export function ActualOutput() {
-  const context = React.useContext(CSSExercisePageContext)
-  if (!context) {
-    return null
-  }
-  const { actualIFrameRef, expectedReferenceIFrameRef, expectedIFrameRef } =
-    context
+function ActualOutputContent({
+  context,
+}: {
+  context: React.ContextType<typeof CSSExercisePageContext>
+}) {
   const {
     isDiffModeOn,
     setCurtainOpacity,
@@ -22,6 +20,11 @@ export function ActualOutput() {
   const containerRef = useRef<HTMLDivElement>(null)
   // set a high number so curtain isn't at pos zero at first
   const [curtainWidth, setCurtainWidth] = useState(9999)
+  const binaryDiffRef = useRef<HTMLCanvasElement | null>(null)
+  const previousActualSnapshot = useRef<string | undefined>(undefined)
+  
+  const { actualIFrameRef, expectedReferenceIFrameRef, expectedIFrameRef } =
+    context!
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return
@@ -34,7 +37,7 @@ export function ActualOutput() {
   const handleOnMouseEnter = useCallback(() => {
     if (isDiffModeOn) return
     setCurtainOpacity(0.6)
-  }, [isDiffModeOn])
+  }, [isDiffModeOn, setCurtainOpacity])
 
   const handleOnMouseLeave = useCallback(() => {
     if (!containerRef.current) return
@@ -50,11 +53,7 @@ export function ActualOutput() {
     })
     if (isDiffModeOn) return
     setCurtainOpacity(1)
-  }, [curtainWidth, isDiffModeOn])
-
-  const binaryDiffRef = useRef<HTMLCanvasElement | null>(null)
-
-  const previousActualSnapshot = useRef<string | undefined>(undefined)
+  }, [curtainWidth, isDiffModeOn, setCurtainOpacity])
 
   useEffect(() => {
     async function populateCanvas(forceRedraw = false) {
@@ -113,7 +112,7 @@ export function ActualOutput() {
       window.removeEventListener('resize', debouncedResize)
       debouncedResize.cancel?.()
     }
-  }, [isDiffModeOn, diffMode, studentCodeHash])
+  }, [isDiffModeOn, diffMode, studentCodeHash, actualIFrameRef, expectedIFrameRef])
 
   return (
     <div className="p-12">
@@ -126,7 +125,7 @@ export function ActualOutput() {
             isDiffModeOn && diffMode === 'gradual'
               ? 'sepia(100%) invert(100%) hue-rotate(116deg) brightness(110%)'
               : 'none',
-          aspectRatio: context.code.aspectRatio,
+          aspectRatio: context!.code.aspectRatio,
         }}
       >
         {/* student's code's output */}
@@ -189,6 +188,15 @@ export function ActualOutput() {
       </div>
     </div>
   )
+}
+
+export function ActualOutput() {
+  const context = React.useContext(CSSExercisePageContext)
+  if (!context) {
+    return null
+  }
+  
+  return <ActualOutputContent context={context} />
 }
 
 function waitForIframeLoad(iframe: HTMLIFrameElement): Promise<void> {

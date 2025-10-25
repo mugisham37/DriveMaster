@@ -23,7 +23,7 @@ export function CustomFunctionsButton({ onChange }: { onChange?: () => void }) {
       <ManageCustomFunctionsModal
         isOpen={isManagerModalOpen}
         setIsOpen={setIsManagerModalOpen}
-        onChange={onChange}
+        onChange={onChange || undefined}
       />
     </>
   )

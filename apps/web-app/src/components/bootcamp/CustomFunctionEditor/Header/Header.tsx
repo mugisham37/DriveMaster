@@ -10,7 +10,7 @@ import { DeleteFunctionButton } from '../DeleteFunctionButton'
 
 export type StudentCodeGetter = () => string | undefined
 
-function _Header({ handleSaveChanges }: { handleSaveChanges: () => void }) {
+function HeaderComponent({ handleSaveChanges }: { handleSaveChanges: () => void }) {
   const { clearResults, customFunctionName, isPredefined } =
     customFunctionEditorStore()
 
@@ -50,4 +50,4 @@ function _Header({ handleSaveChanges }: { handleSaveChanges: () => void }) {
   )
 }
 
-export const Header = wrapWithErrorBoundary(_Header)
+export const Header = wrapWithErrorBoundary(HeaderComponent)

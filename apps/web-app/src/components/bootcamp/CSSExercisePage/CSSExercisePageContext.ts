@@ -3,11 +3,11 @@ import { createContext } from 'react'
 import { Handler } from '../JikiscriptExercisePage/CodeMirror/CodeMirror'
 
 type CSSExercisePageContextType = {
-  actualIFrameRef: React.RefObject<HTMLIFrameElement>
-  expectedIFrameRef: React.RefObject<HTMLIFrameElement>
-  expectedReferenceIFrameRef: React.RefObject<HTMLIFrameElement>
-  htmlEditorRef: React.RefObject<EditorView>
-  cssEditorRef: React.RefObject<EditorView>
+  actualIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  expectedIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  expectedReferenceIFrameRef: React.RefObject<HTMLIFrameElement | null>
+  htmlEditorRef: React.RefObject<EditorView | null>
+  cssEditorRef: React.RefObject<EditorView | null>
   exercise: CSSExercisePageExercise
   code: CSSExercisePageCode
   handleCompare: () => Promise<number>

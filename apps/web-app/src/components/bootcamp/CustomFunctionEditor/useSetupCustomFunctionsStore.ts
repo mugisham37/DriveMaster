@@ -38,5 +38,5 @@ export function useSetupCustomFunctionStore({
     }
 
     initializeCustomFunctions(updatedCustomFunctions)
-  }, [])
+  }, [customFunction.name, customFunctions, initializeCustomFunctions])
 }

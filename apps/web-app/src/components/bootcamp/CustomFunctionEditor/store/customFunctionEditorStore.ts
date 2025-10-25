@@ -166,7 +166,7 @@ const customFunctionEditorStore = create<CustomFunctionEditorStoreState>(
 
       set((state) => {
         const results = state.results
-        const inspectedFrames = results[uuid] ? results[uuid].frames : []
+        const inspectedFrames = results[uuid] ? results[uuid]?.frames : []
         return { inspectedTest: uuid, inspectedFrames }
       })
     },
@@ -179,7 +179,8 @@ const customFunctionEditorStore = create<CustomFunctionEditorStoreState>(
       const { testBeingEdited, tests } = get()
 
       if (testBeingEdited) {
-        if (!tests[testBeingEdited]) {
+        const testExists = tests.find(t => t.uuid === testBeingEdited)
+        if (!testExists) {
           toast(
             'You already have an unsaved empty test. Finish that first, then you can add a new test.'
           )

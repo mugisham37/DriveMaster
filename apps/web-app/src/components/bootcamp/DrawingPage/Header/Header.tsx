@@ -1,59 +1,59 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { wrapWithErrorBoundary } from '@/components/bootcamp/common/ErrorBoundary/wrapWithErrorBoundary'
-import { assembleClassNames } from '@/utils/assemble-classnames'
+import React, { useCallback, useEffect, useState } from "react";
+import { wrapWithErrorBoundary } from "@/components/bootcamp/common/ErrorBoundary/wrapWithErrorBoundary";
+import { assembleClassNames } from "@/utils/assemble-classnames";
 
-import { GraphicalIcon } from '@/components/common/GraphicalIcon'
+import { GraphicalIcon } from "@/components/common/GraphicalIcon";
 
-export type StudentCodeGetter = () => string | undefined
+export type StudentCodeGetter = () => string | undefined;
 
-const DEFAULT_SAVE_BUTTON_LABEL = 'Save'
-function _Header({
+const DEFAULT_SAVE_BUTTON_LABEL = "Save";
+function HeaderComponent({
   links,
   savingStateLabel,
   drawing,
   backgrounds,
   setBackgroundImage,
 }: {
-  savingStateLabel: string
-  setBackgroundImage: ((imageUrl: string | null) => void) | null
-} & Pick<DrawingPageProps, 'links' | 'drawing' | 'backgrounds'>) {
-  const [titleInputValue, setTitleInputValue] = useState(drawing.title)
-  const [editMode, setEditMode] = useState(false)
+  savingStateLabel: string;
+  setBackgroundImage: ((imageUrl: string | null) => void) | null;
+} & Pick<DrawingPageProps, "links" | "drawing" | "backgrounds">) {
+  const [titleInputValue, setTitleInputValue] = useState(drawing.title);
+  const [editMode, setEditMode] = useState(false);
   const [titleSavingStateLabel, setTitleSavingStateLabel] = useState<string>(
     DEFAULT_SAVE_BUTTON_LABEL
-  )
+  );
 
   const handleSaveTitle = useCallback(() => {
-    setTitleSavingStateLabel('Saving...')
+    setTitleSavingStateLabel("Saving...");
     patchDrawingTitle(links, titleInputValue)
       .then(() => {
-        setTitleSavingStateLabel(DEFAULT_SAVE_BUTTON_LABEL)
-        setEditMode(false)
+        setTitleSavingStateLabel(DEFAULT_SAVE_BUTTON_LABEL);
+        setEditMode(false);
       })
-      .catch(() => setTitleSavingStateLabel('Try again'))
-  }, [links, titleInputValue])
+      .catch(() => setTitleSavingStateLabel("Try again"));
+  }, [links, titleInputValue]);
 
   const handleBackgroundChange = useCallback(
     (background: Background) => {
       if (setBackgroundImage) {
-        setBackgroundImage(background.imageUrl)
-        patchCanvasBackground(links, background.slug)
+        setBackgroundImage(background.imageUrl);
+        patchCanvasBackground(links, background.slug);
       }
     },
-    [setBackgroundImage]
-  )
+    [links, setBackgroundImage]
+  );
 
   // setup the background on mount
   useEffect(() => {
     if (setBackgroundImage && drawing.backgroundSlug) {
       const background = backgrounds.find(
         (bg) => bg.slug === drawing.backgroundSlug
-      )
+      );
       if (background) {
-        setBackgroundImage(background.imageUrl)
+        setBackgroundImage(background.imageUrl);
       }
     }
-  }, [drawing?.backgroundSlug, setBackgroundImage])
+  }, [backgrounds, drawing?.backgroundSlug, setBackgroundImage]);
 
   return (
     <div className="page-header">
@@ -72,10 +72,13 @@ function _Header({
 
         <select
           onChange={(e) => {
-            const selectedBackground: Background = JSON.parse(
-              e.target.selectedOptions[0].dataset.background!
-            )
-            handleBackgroundChange(selectedBackground)
+            const selectedOption = e.target.selectedOptions[0];
+            if (selectedOption?.dataset.background) {
+              const selectedBackground: Background = JSON.parse(
+                selectedOption.dataset.background
+              );
+              handleBackgroundChange(selectedBackground);
+            }
           }}
           value={drawing.backgroundSlug}
         >
@@ -104,11 +107,11 @@ function _Header({
               <input
                 value={titleInputValue}
                 onChange={(e) => {
-                  setTitleInputValue(e.target.value)
-                  setTitleSavingStateLabel(DEFAULT_SAVE_BUTTON_LABEL)
+                  setTitleInputValue(e.target.value);
+                  setTitleSavingStateLabel(DEFAULT_SAVE_BUTTON_LABEL);
                 }}
                 type="text"
-                style={{ all: 'unset', borderBottom: '1px solid' }}
+                style={{ all: "unset", borderBottom: "1px solid" }}
               />
             </>
           ) : (
@@ -123,55 +126,55 @@ function _Header({
 
         <a
           href={links.drawingsIndex}
-          className={assembleClassNames('btn-secondary btn-xxs')}
+          className={assembleClassNames("btn-secondary btn-xxs")}
         >
           Back to drawings
         </a>
       </div>
     </div>
-  )
+  );
 }
 
-export const Header = wrapWithErrorBoundary(_Header)
+export const Header = wrapWithErrorBoundary(HeaderComponent);
 
 async function patchDrawingTitle(
-  links: DrawingPageProps['links'],
+  links: DrawingPageProps["links"],
   title: string
 ) {
   const response = await fetch(links.updateCode, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       title,
     }),
-  })
+  });
 
   if (!response.ok) {
-    throw new Error('Failed to save code')
+    throw new Error("Failed to save code");
   }
 
-  return response.json()
+  return response.json();
 }
 
 async function patchCanvasBackground(
-  links: DrawingPageProps['links'],
+  links: DrawingPageProps["links"],
   backgroundSlug: string
 ) {
   const response = await fetch(links.updateCode, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       background_slug: backgroundSlug,
     }),
-  })
+  });
 
   if (!response.ok) {
-    throw new Error('Failed to save code')
+    throw new Error("Failed to save code");
   }
 
-  return response.json()
+  return response.json();
 }

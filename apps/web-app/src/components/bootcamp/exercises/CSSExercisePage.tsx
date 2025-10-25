@@ -13,22 +13,16 @@ interface CSSExercisePageProps {
 }
 
 export function CSSExercisePage({
-  project,
   exercise,
   solution,
   test_results,
   code,
   links
-}: CSSExercisePageProps) {
+}: Omit<CSSExercisePageProps, 'project'>) {
   const [cssCode, setCssCode] = useState(code.stub?.css || '')
   const [htmlCode, setHtmlCode] = useState(code.stub?.html || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const previewRef = useRef<HTMLIFrameElement>(null)
-
-  // Update preview when code changes
-  useEffect(() => {
-    updatePreview()
-  }, [cssCode, htmlCode])
 
   const updatePreview = useCallback(() => {
     if (!previewRef.current) return
@@ -55,6 +49,11 @@ export function CSSExercisePage({
     previewDocument.write(fullHTML)
     previewDocument.close()
   }, [cssCode, htmlCode, code.normalize_css])
+
+  // Update preview when code changes
+  useEffect(() => {
+    updatePreview()
+  }, [cssCode, htmlCode, updatePreview])
 
   const handleSubmit = async () => {
     setIsSubmitting(true)

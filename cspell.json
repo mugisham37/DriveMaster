@@ -793,7 +793,10 @@
     "scrollability",
     "Kempson",
     "colours",
-    "LINEFROM"
+    "LINEFROM",
+    "conten",
+    "Autoselect",
+    "Jiki"
   ],
   "ignorePaths": [
     "node_modules/**",

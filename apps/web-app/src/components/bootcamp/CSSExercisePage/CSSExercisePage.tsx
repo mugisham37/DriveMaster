@@ -24,7 +24,7 @@ export default function CSSExercisePage(data: CSSExercisePageProps) {
     if (data.solution.passedBasicTests) {
       setAssertionStatus('pass')
     }
-  }, [data.solution])
+  }, [data.solution, setAssertionStatus])
 
   const { handleWidthChangeMouseDown } = useInitResizablePanels()
 

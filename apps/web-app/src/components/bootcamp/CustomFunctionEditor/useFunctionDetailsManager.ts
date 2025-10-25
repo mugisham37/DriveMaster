@@ -18,7 +18,7 @@ export function useFunctionDetailsManager(customFunction: CustomFunction) {
 
   useEffect(() => {
     setDetailsLocalStorageValue({ name, description })
-  }, [name, description])
+  }, [name, description, setDetailsLocalStorageValue])
 
   return {
     name,

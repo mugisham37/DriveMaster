@@ -21,7 +21,7 @@ export type EditorCode = {
 export function useSetupEditors(
   slug: string,
   code: CSSExercisePageCode,
-  actualIFrameRef: RefObject<HTMLIFrameElement>
+  actualIFrameRef: RefObject<HTMLIFrameElement | null>
 ) {
   const [editorCode, setEditorCode] = useLocalStorage<EditorCode>(
     `css-editor-code-${slug}`,

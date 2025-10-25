@@ -59,7 +59,7 @@ export default function DrawingPage({
         setSavingStateLabel('Saved')
       )
     }, 5000)
-  }, [setEditorLocalStorageValue])
+  }, [getStudentCode, links])
 
   return (
     <div id="bootcamp-solve-exercise-page">
@@ -78,10 +78,9 @@ export default function DrawingPage({
               ref={editorViewRef}
               editorDidMount={handleEditorDidMount}
               handleRunCode={handleRunCode}
-              setEditorLocalStorageValue={setEditorLocalStorageValue}
               onEditorChangeCallback={patchCodeOnDebounce}
             />
-            <Scrubber animationTimeline={animationTimeline} frames={frames} />
+            {animationTimeline && <Scrubber animationTimeline={animationTimeline} frames={frames} />}
           </ErrorBoundary>
         </div>
         <Resizer direction="vertical" handleMouseDown={handleMouseDown} />
