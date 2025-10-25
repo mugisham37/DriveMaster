@@ -22,7 +22,7 @@ export default class TicTacToeExercise extends DrawExercise {
     return {}
   }
 
-  public override write(executionCtx: ExecutionContext, text: string) {
+  public write(executionCtx: ExecutionContext, text: string) {
     this.resultElem.innerHTML = text
     this.animateResult(executionCtx)
   }
@@ -48,7 +48,7 @@ export default class TicTacToeExercise extends DrawExercise {
     executionCtx.fastForward(1)
   }
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'fill_color_rgba',
       func: this.fillColorRGBA.bind(this),
@@ -89,9 +89,7 @@ export default class TicTacToeExercise extends DrawExercise {
     },
   ]
 
-  public override getExerciseSpecificFunctions() {
-    return []
-  }
+
 }
 
 /*this.boardElem = document.createElement('div')

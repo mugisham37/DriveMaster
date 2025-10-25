@@ -6,15 +6,16 @@ import { RobotInstance } from './Robot'
 type FormalConversationInstance = Jiki.Instance & {}
 
 function fn(this: FormalRobotsExercise) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const exercise = this
-  const FormalConversation = new Jiki.Class('FormalConversation')
+  const FormalConversation = new Jiki.JikiClass('FormalConversation', {})
   FormalConversation.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
     robot1: Jiki.JikiObject,
     robot2: Jiki.JikiObject
   ) {
-    if (!(robot1 instanceof Jiki.Instance && robot1 instanceof Jiki.Instance)) {
+    if (!(Jiki.isInstance(robot1) && Jiki.isInstance(robot2))) {
       executionCtx.logicError('Both participants must be robots')
     }
     object.setField('robot1', robot1)
@@ -30,7 +31,7 @@ function fn(this: FormalRobotsExercise) {
       object: FormalConversationInstance,
       idx: Jiki.JikiObject
     ) {
-      if (!(idx instanceof Jiki.Number)) {
+      if (!(idx instanceof Jiki.JikiNumber)) {
         return executionCtx.logicError('Index must be a number')
       }
       if (idx.value !== 1 && idx.value !== 2) {
@@ -46,7 +47,7 @@ function fn(this: FormalRobotsExercise) {
     'caused the robots to greet each other',
     'public',
     function (
-      executionCtx: ExecutionContext,
+      _executionCtx: ExecutionContext,
       object: FormalConversationInstance
     ) {
       const r1 = object.getField('robot1') as RobotInstance
@@ -62,7 +63,7 @@ function fn(this: FormalRobotsExercise) {
     'caused the robots to say goodbye',
     'public',
     function (
-      executionCtx: ExecutionContext,
+      _executionCtx: ExecutionContext,
       object: FormalConversationInstance
     ) {
       const r1 = object.getField('robot1') as RobotInstance
@@ -76,6 +77,6 @@ function fn(this: FormalRobotsExercise) {
   return FormalConversation
 }
 
-export function buildFormalConversation(binder: any) {
+export function buildFormalConversation(binder: FormalRobotsExercise) {
   return fn.bind(binder)()
 }

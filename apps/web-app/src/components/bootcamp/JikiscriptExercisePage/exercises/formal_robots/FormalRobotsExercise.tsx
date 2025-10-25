@@ -1,16 +1,14 @@
-import React from 'react'
-import type { ExecutionContext, ExternalFunction } from '@/interpreter/executor'
+import type { ExecutionContext, ExternalFunction } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { buildRobot } from './Robot'
 import { buildFormalConversation } from './FormalConversation'
-import checkers from '../../test-runner/generateAndRunTestSuite/checkers'
 
 export default class FormalRobotsExercise extends Exercise {
   private Robot = buildRobot(this)
   private FormalConversation = buildFormalConversation(this)
 
-  public static hasView = false
+  public static override hasView = false
   public interactions: string[] = []
   public robotNames: string[] = []
   public robotAges: number[] = []
@@ -19,18 +17,18 @@ export default class FormalRobotsExercise extends Exercise {
     super()
   }
 
-  public setRobotNames(_, robotNames: string[]) {
+  public setRobotNames(_: unknown, robotNames: string[]) {
     this.robotNames = [...robotNames]
   }
 
-  public setRobotAges(_, robotAges: number[]) {
+  public setRobotAges(_: unknown, robotAges: number[]) {
     this.robotAges = [...robotAges]
   }
 
-  public getState() {
+  public override getState() {
     return {}
   }
-  public getInteraction(_, idx: number) {
+  public getInteraction(_: unknown, idx: number) {
     return this.interactions[idx]
   }
   public vibrate_air(
@@ -47,11 +45,11 @@ export default class FormalRobotsExercise extends Exercise {
     this.interactions.push(`${name.value}: ${utterance.value}`)
   }
 
-  public availableClasses: Jiki.Class[] = [this.Robot, this.FormalConversation]
-  public availableFunctions: ExternalFunction[] = [
+  public availableClasses: Jiki.JikiClass[] = [this.Robot, this.FormalConversation]
+  public override availableFunctions: ExternalFunction[] = [
     {
       name: 'vibrate_air',
-      func: this.vibrate_air.bind(this),
+      func: (...args: unknown[]) => this.vibrate_air(args[0] as ExecutionContext, args[1] as Jiki.JikiObject, args[2] as Jiki.JikiObject),
       description: 'caused the robot to speak',
     },
   ]

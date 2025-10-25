@@ -21,7 +21,7 @@ function fn(this: MazeExercise) {
       )
     }
 
-    square.setField('contents', new Jiki.JikiString(''))
+    square.setField('contents', new Jiki.JikiString('') as any)
 
     const emojiSelector = `#${this.view.id} .cell-${square.getUnwrappedField(
       'row'
@@ -64,27 +64,27 @@ function fn(this: MazeExercise) {
     if (!(contents instanceof Jiki.JikiString))
       executionContext.logicError('contents must be a Jiki.String')
 
-    object.setField('row', row)
-    object.setField('col', col)
-    object.setField('is_start', is_start)
-    object.setField('is_finish', is_finish)
-    object.setField('is_wall', is_wall)
-    object.setField('in_maze', in_maze)
-    object.setField('contents', contents)
+    object.setField('row', row as unknown as { [key: string]: any })
+    object.setField('col', col as unknown as { [key: string]: any })
+    object.setField('is_start', is_start as unknown as { [key: string]: any })
+    object.setField('is_finish', is_finish as unknown as { [key: string]: any })
+    object.setField('is_wall', is_wall as unknown as { [key: string]: any })
+    object.setField('in_maze', in_maze as unknown as { [key: string]: any })
+    object.setField('contents', contents as unknown as { [key: string]: any })
   })
-  Square.addGetter('is_start', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+  Square.addGetter('is_start', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('is_start');
   })
-  Square.addGetter('is_finish', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+  Square.addGetter('is_finish', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('is_finish');
   })
-  Square.addGetter('is_wall', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+  Square.addGetter('is_wall', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('is_wall');
   })
-  Square.addGetter('in_maze', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+  Square.addGetter('in_maze', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('in_maze');
   })
-  Square.addGetter('contents', 'public', function(executionCtx: ExecutionContext, object: Jiki.Instance) {
+  Square.addGetter('contents', 'public', function(_executionCtx: ExecutionContext, object: Jiki.Instance) {
     return object.getField('contents');
   })
   Square.addMethod(

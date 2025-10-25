@@ -81,7 +81,7 @@ export type Color =
 
 const svgNS = 'http://www.w3.org/2000/svg'
 
-function createSVG(children) {
+function createSVG(children: Element[]) {
   const svg = document.createElementNS(svgNS, 'svg')
 
   // Create the SVG element
@@ -93,7 +93,7 @@ function createSVG(children) {
 
   // Add children
   if (children) {
-    children.forEach((child) => svg.appendChild(child))
+    children.forEach((child: Element) => svg.appendChild(child))
   }
 
   return svg
@@ -116,7 +116,7 @@ function createSVGElement(
   fillColor: Color,
   strokeColor: Color,
   strokeWidth: number,
-  attrs
+  attrs: Record<string, string>
 ) {
   const elem = document.createElementNS(svgNS, type)
   elem.setAttribute('stroke', colorToString(strokeColor))
@@ -124,7 +124,10 @@ function createSVGElement(
   elem.setAttribute('fill', colorToString(fillColor))
 
   for (const key in attrs) {
-    elem.setAttribute(key, attrs[key])
+    const value = attrs[key]
+    if (value !== undefined) {
+      elem.setAttribute(key, value)
+    }
   }
   return elem
 }

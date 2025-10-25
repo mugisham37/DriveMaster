@@ -1,14 +1,10 @@
 
 import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import cloneDeep from 'lodash.clonedeep'
-import { isString } from '@/lib/interpreter/checks'
 import { randomEmoji } from '../../test-runner/generateAndRunTestSuite/genericSetupFunctions'
 import { isEqual } from 'lodash'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import { exec } from 'child_process'
 import { buildSquare, type SquareInstance } from './Square'
-import { UserDefinedMethod } from '@/lib/interpreter/functions'
 
 type Cell = 0 | 1 | 2 | 3 | 4 | 5 | 6 | string
 
@@ -16,17 +12,22 @@ export default class MazeExercise extends Exercise {
   private Square = buildSquare(this)
 
   private mazeLayout: SquareInstance[][] = []
+  private initialMazeLayout: SquareInstance[][] = []
   private gridSize: number = 0
   protected characterPosition: { x: number; y: number } = { x: 0, y: 0 }
   private direction: string = 'down'
   private angle: number = 180
   private duration: number = 200
-  private characterSelector: string
+  private characterSelector: string = ''
   private squareSize: number = 0
-  private character: HTMLElement
-  private cells: HTMLElement
+  private character!: HTMLElement
+  private cells!: HTMLElement
+  private emojiMode: boolean = false
+  private oopMode: boolean = false
+  private randomEmojis: string[] = []
+  private collectedEmojis: Record<string, number> = {}
 
-  private startingAngles = { down: 180, up: 0, left: -90, right: 90 }
+  private startingAngles: Record<string, number> = { down: 180, up: 0, left: -90, right: 90 }
 
   public getState() {
     return {
@@ -42,7 +43,7 @@ export default class MazeExercise extends Exercise {
 
   public randomEmojisAllCollected() {
     // Turn array of emoji strings into a count map
-    const expected = this.randomEmojis.reduce((acc, emoji) => {
+    const expected = this.randomEmojis.reduce((acc: Record<string, number>, emoji: string) => {
       acc[emoji] = (acc[emoji] || 0) + 1
       return acc
     }, {})
@@ -65,9 +66,7 @@ export default class MazeExercise extends Exercise {
     this.characterSelector = `#${this.view.id} .character`
     this.redrawMaze()
 
-    this.emojiMode = false
-    this.oopMode = false
-    this.randomEmojis = []
+
   }
 
   // Setup Functions
@@ -88,13 +87,13 @@ export default class MazeExercise extends Exercise {
           return cell
         }
 
-        let emoji: string | undefined
+        let emoji: string = ''
         do {
-          emoji = randomEmoji()
-          if (reservedEmojis.includes(emoji!)) {
-            emoji = undefined
+          const emojiResult = randomEmoji() as string
+          if (emojiResult && !reservedEmojis.includes(emojiResult)) {
+            emoji = emojiResult
           }
-        } while (emoji === undefined)
+        } while (emoji === '')
 
         this.randomEmojis.push(emoji)
         return emoji
@@ -182,10 +181,10 @@ export default class MazeExercise extends Exercise {
     ) as SquareInstance[][]
   }
 
-  public enableEmojiMode(_: ExecutionContext) {
+  public enableEmojiMode(_executionCtx: ExecutionContext) {
     this.emojiMode = true
   }
-  public enableOOP(_: ExecutionContext) {
+  public enableOOP(_executionCtx: ExecutionContext) {
     this.oopMode = true
   }
 
@@ -194,9 +193,14 @@ export default class MazeExercise extends Exercise {
     this.view.style.setProperty('--gridSize', this.gridSize.toString())
 
     for (let y = 0; y < this.mazeLayout.length; y++) {
-      for (let x = 0; x < this.mazeLayout[y].length; x++) {
-        const square = this.mazeLayout[y][x]
-        const contents = square.getUnwrappedField('contents')
+      const row = this.mazeLayout[y]
+      if (!row) continue
+      
+      for (let x = 0; x < row.length; x++) {
+        const square = row[x]
+        if (!square) continue
+        
+        const contents = square.getUnwrappedField('contents') as string
 
         const cell = document.createElement('div')
         cell.classList.add('cell', `cell-${y}-${x}`)
@@ -229,37 +233,32 @@ export default class MazeExercise extends Exercise {
     const yRow = this.mazeLayout[this.characterPosition.y]
     if (!yRow) {
       executionCtx.logicError('Oh no, you tried to move off the map.')
-      executionCtx.updateState('gameOver', true)
       return
     }
 
     const square = yRow[this.characterPosition.x]
 
     // If we can't move, blow up
-    if (square === undefined) {
+    if (!square) {
       executionCtx.logicError('Oh no, you tried to move off the map')
-      executionCtx.updateState('gameOver', true)
       return
     }
 
     // If we've hit a bad square, still animate but also animate color
     if (square.getUnwrappedField('is_wall')) {
       executionCtx.logicError('Ouch! You walked into a wall!')
-      executionCtx.updateState('gameOver', true)
       return
     }
 
     // If you hit an invalid square, blow up.
     else if (square.getUnwrappedField('contents') === '🔥') {
       executionCtx.logicError('Ouch! You walked into the fire!')
-      executionCtx.updateState('gameOver', true)
       return
     }
 
     // If you hit an invalid square, blow up.
     else if (square.getUnwrappedField('contents') === '💩') {
       executionCtx.logicError('Ewww! You walked into the poop! 💩💩💩')
-      executionCtx.updateState('gameOver', true)
       return
     } else if (square.getUnwrappedField('is_finish')) {
       this.gameOverWin(executionCtx)
@@ -279,14 +278,18 @@ export default class MazeExercise extends Exercise {
 
   private removeEmoji(executionCtx: ExecutionContext) {
     const yRow = this.mazeLayout[this.characterPosition.y]
+    if (!yRow) return
+    
     const square = yRow[this.characterPosition.x]
-    const fn = square.getMethod('remove_emoji')!.fn as Jiki.RawMethod
-    fn.call(undefined, executionCtx, square)
+    if (!square) return
+    
+    const method = square.getMethod('remove_emoji')
+    if (method && typeof method === 'function') {
+      method(executionCtx, square)
+    }
   }
 
   private gameOverWin(executionCtx: ExecutionContext) {
-    executionCtx.updateState('gameOver', true)
-
     this.addAnimation({
       targets: this.characterSelector,
       duration: 200,
@@ -361,20 +364,20 @@ export default class MazeExercise extends Exercise {
   private describeSquare(
     executionCtx: ExecutionContext,
     square: SquareInstance | undefined
-  ): SquareInstance | Jiki.String {
+  ): SquareInstance | Jiki.JikiString {
     if (!square) {
       if (this.oopMode) {
         return this.Square.instantiate(executionCtx, [
-          new Jiki.Number(0),
-          new Jiki.Number(0),
+          new Jiki.JikiNumber(0),
+          new Jiki.JikiNumber(0),
           Jiki.False,
           Jiki.False,
           Jiki.False,
           Jiki.False,
-          new Jiki.String(''),
+          new Jiki.JikiString(''),
         ]) as SquareInstance
       }
-      return new Jiki.String(this.emojiMode ? '🧱' : 'wall')
+      return new Jiki.JikiString(this.emojiMode ? '🧱' : 'wall')
     }
 
     if (this.oopMode) {
@@ -394,16 +397,16 @@ export default class MazeExercise extends Exercise {
       value = this.emojiMode ? '💩' : 'poop'
     } else {
       if (this.emojiMode) {
-        const contents = square.getUnwrappedField('contents')
+        const contents = square.getUnwrappedField('contents') as string
         value = contents == '' ? '⬜' : contents
       } else {
         value = 'empty'
       }
     }
-    return new Jiki.String(value)
+    return new Jiki.JikiString(value)
   }
 
-  public canMoveToSquare(square: SquareInstance | undefined): Jiki.Boolean {
+  public canMoveToSquare(square: SquareInstance | undefined): Jiki.JikiBoolean {
     if (!square) {
       return Jiki.False
     }
@@ -418,13 +421,13 @@ export default class MazeExercise extends Exercise {
     return Jiki.True
   }
 
-  public canTurnLeft(_: ExecutionContext): Jiki.Boolean {
+  public canTurnLeft(_executionCtx: ExecutionContext): Jiki.JikiBoolean {
     return this.canMoveToSquare(this.lookLeft())
   }
-  public canTurnRight(_: ExecutionContext): Jiki.Boolean {
+  public canTurnRight(_executionCtx: ExecutionContext): Jiki.JikiBoolean {
     return this.canMoveToSquare(this.lookRight())
   }
-  public canMove(_: ExecutionContext): Jiki.Boolean {
+  public canMove(_executionCtx: ExecutionContext): Jiki.JikiBoolean {
     return this.canMoveToSquare(this.lookAhead())
   }
 
@@ -441,8 +444,10 @@ export default class MazeExercise extends Exercise {
       y -= 1
     }
     if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
-      return this.mazeLayout[y][x]
+      const row = this.mazeLayout[y]
+      return row ? row[x] : undefined
     }
+    return undefined
   }
 
   public lookRight(): SquareInstance | undefined {
@@ -458,8 +463,10 @@ export default class MazeExercise extends Exercise {
       y += 1
     }
     if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
-      return this.mazeLayout[y][x]
+      const row = this.mazeLayout[y]
+      return row ? row[x] : undefined
     }
+    return undefined
   }
 
   private lookAhead(): SquareInstance | undefined {
@@ -475,20 +482,20 @@ export default class MazeExercise extends Exercise {
       x += 1
     }
     if (x >= 0 && x < this.gridSize && y >= 0 && y < this.gridSize) {
-      return this.mazeLayout[y][x]
+      const row = this.mazeLayout[y]
+      return row ? row[x] : undefined
     }
+    return undefined
   }
 
   private look(
     executionCtx: ExecutionContext,
-    direction: Jiki.String
-  ): SquareInstance | Jiki.String {
+    direction: Jiki.JikiString
+  ): SquareInstance | Jiki.JikiString {
     if (direction.value === 'down') {
-      return this.describeSquare(
-        executionCtx,
-        this.mazeLayout[this.characterPosition.y] &&
-          this.mazeLayout[this.characterPosition.y][this.characterPosition.x]
-      )
+      const row = this.mazeLayout[this.characterPosition.y]
+      const square = row ? row[this.characterPosition.x] : undefined
+      return this.describeSquare(executionCtx, square)
     }
 
     let square: SquareInstance | undefined
@@ -499,84 +506,84 @@ export default class MazeExercise extends Exercise {
     } else if (direction.value === 'ahead') {
       square = this.lookAhead()
     } else {
-      return executionCtx.logicError(
-        `You asked the blob to look in a direction it doesn't know about. It can only look \"left\", \"right\", or \"ahead\". You asked it to look \"${direction}\".`
+      executionCtx.logicError(
+        `You asked the blob to look in a direction it doesn't know about. It can only look \"left\", \"right\", or \"ahead\". You asked it to look \"${direction.value}\".`
       )
+      return new Jiki.JikiString('')
     }
     return this.describeSquare(executionCtx, square)
   }
 
-  public getInitialMaze(_: ExecutionContext): SquareInstance[][] {
-    return Jiki.wrapJSToJikiObject(this.initialMazeLayout)
+  public getInitialMaze(_executionCtx: ExecutionContext): SquareInstance[][] {
+    return this.initialMazeLayout
   }
 
-  public setupDirection(_: ExecutionContext, direction: string) {
+  public setupDirection(_executionCtx: ExecutionContext, direction: string) {
     this.direction = direction
-    this.angle = this.startingAngles[direction]
-    this.character.style.transform = `rotate(${this.angle}deg)`
+    const angle = this.startingAngles[direction]
+    if (angle !== undefined) {
+      this.angle = angle
+      this.character.style.transform = `rotate(${this.angle}deg)`
+    }
   }
-  public setupPosition(_: ExecutionContext, x: number, y: number) {
-    this.characterPosition = { x: x, y: y }
+  public setupPosition(_executionCtx: ExecutionContext, x: number, y: number) {
+    this.characterPosition = { x, y }
     this.character.style.left = `${this.characterPosition.x * this.squareSize}%`
     this.character.style.top = `${this.characterPosition.y * this.squareSize}%`
   }
-  public announceEmojis(_: ExecutionContext, emojis: Jiki.Dictionary) {
-    this.collectedEmojis = Jiki.unwrapJikiObject(emojis)
+  public announceEmojis(_executionCtx: ExecutionContext, emojis: Jiki.JikiDictionary) {
+    this.collectedEmojis = emojis.value as Record<string, number>
   }
 
-  public override getExerciseSpecificFunctions() {
-    return []
-  }
-
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'move',
-      func: this.move.bind(this),
+      func: (...args: unknown[]) => this.move(args[0] as ExecutionContext),
       description: 'moved the character one step forward',
     },
     {
       name: 'turn_left',
-      func: this.turnLeft.bind(this),
+      func: (...args: unknown[]) => this.turnLeft(args[0] as ExecutionContext),
       description: 'turned the character to the left',
     },
     {
       name: 'turn_right',
-      func: this.turnRight.bind(this),
+      func: (...args: unknown[]) => this.turnRight(args[0] as ExecutionContext),
       description: 'turned the character to the right',
     },
     {
       name: 'can_turn_left',
-      func: this.canTurnLeft.bind(this),
+      func: (...args: unknown[]) => this.canTurnLeft(args[0] as ExecutionContext),
       description: 'checked if the character can turn left',
     },
     {
       name: 'can_turn_right',
-      func: this.canTurnRight.bind(this),
+      func: (...args: unknown[]) => this.canTurnRight(args[0] as ExecutionContext),
       description: 'checked if the character can turn right',
     },
     {
       name: 'can_move',
-      func: this.canMove.bind(this),
+      func: (...args: unknown[]) => this.canMove(args[0] as ExecutionContext),
       description: 'checked if the character can move forward',
     },
     {
       name: 'look',
-      func: this.look.bind(this),
+      func: (...args: unknown[]) => this.look(args[0] as ExecutionContext, args[1] as Jiki.JikiString),
       description: 'looked in a direction and returns what is there',
     },
     {
       name: 'get_initial_maze',
-      func: this.getInitialMaze.bind(this),
+      func: (...args: unknown[]) => this.getInitialMaze(args[0] as ExecutionContext),
       description: 'get the initial maze layout',
     },
     {
       name: 'announce_emojis',
-      func: this.announceEmojis.bind(this),
+      func: (...args: unknown[]) => this.announceEmojis(args[0] as ExecutionContext, args[1] as Jiki.JikiDictionary),
       description: 'announced the emojis that had been collected',
     },
     {
       name: 'remove_emoji',
-      func: this.removeEmoji.bind(this),
+      func: (...args: unknown[]) => this.removeEmoji(args[0] as ExecutionContext),
       description: 'removed the emoji from the current square',
     },
   ]

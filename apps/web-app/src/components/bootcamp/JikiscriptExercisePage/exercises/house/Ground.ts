@@ -1,19 +1,20 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { changeBrightness, storeShape } from './Component'
+import HouseExercise from './HouseExercise'
 
-function fn(this: any) {
+function fn(this: HouseExercise) {
   const drawGround = (
     executionCtx: ExecutionContext,
     ground: Jiki.Instance
   ) => {
-    this.fillColorHex(executionCtx, new Jiki.String('#3cb372'))
+    this.fillColorHex(executionCtx, new Jiki.JikiString('#3cb372'))
     this.rectangle(
       executionCtx,
-      new Jiki.Number(0),
-      new Jiki.Number(100 - (ground.getField('height') as Jiki.Number).value),
-      new Jiki.Number(100),
-      ground.getField('height') as Jiki.Number
+      new Jiki.JikiNumber(0),
+      new Jiki.JikiNumber(100 - (ground.getField('height') as Jiki.JikiNumber).value),
+      new Jiki.JikiNumber(100),
+      ground.getField('height') as Jiki.JikiNumber
     )
     storeShape(this, ground)
   }
@@ -28,7 +29,7 @@ function fn(this: any) {
     )
   }
 
-  const Ground = new Jiki.Class('Ground')
+  const Ground = new Jiki.JikiClass('Ground', {})
   Ground.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
@@ -67,6 +68,6 @@ function fn(this: any) {
   return Ground
 }
 
-export function buildGround(binder: any) {
+export function buildGround(binder: HouseExercise) {
   return fn.bind(binder)()
 }

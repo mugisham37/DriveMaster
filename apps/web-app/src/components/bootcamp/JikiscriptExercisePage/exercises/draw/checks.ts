@@ -1,13 +1,11 @@
 import {
-  FunctionCallExpression,
   Expression,
-  LiteralExpression,
 } from '@/lib/interpreter/expression'
 import { Shape, Circle, Rectangle, Line } from './shapes'
 import { InterpretResult } from '@/lib/interpreter/interpreter'
 import { extractFunctionCallExpressions } from '../../test-runner/generateAndRunTestSuite/checkers'
 
-export function checkCanvasCoverage(shapes: Shape[], requiredPercentage) {
+export function checkCanvasCoverage(shapes: Shape[], requiredPercentage: number) {
   const gridSize = 100
   const grid = Array.from({ length: gridSize }, () =>
     Array(gridSize).fill(false)
@@ -22,7 +20,10 @@ export function checkCanvasCoverage(shapes: Shape[], requiredPercentage) {
       for (let y = 0; y < gridSize; y++) {
         const distanceSquared = (x - shape.cx) ** 2 + (y - shape.cy) ** 2
         if (distanceSquared <= shape.radius ** 2) {
-          grid[x][y] = true // Mark grid point as covered
+          const row = grid[x]
+          if (row) {
+            row[y] = true // Mark grid point as covered
+          }
         }
       }
     }
@@ -42,7 +43,7 @@ export function checkCanvasCoverage(shapes: Shape[], requiredPercentage) {
 }
 
 export function checkUniqueColoredRectangles(shapes: Shape[], count: number) {
-  let colors = new Set()
+  const colors = new Set()
   shapes.forEach((shape) => {
     if (!(shape instanceof Rectangle)) {
       return
@@ -53,7 +54,7 @@ export function checkUniqueColoredRectangles(shapes: Shape[], count: number) {
   return colors.size >= count
 }
 export function checkUniqueColoredLines(shapes: Shape[], count: number) {
-  let colors = new Set()
+  const colors = new Set()
   shapes.forEach((shape) => {
     if (!(shape instanceof Line)) {
       return
@@ -65,7 +66,7 @@ export function checkUniqueColoredLines(shapes: Shape[], count: number) {
 }
 
 export function checkUniqueColoredCircles(shapes: Shape[], count: number) {
-  let colors = new Set()
+  const colors = new Set()
   shapes.forEach((shape) => {
     if (!(shape instanceof Circle)) {
       return
@@ -82,11 +83,16 @@ export function checkUniqueColoredCircles(shapes: Shape[], count: number) {
 export function assertAllArgumentsAreVariables(
   interpreterResult: InterpretResult
 ) {
-  return extractFunctionCallExpressions(
+  const expressions = extractFunctionCallExpressions(
     interpreterResult.meta.statements
-  ).every((expr: FunctionCallExpression) => {
-    return expr.args.every((arg: Expression) => {
-      return !(arg instanceof LiteralExpression)
+  ) as unknown[]
+  
+  return expressions.every((expr: unknown) => {
+    const typedExpr = expr as { arguments?: Expression[]; args?: Expression[] }
+    // Handle both possible structures
+    const args = typedExpr.arguments || typedExpr.args || []
+    return args.every((arg: Expression) => {
+      return arg.type !== 'LiteralExpression'
     })
   })
 }

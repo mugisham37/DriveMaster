@@ -6,6 +6,7 @@ import { guardValidHex } from './helpers'
 import { buildHSLColor, type HSLColorInstance } from './HSLColor'
 
 function fn(this: HouseExercise) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const exercise = this
   const drawRectangle = (
     executionCtx: ExecutionContext,
@@ -14,16 +15,16 @@ function fn(this: HouseExercise) {
     const hsl = rectangle.getField('hsl') as HSLColorInstance
     this.fillColorHSL(
       executionCtx,
-      hsl.getField('hue') as Jiki.Number,
-      hsl.getField('saturation') as Jiki.Number,
-      hsl.getField('luminosity') as Jiki.Number
+      hsl.getField('hue') as Jiki.JikiNumber,
+      hsl.getField('saturation') as Jiki.JikiNumber,
+      hsl.getField('luminosity') as Jiki.JikiNumber
     )
     this.rectangle(
       executionCtx,
-      rectangle.getField('left') as Jiki.Number,
-      rectangle.getField('top') as Jiki.Number,
-      rectangle.getField('width') as Jiki.Number,
-      rectangle.getField('height') as Jiki.Number
+      rectangle.getField('left') as Jiki.JikiNumber,
+      rectangle.getField('top') as Jiki.JikiNumber,
+      rectangle.getField('width') as Jiki.JikiNumber,
+      rectangle.getField('height') as Jiki.JikiNumber
     )
     storeShape(this, rectangle)
   }
@@ -59,7 +60,7 @@ function fn(this: HouseExercise) {
     this.events.push(`sky:hue:${hsl.getUnwrappedField('hue')}`)
   }
 
-  const Rectangle = new Jiki.Class('Rectangle')
+  const Rectangle = new Jiki.JikiClass('Rectangle', {})
   Rectangle.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
@@ -145,6 +146,6 @@ function fn(this: HouseExercise) {
   return Rectangle
 }
 
-export function buildRectangle(binder: any) {
+export function buildRectangle(binder: HouseExercise) {
   return fn.bind(binder)()
 }

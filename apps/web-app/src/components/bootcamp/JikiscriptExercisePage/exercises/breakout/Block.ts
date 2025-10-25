@@ -1,23 +1,21 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
-import BreakoutExercise from './BreakoutExercise'
+import type BreakoutExercise from './BreakoutExercise'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export type BlockInstance = Jiki.Instance & {
-  top: Jiki.Number
-  left: Jiki.Number
-  smashed: Jiki.Boolean
+  top: Jiki.JikiNumber
+  left: Jiki.JikiNumber
+  smashed: Jiki.JikiBoolean
 }
 
-function fn(this: BreakoutExercise) {
-  const exercise = this
-
+function fn(exercise: BreakoutExercise) {
   const hideBlock = (
     executionCtx: ExecutionContext,
-    block: Jiki.JikiObject
+    block: Jiki.Instance
   ) => {
-    this.animateOutOfView(
+    exercise.animateOutOfView(
       executionCtx,
-      `#${this.view.id} #block-${block.objectId}`,
+      `#${exercise.getView().id} #block-${block.objectId}`,
       { duration: 150, offset: 0 }
     )
   }
@@ -59,7 +57,7 @@ function fn(this: BreakoutExercise) {
       }
       object.setField('smashed', value)
       if (value.value) {
-        hideBlock(executionCtx, object)
+        hideBlock(executionCtx, object as Jiki.Instance)
       }
     }
   )
@@ -67,6 +65,6 @@ function fn(this: BreakoutExercise) {
   return Block
 }
 
-export function buildBlock(binder: any) {
-  return fn.bind(binder)()
+export function buildBlock(exercise: BreakoutExercise) {
+  return fn(exercise)
 }

@@ -5,16 +5,17 @@ import FormalRobotsExercise from './FormalRobotsExercise'
 export type RobotInstance = Jiki.Instance & {}
 
 function fn(this: FormalRobotsExercise) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const exercise = this
-  const Robot = new Jiki.Class('Robot')
+  const Robot = new Jiki.JikiClass('Robot', {})
   Robot.addConstructor(function (
-    executionCtx: ExecutionContext,
+    _executionCtx: ExecutionContext,
     object: Jiki.Instance
   ) {
     const name = exercise.robotNames.shift() || ''
     const age = exercise.robotAges.shift() || 0
-    object.setField('name', new Jiki.String(name))
-    object.setField('age', new Jiki.Number(age))
+    object.setField('name', new Jiki.JikiString(name))
+    object.setField('age', new Jiki.JikiNumber(age))
   })
   Robot.addGetter('age', 'public')
   Robot.addMethod(
@@ -26,7 +27,7 @@ function fn(this: FormalRobotsExercise) {
       object: RobotInstance,
       utterence: Jiki.JikiObject
     ) {
-      if (!(utterence instanceof Jiki.String)) {
+      if (!(utterence instanceof Jiki.JikiString)) {
         return executionCtx.logicError('What the robot says must be a string')
       }
       exercise.interactions.push(
@@ -37,6 +38,6 @@ function fn(this: FormalRobotsExercise) {
   return Robot
 }
 
-export function buildRobot(binder: any) {
+export function buildRobot(binder: FormalRobotsExercise) {
   return fn.bind(binder)()
 }

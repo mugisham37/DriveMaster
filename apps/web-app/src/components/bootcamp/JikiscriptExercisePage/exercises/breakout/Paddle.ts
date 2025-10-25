@@ -1,11 +1,10 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import BreakoutExercise from './BreakoutExercise'
+import type BreakoutExercise from './BreakoutExercise'
 
 export type PaddleInstance = Jiki.Instance & {}
 
-function fn(this: BreakoutExercise) {
-  const exercise = this
+function fn(exercise: BreakoutExercise) {
 
   const createPaddle = (
     executionCtx: ExecutionContext,
@@ -14,24 +13,24 @@ function fn(this: BreakoutExercise) {
     const div = document.createElement('div')
     div.classList.add('paddle')
     div.id = `paddle-${paddle.objectId}`
-    div.style.left = `${paddle.getUnwrappedField('cx')}%`
-    div.style.top = `${paddle.getUnwrappedField('cy')}%`
-    div.style.width = `${paddle.getUnwrappedField('width')}%`
-    div.style.height = `${paddle.getUnwrappedField('height')}%`
+    div.style.left = `${paddle.getUnwrappedField('cx') as number}%`
+    div.style.top = `${paddle.getUnwrappedField('cy') as number}%`
+    div.style.width = `${paddle.getUnwrappedField('width') as number}%`
+    div.style.height = `${paddle.getUnwrappedField('height') as number}%`
     div.style.opacity = '0'
-    this.container.appendChild(div)
-    this.animateIntoView(
+    exercise.getContainer().appendChild(div)
+    exercise.animateIntoView(
       executionCtx,
-      `#${this.view.id} #paddle-${paddle.objectId}`
+      `#${exercise.getView().id} #paddle-${paddle.objectId}`
     )
   }
   const move = (executionCtx: ExecutionContext, paddle: PaddleInstance) => {
-    this.addAnimation({
-      targets: `#${this.view.id} #paddle-${paddle.objectId}`,
+    exercise.addAnimation({
+      targets: `#${exercise.getView().id} #paddle-${paddle.objectId}`,
       duration: 1,
       transformations: {
-        left: `${paddle.getUnwrappedField('cx')}%`,
-        top: `${paddle.getUnwrappedField('cy')}%`,
+        left: `${paddle.getUnwrappedField('cx') as number}%`,
+        top: `${paddle.getUnwrappedField('cy') as number}%`,
       },
       offset: executionCtx.getCurrentTime(),
     })
@@ -39,17 +38,18 @@ function fn(this: BreakoutExercise) {
   }
 
   const Paddle = new Jiki.Class('Paddle')
-  Paddle['default_width'] = 20
-  Paddle['default_height'] = 4
-  Paddle['default_cy'] = 97
+  const defaultWidth = 20
+  const defaultHeight = 4
+  const defaultCy = 97
+  
   Paddle.addConstructor(function (
     executionCtx: ExecutionContext,
     paddle: Jiki.Instance
   ) {
     paddle.setField('cx', new Jiki.Number(50))
-    paddle.setField('cy', new Jiki.Number(Paddle['default_cy']))
-    paddle.setField('width', new Jiki.Number(Paddle['default_width']))
-    paddle.setField('height', new Jiki.Number(Paddle['default_height']))
+    paddle.setField('cy', new Jiki.Number(defaultCy))
+    paddle.setField('width', new Jiki.Number(defaultWidth))
+    paddle.setField('height', new Jiki.Number(defaultHeight))
     createPaddle(executionCtx, paddle)
   })
   Paddle.addGetter('cx', 'public')
@@ -62,13 +62,13 @@ function fn(this: BreakoutExercise) {
     'moved the paddle left 0.85 units',
     'public',
     function (executionCtx: ExecutionContext, paddle: PaddleInstance) {
-      const newCx = paddle.getUnwrappedField('cx') - 0.85
-      if (newCx - paddle.getUnwrappedField('width') / 2 < 0) {
+      const newCx = (paddle.getUnwrappedField('cx') as number) - 0.85
+      if (newCx - (paddle.getUnwrappedField('width') as number) / 2 < 0) {
         return executionCtx.logicError(
           'Paddle cannot move off the left of the screen'
         )
       }
-      if (newCx + paddle.getUnwrappedField('width') / 2 > 100) {
+      if (newCx + (paddle.getUnwrappedField('width') as number) / 2 > 100) {
         return executionCtx.logicError(
           'Paddle cannot move off the right of the screen'
         )
@@ -90,13 +90,13 @@ function fn(this: BreakoutExercise) {
     'moved the paddle right 0.9 units',
     'public',
     function (executionCtx: ExecutionContext, paddle: PaddleInstance) {
-      const newCx = paddle.getUnwrappedField('cx') + 0.9
-      if (newCx - paddle.getUnwrappedField('width') / 2 < 0) {
+      const newCx = (paddle.getUnwrappedField('cx') as number) + 0.9
+      if (newCx - (paddle.getUnwrappedField('width') as number) / 2 < 0) {
         return executionCtx.logicError(
           'Paddle cannot move off the left of the screen'
         )
       }
-      if (newCx + paddle.getUnwrappedField('width') / 2 > 100) {
+      if (newCx + (paddle.getUnwrappedField('width') as number) / 2 > 100) {
         return executionCtx.logicError(
           'Paddle cannot move off the right of the screen'
         )
@@ -110,6 +110,6 @@ function fn(this: BreakoutExercise) {
   return Paddle
 }
 
-export function buildPaddle(binder: any) {
-  return fn.bind(binder)()
+export function buildPaddle(exercise: BreakoutExercise) {
+  return fn(exercise)
 }

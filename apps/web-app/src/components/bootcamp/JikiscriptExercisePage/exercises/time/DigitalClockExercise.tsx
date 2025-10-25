@@ -60,7 +60,7 @@ export default class DigitalClockExercise extends Exercise {
     this.minutes = minutes
   }
 
-  public didDisplayCurrentTime(_: ExecutionContext) {
+  public didDisplayCurrentTime(_executionCtx: ExecutionContext) {
     if (this.displayedTime === undefined) {
       return false
     }

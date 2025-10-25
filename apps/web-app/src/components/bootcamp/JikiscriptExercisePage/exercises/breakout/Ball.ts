@@ -1,25 +1,23 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import BreakoutExercise from './BreakoutExercise'
-import { moveCursorByPasteLength } from '../../CodeMirror/extensions/move-cursor-by-paste-length'
+import type BreakoutExercise from './BreakoutExercise'
 
 export type BallInstance = Jiki.Instance & {}
 
-function fn(this: BreakoutExercise) {
-  const exercise = this
+function fn(exercise: BreakoutExercise) {
   const createBall = (executionCtx: ExecutionContext, ball: BallInstance) => {
     const div = document.createElement('div')
     div.classList.add('ball')
     div.id = `ball-${ball.objectId}`
-    div.style.left = `${ball.getUnwrappedField('cx')}%`
-    div.style.top = `${ball.getUnwrappedField('cy')}%`
-    div.style.width = `${ball.getUnwrappedField('radius') * 2}%`
-    div.style.height = `${ball.getUnwrappedField('radius') * 2}%`
+    div.style.left = `${ball.getUnwrappedField('cx') as number}%`
+    div.style.top = `${ball.getUnwrappedField('cy') as number}%`
+    div.style.width = `${(ball.getUnwrappedField('radius') as number) * 2}%`
+    div.style.height = `${(ball.getUnwrappedField('radius') as number) * 2}%`
     div.style.opacity = '0'
-    this.container.appendChild(div)
-    this.animateIntoView(
+    exercise.getContainer().appendChild(div)
+    exercise.animateIntoView(
       executionCtx,
-      `#${this.view.id} #ball-${ball.objectId}`
+      `#${exercise.getView().id} #ball-${ball.objectId}`
     )
   }
 
@@ -104,6 +102,6 @@ function fn(this: BreakoutExercise) {
   return Ball
 }
 
-export function buildBall(binder: any) {
-  return fn.bind(binder)()
+export function buildBall(exercise: BreakoutExercise) {
+  return fn(exercise)
 }

@@ -10,7 +10,7 @@ function fn(this: HouseExercise) {
     circle: Jiki.Instance
   ) => {
     if (circle.shape) {
-      this.animateShapeOutOfView(executionCtx, (circle.shape as any).element);
+      this.animateShapeOutOfView(executionCtx, (circle.shape as { element: SVGElement }).element);
     }
 
     this.fillColorHex(executionCtx, circle.getField("fill_color_hex"));
@@ -69,12 +69,20 @@ function fn(this: HouseExercise) {
     object.setField("z_index", z_index);
     drawCircle(executionCtx, object);
   });
-  Circle.addGetter("cx", "public", function(executionCtx: ExecutionContext, object: Jiki.Instance) {
-    return object.getField("cx");
-  });
-  Circle.addGetter("cy", "public", function(executionCtx: ExecutionContext, object: Jiki.Instance) {
-    return object.getField("cy");
-  });
+  Circle.addGetter(
+    "cx",
+    "public",
+    function (_executionCtx: ExecutionContext, object: Jiki.Instance) {
+      return object.getField("cx");
+    }
+  );
+  Circle.addGetter(
+    "cy",
+    "public",
+    function (_executionCtx: ExecutionContext, object: Jiki.Instance) {
+      return object.getField("cy");
+    }
+  );
 
   Circle.addSetter(
     "cx",

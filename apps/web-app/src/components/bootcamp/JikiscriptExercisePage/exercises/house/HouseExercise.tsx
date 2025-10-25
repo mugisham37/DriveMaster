@@ -1,8 +1,4 @@
-import React from 'react'
-import type { ExecutionContext } from '@/lib/interpreter/executor'
-import { Exercise } from '../Exercise'
-import * as Jiki from '@/lib/interpreter/jikiObjects'
-import { InterpretResult } from '@/lib/interpreter/interpreter'
+
 import DrawExercise from '../draw'
 import { buildRoof } from './Roof'
 import { buildFrame } from './Frame'
@@ -133,7 +129,7 @@ export default class HouseExercise extends DrawExercise {
   }
 
   // Setup Functions
-  public override getExerciseSpecificFunctions() {
+  public getExerciseSpecificFunctions() {
     return []
   }
 
@@ -151,5 +147,5 @@ export default class HouseExercise extends DrawExercise {
     this.HSLColor,
   ]
 
-  public availableFunctions = []
+  public override availableFunctions = []
 }

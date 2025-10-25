@@ -1,12 +1,10 @@
-import React from 'react'
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import * as Jiki from '@/interpreter/jikiObjects'
-import { offset } from '@popperjs/core'
-import { InterpretResult } from '@/interpreter/interpreter'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
+import { InterpretResult } from '@/lib/interpreter/interpreter'
 import { buildBlock, type BlockInstance } from './Block'
 import { buildBall, type BallInstance } from './Ball'
-import { buildPaddle, PaddleInstance } from './Paddle'
+import { buildPaddle, type PaddleInstance } from './Paddle'
 import { buildGame, type GameInstance } from './Game'
 import { buildCircle, CircleInstance } from './Circle'
 import { buildRectangle, RoundedRectangleInstance } from './RoundedRectangle'
@@ -14,6 +12,7 @@ import { buildRectangle, RoundedRectangleInstance } from './RoundedRectangle'
 export default class BreakoutExercise extends Exercise {
   private Block = buildBlock(this)
   private Ball = buildBall(this)
+  private Paddle = buildPaddle(this)
   private Game = buildGame(this)
   private Circle = buildCircle(this)
   private RoundedRectangle = buildRectangle(this)
@@ -30,37 +29,49 @@ export default class BreakoutExercise extends Exercise {
   public rectangleCircleInteractionCount = 0
   public circles: CircleInstance[] = []
   public roundedRectangles: RoundedRectangleInstance[] = []
+  
+  // Additional properties for game over views
+  private gameOverWinView?: HTMLElement
+  private gameOverLoseView?: HTMLElement
+  public ballPositions: [number, number][] = []
+  public paddleBallInteractionCount = 0
+  public blocks: BlockInstance[] = []
 
   public constructor() {
     super('breakout')
 
-    this.container = document.createElement('div')
-    this.container.classList.add('container')
-    this.view.appendChild(this.container)
-
-    this.ballPositions = []
-    this.paddleBallInteractionCount = 0
-    this.blocks = []
+    const container = document.createElement('div')
+    container.classList.add('container')
+    this.getView().appendChild(container)
+    // Use protected property access through getter
+    Object.defineProperty(this, 'container', { value: container, writable: false })
 
     this.circlePositions = []
-    this.rectangleCircleInteractionCount = 0
   }
   public disableAutoDrawBlock() {
     this.autoDrawBlock = false
   }
 
-  public getState() {
+  public getContainer(): HTMLElement {
+    return this.container
+  }
+
+  public override getView(): HTMLElement {
+    return super.getView()
+  }
+
+  public override getState() {
     return {
       numBlocks: this.blocks.length,
       numSmashedBlocks: this.blocks.filter((block: BlockInstance) =>
-        block.getUnwrappedField('smashed')
+        block.getUnwrappedField('smashed') as boolean
       ).length,
       numBallPositions: this.ballPositions.length,
       paddleBallInteractionCount: this.paddleBallInteractionCount,
 
       numOpaqueRoundedRectangles: this.roundedRectangles.filter(
         (rectangle: RoundedRectangleInstance) =>
-          rectangle.getUnwrappedField('opacity') == 1
+          (rectangle.getUnwrappedField('opacity') as number) == 1
       ).length,
       rectangleCircleInteractionCount: this.rectangleCircleInteractionCount,
       numCirclePositions: this.circlePositions.length,
@@ -68,11 +79,11 @@ export default class BreakoutExercise extends Exercise {
     }
   }
 
-  public setDefaultBallRadius(_, radius: number) {
+  public setDefaultBallRadius(_: unknown, radius: number) {
     this.default_ball_radius = radius
   }
 
-  public setDefaultBlockHeight(_, height: number) {
+  public setDefaultBlockHeight(_: unknown, height: number) {
     this.default_block_height = height
   }
 
@@ -112,33 +123,33 @@ export default class BreakoutExercise extends Exercise {
     const div = document.createElement('div')
     div.classList.add('block')
     div.id = `block-${block.objectId}`
-    div.style.left = `${block.getUnwrappedField('left')}%`
-    div.style.top = `${block.getUnwrappedField('top')}%`
-    div.style.width = `${block.getUnwrappedField('width')}%`
-    div.style.height = `${block.getUnwrappedField('height')}%`
+    div.style.left = `${block.getUnwrappedField('left') as number}%`
+    div.style.top = `${block.getUnwrappedField('top') as number}%`
+    div.style.width = `${block.getUnwrappedField('width') as number}%`
+    div.style.height = `${block.getUnwrappedField('height') as number}%`
     div.style.opacity = '0'
-    this.container.appendChild(div)
+    this.getContainer().appendChild(div)
 
     this.animateIntoView(
       executionCtx,
-      `#${this.view.id} #block-${block.objectId}`
+      `#${this.getView().id} #block-${block.objectId}`
     )
   }
 
   public redrawBall(executionCtx: ExecutionContext, ball: BallInstance) {
     this.addAnimation({
-      targets: `#${this.view.id} #ball-${ball.objectId}`,
+      targets: `#${this.getView().id} #ball-${ball.objectId}`,
       duration: 1,
       transformations: {
-        left: `${ball.getUnwrappedField('cx')}%`,
-        top: `${ball.getUnwrappedField('cy')}%`,
+        left: `${ball.getUnwrappedField('cx') as number}%`,
+        top: `${ball.getUnwrappedField('cy') as number}%`,
       },
       offset: executionCtx.getCurrentTime(),
     })
     executionCtx.fastForward(1)
   }
 
-  public logBallPaddleInteractions(executionCtx: ExecutionContext) {
+  public logBallPaddleInteractions(_executionCtx: ExecutionContext) {
     if (this.gameInstance == undefined) {
       return
     }
@@ -149,14 +160,14 @@ export default class BreakoutExercise extends Exercise {
     }
 
     const ballBottom =
-      ball.getUnwrappedField('cy') + ball.getUnwrappedField('radius')
-    const ballMiddle = ball.getUnwrappedField('cx')
+      (ball.getUnwrappedField('cy') as number) + (ball.getUnwrappedField('radius') as number)
+    const ballMiddle = ball.getUnwrappedField('cx') as number
     const paddleTop =
-      paddle.getUnwrappedField('cy') - paddle.getUnwrappedField('height') / 2
+      (paddle.getUnwrappedField('cy') as number) - (paddle.getUnwrappedField('height') as number) / 2
     const paddleLeft =
-      paddle.getUnwrappedField('cx') - paddle.getUnwrappedField('width') / 2
+      (paddle.getUnwrappedField('cx') as number) - (paddle.getUnwrappedField('width') as number) / 2
     const paddleRight =
-      paddle.getUnwrappedField('cx') + paddle.getUnwrappedField('width') / 2
+      (paddle.getUnwrappedField('cx') as number) + (paddle.getUnwrappedField('width') as number) / 2
 
     if (
       ballBottom == paddleTop &&
@@ -173,18 +184,18 @@ export default class BreakoutExercise extends Exercise {
     if (
       this.blocks.length > 0 &&
       this.blocks.every((block: BlockInstance) =>
-        block.getUnwrappedField('smashed')
+        block.getUnwrappedField('smashed') as boolean
       )
     ) {
       executionCtx.logicError(
         "You shouldn't move the ball when there were no blocks remaining."
       )
     }
-    const cx = ball.getUnwrappedField('cx')
-    const cy = ball.getUnwrappedField('cy')
-    const x_velocity = ball.getUnwrappedField('x_velocity')
-    const y_velocity = ball.getUnwrappedField('y_velocity')
-    const radius = ball.getUnwrappedField('radius')
+    const cx = ball.getUnwrappedField('cx') as number
+    const cy = ball.getUnwrappedField('cy') as number
+    const x_velocity = ball.getUnwrappedField('x_velocity') as number
+    const y_velocity = ball.getUnwrappedField('y_velocity') as number
+    const radius = ball.getUnwrappedField('radius') as number
 
     const newCx = cx + x_velocity
     const newCy = cy + y_velocity
@@ -215,7 +226,7 @@ export default class BreakoutExercise extends Exercise {
     }
 
     this.addAnimation({
-      targets: `#${this.view.id} #ball-${ball.objectId}`,
+      targets: `#${this.getView().id} #ball-${ball.objectId}`,
       duration: 1,
       transformations: {
         left: `${newCx}%`,
@@ -228,33 +239,29 @@ export default class BreakoutExercise extends Exercise {
     this.logBallPaddleInteractions(executionCtx)
   }
 
-  public gameOver(executionCtx: ExecutionContext, result: Jiki.JikiObject) {
-    if (!(result instanceof Jiki.String)) {
-      return executionCtx.logicError('Result must be either "win" or "lose"')
-    }
-    if (!(result.value === 'win' || result.value === 'lose')) {
-      return executionCtx.logicError('Result must be either "win" or "lose"')
-    }
-
-    if (result.value === 'win') {
+  public gameOver(executionCtx: ExecutionContext) {
+    // Check if all blocks are smashed to determine win/lose
+    const allBlocksSmashed = this.blocks.length > 0 && 
+      this.blocks.every((block: BlockInstance) => block.getUnwrappedField('smashed') as boolean)
+    
+    if (allBlocksSmashed) {
       this.result = 'win'
       this.gameOverWin(executionCtx)
-    }
-    if (result.value === 'lose') {
+    } else {
       this.result = 'lose'
       this.gameOverLose(executionCtx)
     }
 
-    executionCtx.updateState('gameOver', true)
+    executionCtx.updateState({ gameOver: true })
   }
 
   private gameOverWin(executionCtx: ExecutionContext) {
     this.gameOverWinView = document.createElement('div')
     this.gameOverWinView.classList.add('game-over-win')
     this.gameOverWinView.style.opacity = '0'
-    this.view.appendChild(this.gameOverWinView)
+    this.getView().appendChild(this.gameOverWinView)
     this.addAnimation({
-      targets: `#${this.view.id} .game-over-win`,
+      targets: `#${this.getView().id} .game-over-win`,
       duration: 100,
       transformations: {
         opacity: 0.9,
@@ -268,9 +275,9 @@ export default class BreakoutExercise extends Exercise {
     this.gameOverLoseView = document.createElement('div')
     this.gameOverLoseView.classList.add('game-over-lose')
     this.gameOverLoseView.style.opacity = '0'
-    this.view.appendChild(this.gameOverLoseView)
+    this.getView().appendChild(this.gameOverLoseView)
     this.addAnimation({
-      targets: `#${this.view.id} .game-over-lose`,
+      targets: `#${this.getView().id} .game-over-lose`,
       duration: 100,
       transformations: {
         opacity: 0.9,
@@ -281,25 +288,26 @@ export default class BreakoutExercise extends Exercise {
   }
 
   // Setup Functions
-  public setupBlocks(_: ExecutionContext, layout: [][]) {}
+  public setupBlocks(_: ExecutionContext, _layout: unknown[][]) {}
 
   public availableClasses = [
     this.Block,
     this.Ball,
+    this.Paddle,
     this.Game,
     this.Circle,
     this.RoundedRectangle,
   ]
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'move_ball',
-      func: this.moveBall.bind(this),
+      func: (...args: unknown[]) => this.moveBall(args[0] as ExecutionContext, args[1] as Jiki.Instance),
       description: 'moved the ball by its velocities',
     },
     {
       name: 'game_over',
-      func: this.gameOver.bind(this),
+      func: (...args: unknown[]) => this.gameOver(args[0] as ExecutionContext),
       description: 'announced the game as over',
     },
   ]

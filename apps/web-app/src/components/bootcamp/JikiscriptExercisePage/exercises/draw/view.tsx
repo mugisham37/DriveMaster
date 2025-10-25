@@ -16,10 +16,11 @@ export function DrawView() {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
+    const canvasSize = Math.max(rect.width, rect.height)
 
     setCoordinates({
-      x: aToR(Math.round(x)),
-      y: aToR(Math.round(y)),
+      x: aToR(Math.round(x), canvasSize),
+      y: aToR(Math.round(y), canvasSize),
       rawX: Math.round(x),
       rawY: Math.round(y),
     })

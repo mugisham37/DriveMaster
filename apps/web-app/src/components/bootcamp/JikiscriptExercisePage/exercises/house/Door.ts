@@ -8,52 +8,54 @@ function fn(this: HouseExercise) {
     this.fillColorHex(executionCtx, new Jiki.String('#A0512D'))
     this.rectangle(
       executionCtx,
-      door.getField('left') as Jiki.Number,
-      door.getField('top') as Jiki.Number,
-      door.getField('width') as Jiki.Number,
-      door.getField('height') as Jiki.Number
+      door.getField('left') as Jiki.JikiNumber,
+      door.getField('top') as Jiki.JikiNumber,
+      door.getField('width') as Jiki.JikiNumber,
+      door.getField('height') as Jiki.JikiNumber
     )
     storeShape(this, door)
 
-    this.fillColorHex(executionCtx, new Jiki.String('#FFDF00'))
+    this.fillColorHex(executionCtx, new Jiki.JikiString('#FFDF00'))
     this.circle(
       executionCtx,
-      //@ts-ignore
-      new Jiki.Number(
-        door.getUnwrappedField('left') + door.getUnwrappedField('width') - 2
+      new Jiki.JikiNumber(
+        (door.getUnwrappedField('left') as number) + (door.getUnwrappedField('width') as number) - 2
       ),
-      //@ts-ignore
-      new Jiki.Number(
-        door.getUnwrappedField('top') + door.getUnwrappedField('height') / 2
+      new Jiki.JikiNumber(
+        (door.getUnwrappedField('top') as number) + (door.getUnwrappedField('height') as number) / 2
       ),
-      new Jiki.Number(1)
+      new Jiki.JikiNumber(1)
     )
     const knobShape = this.shapes[this.shapes.length - 1]
-    knobShape.element.style.filter = 'brightness(100%)'
-    knobShape.element.style.zIndex = door
-      .getUnwrappedField('z_index')
-      .toString()
-    door['knobShape'] = knobShape
+    if (knobShape) {
+      knobShape.element.style.filter = 'brightness(100%)'
+      knobShape.element.style.zIndex = (door
+        .getUnwrappedField('z_index') as number)
+        .toString()
+      door['knobShape'] = knobShape
+    }
   }
 
   const changeDoorBrightness = (
     executionCtx: ExecutionContext,
     door: Jiki.Instance
   ) => {
-    const shape = door['knobShape']
-    this.addAnimation({
-      targets: `#${this.view.id} #${shape.element.id}`,
-      duration: 1,
-      transformations: {
-        filter: `brightness(${door.getUnwrappedField('brightness')}%)`,
-      },
-      offset: executionCtx.getCurrentTime(),
-    })
-    changeBrightness(executionCtx, this, door)
-    this.events.push(`door:brightness:${door.getUnwrappedField('brightness')}`)
+    const shape = door['knobShape'] as { element: { id: string } }
+    if (shape) {
+      this.addAnimation({
+        targets: `#${this.view.id} #${shape.element.id}`,
+        duration: 1,
+        transformations: {
+          filter: `brightness(${door.getUnwrappedField('brightness')}%)`,
+        },
+        offset: executionCtx.getCurrentTime(),
+      })
+      changeBrightness(executionCtx, this, door)
+      this.events.push(`door:brightness:${door.getUnwrappedField('brightness')}`)
+    }
   }
 
-  const Door = new Jiki.Class('Door')
+  const Door = new Jiki.JikiClass('Door', {})
   Door.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
@@ -100,6 +102,6 @@ function fn(this: HouseExercise) {
   return Door
 }
 
-export function buildDoor(binder: any) {
+export function buildDoor(binder: HouseExercise) {
   return fn.bind(binder)()
 }

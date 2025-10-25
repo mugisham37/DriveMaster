@@ -1,8 +1,7 @@
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import BreakoutExercise from './BreakoutExercise'
-import { BlockInstance, buildBlock } from './Block'
-import { bindAll } from 'lodash'
+import type BreakoutExercise from './BreakoutExercise'
+import { BlockInstance } from './Block'
 import { buildBall, type BallInstance } from './Ball'
 import { buildPaddle, type PaddleInstance } from './Paddle'
 
@@ -11,9 +10,7 @@ export type GameInstance = Jiki.Instance & {
   paddle: PaddleInstance
 }
 
-function fn(this: BreakoutExercise) {
-  const exercise = this
-  const Block = buildBlock(exercise)
+function fn(exercise: BreakoutExercise) {
   const Ball = buildBall(exercise)
   const Paddle = buildPaddle(exercise)
 
@@ -22,20 +19,20 @@ function fn(this: BreakoutExercise) {
     executionCtx: ExecutionContext,
     game: Jiki.Instance
   ) {
-    const ball = Ball.instantiate(executionCtx, [])
+    const ball = Ball.instantiate(executionCtx, []) as Jiki.Instance
     ball.setField('cy', new Jiki.Number(95 - exercise.default_ball_radius))
-    exercise.redrawBall(executionCtx, ball)
+    exercise.redrawBall(executionCtx, ball as BallInstance)
     exercise.gameInstance = game as GameInstance
 
-    game.setField('ball', ball)
-    game.setField('paddle', Paddle.instantiate(executionCtx, []))
+    game.setField('ball', ball as unknown as Jiki.JikiscriptValue)
+    game.setField('paddle', Paddle.instantiate(executionCtx, []) as unknown as Jiki.JikiscriptValue)
     game.setField('blocks', new Jiki.List([]))
   })
 
   Game.addGetter('ball', 'public')
-  Game.addSetter('ball', 'public')
+  Game.addSetter('ball', 'public', function() {})
   Game.addGetter('paddle', 'public')
-  Game.addSetter('paddle', 'public')
+  Game.addSetter('paddle', 'public', function() {})
   Game.addGetter('blocks', 'public')
 
   Game.addMethod(
@@ -47,11 +44,11 @@ function fn(this: BreakoutExercise) {
       game: Jiki.Instance,
       block: Jiki.JikiObject
     ) {
-      if (!(block instanceof Jiki.Instance)) {
+      if (!Jiki.isInstance(block)) {
         return executionCtx.logicError('block must be a Block')
       }
-      ;(game.getField('blocks') as Jiki.List).value.push(block)
-      exercise.drawBlock(executionCtx, block as BlockInstance)
+      ;(game.getField('blocks') as Jiki.JikiList).value.push(block)
+      exercise.drawBlock(executionCtx, block as unknown as BlockInstance)
     }
   )
 
@@ -61,16 +58,15 @@ function fn(this: BreakoutExercise) {
     'public',
     function (
       executionCtx: ExecutionContext,
-      game: Jiki.Instance,
-      result: Jiki.JikiObject
+      _game: Jiki.Instance
     ) {
-      exercise.gameOver(executionCtx, result)
+      exercise.gameOver(executionCtx)
     }
   )
 
   return Game
 }
 
-export function buildGame(binder: any) {
-  return fn.bind(binder)()
+export function buildGame(exercise: BreakoutExercise) {
+  return fn(exercise)
 }

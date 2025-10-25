@@ -5,7 +5,7 @@ import HouseExercise from './HouseExercise'
 export type HSLColorInstance = Jiki.Instance & {}
 
 function fn(this: HouseExercise) {
-  const HSLColor = new Jiki.Class('HSLColor')
+  const HSLColor = new Jiki.JikiClass('HSLColor', {})
   HSLColor.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
@@ -31,6 +31,6 @@ function fn(this: HouseExercise) {
   return HSLColor
 }
 
-export function buildHSLColor(binder: any) {
+export function buildHSLColor(binder: HouseExercise) {
   return fn.bind(binder)()
 }

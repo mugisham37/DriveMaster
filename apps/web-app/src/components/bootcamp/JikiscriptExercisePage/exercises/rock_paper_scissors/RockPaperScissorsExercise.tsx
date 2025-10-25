@@ -10,7 +10,7 @@ export default class RockPaperScissorsExercise extends Exercise {
   private player2Choice?: Choice
   private expectedResult?: Result
   private result?: Result
-  private container: HTMLDivElement
+  protected override container: HTMLDivElement
   private player1Elem: HTMLDivElement
   private player2Elem: HTMLDivElement
 
@@ -30,11 +30,11 @@ export default class RockPaperScissorsExercise extends Exercise {
     this.container.appendChild(this.player2Elem)
   }
 
-  public getState() {
+  public override getState() {
     return { result: this.result }
   }
 
-  public setChoices(executionCtx: ExecutionContext, player1: Choice, player2: Choice) {
+  public setChoices(_executionCtx: ExecutionContext, player1: Choice, player2: Choice) {
     this.player1Choice = player1
     this.player2Choice = player2
     const result = this.determineCorrectResult()
@@ -70,16 +70,16 @@ export default class RockPaperScissorsExercise extends Exercise {
     return 'player_2'
   }
 
-  public getPlayer1Choice(executionCtx: ExecutionContext): Jiki.JikiString {
+  public getPlayer1Choice(_executionCtx: ExecutionContext): Jiki.JikiString {
     return new Jiki.JikiString(this.player1Choice!)
   }
 
-  public getPlayer2Choice(executionCtx: ExecutionContext): Jiki.JikiString {
+  public getPlayer2Choice(_executionCtx: ExecutionContext): Jiki.JikiString {
     return new Jiki.JikiString(this.player2Choice!)
   }
 
   public announceResult(executionCtx: ExecutionContext, result: Jiki.JikiString) {
-    const resultStr = result.value
+    const resultStr = result.value as string
     if (
       resultStr !== 'player_1' &&
       resultStr !== 'player_2' &&
@@ -90,11 +90,11 @@ export default class RockPaperScissorsExercise extends Exercise {
       )
     }
 
-    this.result = resultStr
+    this.result = resultStr as Result
     if (resultStr !== this.expectedResult) {
       // TODO: Change logic error to be parameterized and sanitize the strings in the interpreter.
       executionCtx.logicError(
-        `Oh no! You announced the wrong result. There's chaos in the playing hall!\n\nYou should have announced \`"${this.expectedResult}"\` but you announced \`"${result}"\`.`
+        `Oh no! You announced the wrong result. There's chaos in the playing hall!\n\nYou should have announced \`"${this.expectedResult}"\` but you announced \`"${result.value}"\`.`
       )
     }
   }
@@ -102,17 +102,17 @@ export default class RockPaperScissorsExercise extends Exercise {
   public override availableFunctions = [
     {
       name: 'announce_result',
-      func: this.announceResult.bind(this),
+      func: (...args: unknown[]) => this.announceResult(args[0] as ExecutionContext, args[1] as Jiki.JikiString),
       description: 'announced the result of the game as ${arg1}',
     },
     {
       name: 'get_player_1_choice',
-      func: this.getPlayer1Choice.bind(this),
+      func: (...args: unknown[]) => this.getPlayer1Choice(args[0] as ExecutionContext),
       description: 'returned the choice of player 1',
     },
     {
       name: 'get_player_2_choice',
-      func: this.getPlayer2Choice.bind(this),
+      func: (...args: unknown[]) => this.getPlayer2Choice(args[0] as ExecutionContext),
       description: 'returned the choice of player 2',
     },
   ]

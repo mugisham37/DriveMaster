@@ -8,10 +8,10 @@ function fn(this: HouseExercise) {
     this.fillColorHex(executionCtx, new Jiki.String('#f0985b'))
     this.rectangle(
       executionCtx,
-      frame.getField('left') as Jiki.Number,
-      frame.getField('top') as Jiki.Number,
-      frame.getField('width') as Jiki.Number,
-      frame.getField('height') as Jiki.Number
+      frame.getField('left') as Jiki.JikiNumber,
+      frame.getField('top') as Jiki.JikiNumber,
+      frame.getField('width') as Jiki.JikiNumber,
+      frame.getField('height') as Jiki.JikiNumber
     )
     storeShape(this, frame)
   }
@@ -26,7 +26,7 @@ function fn(this: HouseExercise) {
     )
   }
 
-  const Frame = new Jiki.Class('Frame')
+  const Frame = new Jiki.JikiClass('Frame', {})
   Frame.addConstructor(function (
     executionCtx: ExecutionContext,
     object: Jiki.Instance,
@@ -76,6 +76,6 @@ function fn(this: HouseExercise) {
   return Frame
 }
 
-export function buildFrame(binder: any) {
+export function buildFrame(binder: HouseExercise) {
   return fn.bind(binder)()
 }

@@ -1,29 +1,28 @@
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import DrawExercise from '../draw'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 
 export default class GolfExercise extends DrawExercise {
+  private shotLength: number = 0
+
   constructor() {
     super('golf')
-
-    // Set some defaults
-    this.shotLength = 0
   }
 
   setShotLength(_: ExecutionContext, length: number) {
     this.shotLength = length
   }
-  getShotLength(_: ExecutionContext): Jiki.Number {
+  getShotLength(_: ExecutionContext): Jiki.JikiNumber {
     return new Jiki.Number(this.shotLength)
   }
-  fireFireworks(executionCtx: ExecutionContext) {
-    super.fireFireworks(executionCtx, executionCtx.getCurrentTime())
+  override fireFireworks(executionCtx: ExecutionContext) {
+    super.fireFireworks(executionCtx, 0)
   }
 
   // TODO: How do I get just the ones I want out of DrawExercise
   // (circle, fillColorHex, fillColorRGB, fillColorHSL)
   // and then add the new ones to this?
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'clear',
       func: this.clear.bind(this),

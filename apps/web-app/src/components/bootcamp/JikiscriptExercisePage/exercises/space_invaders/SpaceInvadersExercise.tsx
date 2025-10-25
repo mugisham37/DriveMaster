@@ -2,16 +2,14 @@
 import { Exercise } from '../Exercise'
 import { ExecutionContext } from '@/lib/interpreter/executor'
 import { cloneDeep } from 'lodash'
-import { addOrdinalSuffix as deepTrim } from '@/lib/interpreter/describers/helpers'
+
 import { isNumber } from '@/lib/interpreter/checks'
 import { extractFunctionCallExpressions } from '../../test-runner/generateAndRunTestSuite/checkers'
-import {
-  RepeatUntilGameOverStatement,
-  Statement,
-} from '@/lib/interpreter/statement'
+import { Statement } from '@/lib/interpreter/statement'
 import { InterpretResult } from '@/lib/interpreter/interpreter'
 import * as Jiki from '@/lib/interpreter/jikiObjects'
-import { exec } from 'child_process'
+
+
 
 type GameStatus = 'running' | 'won' | 'lost'
 type AlienStatus = 'alive' | 'dead'
@@ -22,9 +20,9 @@ class Alien {
 
   public constructor(
     public elem: HTMLElement,
-    row: number,
-    col: number,
-    type: number
+    public row: number,
+    public col: number,
+    public type: number
   ) {
     this.status = 'alive'
   }
@@ -56,6 +54,10 @@ export default class SpaceInvadersExercise extends Exercise {
   )
   private laserPosition = 0
   private features = { alienRespawning: false }
+  private aliens: (Alien | null)[][] = []
+  private startingAliens: (Alien | null)[][] = []
+  private laser!: HTMLElement
+  private lastShotAt: number = 0
 
   public constructor() {
     super('space-invaders')
@@ -70,9 +72,9 @@ export default class SpaceInvadersExercise extends Exercise {
     return { gameStatus: this.gameStatus }
   }
 
-  public setupAliens(_: ExecutionContext, rows: number[][]) {
-    this.aliens = rows.map((row, rowIdx) => {
-      return row.map((type, colIdx) => {
+  public setupAliens(_executionCtx: ExecutionContext, rows: number[][]) {
+    this.aliens = rows.map((row: number[], rowIdx: number) => {
+      return row.map((type: number, colIdx: number) => {
         if (type === 0) return null
         return this.addAlien(rowIdx, colIdx, type)
       })
@@ -109,6 +111,7 @@ export default class SpaceInvadersExercise extends Exercise {
   ) {
     const deathTime = executionCtx.getCurrentTime() + this.shotDuration
     alien.status = 'dead'
+    alien.lastKilledAt = deathTime
     ;[
       ['tl', -10, -10, -180],
       ['tr', 10, -10, 180],
@@ -144,7 +147,7 @@ export default class SpaceInvadersExercise extends Exercise {
 
     // Only respawn each alien once
     if (alien.respawnsAt !== undefined) {
-      alien.respawnsAt = undefined
+      delete alien.respawnsAt
       return
     }
 
@@ -201,18 +204,17 @@ export default class SpaceInvadersExercise extends Exercise {
   private checkForWin(executionCtx: ExecutionContext) {
     if (this.allAliensDead(executionCtx)) {
       this.gameStatus = 'won'
-      executionCtx.updateState('gameOver', true)
     }
   }
 
-  public isAlienAbove(executionCtx: ExecutionContext): Jiki.Boolean {
-    return new Jiki.Boolean(
-      this.aliens.some((row) => {
+  public isAlienAbove(executionCtx: ExecutionContext): Jiki.JikiBoolean {
+    return new Jiki.JikiBoolean(
+      this.aliens.some((row: (Alien | null)[]) => {
         const alien = row[this.laserPosition]
         if (alien === null) {
           return false
         }
-        return alien.isAlive(executionCtx.getCurrentTime())
+        return alien ? alien.isAlive(executionCtx.getCurrentTime()) : false
       })
     )
   }
@@ -225,9 +227,9 @@ export default class SpaceInvadersExercise extends Exercise {
     }
     this.lastShotAt = executionCtx.getCurrentTime()
 
-    let targetRow = null
+    let targetRow: number | null = null
     let targetAlien: Alien | null = null
-    this.aliens.forEach((row, rowIdx) => {
+    this.aliens.forEach((row: (Alien | null)[], rowIdx: number) => {
       const alien = row[this.laserPosition]
       if (alien == null) {
         return
@@ -237,10 +239,10 @@ export default class SpaceInvadersExercise extends Exercise {
       }
 
       targetRow = rowIdx
-      targetAlien = row[this.laserPosition]
+      targetAlien = alien
     })
 
-    let targetTop
+    let targetTop: string | number
     if (targetRow === null) {
       targetTop = -10
     } else {
@@ -267,7 +269,7 @@ export default class SpaceInvadersExercise extends Exercise {
     this.addAnimation({
       targets: `#${this.view.id} #${shot.id}`,
       duration: duration,
-      transformations: { top: targetTop },
+      transformations: { top: targetTop as any },
       offset: executionCtx.getCurrentTime(),
       easing: 'linear',
     })
@@ -275,7 +277,6 @@ export default class SpaceInvadersExercise extends Exercise {
     if (targetAlien === null) {
       executionCtx.logicError('Oh no, you missed. Wasting ammo is not allowed!')
       this.gameStatus = 'lost'
-      executionCtx.updateState('gameOver', true)
     } else {
       this.killAlien(executionCtx, targetAlien, shot)
 
@@ -289,7 +290,7 @@ export default class SpaceInvadersExercise extends Exercise {
   public moveLeft(executionCtx: ExecutionContext) {
     if (this.laserPosition == this.minLaserPosition) {
       executionCtx.logicError('Oh no, you tried to move off the edge!')
-      executionCtx.updateState('gameOver', true)
+      return
     }
 
     this.laserPosition -= 1
@@ -299,7 +300,7 @@ export default class SpaceInvadersExercise extends Exercise {
   public moveRight(executionCtx: ExecutionContext) {
     if (this.laserPosition == this.maxLaserPosition) {
       executionCtx.logicError('Oh no, you tried to move off the edge!')
-      executionCtx.updateState('gameOver', true)
+      return
     }
 
     this.laserPosition += 1
@@ -308,37 +309,40 @@ export default class SpaceInvadersExercise extends Exercise {
 
   public getStartingAliensInRow(
     executionCtx: ExecutionContext,
-    row: Jiki.Number
-  ): Jiki.List {
+    row: Jiki.JikiNumber
+  ): Jiki.JikiList {
     if (!isNumber(row.value)) {
       executionCtx.logicError(
         'Oh no, the row input you provided is not a number.'
       )
+      return new Jiki.JikiList([])
     }
 
-    if (row.value < 1 || row.value > this.startingAliens.length) {
+    const rowValue = row.value as number
+    if (rowValue < 1 || rowValue > this.startingAliens.length) {
       executionCtx.logicError(
-        deepTrim(`
-          Oh no, you tried to access a row of aliens that doesn't exist.
-          You asked for row ${row.value}, but there are only ${this.startingAliens.length} rows of aliens.
-        `)
+        `Oh no, you tried to access a row of aliens that doesn't exist. You asked for row ${rowValue}, but there are only ${this.startingAliens.length} rows of aliens.`
       )
+      return new Jiki.JikiList([])
     }
 
-    return new Jiki.List(
-      this.startingAliens
-        .slice()
-        .reverse()
-        [row.value - 1].map((alien) => alien !== null)
-        .map((alive) => new Jiki.Boolean(alive))
+    const rowData = this.startingAliens.slice().reverse()[rowValue - 1]
+    if (!rowData) {
+      return new Jiki.JikiList([])
+    }
+    
+    return new Jiki.JikiList(
+      rowData
+        .map((alien: Alien | null) => alien !== null)
+        .map((alive: boolean) => new Jiki.JikiBoolean(alive) as any)
     )
   }
 
-  public getStartingAliens(_: ExecutionContext) {
-    return [...this.startingAliens.map((row) => row.map(Boolean))]
+  public getStartingAliens(_executionCtx: ExecutionContext) {
+    return this.startingAliens.map((row: (Alien | null)[]) => row.map(Boolean))
   }
 
-  override fireFireworks(executionCtx: ExecutionContext) {
+  public override fireFireworks(executionCtx: ExecutionContext, startTime?: number) {
     if (!this.allAliensDead(executionCtx)) {
       executionCtx.logicError(
         'You need to defeat all the aliens before you can celebrate!'
@@ -346,93 +350,94 @@ export default class SpaceInvadersExercise extends Exercise {
     }
     super.fireFireworks(
       executionCtx,
-      executionCtx.getCurrentTime() + this.shotDuration
+      startTime || executionCtx.getCurrentTime() + this.shotDuration
     )
 
     executionCtx.fastForward(2500)
-    executionCtx.updateState('gameOver', true)
   }
 
-  public wasFireworksCalledInsideRepeatLoop(result: InterpretResult) {
-    const callsInsideRepeat = (statements) =>
+  public wasFireworksCalledInsideRepeatLoop(result: InterpretResult): boolean {
+    const callsInsideRepeat = (statements: unknown[]): unknown[] =>
       statements
-        .filter((obj) => obj)
-        .map((elem: Statement) => {
-          if (elem instanceof RepeatUntilGameOverStatement) {
-            return extractFunctionCallExpressions(elem.body).filter(
-              (expr) => expr.callee.name.lexeme === 'fire_fireworks'
+        .filter((obj: unknown) => obj)
+        .map((elem: unknown) => {
+          const element = elem as { type?: string; body?: unknown[]; children?: () => unknown[] }
+          if (element.type === 'RepeatUntilGameOverStatement') {
+            const body = element.body || element.children?.() || []
+            return extractFunctionCallExpressions(body as Statement[]).filter(
+              (expr: { callee?: { name?: { lexeme?: string } } }) => expr.callee?.name?.lexeme === 'fire_fireworks'
             )
           }
-          return callsInsideRepeat(elem.children())
+          const children = element.children?.() || []
+          return callsInsideRepeat(children)
         })
         .flat()
 
-    const callsOutsideRepeat = (statements) =>
+    const callsOutsideRepeat = (statements: unknown[]): unknown[] =>
       statements
-        .filter((obj) => obj)
-        .map((elem: Statement) => {
-          if (elem instanceof RepeatUntilGameOverStatement) {
+        .filter((obj: unknown) => obj)
+        .map((elem: unknown) => {
+          const element = elem as { type?: string; children?: () => unknown[] }
+          if (element.type === 'RepeatUntilGameOverStatement') {
             return []
           }
-          return callsOutsideRepeat(elem.children())
+          const children = element.children?.() || []
+          return callsOutsideRepeat(children)
         })
         .flat()
 
+    const statements = (result.meta as { statements?: unknown[] })?.statements || []
     return (
-      callsInsideRepeat(result.meta.statements).length > 0 &&
-      callsOutsideRepeat(result.meta.statements).length === 0
+      callsInsideRepeat(statements).length > 0 &&
+      callsOutsideRepeat(statements).length === 0
     )
   }
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'move_left',
-      func: this.moveLeft.bind(this),
+      func: (...args: unknown[]) => this.moveLeft(args[0] as ExecutionContext),
       description: 'moved the laser canon to the left',
     },
     {
       name: 'moveLeft',
-      func: this.moveLeft.bind(this),
+      func: (...args: unknown[]) => this.moveLeft(args[0] as ExecutionContext),
       description: 'moved the laser canon to the left',
     },
     {
       name: 'move_right',
-      func: this.moveRight.bind(this),
+      func: (...args: unknown[]) => this.moveRight(args[0] as ExecutionContext),
       description: 'moved the laser canon to the right',
     },
     {
       name: 'moveRight',
-      func: this.moveRight.bind(this),
+      func: (...args: unknown[]) => this.moveRight(args[0] as ExecutionContext),
       description: 'moved the laser canon to the right',
     },
     {
       name: 'shoot',
-      func: this.shoot.bind(this),
+      func: (...args: unknown[]) => this.shoot(args[0] as ExecutionContext),
       description: 'shot the laser upwards',
     },
     {
       name: 'is_alien_above',
-      func: this.isAlienAbove.bind(this),
+      func: (...args: unknown[]) => this.isAlienAbove(args[0] as ExecutionContext),
       description: 'determined if there was an alien above the laser canon',
     },
     {
       name: 'get_starting_aliens_in_row',
-      func: this.getStartingAliensInRow.bind(this),
+      func: (...args: unknown[]) => this.getStartingAliensInRow(args[0] as ExecutionContext, args[1] as Jiki.JikiNumber),
       description: 'retrieved the starting positions of row ${arg1} of aliens',
     },
     {
       name: 'getStartingAliens',
-      func: this.getStartingAliens.bind(this),
+      func: (...args: unknown[]) => this.getStartingAliens(args[0] as ExecutionContext),
       description: 'retrieved the starting positions of row ${arg1} of aliens',
     },
     {
       name: 'fire_fireworks',
-      func: this.fireFireworks.bind(this),
+      func: (...args: unknown[]) => this.fireFireworks(args[0] as ExecutionContext),
       description: 'fired off celebratory fireworks',
     },
   ]
-
-  public override getExerciseSpecificFunctions() {
-    return []
-  }
 }

@@ -1,29 +1,32 @@
-import React from 'react'
-import type { ExecutionContext } from '@/interpreter/executor'
+import type { ExecutionContext } from '@/lib/interpreter/executor'
 import { Exercise } from '../Exercise'
-import * as Jiki from '@/interpreter/jikiObjects'
+import * as Jiki from '@/lib/interpreter/jikiObjects'
 import { genericSetupFunctions } from '../../test-runner/generateAndRunTestSuite/genericSetupFunctions'
 
 export default class DataExercise extends Exercise {
-  public static hasView = false
+  public static override hasView = false
 
   public constructor() {
     super()
   }
 
-  public getState() {
+  public override getState() {
     return {}
   }
 
   private fetchData(
     executionCtx: ExecutionContext,
-    url: Jiki.String,
-    params: Jiki.Dictionary
-  ): Jiki.Dictionary {
-    if (!(url instanceof Jiki.String))
-      return executionCtx.logicError('URL must be a string')
-    if (!(params instanceof Jiki.Dictionary))
-      return executionCtx.logicError('Params must be a dictionary')
+    url: Jiki.JikiString,
+    params: Jiki.JikiDictionary
+  ): Jiki.JikiDictionary {
+    if (!(url instanceof Jiki.JikiString)) {
+      executionCtx.logicError('URL must be a string')
+      return new Jiki.JikiDictionary({ error: 'URL must be a string' })
+    }
+    if (!(params instanceof Jiki.JikiDictionary)) {
+      executionCtx.logicError('Params must be a dictionary')
+      return new Jiki.JikiDictionary({ error: 'Params must be a dictionary' })
+    }
 
     if (url.value == 'https://myllm.com/api/v2/qanda') {
       return this.llmRequest(executionCtx, params)
@@ -40,37 +43,37 @@ export default class DataExercise extends Exercise {
     if (url.value.startsWith('https://api.school.com/')) {
       return this.gradesRequest(executionCtx, url.value)
     } else {
-      return Jiki.wrapJSToJikiObject({ error: 'Unknown URL' })
+      return new Jiki.JikiDictionary({ error: 'Unknown URL' })
     }
   }
 
   private gradesRequest(
     executionCtx: ExecutionContext,
     url: string
-  ): Jiki.Dictionary {
+  ): Jiki.JikiDictionary {
     if (url == 'https://api.school.com/v4/grades/2025/class-6') {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         data: {
           teacher: 'miss joseph',
           grades: ['A', 'A', 'A', 'A', 'A', 'A'],
         },
       })
     } else if (url == 'https://api.school.com/v3/grades/2024/class-7') {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         data: {
           teacher: 'mr omar',
           grades: 'BBBBBBBBBBBB',
         },
       })
     } else if (url == 'https://api.school.com/v3/grades/2024/class-2') {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         data: {
           teacher: 'dr li',
           grades: 'BBDEAACADEDFFA',
         },
       })
     } else if (url == 'https://api.school.com/v4/grades/2025/class-9') {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         data: {
           teacher: 'mrs bankole',
           grades: [
@@ -93,7 +96,7 @@ export default class DataExercise extends Exercise {
         },
       })
     } else if (url == 'https://api.school.com/v3/grades/2024/class-3') {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         data: {
           teacher: `${genericSetupFunctions.randomHonorific()} perez espinosa`,
           grades: 'DABAAECD',
@@ -101,19 +104,25 @@ export default class DataExercise extends Exercise {
       })
     }
     executionCtx.logicError('Data not found')
-    return Jiki.wrapJSToJikiObject({ error: 'Data not found.' })
+    return new Jiki.JikiDictionary({ error: 'Data not found.' })
   }
 
   private timeRequest(
     executionCtx: ExecutionContext,
-    params: Jiki.Dictionary
-  ): Jiki.Dictionary {
-    const city = params.value.get('city')
-    if (!city) {
+    params: Jiki.JikiDictionary
+  ): Jiki.JikiDictionary {
+    const cityValue = params.value['city']
+    if (!cityValue) {
       executionCtx.logicError('Please specify a city')
+      return new Jiki.JikiDictionary({ error: 'Please specify a city' })
     }
-    if (city.value == 'Amsterdam') {
-      return Jiki.wrapJSToJikiObject({
+    
+    // Extract the actual city string value
+    const city = typeof cityValue === 'object' && cityValue && 'value' in cityValue 
+      ? (cityValue as Jiki.JikiObject).value 
+      : cityValue
+    if (city == 'Amsterdam') {
+      return new Jiki.JikiDictionary({
         year: 2025,
         month: 3,
         day: 3,
@@ -128,8 +137,8 @@ export default class DataExercise extends Exercise {
         dayOfWeek: 'Monday',
         dstActive: false,
       })
-    } else if (city.value == 'Amsterdam') {
-      return Jiki.wrapJSToJikiObject({
+    } else if (city == 'Amsterdam') {
+      return new Jiki.JikiDictionary({
         year: 2025,
         month: 3,
         day: 3,
@@ -144,8 +153,8 @@ export default class DataExercise extends Exercise {
         dayOfWeek: 'Monday',
         dstActive: false,
       })
-    } else if (city.value == 'Tokyo') {
-      return Jiki.wrapJSToJikiObject({
+    } else if (city == 'Tokyo') {
+      return new Jiki.JikiDictionary({
         year: 2025,
         month: 3,
         day: 3,
@@ -160,8 +169,8 @@ export default class DataExercise extends Exercise {
         dayOfWeek: 'Monday',
         dstActive: false,
       })
-    } else if (city.value == 'Lima') {
-      return Jiki.wrapJSToJikiObject({
+    } else if (city == 'Lima') {
+      return new Jiki.JikiDictionary({
         year: 2025,
         month: 3,
         day: 2,
@@ -177,21 +186,27 @@ export default class DataExercise extends Exercise {
         dstActive: false,
       })
     } else {
-      return Jiki.wrapJSToJikiObject({ error: 'Could not determine the time.' })
+      return new Jiki.JikiDictionary({ error: 'Could not determine the time.' })
     }
   }
 
   private llmRequest(
     executionCtx: ExecutionContext,
-    params: Jiki.Dictionary
-  ): Jiki.Dictionary {
-    const question = params.value.get('question')
-    if (!question) {
+    params: Jiki.JikiDictionary
+  ): Jiki.JikiDictionary {
+    const questionValue = params.value['question']
+    if (!questionValue) {
       executionCtx.logicError('Please specify a question')
+      return new Jiki.JikiDictionary({ error: 'Please specify a question' })
     }
+    
+    // Extract the actual question string value
+    const question = typeof questionValue === 'object' && questionValue && 'value' in questionValue 
+      ? (questionValue as Jiki.JikiObject).value 
+      : questionValue
 
-    if (question.value == "Who won the 1966 Football Men's World Cup?") {
-      return Jiki.wrapJSToJikiObject({
+    if (question == "Who won the 1966 Football Men's World Cup?") {
+      return new Jiki.JikiDictionary({
         response: {
           question: "Who won the 1966 Football Men's World Cup?",
           answers: [{ text: 'England', certainty: '1' }],
@@ -201,9 +216,9 @@ export default class DataExercise extends Exercise {
         },
       })
     } else if (
-      question.value == "What's the best cacao percentage in chocolate?"
+      question == "What's the best cacao percentage in chocolate?"
     ) {
-      return Jiki.wrapJSToJikiObject({
+      return new Jiki.JikiDictionary({
         response: {
           question: "What's the best cacao percentage in chocolate?",
           answers: [
@@ -226,8 +241,8 @@ export default class DataExercise extends Exercise {
           time: '123ms',
         },
       })
-    } else if (question.value == "What's the best website to learn to code?") {
-      return Jiki.wrapJSToJikiObject({
+    } else if (question == "What's the best website to learn to code?") {
+      return new Jiki.JikiDictionary({
         response: {
           question: "What's the best website to learn to code?",
           answers: [
@@ -243,15 +258,15 @@ export default class DataExercise extends Exercise {
         },
       })
     } else {
-      return Jiki.wrapJSToJikiObject({ error: 'Could not determine answer' })
+      return new Jiki.JikiDictionary({ error: 'Could not determine answer' })
     }
   }
 
   private spotifyUserRequest(
-    executionCtx: ExecutionContext,
+    _executionCtx: ExecutionContext,
     url: string
-  ): Jiki.Dictionary {
-    const emptyDict = Jiki.wrapJSToJikiObject({ items: [] })
+  ): Jiki.JikiDictionary {
+    const emptyDict = new Jiki.JikiDictionary({ items: [] })
 
     // Extract username from https://api.spotify.com/v1/users/{username}
     // using a regexp where username can be a-z
@@ -259,10 +274,10 @@ export default class DataExercise extends Exercise {
       /https:\/\/api\.spotify\.com\/v1\/users\/([a-zA-Z]+)/
     )
     if (match === null)
-      return Jiki.wrapJSToJikiObject({ error: 'Could not parse URL' })
+      return new Jiki.JikiDictionary({ error: 'Could not parse URL' })
     const username = match[1]
     if (username === null)
-      return Jiki.wrapJSToJikiObject({ error: 'Could not parse URL' })
+      return new Jiki.JikiDictionary({ error: 'Could not parse URL' })
 
     let artists: string[] | undefined
     switch (username) {
@@ -284,30 +299,30 @@ export default class DataExercise extends Exercise {
         ]
         break
       default:
-        return Jiki.wrapJSToJikiObject({ error: 'Unknown user' })
+        return new Jiki.JikiDictionary({ error: 'Unknown user' })
     }
     if (!artists) return emptyDict
 
-    return Jiki.wrapJSToJikiObject({
+    return new Jiki.JikiDictionary({
       items: artists.map((id) => ({
         urls: { spotify_api: `https://api.spotify.com/v1/artists/${id}` },
       })),
     })
   }
   private spotifyArtistRequest(
-    executionCtx: ExecutionContext,
+    _executionCtx: ExecutionContext,
     url: string
-  ): Jiki.Dictionary {
+  ): Jiki.JikiDictionary {
     // Extract artist id from https://api.spotify.com/v1/artist/{id}
     // using a regexp where id can be a-z, A-Z, 0-9
     const match = url.match(
       /https:\/\/api\.spotify\.com\/v1\/artists\/([a-zA-Z0-9]+)/
     )
     if (match === null)
-      return Jiki.wrapJSToJikiObject({ error: 'Could not parse URL' })
+      return new Jiki.JikiDictionary({ error: 'Could not parse URL' })
     const artistId = match[1]
     if (artistId === null)
-      return Jiki.wrapJSToJikiObject({ error: 'Could not parse URL' })
+      return new Jiki.JikiDictionary({ error: 'Could not parse URL' })
 
     let name: string | undefined
     switch (artistId) {
@@ -340,15 +355,18 @@ export default class DataExercise extends Exercise {
         break
     }
     if (name === undefined) {
-      return Jiki.wrapJSToJikiObject({ error: 'Unknown artist' })
+      return new Jiki.JikiDictionary({ error: 'Unknown artist' })
     }
-    return Jiki.wrapJSToJikiObject({ name })
+    return new Jiki.JikiDictionary({ name })
   }
 
-  public availableFunctions = [
+  public override availableFunctions = [
     {
       name: 'fetch',
-      func: this.fetchData.bind(this),
+      func: (...args: unknown[]) => {
+        const [executionCtx, url, params] = args as [ExecutionContext, Jiki.JikiString, Jiki.JikiDictionary]
+        return this.fetchData(executionCtx, url, params)
+      },
       description: 'fetched data from the provided URL',
     },
   ]
