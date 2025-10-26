@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { Avatar, TrackIcon } from '@/components/common'
 import { fromNow } from '@/utils/date'

@@ -1,3 +1,5 @@
+'use client'
+
 // i18n-key-prefix: insidersStatus
 // i18n-namespace: components/insiders
 import React, { useCallback, useEffect, useState } from 'react'

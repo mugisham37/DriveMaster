@@ -1,3 +1,5 @@
+'use client'
+
 // i18n-key-prefix: paymentPending
 // i18n-namespace: components/insiders
 import React, { useEffect } from 'react'

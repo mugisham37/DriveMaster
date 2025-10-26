@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { usePaginatedRequestQuery, type Request as RequestQueryType } from '@/hooks/request-query'
 import { useHistory, removeEmpty } from '@/hooks/use-history'

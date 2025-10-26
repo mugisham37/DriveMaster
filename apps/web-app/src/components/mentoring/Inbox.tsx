@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { DiscussionList } from './inbox/DiscussionList'
 import { StatusTab } from './inbox/StatusTab'

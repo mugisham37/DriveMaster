@@ -2,24 +2,28 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { CustomFunctionEditor } from "@/components/bootcamp";
+import dynamic from 'next/dynamic';
+const CustomFunctionEditor = dynamic(
+  () => import('@/components/bootcamp/CustomFunctionEditor').then((mod) => mod.CustomFunctionEditor),
+  { ssr: false }
+);
 
-interface CustomFunctionEditorPageProps {
-  params: { uuid: string };
+interface Props {
+  params: {
+    uuid: string;
+  };
 }
 
 export async function generateMetadata({
   params,
-}: CustomFunctionEditorPageProps): Promise<Metadata> {
+}: Props): Promise<Metadata> {
   return {
-    title: `Custom Function Editor - Exercism Bootcamp`,
+    title: `Custom Function Editor - DriveMaster Bootcamp`,
     description: `Edit custom function: ${params.uuid}`,
   };
 }
 
-export default async function CustomFunctionEditorPage({
-  params,
-}: CustomFunctionEditorPageProps) {
+export default async function Page({ params }: Props) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
@@ -27,46 +31,11 @@ export default async function CustomFunctionEditorPage({
   }
 
   try {
-    // Mock custom function data
-    const customFunction = {
-      uuid: params.uuid,
-      name: "myCustomFunction",
-      active: true,
-      description: "A custom function for bootcamp exercises",
-      predefined: false,
-      code: 'function myCustomFunction() {\n  // Your code here\n  return "Hello World";\n}',
-      tests: [
-        {
-          uuid: "test-1",
-          args: "",
-          expected: "Hello World",
-        },
-      ],
-    };
-
-    const customFunctions = {
-      selected: [customFunction.uuid],
-      forInterpreter: [{
-        name: customFunction.name,
-        arity: 0, // Default arity
-        code: customFunction.code,
-        description: customFunction.description,
-        dependencies: []
-      }]
-    };
-
-    const links = {
-      updateCustomFns: `/api/bootcamp/custom-functions/${params.uuid}`,
-      customFnsDashboard: "/bootcamp/custom-functions",
-      deleteCustomFn: `/api/bootcamp/custom-functions/${params.uuid}/delete`,
-    };
 
     return (
-      <CustomFunctionEditor
-        customFunction={customFunction}
-        customFunctions={customFunctions}
-        links={links}
-      />
+      <div className="container mx-auto px-4 py-8">
+        <CustomFunctionEditor uuid={params.uuid} />
+      </div>
     );
   } catch (error) {
     console.error("Error loading custom function:", error);
