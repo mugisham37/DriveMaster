@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { shortFromNow, fromNow } from "@/utils/time";
 import { SubmissionMethodIcon } from "./iteration-summary/SubmissionMethodIcon";

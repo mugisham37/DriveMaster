@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 import { FlashMessages } from "@/components/common";
 import { getServerAuthSession } from "@/lib/auth";
 import { ComponentInitializer } from "@/lib/component-initializer";
@@ -73,10 +74,12 @@ export default async function RootLayout({
         className={`${inter.variable} ${poppins.variable} antialiased`}
       >
         <SessionProvider session={session as Record<string, unknown> | null}>
-          <ComponentInitializer />
-          <PerformanceMonitor />
-          <FlashMessages />
-          {children}
+          <I18nProvider>
+            <ComponentInitializer />
+            <PerformanceMonitor />
+            <FlashMessages />
+            {children}
+          </I18nProvider>
         </SessionProvider>
       </body>
     </html>

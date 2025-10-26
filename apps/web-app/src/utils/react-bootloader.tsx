@@ -82,6 +82,9 @@ const loadStylesheet = function (url: string): Promise<void> {
 };
 
 function initEventListeners() {
+  // Only run on client side
+  if (typeof window === 'undefined') return;
+  
   // As we have conditional stylesheets per page, we need to extract and
   // render those when the frame changes. We want the CSS to load BEFORE
   // then HTML renders, so we get any stylesheets downloaded and THEN render
@@ -380,4 +383,7 @@ function renderTooltip(mappings: ComponentMappings, elem: HTMLElement) {
   );
 }
 
-initEventListeners();
+// Only initialize event listeners on client side
+if (typeof window !== 'undefined') {
+  initEventListeners();
+}

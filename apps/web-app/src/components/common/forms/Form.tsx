@@ -1,3 +1,5 @@
+'use client'
+
 import React, { FormEvent, useCallback } from 'react'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { useFormSubmission } from '@/hooks/useFormSubmission'

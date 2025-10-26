@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useState } from 'react'
 import Modal, { ModalProps } from '../../modals/Modal'
 import { Track } from '../../types'
