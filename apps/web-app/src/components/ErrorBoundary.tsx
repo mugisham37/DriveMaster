@@ -1,3 +1,5 @@
+'use client'
+
 import React, { Component, ReactNode } from 'react'
 import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-boundary'
 

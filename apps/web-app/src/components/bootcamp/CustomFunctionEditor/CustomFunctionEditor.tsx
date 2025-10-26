@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useCallback, useEffect, useMemo } from 'react'
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary'
 import { CodeMirror } from '../JikiscriptExercisePage/CodeMirror/CodeMirror'

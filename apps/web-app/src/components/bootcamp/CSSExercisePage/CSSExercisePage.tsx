@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { Resizer } from '../JikiscriptExercisePage/hooks/useResize'

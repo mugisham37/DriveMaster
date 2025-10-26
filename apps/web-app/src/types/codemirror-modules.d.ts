@@ -1,198 +1,198 @@
 // Type declarations for optional CodeMirror language modules
 declare module '@exercism/codemirror-lang-arturo' {
-  export const arturo: () => any
+  export const arturo: () => unknown
 }
 
 declare module '@codemirror/lang-cpp' {
-  export const cpp: () => any
+  export const cpp: () => unknown
 }
 
 declare module '@codemirror/lang-java' {
-  export const java: () => any
+  export const java: () => unknown
 }
 
 declare module '@exercism/codemirror-lang-gleam' {
-  export const gleam: () => any
+  export const gleam: () => unknown
 }
 
 declare module '@codemirror/lang-php' {
-  export const php: () => any
+  export const php: () => unknown
 }
 
 declare module '@codemirror/lang-python' {
-  export const python: () => any
+  export const python: () => unknown
 }
 
 declare module '@codemirror/lang-rust' {
-  export const rust: () => any
+  export const rust: () => unknown
 }
 
 declare module '@exercism/codemirror-lang-uiua' {
-  export const uiua: () => any
+  export const uiua: () => unknown
 }
 
 declare module '@exercism/codemirror-lang-wren' {
-  export const wren: () => any
+  export const wren: () => unknown
 }
 
 declare module '@codemirror/lang-yaml' {
-  export const yaml: () => any
+  export const yaml: () => unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/shell' {
-  export const shell: any
+  export const shell: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/clike' {
-  export const c: any
-  export const cpp: any
-  export const csharp: any
-  export const dart: any
-  export const java: any
-  export const kotlin: any
-  export const objectiveC: any
-  export const scala: any
-  export const ceylon: any
+  export const c: unknown
+  export const cpp: unknown
+  export const csharp: unknown
+  export const dart: unknown
+  export const java: unknown
+  export const kotlin: unknown
+  export const objectiveC: unknown
+  export const scala: unknown
+  export const ceylon: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/clojure' {
-  export const clojure: any
+  export const clojure: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/cobol' {
-  export const cobol: any
+  export const cobol: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/coffeescript' {
-  export const coffeeScript: any
+  export const coffeeScript: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/commonlisp' {
-  export const commonLisp: any
+  export const commonLisp: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/crystal' {
-  export const crystal: any
+  export const crystal: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/d' {
-  export const d: any
+  export const d: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/pascal' {
-  export const pascal: any
+  export const pascal: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/elm' {
-  export const elm: any
+  export const elm: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/erlang' {
-  export const erlang: any
+  export const erlang: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/factor' {
-  export const factor: any
+  export const factor: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/forth' {
-  export const forth: any
+  export const forth: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/fortran' {
-  export const fortran: any
+  export const fortran: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/mllike' {
-  export const fSharp: any
-  export const oCaml: any
-  export const sml: any
+  export const fSharp: unknown
+  export const oCaml: unknown
+  export const sml: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/apl' {
-  export const apl: any
+  export const apl: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/go' {
-  export const go: any
+  export const go: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/groovy' {
-  export const groovy: any
+  export const groovy: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/haskell' {
-  export const haskell: any
+  export const haskell: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/haxe' {
-  export const haxe: any
+  export const haxe: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/lua' {
-  export const lua: any
+  export const lua: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/perl' {
-  export const perl: any
+  export const perl: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/smalltalk' {
-  export const smalltalk: any
+  export const smalltalk: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/sql' {
-  export const sql: any
-  export const sqlite: any
-  export const plSQL: any
+  export const sql: unknown
+  export const sqlite: unknown
+  export const plSQL: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/powershell' {
-  export const powerShell: any
+  export const powerShell: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/r' {
-  export const r: any
+  export const r: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/ruby' {
-  export const ruby: any
+  export const ruby: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/scheme' {
-  export const scheme: any
+  export const scheme: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/swift' {
-  export const swift: any
+  export const swift: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/verilog' {
-  export const verilog: any
+  export const verilog: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/tcl' {
-  export const tcl: any
+  export const tcl: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/vb' {
-  export const vb: any
+  export const vb: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/wast' {
-  export const wast: any
+  export const wast: unknown
 }
 
 declare module '@codemirror/legacy-modes/mode/gas' {
-  export const gas: any
+  export const gas: unknown
 }
 
 declare module 'codemirror-lang-elixir' {
-  export const elixir: any
+  export const elixir: unknown
 }
 
 declare module 'nim-codemirror-mode' {
-  export const nim: any
+  export const nim: unknown
 }
 
 declare module '@plutojl/lang-julia' {

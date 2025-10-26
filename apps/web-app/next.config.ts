@@ -1,16 +1,18 @@
 import type { NextConfig } from "next";
-import { getOptimizedWebpackConfig, getPerformancePlugins } from './lib/config/webpack'
+import { getOptimizedWebpackConfig, getPerformancePlugins } from './src/lib/config/webpack'
 
 const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  },
+  
+  // Turbopack configuration
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
@@ -49,7 +51,6 @@ const nextConfig: NextConfig = {
   compress: true,
   
   // Build optimization settings
-  swcMinify: true,
   poweredByHeader: false,
   generateEtags: true,
   
