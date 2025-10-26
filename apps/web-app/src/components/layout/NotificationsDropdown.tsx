@@ -1,32 +1,130 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react'
-import consumer from '../../utils/action-cable-consumer'
-import { GraphicalIcon } from '../common/GraphicalIcon'
-import { NotificationsIcon } from './notifications/NotificationsIcon'
-import { NotificationItem } from '../notifications/NotificationItem'
-import { Notification as NotificationType } from '../../types'
-import { useNotificationDropdown } from './notifications/useNotificationDropdown'
-import { DropdownAttributes } from '../../hooks/useAdvancedDropdown'
-import { usePaginatedRequestQuery } from '../../hooks/request-query'
-import { useErrorHandler, ErrorBoundary } from '../ErrorBoundary'
-import { Loading } from '../common/Loading'
-import { QueryStatus, useQueryClient } from '@tanstack/react-query'
-import { NotificationsChannel } from '../../lib/realtime/channels/notifications-channel'
-import { useAppTranslation } from '@/i18n/useAppTranslation'
+import React, { useEffect, useRef } from 'react';
+import { Icon } from '../common/Icon';
+import Link from 'next/link';
+import Image from 'next/image';
+import type { APIResponse, NotificationsDropdownProps } from '../notifications/types';
+import { useNotificationDropdown } from '../notifications/useNotificationDropdown';
+import { usePaginatedRequestQuery } from '../../hooks/request-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { NotificationsChannel } from '../../lib/realtime/channels/notifications-channel';
 
-export type APIResponse = {
-  results: NotificationType[]
-  meta: {
-    total: number
-    unreadCount: number
-    links: {
-      all: string
+const MAX_NOTIFICATIONS = 5
+export const NOTIFICATIONS_CACHE_KEY = 'notifications'
+
+export function NotificationsDropdown({ endpoint }: NotificationsDropdownProps): React.ReactElement {
+  const queryClient = useQueryClient()
+  const { t } = useAppTranslation('components/dropdowns')
+  
+  const { data: resolvedData } = usePaginatedRequestQuery<APIResponse>([NOTIFICATIONS_CACHE_KEY], {
+    endpoint,
+    query: { per_page: MAX_NOTIFICATIONS },
+    options: { staleTime: 30 * 1000 }
+  })
+
+  const {
+    buttonAttributes,
+    panelAttributes,
+    listAttributes,
+    itemAttributes,
+    isOpen,
+    setIsOpen
+  } = useNotificationDropdown(resolvedData)
+
+  const connectionRef = useRef<NotificationsChannel | null>(null)
+  const unreadCount = resolvedData?.meta.unreadCount || 0
+
+  useEffect(() => {
+    if (!connectionRef.current) {
+      connectionRef.current = new NotificationsChannel((message) => {
+        if (!message) return
+        if (message.type === 'notifications.changed' && listAttributes.hidden) {
+          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+        }
+      })
     }
-  }
-}
 
-const DEFAULT_ERROR = new Error('Unable to load notifications')
+    if (!listAttributes.hidden) {
+      queryClient.refetchQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+    }
+
+    return () => {
+      connectionRef.current?.disconnect()
+      connectionRef.current = null
+    }
+  }, [listAttributes.hidden, queryClient])
+
+  return (
+    <div className="c-notifications-dropdown">
+      <button {...buttonAttributes} className="c-notifications-dropdown__button">
+        <Icon icon="notification" alt={t('notifications.buttonLabel')} />
+        {unreadCount > 0 && (
+          <span className="c-notifications-dropdown__count">{unreadCount}</span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div {...panelAttributes} className="c-notifications-dropdown__panel">
+          <div className="c-notifications-dropdown__header">
+            <h3>{t('notifications.title')}</h3>
+            <Link 
+              href="/notifications"
+              className="c-notifications-dropdown__view-all"
+              onClick={() => setIsOpen(false)}
+            >
+              {t('notifications.viewAll')}
+            </Link>
+          </div>
+
+          {resolvedData && (
+            <div {...listAttributes} className="c-notifications-dropdown__list">
+              {resolvedData.results.length === 0 ? (
+                <div className="c-notifications-dropdown__empty">
+                  <Icon icon="notification-empty" alt="" />
+                  <p>{t('notifications.noNotifications')}</p>
+                </div>
+              ) : (
+                <>
+                  {resolvedData.results.map((notification, index) => (
+                    <div 
+                      {...itemAttributes(index)}
+                      key={notification.id}
+                      className={`c-notifications-dropdown__item ${!notification.status.isRead ? 'is-unread' : ''}`}
+                    >
+                      <NotificationItem 
+                        notification={notification}
+                        onMarkAsRead={() => {
+                          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+                        }}
+                      />
+                    </div>
+                  ))}
+
+                  {resolvedData.results.length > MAX_NOTIFICATIONS && (
+                    <Link
+                      href="/notifications"
+                      className="c-notifications-dropdown__more"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {t('notifications.showMore')}
+                      <Image 
+                        src="/assets/icons/arrow-right.svg"
+                        alt=""
+                        width={16}
+                        height={16}
+                      />
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const ErrorMessage = ({ error }: { error: unknown }) => {
   useErrorHandler(error, { defaultError: DEFAULT_ERROR })
@@ -85,43 +183,32 @@ const DropdownContent = ({
 const MAX_NOTIFICATIONS = 5
 export const NOTIFICATIONS_CACHE_KEY = 'notifications'
 
-export function NotificationsDropdown({
-  endpoint,
-}: {
-  endpoint: string
-}): JSX.Element {
+export function NotificationsDropdown({ endpoint }: { endpoint: string }): React.ReactElement {
   const queryClient = useQueryClient()
+  const { data: resolvedData } = usePaginatedRequestQuery<APIResponse>([NOTIFICATIONS_CACHE_KEY], {
+    endpoint,
+    query: { per_page: MAX_NOTIFICATIONS },
+    options: { staleTime: 30 * 1000 }
+  })
+
   const {
-    data: resolvedData,
-    error,
-    status,
-  } = usePaginatedRequestQuery<APIResponse, unknown>(
-    [NOTIFICATIONS_CACHE_KEY],
-    {
-      endpoint: endpoint,
-      query: { per_page: MAX_NOTIFICATIONS },
-      options: {
-        staleTime: 30 * 1000,
-        refetchOnMount: true,
-      },
-    }
-  )
-  const {
+    buttonRef,
     buttonAttributes,
     panelAttributes,
     listAttributes,
     itemAttributes,
-    open,
+    isOpen,
+    setIsOpen
   } = useNotificationDropdown(resolvedData)
 
   const connectionRef = useRef<NotificationsChannel | null>(null)
+  const unreadCount = resolvedData?.meta.unreadCount || 0
 
   useEffect(() => {
     if (!connectionRef.current) {
       connectionRef.current = new NotificationsChannel((message) => {
         if (!message) return
-
-        if (message.type === 'notifications.changed' && listAttributes.hidden) {
+        if (message.status === 'changed' && listAttributes.hidden) {
           queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
         }
       })
@@ -138,11 +225,10 @@ export function NotificationsDropdown({
   }, [listAttributes.hidden, queryClient])
 
   return (
-    <div className="notifications-dropdown" ref={dropdownRef}>
+    <div className="notifications-dropdown" ref={buttonRef}>
       <button
+        {...buttonAttributes}
         className="notifications-trigger"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <Icon icon="notification" alt="Notifications" />
@@ -151,8 +237,8 @@ export function NotificationsDropdown({
         )}
       </button>
 
-      {isOpen && (
-        <div className="notifications-dropdown-content">
+      {isOpen && resolvedData && (
+        <div {...panelAttributes} className="notifications-dropdown-content">
           <div className="notifications-header">
             <h3>Notifications</h3>
             <Link 
@@ -164,27 +250,28 @@ export function NotificationsDropdown({
             </Link>
           </div>
 
-          <div className="notifications-list">
-            {notifications.length === 0 ? (
+          <div className="notifications-list" {...listAttributes}>
+            {resolvedData.results.length === 0 ? (
               <div className="no-notifications">
                 <Icon icon="notification-empty" alt="" />
                 <p>No new notifications</p>
               </div>
             ) : (
-              notifications.slice(0, 5).map((notification) => (
+              resolvedData.results.slice(0, 5).map((notification, index) => (
                 <Link
+                  {...itemAttributes(index)}
                   key={notification.id}
-                  href={notification.url}
-                  className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+                  href={notification.links.self}
+                  className={`notification-item ${!notification.status.isRead ? 'unread' : ''}`}
                   onClick={() => setIsOpen(false)}
                 >
                   <div className="notification-content">
-                    <p>{notification.text}</p>
+                    <p>{notification.type}</p>
                     <time className="notification-time">
-                      {formatTime(notification.createdAt)}
+                      {new Date(notification.status.updatedAt).toLocaleString()}
                     </time>
                   </div>
-                  {!notification.isRead && (
+                  {!notification.status.isRead && (
                     <div className="unread-indicator" />
                   )}
                 </Link>
@@ -192,7 +279,7 @@ export function NotificationsDropdown({
             )}
           </div>
 
-          {notifications.length > 5 && (
+          {resolvedData.results.length > 5 && (
             <div className="notifications-footer">
               <Link 
                 href="/notifications" 
