@@ -14,10 +14,16 @@ const config: Config = {
         textColor2: 'var(--text-color-2)', 
         textColor6: 'var(--text-color-6)',
         backgroundColorA: 'var(--background-color-a)',
+        backgroundColorB: '#f8fafc',
+        backgroundColorD: '#f1f5f9',
         prominentLinkColor: 'var(--prominent-link-color)',
         alert: 'var(--alert)',
         veryLightBlue: 'var(--very-light-blue)',
+        lightBlue: '#e0f2fe',
+        darkBlue: '#1e40af',
         borderColor: 'var(--border-color)',
+        borderColor6: '#d1d5db',
+        borderColor7: '#e5e7eb',
       },
       spacing: {
         // Standard Tailwind spacing with some custom values
@@ -36,7 +42,19 @@ const config: Config = {
         '32': '8rem',
         '40': '10rem',
         '48': '12rem',
-        '64': '16rem'
+        '64': '16rem',
+        // Additional custom spacing values
+        '14': '3.5rem',
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '28': '7rem',
+        '36': '9rem',
+        '44': '11rem',
+        '52': '13rem',
+        '60': '15rem',
+        '72': '18rem',
+        '80': '20rem',
+        '96': '24rem'
       },
       borderRadius: {
         'none': '0',
@@ -66,6 +84,25 @@ const config: Config = {
         '4xl': '2.25rem',
         '5xl': '3rem',
         '6xl': '3.75rem',
+        // Custom font sizes used in the app
+        '12': '0.75rem',
+        '14': '0.875rem',
+        '16': '1rem',
+        '18': '1.125rem',
+        '20': '1.25rem',
+        '24': '1.5rem',
+        '28': '1.75rem',
+        '32': '2rem',
+        // Semantic font sizes
+        'h1': '2.25rem',
+        'h2': '1.875rem',
+        'h3': '1.5rem',
+        'h4': '1.25rem',
+        'h5': '1.125rem',
+        'h6': '1rem',
+        'p-base': '1rem',
+        'p-large': '1.125rem',
+        'p-small': '0.875rem',
       },
       fontFamily: {
         // Exact font family preservation
@@ -78,6 +115,21 @@ const config: Config = {
         '140': '140%', 
         '150': '150%',
         '160': '160%'
+      },
+      borderWidth: {
+        DEFAULT: '1px',
+        '0': '0',
+        '1': '1px',
+        '2': '2px',
+        '4': '4px',
+        '8': '8px',
+      },
+      minWidth: {
+        '20': '5rem',
+        '24': '6rem',
+        '32': '8rem',
+        '40': '10rem',
+        '48': '12rem',
       }
     }
   },

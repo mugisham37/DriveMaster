@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,7 +13,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const solutionUuid = params.uuid
+    const { uuid: solutionUuid } = await params
 
     // Mock solution completion - in real implementation:
     // 1. Verify the solution has passed required tests

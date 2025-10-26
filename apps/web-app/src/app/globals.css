@@ -1,6 +1,57 @@
 /* Global Styles - Uses Tailwind CSS */
 /* Note: @apply directives in component files may show as "unknown" but are valid Tailwind CSS */
 @import "tailwindcss";
+
+/* Tailwind CSS v4 Custom Color Definitions */
+@theme {
+  --color-text-color-1: #1a1a1a;
+  --color-text-color-2: #4a4a4a;
+  --color-text-color-6: #888888;
+  --color-background-color-a: #ffffff;
+  --color-background-color-b: #f8fafc;
+  --color-background-color-d: #f1f5f9;
+  --color-prominent-link-color: #6366f1;
+  --color-alert: #ef4444;
+  --color-very-light-blue: #f0f9ff;
+  --color-light-blue: #e0f2fe;
+  --color-dark-blue: #1e40af;
+  --color-border-color: #e5e7eb;
+  --color-border-color-6: #d1d5db;
+  --color-border-color-7: #e5e7eb;
+  --color-light-gray: #f3f4f6;
+  --color-light-yellow: #fef3c7;
+  --color-dark-yellow: #d97706;
+  --color-light-green: #d1fae5;
+  --color-dark-green: #059669;
+  --color-light-purple: #e9d5ff;
+  --color-dark-purple: #7c3aed;
+  --color-light-orange: #fed7aa;
+  --color-dark-orange: #ea580c;
+  
+  /* Font sizes */
+  --font-size-14: 0.875rem;
+  --font-size-15: 0.9375rem;
+  --font-size-16: 1rem;
+  --font-size-h3: 1.5rem;
+  --font-size-h4: 1.25rem;
+  --font-size-p-base: 1rem;
+  --font-size-p-large: 1.125rem;
+  
+  /* Spacing */
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-15: 3.75rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  
+  /* Border radius */
+  --radius-8: 0.5rem;
+  --radius-circle: 50%;
+  
+  /* Line heights */
+  --line-height-paragraph: 1.6;
+}
 @import "../styles/bootcamp-exercises.css";
 @import "../styles/components/common.css";
 @import "../styles/components/dropdown.css";
@@ -26,10 +77,27 @@
   --text-color-2: #4a4a4a;
   --text-color-6: #888888;
   --background-color-a: #ffffff;
+  --background-color-b: #f8fafc;
+  --background-color-d: #f1f5f9;
   --prominent-link-color: #6366f1;
   --alert: #ef4444;
   --very-light-blue: #f0f9ff;
+  --light-blue: #e0f2fe;
+  --dark-blue: #1e40af;
   --border-color: #e5e7eb;
+  --border-color-6: #d1d5db;
+  --border-color-7: #e5e7eb;
+  
+  /* Additional color variables for status tags */
+  --light-gray: #f3f4f6;
+  --light-yellow: #fef3c7;
+  --dark-yellow: #d97706;
+  --light-green: #d1fae5;
+  --dark-green: #059669;
+  --light-purple: #e9d5ff;
+  --dark-purple: #7c3aed;
+  --light-orange: #fed7aa;
+  --dark-orange: #ea580c;
 
   /* Typography variables */
   --body-font: "Inter", sans-serif;

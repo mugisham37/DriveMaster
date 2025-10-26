@@ -43,7 +43,7 @@ function Steps() {
       )
     case 'selectedOnlineEditor':
       return (
-        <STEPS.SelectedOnlineEdiorStep
+        <STEPS.SelectedOnlineEditorStep
           onContinueToOnlineEditor={() => send('CONTINUE')}
         />
       )

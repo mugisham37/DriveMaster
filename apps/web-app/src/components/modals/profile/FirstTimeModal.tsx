@@ -10,7 +10,7 @@ type Links = {
   profile: string
 }
 
-export default function FirstTimeModal({
+function FirstTimeModal({
   links,
 }: {
   links: Links
@@ -41,3 +41,6 @@ export default function FirstTimeModal({
     </Modal>
   )
 }
+
+export { FirstTimeModal }
+export default FirstTimeModal

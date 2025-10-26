@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   const session = await getServerSession(authOptions)
   
@@ -13,9 +13,10 @@ export async function GET(
   }
 
   try {
+    const { uuid } = await params
     // Mock custom function data
     const customFunction = {
-      uuid: params.uuid,
+      uuid: uuid,
       name: 'myCustomFunction',
       active: true,
       description: 'A custom function for bootcamp exercises',
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   const session = await getServerSession(authOptions)
   
@@ -42,11 +43,12 @@ export async function PATCH(
   }
 
   try {
+    const { uuid } = await params
     const body = await request.json()
     
     // Mock update logic
     const updatedFunction = {
-      uuid: params.uuid,
+      uuid: uuid,
       ...body,
       updated_at: new Date().toISOString()
     }

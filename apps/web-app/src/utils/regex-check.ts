@@ -1,4 +1,4 @@
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 
 // Remove the conflicting global declaration as it's already defined in lib.es2022.regexp.d.ts
 
@@ -33,7 +33,7 @@ function compareVersions(versionA: string, versionB: string): number {
 }
 
 export function isLookbehindSupported(): boolean {
-  const parser = new (UAParser as unknown as { new(): { getBrowser(): { name?: string; version?: string } } })()
+  const parser = new UAParser()
   const browser = parser.getBrowser()
 
   switch (browser.name) {

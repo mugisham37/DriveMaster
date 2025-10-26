@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const drawingUuid = params.uuid
+    const { uuid: drawingUuid } = await params
 
     // Mock drawing data - in real implementation, fetch from database
     const drawingData = {
@@ -60,7 +60,7 @@ draw.fillRect(200, 200, 100, 100)`,
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -69,7 +69,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const drawingUuid = params.uuid
+    const { uuid: drawingUuid } = await params
     const body = await request.json()
     const { code, background_slug } = body
 

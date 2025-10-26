@@ -1,9 +1,15 @@
 /* Unlock On Complete Sentence Styles */
 
 .unlock-on-complete-sentence {
-  @apply p-16 bg-lightBlue rounded-8 border border-borderColor7;
+  padding: 4rem;
+  background-color: #e0f2fe;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
 }
 
 .unlock-on-complete-sentence p {
-  @apply m-0 text-textColor6 text-15 leading-paragraph;
+  margin: 0;
+  color: #888888;
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }

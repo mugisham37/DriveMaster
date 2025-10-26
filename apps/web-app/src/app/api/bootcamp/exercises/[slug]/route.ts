@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const exerciseSlug = params.slug
+    const { slug: exerciseSlug } = await params
 
     // Mock exercise data - in real implementation, fetch from database
     const exerciseData = {

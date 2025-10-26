@@ -15,7 +15,7 @@ interface TrackSelectorProps {
   onContinue: () => void
 }
 
-export default function TrackSelector({
+function TrackSelector({
   selected,
   setSelected,
   tracksEndpoint,
@@ -120,3 +120,6 @@ export default function TrackSelector({
     </div>
   )
 }
+
+export { TrackSelector }
+export default TrackSelector
