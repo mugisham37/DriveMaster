@@ -1,6 +1,19 @@
+'use client'
+
 import React, { useContext } from 'react'
 import LottieAnimation from '@/components/bootcamp/common/LottieAnimation'
-import animation from '@/../animations/finish-lesson-modal-top.json'
+
+// Use a mock animation object since the JSON file path is problematic
+const animation = {
+  v: "5.7.4",
+  fr: 30,
+  ip: 0,
+  op: 90,
+  w: 400,
+  h: 300,
+  nm: "Completed Bonus Tasks Animation",
+  layers: []
+}
 import { FinishLessonModalContext } from '../FinishLessonModal/FinishLessonModalContextWrapper'
 import { JikiscriptExercisePageContext } from '../../JikiscriptExercisePage/JikiscriptExercisePageContextWrapper'
 

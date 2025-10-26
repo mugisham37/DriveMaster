@@ -1,3 +1,5 @@
+'use client'
+
 import { useLayoutEffect } from 'react'
 import useTaskStore from '../store/taskStore/taskStore'
 import useTestStore from '../store/testStore'

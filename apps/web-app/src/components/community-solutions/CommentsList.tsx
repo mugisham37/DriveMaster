@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useCallback } from 'react'
 import { Header } from './comments-list/Header'
 import { NewCommentForm } from './comments-list/NewCommentForm'
