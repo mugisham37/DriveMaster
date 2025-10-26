@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useCallback, useContext, useState } from 'react'
 import { TabContext } from '@/components/common/Tab'
 import { Tabs } from './Tabs'

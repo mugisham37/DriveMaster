@@ -1,3 +1,5 @@
+'use client'
+
 import { EditorView } from 'codemirror'
 import { createContext } from 'react'
 import { Handler } from '../JikiscriptExercisePage/CodeMirror/CodeMirror'

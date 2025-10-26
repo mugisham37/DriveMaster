@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 export function useRestoreIframeScrollAfterResize() {
   const isDraggingRef = useRef(false)

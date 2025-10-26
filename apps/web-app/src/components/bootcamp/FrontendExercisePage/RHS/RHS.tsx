@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext } from 'react'
 import { TabContext } from '@/components/common/Tab'
 import { Tabs } from './Tabs'

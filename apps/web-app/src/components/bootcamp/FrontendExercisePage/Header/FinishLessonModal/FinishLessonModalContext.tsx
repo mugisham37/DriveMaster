@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext } from 'react'
 import type { NextExercise } from '@/components/bootcamp/JikiscriptExercisePage/Tasks/completeSolution'
 import { FinishLessonModalView } from '../../../JikiscriptExercisePage/Tasks/useTasks'

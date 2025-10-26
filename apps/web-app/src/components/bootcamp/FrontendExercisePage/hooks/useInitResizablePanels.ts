@@ -1,3 +1,5 @@
+'use client'
+
 import { useLayoutEffect } from 'react'
 import { useResizablePanels } from '../../JikiscriptExercisePage/hooks/useResize'
 import { useFrontendExercisePageStore } from '../store/frontendExercisePageStore'
