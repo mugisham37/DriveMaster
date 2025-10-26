@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useCallback, useContext, useEffect } from 'react'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import useTestStore from '../store/testStore'

@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useContext, useEffect, useMemo, useRef } from 'react'
 import { wrapWithErrorBoundary } from '@/components/bootcamp/common/ErrorBoundary/wrapWithErrorBoundary'
 import Typewriter, { type Options } from '@/lib/typewriter-mock'

@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useEffect, RefObject, useState } from 'react'
 import { useLocalStorage } from '@uidotdev/usehooks'
 import { useEditorHandler } from '../../common/hooks/useEditorHandler'

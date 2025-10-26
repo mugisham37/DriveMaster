@@ -1,3 +1,5 @@
+'use client'
+
 import { useRef, useEffect } from 'react'
 import projectsCache from '../utils/exerciseMap'
 import { Exercise } from '../exercises/Exercise'

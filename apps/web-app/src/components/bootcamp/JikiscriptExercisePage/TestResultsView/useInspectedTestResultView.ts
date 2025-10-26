@@ -1,4 +1,6 @@
 
+'use client'
+
 import { diffChars, diffWords, type Change } from 'diff'
 import { useRef, useEffect, useMemo } from 'react'
 import useTestStore from '../store/testStore'

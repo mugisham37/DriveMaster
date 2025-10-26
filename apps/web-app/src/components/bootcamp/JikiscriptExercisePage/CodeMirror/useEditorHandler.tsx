@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, SetStateAction, useRef, useState } from 'react'
 import { useConstructRunCode } from '../hooks/useConstructRunCode/useConstructRunCode'
 import type { EditorView } from 'codemirror'

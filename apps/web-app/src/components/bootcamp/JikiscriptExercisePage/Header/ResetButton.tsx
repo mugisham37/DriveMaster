@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useCallback, useContext, useState } from 'react'
 import Modal from 'react-modal'
 import { assembleClassNames } from '@/utils/assemble-classnames'

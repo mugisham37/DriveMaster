@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { assembleClassNames } from '@/utils/assemble-classnames'
 import { useLocalStorage } from '@uidotdev/usehooks'
