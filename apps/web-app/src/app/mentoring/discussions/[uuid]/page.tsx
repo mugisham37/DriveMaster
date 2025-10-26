@@ -96,7 +96,7 @@ export default async function MentoringDiscussionPage({
       userHandle: session.user.handle,
       request: {
         uuid: params.uuid,
-        status: 'pending',
+        status: 'pending' as const,
         isLocked: false,
         trackSlug: 'javascript',
         exerciseSlug: 'hello-world',
@@ -106,9 +106,14 @@ export default async function MentoringDiscussionPage({
           avatarUrl: '/assets/avatars/default.svg'
         },
         exercise: {
+          id: 'hello-world',
           slug: 'hello-world',
           title: 'Hello World',
-          iconUrl: '/assets/exercises/hello-world.svg'
+          iconUrl: '/assets/exercises/hello-world.svg',
+          difficulty: 1,
+          links: {
+            self: '/tracks/javascript/exercises/hello-world'
+          }
         }
       },
       discussion: null,
@@ -120,17 +125,26 @@ export default async function MentoringDiscussionPage({
         indentSize: 2
       },
       exercise: {
+        id: 'hello-world',
         slug: 'hello-world',
         title: 'Hello World',
-        iconUrl: '/assets/exercises/hello-world.svg'
+        iconUrl: '/assets/exercises/hello-world.svg',
+        difficulty: 1,
+        links: {
+          self: '/tracks/javascript/exercises/hello-world'
+        }
       },
       iterations: [],
       instructions: 'Loading instructions...',
       testFiles: [],
       student: {
+        id: 1,
         handle: 'student',
         avatarUrl: '/assets/avatars/default.svg',
-        flair: null
+        reputation: '0',
+        isFavorited: false,
+        numTotalDiscussions: 0,
+        numDiscussionsWithMentor: 0
       },
       studentSolutionUuid: 'mock-uuid',
       mentorSolution: null,

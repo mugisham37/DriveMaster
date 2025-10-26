@@ -30,50 +30,65 @@
   --alert: #ef4444;
   --very-light-blue: #f0f9ff;
   --border-color: #e5e7eb;
-  
+
   /* Typography variables */
-  --body-font: 'Inter', sans-serif;
-  --heading-font: 'Poppins', sans-serif;
-  --code-font: 'Monaco', 'Consolas', monospace;
+  --body-font: "Inter", sans-serif;
+  --heading-font: "Poppins", sans-serif;
+  --code-font: "Monaco", "Consolas", monospace;
 }
 
 /* Preserve exact animation definitions */
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(32px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
 @keyframes scaleIn {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1);
   }
 }
 
 @keyframes wavingHand {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(20deg); }
-  75% { transform: rotate(-20deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-20deg);
+  }
 }
 
 .scrolling-testimonials {
@@ -97,9 +112,16 @@
 }
 
 @keyframes wavingHand {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(20deg); }
-  75% { transform: rotate(-10deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
 }
 
 /* Preserve all existing component styles with hover states and transitions */
@@ -108,21 +130,21 @@
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     opacity: 0.8;
     transform: translateY(-1px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   &.--with-bg {
     background: var(--very-light-blue);
     padding: 12px 16px;
     border-radius: 8px;
-    
+
     &:hover {
       background: #e0f2fe;
       transform: translateY(-2px);
@@ -135,22 +157,22 @@
 button {
   transition: all 0.2s ease-in-out;
   cursor: pointer;
-  
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   &:focus-visible {
     outline: 2px solid var(--prominent-link-color);
     outline-offset: 2px;
@@ -160,11 +182,11 @@ button {
 /* Link hover states */
 a {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     opacity: 0.8;
   }
-  
+
   &:focus-visible {
     outline: 2px solid var(--prominent-link-color);
     outline-offset: 2px;
@@ -172,19 +194,21 @@ a {
 }
 
 /* Form input hover and focus states */
-input, textarea, select {
+input,
+textarea,
+select {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover:not(:disabled) {
     border-color: var(--prominent-link-color);
   }
-  
+
   &:focus {
     outline: none;
     border-color: var(--prominent-link-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -194,7 +218,7 @@ input, textarea, select {
 /* Icon hover states */
 .c-icon {
   transition: transform 0.2s ease-in-out;
-  
+
   &:hover {
     transform: scale(1.05);
   }
@@ -203,7 +227,7 @@ input, textarea, select {
 /* Avatar hover states */
 .c-avatar {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -213,23 +237,23 @@ input, textarea, select {
 /* Badge hover states */
 .c-badge-medallion {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     transform: scale(1.05) rotate(5deg);
   }
-  
+
   &.--common:hover {
     box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
   }
-  
+
   &.--rare:hover {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
-  
+
   &.--ultimate:hover {
     box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
   }
-  
+
   &.--legendary:hover {
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
   }
@@ -241,7 +265,8 @@ input, textarea, select {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -250,9 +275,10 @@ input, textarea, select {
 }
 
 /* Card hover states */
-.card, .c-card {
+.card,
+.c-card {
   transition: all 0.3s ease-in-out;
-  
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -260,9 +286,10 @@ input, textarea, select {
 }
 
 /* Track and exercise item hover states */
-.track-item, .exercise-item {
+.track-item,
+.exercise-item {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     background-color: rgba(99, 102, 241, 0.05);
     transform: translateX(4px);
@@ -270,14 +297,15 @@ input, textarea, select {
 }
 
 /* Navigation hover states */
-nav a, .nav-link {
+nav a,
+.nav-link {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     color: var(--prominent-link-color);
     transform: translateY(-1px);
   }
-  
+
   &.active {
     color: var(--prominent-link-color);
     font-weight: 600;
@@ -298,7 +326,7 @@ nav a, .nav-link {
   transition: all 0.2s ease-in-out;
   opacity: 0;
   visibility: hidden;
-  
+
   &.visible {
     opacity: 1;
     visibility: visible;
@@ -310,7 +338,7 @@ nav a, .nav-link {
   background: var(--background-color-a);
   border-bottom: 1px solid var(--border-color);
   transition: all 0.2s ease-in-out;
-  
+
   &:focus-within {
     border-bottom-color: var(--prominent-link-color);
     box-shadow: 0 2px 0 var(--prominent-link-color);
@@ -320,7 +348,7 @@ nav a, .nav-link {
 /* Dropdown hover states */
 .dropdown-item {
   transition: all 0.15s ease-in-out;
-  
+
   &:hover {
     background-color: var(--very-light-blue);
     color: var(--prominent-link-color);
@@ -330,11 +358,11 @@ nav a, .nav-link {
 /* Tab hover states */
 .tab {
   transition: all 0.2s ease-in-out;
-  
+
   &:hover:not(.active) {
     background-color: rgba(99, 102, 241, 0.05);
   }
-  
+
   &.active {
     color: var(--prominent-link-color);
     border-bottom-color: var(--prominent-link-color);
@@ -422,7 +450,8 @@ body {
 }
 
 @keyframes arrow-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   50% {
@@ -443,7 +472,8 @@ body {
 }
 
 @keyframes hamster-excited {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1) rotate(0deg);
   }
   25% {
@@ -469,7 +499,8 @@ body {
 }
 
 @keyframes error {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   25% {
@@ -530,14 +561,15 @@ body {
 }
 
 /* Tooltip styles for Exercism tooltips */
-.tippy-box[data-theme~='exercism'] {
+.tippy-box[data-theme~="exercism"] {
   background-color: white;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.tippy-box[data-theme~='exercism'] .tippy-arrow {
+.tippy-box[data-theme~="exercism"] .tippy-arrow {
   color: white;
 }
 

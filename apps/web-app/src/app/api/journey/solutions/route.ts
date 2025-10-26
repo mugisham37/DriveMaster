@@ -22,12 +22,13 @@ export async function GET(request: NextRequest) {
   const criteria = searchParams.get('criteria') || ''
   const trackSlug = searchParams.get('track_slug') || ''
   const status = searchParams.get('status') || ''
-  const _mentoringStatus = searchParams.get('mentoring_status') || ''
-  const _syncStatus = searchParams.get('sync_status') || ''
-  const _testsStatus = searchParams.get('tests_status') || ''
-  const _headTestsStatus = searchParams.get('head_tests_status') || ''
+  // Note: These parameters are extracted but not used in the mock implementation
+  // const mentoringStatus = searchParams.get('mentoring_status') || ''
+  // const syncStatus = searchParams.get('sync_status') || ''
+  // const testsStatus = searchParams.get('tests_status') || ''
+  // const headTestsStatus = searchParams.get('head_tests_status') || ''
   const page = parseInt(searchParams.get('page') || '1')
-  const _order = searchParams.get('order') || 'newest_first'
+  // const order = searchParams.get('order') || 'newest_first'
 
   // Mock paginated solutions data
   const solutions = [

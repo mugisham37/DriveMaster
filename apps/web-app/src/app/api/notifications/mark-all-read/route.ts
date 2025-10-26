@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerAuthSession } from '@/lib/auth'
 
-export async function PATCH(_request: NextRequest) {
+export async function PATCH(_: NextRequest) {
   try {
     const session = await getServerAuthSession()
     

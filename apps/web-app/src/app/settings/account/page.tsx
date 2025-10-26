@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: 'Manage your account security and personal information'
 }
 
-async function getAccountData(userId: number) {
+async function getAccountData() {
   // TODO: Fetch actual account data from database
   
   const mockData = {
@@ -44,7 +44,7 @@ export default async function AccountSettingsPage() {
     redirect('/auth/signin?callbackUrl=/settings/account')
   }
 
-  const accountData = await getAccountData(session.user.id)
+  const accountData = await getAccountData()
 
   return (
     <div id="page-settings-account" className="page-settings">

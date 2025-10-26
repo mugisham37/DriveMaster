@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getServerAuthSession } from '@/lib/auth'
 import { AuthenticatedOnly, UnauthenticatedOnly } from '@/components/auth/ProtectedRoute'
 
@@ -23,7 +24,7 @@ export default async function TestAuthPage() {
           )}
         </div>
         
-        <AuthenticatedOnly fallback={<div className="p-4 bg-gray-100 rounded">This content is only visible to authenticated users</div>}>
+        <AuthenticatedOnly>
           <div className="p-4 bg-green-100 rounded">
             <h3 className="font-semibold">Authenticated Content</h3>
             <p>You are signed in! This content is protected.</p>
@@ -34,7 +35,7 @@ export default async function TestAuthPage() {
           <div className="p-4 bg-blue-100 rounded">
             <h3 className="font-semibold">Sign In Required</h3>
             <p>Please sign in to access protected content.</p>
-            <a href="/api/auth/signin" className="text-blue-600 underline">Sign In</a>
+            <Link href="/api/auth/signin" className="text-blue-600 underline">Sign In</Link>
           </div>
         </UnauthenticatedOnly>
       </div>

@@ -56,7 +56,7 @@ export class TestRunChannel {
   constructor(testRun: TestRun, onReceive: TestRunEventHandler) {
     this.testRun = testRun
     this.onReceive = onReceive
-    this.subscriberId = `test_run_${testRun.submissionUuid}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `test_run_${testRun.submissionUuid}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }
@@ -165,9 +165,9 @@ export class TestRunChannel {
   private setupConnectionHandlers(): void {
     if (!this.connection) return
 
-    this.connection.on('message', (event) => {
-      if (event.data) {
-        this.handleMessage(event.data)
+    this.connection.on('message', (event: { data?: unknown }) => {
+      if (event.data && typeof event.data === 'object' && event.data !== null) {
+        this.handleMessage(event.data as Record<string, unknown>)
       }
     })
 
@@ -179,7 +179,7 @@ export class TestRunChannel {
       console.log(`Test run channel connection lost: ${this.testRun.submissionUuid}`)
     })
 
-    this.connection.on('error', (event) => {
+    this.connection.on('error', (event: { error?: Error }) => {
       console.error(`Test run channel error: ${this.testRun.submissionUuid}`, event.error)
     })
   }

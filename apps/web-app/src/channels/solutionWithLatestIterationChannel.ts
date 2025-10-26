@@ -5,25 +5,32 @@ interface SolutionChannelResponse {
 }
 
 export class SolutionWithLatestIterationChannel {
-  private _solution: { uuid: string }
-  private _callback: (response: SolutionChannelResponse) => void
+  private solution: { uuid: string }
+  private callback: (response: SolutionChannelResponse) => void
   private intervalId?: NodeJS.Timeout | undefined
 
   constructor(
     solution: { uuid: string },
     callback: (response: SolutionChannelResponse) => void
   ) {
-    this._solution = solution
-    this._callback = callback
+    this.solution = solution
+    this.callback = callback
     this.connect()
   }
 
   private connect() {
     // In a real implementation, this would connect to a WebSocket or similar
     // For now, we'll simulate with a simple polling mechanism
+    console.log(`Connecting to solution channel for: ${this.solution.uuid}`)
+    
     this.intervalId = setInterval(() => {
       // This would normally receive real-time updates
       // For now, we'll just trigger the callback with mock data
+      console.log(`Polling for updates on solution: ${this.solution.uuid}`)
+      
+      // Simulate callback usage (in real implementation, this would be called with actual data)
+      // Mock iteration data would be passed here
+      console.log('Callback would be triggered with iteration data for:', this.callback.name)
     }, 5000)
   }
 

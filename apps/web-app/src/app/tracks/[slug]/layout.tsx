@@ -19,18 +19,13 @@ export default async function TrackLayout({ children, params }: TrackLayoutProps
     iconUrl: trackData.track.iconUrl
   } : undefined
 
-  // Calculate user joined days ago
-  const userJoinedDaysAgo = session?.user?.createdAt 
-    ? Math.floor((Date.now() - new Date(session.user.createdAt).getTime()) / (1000 * 60 * 60 * 24))
-    : 0
-
   return (
     <>
       {children}
       {trackInfo && session?.user && (
         <TrackWelcomeModal 
           track={trackInfo}
-          userSeniority={(session.user as unknown)?.seniority}
+          userSeniority={session.user.seniority || 'beginner'}
         />
       )}
     </>

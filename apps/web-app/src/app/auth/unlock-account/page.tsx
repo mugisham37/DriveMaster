@@ -38,7 +38,7 @@ export default function UnlockAccountPage() {
 
       setSuccess('Unlock instructions sent! Please check your email.')
       setEmail('')
-    } catch (_err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

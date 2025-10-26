@@ -6,7 +6,7 @@ import { getServerAuthSession } from '@/lib/auth'
  * GET /api/journey/overview - Get user journey overview data
  */
 
-export async function GET(_request: NextRequest) {
+export async function GET(_: NextRequest) {
   try {
     const session = await getServerAuthSession()
     

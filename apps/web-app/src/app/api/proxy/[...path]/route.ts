@@ -186,8 +186,8 @@ export const DELETE = proxyRequest
 
 // Handle preflight requests
 export async function OPTIONS(
-  _request: NextRequest,
-  _params: { params: { path: string[] } }
+  _: NextRequest,
+  __: { params: { path: string[] } }
 ) {
   return new NextResponse(null, {
     status: 200,

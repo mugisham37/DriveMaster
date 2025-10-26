@@ -4,7 +4,10 @@ import { withErrorHandling } from '@/lib/api/middleware'
 async function handleUnsubscribe(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, token: _token, type, preferences } = body
+    const { email, token, type, preferences } = body
+    
+    // Note: token is extracted but not used in mock implementation
+    void token
 
     // TODO: Implement actual unsubscribe logic
     // This would typically:

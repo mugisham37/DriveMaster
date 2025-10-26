@@ -60,7 +60,7 @@ export class MetricsChannel {
 
   constructor(onReceive: MetricsEventHandler) {
     this.onReceive = onReceive
-    this.subscriberId = `metrics_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `metrics_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }
@@ -167,9 +167,9 @@ export class MetricsChannel {
   private setupConnectionHandlers(): void {
     if (!this.connection) return
 
-    this.connection.on('message', (event) => {
-      if (event.data) {
-        this.handleMessage(event.data)
+    this.connection.on('message', (event: { data?: unknown }) => {
+      if (event.data && typeof event.data === 'object' && event.data !== null) {
+        this.handleMessage(event.data as Record<string, unknown>)
       }
     })
 
@@ -181,7 +181,7 @@ export class MetricsChannel {
       console.log('Metrics channel connection lost')
     })
 
-    this.connection.on('error', (event) => {
+    this.connection.on('error', (event: { error?: Error }) => {
       console.error('Metrics channel error:', event.error)
     })
   }

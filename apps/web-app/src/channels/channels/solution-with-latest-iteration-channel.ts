@@ -40,7 +40,7 @@ export class SolutionWithLatestIterationChannel {
   ) {
     this.solution = solution
     this.onReceive = onReceive
-    this.subscriberId = `solution_with_latest_iteration_${solution.uuid}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.subscriberId = `solution_with_latest_iteration_${solution.uuid}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
     
     this.subscribe()
   }
@@ -129,9 +129,9 @@ export class SolutionWithLatestIterationChannel {
   private setupConnectionHandlers(): void {
     if (!this.connection) return
 
-    this.connection.on('message', (event) => {
-      if (event.data) {
-        this.handleMessage(event.data)
+    this.connection.on('message', (event: { data?: unknown }) => {
+      if (event.data && typeof event.data === 'object' && event.data !== null) {
+        this.handleMessage(event.data as Record<string, unknown>)
       }
     })
 
@@ -143,7 +143,7 @@ export class SolutionWithLatestIterationChannel {
       console.log(`Solution with latest iteration channel connection lost: ${this.solution.uuid}`)
     })
 
-    this.connection.on('error', (event) => {
+    this.connection.on('error', (event: { error?: Error }) => {
       console.error(`Solution with latest iteration channel error: ${this.solution.uuid}`, event.error)
     })
   }

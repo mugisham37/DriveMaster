@@ -44,7 +44,7 @@ export default function SignInPage() {
           router.push(callbackUrl)
         }
       }
-    } catch (_err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

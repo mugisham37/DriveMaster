@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Manage your Exercism preferences and settings",
 };
 
-async function getPreferencesData(userId: number) {
+async function getPreferencesData() {
   // TODO: Fetch actual preferences from database
 
   const mockData = {
@@ -36,7 +36,7 @@ export default async function PreferencesSettingsPage() {
     redirect("/auth/signin?callbackUrl=/settings/preferences");
   }
 
-  const preferencesData = await getPreferencesData(session.user.id);
+  const preferencesData = await getPreferencesData();
 
   return (
     <div id="page-settings-preferences" className="page-settings">
@@ -57,10 +57,10 @@ export default async function PreferencesSettingsPage() {
 
           <section id="comments-preference-form" className="mb-12">
             <CommentsPreferenceForm
-              current_preference={preferencesData.comments_preference}
+              currentPreference={preferencesData.comments_preference}
               label="Allow comments on published solutions"
-              num_published_solutions={preferencesData.num_published_solutions}
-              num_solutions_with_comments_enabled={
+              numPublishedSolutions={preferencesData.num_published_solutions}
+              numSolutionsWithCommentsEnabled={
                 preferencesData.num_solutions_with_comments_enabled
               }
               links={{
@@ -75,16 +75,16 @@ export default async function PreferencesSettingsPage() {
             <>
               <section id="bootcamp-affiliate-coupon-form" className="mb-12">
                 <BootcampAffiliateCouponForm
-                  insiders_status={
+                  insidersStatus={
                     session.user.isInsider ? "active" : "ineligible"
                   }
-                  bootcamp_affiliate_coupon_code={
+                  bootcampAffiliateCouponCode={
                     preferencesData.bootcamp_affiliate_coupon_code
                   }
                   context="INSIDER"
                   links={{
-                    insiders_path: "/insiders",
-                    bootcamp_affiliate_coupon_code:
+                    insidersPath: "/insiders",
+                    bootcampAffiliateCouponCode:
                       "/api/settings/bootcamp-affiliate-coupon",
                   }}
                 />
@@ -92,14 +92,14 @@ export default async function PreferencesSettingsPage() {
 
               <section id="bootcamp-free-coupon-form" className="mb-12">
                 <BootcampFreeCouponForm
-                  insiders_status={
+                  insidersStatus={
                     session.user.isInsider ? "active" : "ineligible"
                   }
-                  bootcamp_free_coupon_code={
+                  bootcampFreeCouponCode={
                     preferencesData.bootcamp_free_coupon_code
                   }
                   links={{
-                    bootcamp_free_coupon_code:
+                    bootcampFreeCouponCode:
                       "/api/settings/bootcamp-free-coupon",
                   }}
                 />

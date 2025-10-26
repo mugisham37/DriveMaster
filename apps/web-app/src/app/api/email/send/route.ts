@@ -69,7 +69,7 @@ async function sendEmailHandler(request: NextRequest) {
   }
 }
 
-async function getEmailQueueStatus(_request: NextRequest) {
+async function getEmailQueueStatus(_: NextRequest) {
   const session = await getServerAuthSession()
   
   // Only allow admins to check queue status

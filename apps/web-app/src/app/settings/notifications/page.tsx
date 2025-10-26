@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Manage your email and notification preferences'
 }
 
-async function getCommunicationPreferences(userId: number) {
+async function getCommunicationPreferences() {
   // TODO: Fetch actual communication preferences from database
   
   const mockPreferences = [
@@ -88,7 +88,7 @@ export default async function NotificationSettingsPage() {
     redirect('/auth/signin?callbackUrl=/settings/notifications')
   }
 
-  const communicationPreferences = await getCommunicationPreferences(session.user.id)
+  const communicationPreferences = await getCommunicationPreferences()
 
   return (
     <div id="page-settings-notifications" className="page-settings">

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Layout } from '@/components/layout/Layout'
 import { GraphicalIcon } from '@/components/common/GraphicalIcon'
 import { CopyToClipboardButton } from '@/components/common/CopyToClipboardButton'
-import { useAuth } from '@/hooks/useAuth'
+
 
 interface Partner {
   id: number
