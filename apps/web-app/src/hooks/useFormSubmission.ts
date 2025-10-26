@@ -14,7 +14,7 @@ export interface UseFormSubmissionResult {
   status: SubmissionStatus
   error: Error | null
   isSubmitting: boolean
-  submit: (data?: any) => Promise<void>
+  submit: (data?: Record<string, unknown>) => Promise<void>
   reset: () => void
 }
 
@@ -22,7 +22,7 @@ export function useFormSubmission(options: UseFormSubmissionOptions): UseFormSub
   const [status, setStatus] = useState<SubmissionStatus>('idle')
   const [error, setError] = useState<Error | null>(null)
 
-  const submit = useCallback(async (data?: any) => {
+  const submit = useCallback(async (data?: Record<string, unknown>) => {
     try {
       setStatus('submitting')
       setError(null)

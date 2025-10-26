@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useCallback, useState } from 'react'
 import { ManageCustomFunctionsModal } from './ManageCustomFunctionsModal'
 import { Icon } from '@/components/common'

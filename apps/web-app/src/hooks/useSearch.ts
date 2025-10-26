@@ -24,8 +24,7 @@ export function useSearch<T>(
   const {
     debounceMs = 300,
     minQueryLength = 1,
-    maxResults = 50,
-    caseSensitive = false
+    maxResults = 50
   } = options
 
   const [query, setQuery] = useState('')

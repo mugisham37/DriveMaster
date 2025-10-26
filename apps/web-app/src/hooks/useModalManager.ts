@@ -6,8 +6,8 @@ interface ModalState {
   id: string
   isOpen: boolean
   priority: number
-  component: React.ComponentType<any>
-  props?: any
+  component: React.ComponentType<Record<string, unknown>>
+  props?: Record<string, unknown>
 }
 
 interface UseModalManagerReturn {
@@ -33,21 +33,6 @@ export function useModalManager(): UseModalManagerReturn {
   // Force re-render
   const triggerUpdate = useCallback(() => {
     forceUpdate({})
-  }, [])
-
-  useEffect(() => {
-    if (!isInitialized.current) {
-      modalManagerInstance = {
-        activeModal,
-        registerModal,
-        openModal,
-        closeModal,
-        closeAllModals,
-        isModalOpen,
-        canShowModal
-      }
-      isInitialized.current = true
-    }
   }, [])
 
   const registerModal = useCallback((modal: Omit<ModalState, 'isOpen'>) => {
@@ -109,13 +94,28 @@ export function useModalManager(): UseModalManagerReturn {
     // Can show if no modal is active or if this modal has higher priority
     if (!activeModalId) return true
     
-    const activeModal = modalRegistry.get(activeModalId)
+    const activeModalFromRegistry = modalRegistry.get(activeModalId)
     const requestedModal = modalRegistry.get(id)
     
-    if (!activeModal || !requestedModal) return false
+    if (!activeModalFromRegistry || !requestedModal) return false
     
-    return requestedModal.priority > activeModal.priority
+    return requestedModal.priority > activeModalFromRegistry.priority
   }, [])
+
+  useEffect(() => {
+    if (!isInitialized.current) {
+      modalManagerInstance = {
+        activeModal,
+        registerModal,
+        openModal,
+        closeModal,
+        closeAllModals,
+        isModalOpen,
+        canShowModal
+      }
+      isInitialized.current = true
+    }
+  }, [activeModal, registerModal, openModal, closeModal, closeAllModals, isModalOpen, canShowModal])
 
   return {
     activeModal,

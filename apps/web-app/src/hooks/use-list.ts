@@ -25,7 +25,7 @@ export function useList(initialRequest: Request) {
     }));
   }, []);
 
-  const setQuery = useCallback((query: Record<string, any>) => {
+  const setQuery = useCallback((query: Record<string, unknown>) => {
     setRequest((prev) => ({
       ...prev,
       query,

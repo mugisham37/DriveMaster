@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 export type DropdownAttributes = {
   buttonAttributes: ButtonAttributes
-  panelAttributes: any
+  panelAttributes: PanelAttributes
   itemAttributes: (index: number) => ItemAttributes
   listAttributes: ListAttributes
   open: boolean
@@ -24,6 +24,12 @@ type ButtonAttributes = {
   ref: (element: HTMLButtonElement) => void
   onKeyDown: (e: KeyboardEvent) => void
   onClick: () => void
+}
+
+type PanelAttributes = {
+  ref?: React.Dispatch<React.SetStateAction<HTMLDivElement | null>> | ((element: HTMLElement | null) => void)
+  style?: React.CSSProperties
+  className?: string
 }
 
 type ItemAttributes = {
@@ -41,8 +47,7 @@ type ListAttributes = {
 
 export const useDropdown = (
   itemLength: number,
-  onItemSelect?: (index: number) => void,
-  panelOptions?: any
+  onItemSelect?: (index: number) => void
 ): DropdownAttributes => {
   const {
     open,
@@ -103,14 +108,15 @@ export const useDropdown = (
         if (onItemSelect) {
           onItemSelect(index)
         } else {
-          const link = menuItemElementsRef.current[index].querySelector('a')
-          const button = menuItemElementsRef.current[index].querySelector(
-            'button'
-          )
+          const menuItem = menuItemElementsRef.current[index]
+          if (menuItem) {
+            const link = menuItem.querySelector('a')
+            const button = menuItem.querySelector('button')
 
-          setOpen(false)
-          link?.click()
-          button?.click()
+            setOpen(false)
+            link?.click()
+            button?.click()
+          }
         }
 
         break
@@ -136,11 +142,13 @@ export const useDropdown = (
 
     if (focusIndex === null) {
       buttonElement?.focus()
-
       return
     }
 
-    menuItemElementsRef.current[focusIndex].focus()
+    const menuItem = menuItemElementsRef.current[focusIndex]
+    if (menuItem) {
+      menuItem.focus()
+    }
   }, [open, focusIndex, buttonElement])
 
   return {

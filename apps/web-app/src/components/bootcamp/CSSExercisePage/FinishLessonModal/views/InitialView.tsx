@@ -1,6 +1,6 @@
 import React, { useContext, useCallback } from 'react'
 import LottieAnimation from '@/components/bootcamp/common/LottieAnimation'
-import animation from '@/../animations/finish-lesson-modal-top.json'
+import animation from '../../../../../../animations/finish-lesson-modal-top.json'
 import { FinishLessonModalContext } from '../FinishLessonModalContext'
 
 export function InitialView() {

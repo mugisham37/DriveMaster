@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export function removeEmpty(obj: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {}
+type PrimitiveValue = string | number | boolean | null | undefined
+
+export function removeEmpty(obj: Record<string, PrimitiveValue>): Record<string, PrimitiveValue> {
+  const result: Record<string, PrimitiveValue> = {}
   
   Object.entries(obj || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -13,7 +15,7 @@ export function removeEmpty(obj: Record<string, any>): Record<string, any> {
   return result
 }
 
-export function useHistory({ pushOn }: { pushOn: Record<string, any> }) {
+export function useHistory({ pushOn }: { pushOn: Record<string, PrimitiveValue> }) {
   const router = useRouter()
   
   useEffect(() => {
