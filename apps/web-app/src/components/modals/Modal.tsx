@@ -69,8 +69,8 @@ export default function Modal({
   const modalContent = (
     <div 
       className={`modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 ${
-        theme === 'dark' ? 'bg-black bg-opacity-75' : 'bg-black bg-opacity-50'
-      } ${cover ? 'bg-opacity-90' : ''}`}
+        theme === 'dark' ? 'bg-black/75' : 'bg-black/50'
+      } ${cover ? 'bg-black/90' : ''}`}
     >
       <div
         ref={modalRef}

@@ -217,7 +217,7 @@ export default async function BlogPage({
                 <div className="p-16">
                   <h3 className="text-h6 mb-8 line-clamp-2">{post.title}</h3>
                   <p className="text-p-small text-textColor6 mb-12 line-clamp-3">{post.excerpt}</p>
-                  <div className="flex items-center text-12 text-textColor6">
+                  <div className="flex items-center text-xs text-textColor6">
                     <Avatar user={post.author} size="small" />
                     <span className="ml-6">{post.author.name}</span>
                   </div>

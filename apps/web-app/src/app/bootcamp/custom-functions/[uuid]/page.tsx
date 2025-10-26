@@ -2,11 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import dynamic from 'next/dynamic';
-const CustomFunctionEditor = dynamic(
-  () => import('@/components/bootcamp/CustomFunctionEditor').then((mod) => mod.CustomFunctionEditor),
-  { ssr: false }
-);
+import { CustomFunctionEditorClientWrapper } from '@/components/bootcamp/CustomFunctionEditor/ClientWrapper';
 
 interface Props {
   params: {
@@ -34,7 +30,7 @@ export default async function Page({ params }: Props) {
 
     return (
       <div className="container mx-auto px-4 py-8">
-        <CustomFunctionEditor uuid={params.uuid} />
+        <CustomFunctionEditorClientWrapper uuid={params.uuid} />
       </div>
     );
   } catch (error) {

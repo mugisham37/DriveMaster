@@ -35,7 +35,7 @@
 }
 
 .c-exercise-header .c-tab .count {
-  @apply bg-lightBlue text-darkBlue text-12 font-semibold px-6 py-2 rounded-circle min-w-20 text-center;
+  @apply bg-lightBlue text-darkBlue text-xs font-semibold px-6 py-2 rounded-circle min-w-20 text-center;
 }
 
 .c-exercise-header .editor-btn {

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useCallback } from 'react'
 import { sendRequest } from '@/utils/send-request'
 import { MutationStatus, useMutation, UseMutationOptions } from '@tanstack/react-query'

@@ -1,7 +1,7 @@
 /* Exercise Status Tag Styles - migrated from Ruby CSS classes */
 
 .c-exercise-status-tag {
-  @apply inline-flex items-center px-8 py-4 text-12 font-semibold rounded-5 uppercase tracking-wide;
+  @apply inline-flex items-center px-8 py-4 text-xs font-semibold rounded-md uppercase tracking-wide;
 }
 
 .c-exercise-status-tag.--available {

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react'
 import { QueryStatus } from '@tanstack/react-query'
 import { useSettingsMutation } from '../useSettingsMutation'

@@ -40,8 +40,8 @@ export function Modal({
 
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 ${
-      theme === 'dark' ? 'bg-black bg-opacity-75' : 'bg-black bg-opacity-50'
-    } ${cover ? 'bg-opacity-90' : ''}`}>
+      theme === 'dark' ? 'bg-black/75' : 'bg-black/50'
+    } ${cover ? 'bg-black/90' : ''}`}>
       <div className={`rounded-lg max-w-2xl max-h-[90vh] overflow-auto ${
         theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
       } ${ReactModalClassName} ${className}`}>

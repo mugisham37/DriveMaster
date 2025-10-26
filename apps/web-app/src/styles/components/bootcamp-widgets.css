@@ -65,7 +65,7 @@
 
 .c-exercise-widget .locked-overlay {
   @apply absolute inset-0 flex items-center justify-center;
-  @apply bg-gray-200 bg-opacity-75 rounded-lg;
+  @apply bg-gray-200/75 rounded-lg;
 }
 
 .c-exercise-widget.size-small {

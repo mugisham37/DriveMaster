@@ -9,19 +9,91 @@ import { useNotificationDropdown } from '../notifications/useNotificationDropdow
 import { usePaginatedRequestQuery } from '../../hooks/request-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { NotificationsChannel } from '../../lib/realtime/channels/notifications-channel';
+import { useAppTranslation } from '../../hooks/use-app-translation';
+import { useErrorHandler } from '../../hooks/use-error-handler';
+import { ErrorBoundary } from 'react-error-boundary';
+import { NotificationItem } from '../notifications/NotificationItem';
+import { GraphicalIcon } from '../common/GraphicalIcon';
+import { Loading } from '../common/Loading';
 
-const MAX_NOTIFICATIONS = 5
-export const NOTIFICATIONS_CACHE_KEY = 'notifications'
+const MAX_NOTIFICATIONS = 5;
+export const NOTIFICATIONS_CACHE_KEY = 'notifications';
+
+const DEFAULT_ERROR = 'Something went wrong loading notifications';
+
+type QueryStatus = 'pending' | 'error' | 'success';
+
+interface DropdownAttributes {
+  listAttributes: {
+    id: string;
+    hidden: boolean;
+  };
+  itemAttributes: (index: number) => Record<string, unknown>;
+}
+
+const ErrorMessage = ({ error }: { error: unknown }) => {
+  useErrorHandler(error, { defaultError: DEFAULT_ERROR });
+  return null;
+};
+
+const ErrorFallback = ({ error }: { error: Error }) => {
+  return <p>{error.message}</p>;
+};
+
+const DropdownContent = ({
+  data,
+  status,
+  error,
+  listAttributes,
+  itemAttributes,
+}: {
+  data: APIResponse | undefined;
+  status: QueryStatus;
+  error: unknown;
+} & Pick<DropdownAttributes, 'listAttributes' | 'itemAttributes'>) => {
+  const { t } = useAppTranslation('components/dropdowns');
+  
+  if (data) {
+    return (
+      <ul {...listAttributes}>
+        {data.results.map((notification, i) => {
+          return (
+            <li {...itemAttributes(i)} key={i}>
+              <NotificationItem notification={notification} onMarkAsRead={() => {}} />
+            </li>
+          );
+        })}
+        <li {...itemAttributes(data.results.length)}>
+          <a href={data.meta.links.all} className="c-prominent-link">
+            <span>{t('notifications.seeAllYourNotifications')}</span>
+            <GraphicalIcon icon="arrow-right" />
+          </a>
+        </li>
+      </ul>
+    );
+  } else {
+    const { id, hidden } = listAttributes;
+
+    return (
+      <div id={id} hidden={hidden}>
+        {status === 'pending' ? <Loading /> : null}
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <ErrorMessage error={error} />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+};
 
 export function NotificationsDropdown({ endpoint }: NotificationsDropdownProps): React.ReactElement {
-  const queryClient = useQueryClient()
-  const { t } = useAppTranslation('components/dropdowns')
+  const queryClient = useQueryClient();
+  const { t } = useAppTranslation('components/dropdowns');
   
   const { data: resolvedData } = usePaginatedRequestQuery<APIResponse>([NOTIFICATIONS_CACHE_KEY], {
     endpoint,
     query: { per_page: MAX_NOTIFICATIONS },
     options: { staleTime: 30 * 1000 }
-  })
+  });
 
   const {
     buttonAttributes,
@@ -30,30 +102,30 @@ export function NotificationsDropdown({ endpoint }: NotificationsDropdownProps):
     itemAttributes,
     isOpen,
     setIsOpen
-  } = useNotificationDropdown(resolvedData)
+  } = useNotificationDropdown(resolvedData);
 
-  const connectionRef = useRef<NotificationsChannel | null>(null)
-  const unreadCount = resolvedData?.meta.unreadCount || 0
+  const connectionRef = useRef<NotificationsChannel | null>(null);
+  const unreadCount = resolvedData?.meta.unreadCount || 0;
 
   useEffect(() => {
     if (!connectionRef.current) {
       connectionRef.current = new NotificationsChannel((message) => {
-        if (!message) return
+        if (!message) return;
         if (message.type === 'notifications.changed' && listAttributes.hidden) {
-          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] });
         }
-      })
+      });
     }
 
     if (!listAttributes.hidden) {
-      queryClient.refetchQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+      queryClient.refetchQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] });
     }
 
     return () => {
-      connectionRef.current?.disconnect()
-      connectionRef.current = null
-    }
-  }, [listAttributes.hidden, queryClient])
+      connectionRef.current?.disconnect();
+      connectionRef.current = null;
+    };
+  }, [listAttributes.hidden, queryClient]);
 
   return (
     <div className="c-notifications-dropdown">
@@ -95,7 +167,7 @@ export function NotificationsDropdown({ endpoint }: NotificationsDropdownProps):
                       <NotificationItem 
                         notification={notification}
                         onMarkAsRead={() => {
-                          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
+                          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] });
                         }}
                       />
                     </div>
@@ -118,176 +190,6 @@ export function NotificationsDropdown({ endpoint }: NotificationsDropdownProps):
                   )}
                 </>
               )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const ErrorMessage = ({ error }: { error: unknown }) => {
-  useErrorHandler(error, { defaultError: DEFAULT_ERROR })
-
-  return null
-}
-
-const ErrorFallback = ({ error }: { error: Error }) => {
-  return <p>{error.message}</p>
-}
-
-const DropdownContent = ({
-  data,
-  status,
-  error,
-  listAttributes,
-  itemAttributes,
-}: {
-  data: APIResponse | undefined
-  status: QueryStatus
-  error: unknown
-} & Pick<DropdownAttributes, 'listAttributes' | 'itemAttributes'>) => {
-  const { t } = useAppTranslation('components/dropdowns')
-  if (data) {
-    return (
-      <ul {...listAttributes}>
-        {data.results.map((notification, i) => {
-          return (
-            <li {...itemAttributes(i)} key={i}>
-              <NotificationItem notification={notification} onMarkAsRead={() => {}} />
-            </li>
-          )
-        })}
-        <li {...itemAttributes(data.results.length)}>
-          <a href={data.meta.links.all} className="c-prominent-link">
-            <span>{t('notifications.seeAllYourNotifications')}</span>
-            <GraphicalIcon icon="arrow-right" />
-          </a>
-        </li>
-      </ul>
-    )
-  } else {
-    const { id, hidden } = listAttributes
-
-    return (
-      <div id={id} hidden={hidden}>
-        {status === 'pending' ? <Loading /> : null}
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          <ErrorMessage error={error} />
-        </ErrorBoundary>
-      </div>
-    )
-  }
-}
-
-const MAX_NOTIFICATIONS = 5
-export const NOTIFICATIONS_CACHE_KEY = 'notifications'
-
-export function NotificationsDropdown({ endpoint }: { endpoint: string }): React.ReactElement {
-  const queryClient = useQueryClient()
-  const { data: resolvedData } = usePaginatedRequestQuery<APIResponse>([NOTIFICATIONS_CACHE_KEY], {
-    endpoint,
-    query: { per_page: MAX_NOTIFICATIONS },
-    options: { staleTime: 30 * 1000 }
-  })
-
-  const {
-    buttonRef,
-    buttonAttributes,
-    panelAttributes,
-    listAttributes,
-    itemAttributes,
-    isOpen,
-    setIsOpen
-  } = useNotificationDropdown(resolvedData)
-
-  const connectionRef = useRef<NotificationsChannel | null>(null)
-  const unreadCount = resolvedData?.meta.unreadCount || 0
-
-  useEffect(() => {
-    if (!connectionRef.current) {
-      connectionRef.current = new NotificationsChannel((message) => {
-        if (!message) return
-        if (message.status === 'changed' && listAttributes.hidden) {
-          queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
-        }
-      })
-    }
-
-    if (!listAttributes.hidden) {
-      queryClient.refetchQueries({ queryKey: [NOTIFICATIONS_CACHE_KEY] })
-    }
-
-    return () => {
-      connectionRef.current?.disconnect()
-      connectionRef.current = null
-    }
-  }, [listAttributes.hidden, queryClient])
-
-  return (
-    <div className="notifications-dropdown" ref={buttonRef}>
-      <button
-        {...buttonAttributes}
-        className="notifications-trigger"
-        aria-haspopup="true"
-      >
-        <Icon icon="notification" alt="Notifications" />
-        {unreadCount > 0 && (
-          <span className="notification-count">{unreadCount}</span>
-        )}
-      </button>
-
-      {isOpen && resolvedData && (
-        <div {...panelAttributes} className="notifications-dropdown-content">
-          <div className="notifications-header">
-            <h3>Notifications</h3>
-            <Link 
-              href="/notifications" 
-              className="view-all-link"
-              onClick={() => setIsOpen(false)}
-            >
-              View all
-            </Link>
-          </div>
-
-          <div className="notifications-list" {...listAttributes}>
-            {resolvedData.results.length === 0 ? (
-              <div className="no-notifications">
-                <Icon icon="notification-empty" alt="" />
-                <p>No new notifications</p>
-              </div>
-            ) : (
-              resolvedData.results.slice(0, 5).map((notification, index) => (
-                <Link
-                  {...itemAttributes(index)}
-                  key={notification.id}
-                  href={notification.links.self}
-                  className={`notification-item ${!notification.status.isRead ? 'unread' : ''}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <div className="notification-content">
-                    <p>{notification.type}</p>
-                    <time className="notification-time">
-                      {new Date(notification.status.updatedAt).toLocaleString()}
-                    </time>
-                  </div>
-                  {!notification.status.isRead && (
-                    <div className="unread-indicator" />
-                  )}
-                </Link>
-              ))
-            )}
-          </div>
-
-          {resolvedData.results.length > 5 && (
-            <div className="notifications-footer">
-              <Link 
-                href="/notifications" 
-                className="view-all-btn"
-                onClick={() => setIsOpen(false)}
-              >
-                View all notifications
-              </Link>
             </div>
           )}
         </div>

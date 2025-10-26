@@ -57,7 +57,7 @@ export function VideosSidebar({
         <div className="mb-32">
           <div className="flex items-center mb-2">
             <div className="animate-pulse bg-alert rounded-circle mr-6 w-[10px] h-[10px]" />
-            <div className="font-bold leading-150 flex items-center text-textColor2 text-12 uppercase">
+            <div className="font-bold leading-150 flex items-center text-textColor2 text-xs uppercase">
               Live Now
             </div>
           </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useCallback, useState } from 'react'
 
 const INVALID_INPUT_STYLES = '!border-1 !border-orange mb-8'

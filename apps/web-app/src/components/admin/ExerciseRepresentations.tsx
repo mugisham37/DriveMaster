@@ -153,11 +153,11 @@ export function ExerciseRepresentations() {
             
             <div>
               {representation.hasFeedback ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-12 font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Has Feedback
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-12 font-medium bg-yellow-100 text-yellow-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                   No Feedback
                 </span>
               )}

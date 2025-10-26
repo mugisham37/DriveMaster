@@ -368,7 +368,7 @@ export default async function Challenge12in23Page() {
                 <div className="grid grid-cols-2 gap-12">
                   <Link
                     href="https://youtu.be/e15lRHLJQKI"
-                    className="bg-backgroundColorB p-8 shadow-smZ1 rounded-5 relative block"
+                    className="bg-backgroundColorB p-8 shadow-smZ1 rounded-md relative block"
                   >
                     <GraphicalIcon
                       icon="video-play"
@@ -379,7 +379,7 @@ export default async function Challenge12in23Page() {
                       alt="A video thumbnail"
                       width={150}
                       height={100}
-                      className="mb-8 block w-full rounded-5"
+                      className="mb-8 block w-full rounded-md"
                     />
                     <div className="text-center text-h6">
                       How&apos;s your #12in23 going?
@@ -388,7 +388,7 @@ export default async function Challenge12in23Page() {
 
                   <Link
                     href="https://youtu.be/2refhxXqePI"
-                    className="bg-backgroundColorB p-8 shadow-smZ1 rounded-5 relative block"
+                    className="bg-backgroundColorB p-8 shadow-smZ1 rounded-md relative block"
                   >
                     <GraphicalIcon
                       icon="video-play"
@@ -399,7 +399,7 @@ export default async function Challenge12in23Page() {
                       alt="A video thumbnail"
                       width={150}
                       height={100}
-                      className="mb-8 block w-full rounded-5"
+                      className="mb-8 block w-full rounded-md"
                     />
                     <div className="text-center text-h6">
                       The Official #12in23 Calendar

@@ -118,7 +118,7 @@ export default function ThemePreferenceForm({
             key={theme.id}
             className={`theme-option p-4 border rounded-8 cursor-pointer transition-all ${
               selectedTheme === theme.id
-                ? 'border-prominentLinkColor bg-prominentLinkColor bg-opacity-5'
+                ? 'border-prominentLinkColor bg-prominentLinkColor/5'
                 : 'border-borderColor6 hover:border-borderColor4'
             } ${
               !theme.available ? 'opacity-50 cursor-not-allowed' : ''

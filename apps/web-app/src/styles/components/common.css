@@ -32,7 +32,65 @@
 }
 
 .markdown-preview {
-  @apply p-3 prose prose-sm max-w-none;
+  @apply p-3 max-w-none;
+  
+  /* Typography styles similar to prose */
+  line-height: 1.7;
+  color: #374151;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
+  @apply font-semibold text-gray-900 mt-6 mb-4;
+}
+
+.markdown-preview h1 {
+  @apply text-2xl;
+}
+
+.markdown-preview h2 {
+  @apply text-xl;
+}
+
+.markdown-preview h3 {
+  @apply text-lg;
+}
+
+.markdown-preview p {
+  @apply mb-4;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  @apply mb-4 pl-6;
+}
+
+.markdown-preview li {
+  @apply mb-2;
+}
+
+.markdown-preview code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.markdown-preview pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.markdown-preview pre code {
+  @apply bg-transparent p-0;
+}
+
+.markdown-preview blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
+}
+
+.markdown-preview a {
+  @apply text-blue-600 hover:text-blue-800 underline;
 }
 
 /* Share Button & Modal */
@@ -454,7 +512,7 @@
 }
 
 .locked-overlay {
-  @apply absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center gap-2 text-gray-500 rounded-lg;
+  @apply absolute inset-0 bg-white/75 flex items-center justify-center gap-2 text-gray-500 rounded-lg;
 }
 
 .exercise-widget-link {
@@ -467,7 +525,7 @@
 
 /* Concept Widget */
 .concept-widget {
-  @apply inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-decoration-none;
+  @apply inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors no-underline;
 }
 
 .concept-icon {

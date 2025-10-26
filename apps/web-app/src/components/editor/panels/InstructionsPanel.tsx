@@ -42,7 +42,7 @@ function HelloWorldVideo() {
     <>
       <h2>{t('instructionsPanel.introduction')}</h2>
       <p className="mb-20">{t('instructionsPanel.watchOurVideo')}</p>
-      <VimeoEmbed id="853440496?h=6abbdfc68f" className="rounded-5" />
+      <VimeoEmbed id="853440496?h=6abbdfc68f" className="rounded-md" />
     </>
   )
 }

@@ -125,7 +125,7 @@ export default function MechanicalMarchPage() {
                     {topic.concepts.map((concept) => (
                       <span 
                         key={concept}
-                        className="px-12 py-4 bg-backgroundColorB rounded-4 text-12 font-medium text-textColor6"
+                        className="px-12 py-4 bg-backgroundColorB rounded-4 text-xs font-medium text-textColor6"
                       >
                         {concept}
                       </span>

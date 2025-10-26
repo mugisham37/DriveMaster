@@ -349,7 +349,7 @@ export default async function BlogPostPage({
                   <p className="text-p-small text-textColor6 mb-12 line-clamp-3">
                     {otherPost.excerpt}
                   </p>
-                  <div className="flex items-center text-12 text-textColor6">
+                  <div className="flex items-center text-xs text-textColor6">
                     <Avatar user={otherPost.author} size="small" />
                     <span className="ml-6">{otherPost.author.name}</span>
                   </div>

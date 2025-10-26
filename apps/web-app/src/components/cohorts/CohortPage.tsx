@@ -38,7 +38,7 @@ export function CohortPage({ cohort, membership }: CohortPageProps) {
     <div>
       {isClosed && (
         <div className="bg-backgroundColorA relative">
-          <div className="m-20 py-16 px-20 text-18 font-bold text-red border-orange border-1 rounded-5 bg-lightOrange text-center">
+          <div className="m-20 py-16 px-20 text-18 font-bold text-red border-orange border-1 rounded-md bg-lightOrange text-center">
             This cohort is now closed for applications
           </div>
         </div>

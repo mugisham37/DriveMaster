@@ -83,7 +83,7 @@ export function ImpactTestimonialsList({
                 size="medium"
                 className="h-[32px] w-[32px]"
               />
-              <span className="text-12 text-textColor2">→</span>
+              <span className="text-xs text-textColor2">→</span>
               <Avatar
                 user={{
                   avatarUrl: testimonial.mentor.avatarUrl,
@@ -114,7 +114,7 @@ export function ImpactTestimonialsList({
               <span>{testimonial.track.title}</span>
             </div>
             
-            <time className="text-12 text-textColor3 mt-8 block">
+            <time className="text-xs text-textColor3 mt-8 block">
               {fromNow(testimonial.createdAt)}
             </time>
           </div>
@@ -124,7 +124,7 @@ export function ImpactTestimonialsList({
       {/* Modal for selected testimonial */}
       {selectedTestimonial && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={() => setSelectedTestimonial(null)}
         >
           <div 
