@@ -106,7 +106,11 @@ export default async function DonatePage() {
         <article className="pt-40">
           {session?.user ? (
             <section className="form-section">
-              <DonationsForm user={session.user} />
+              <DonationsForm user={{
+                ...session.user,
+                preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
+                tracks: []
+              }} />
               <DonationsAlternatives />
             </section>
           ) : (

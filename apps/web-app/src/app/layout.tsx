@@ -72,7 +72,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${poppins.variable} antialiased`}
       >
-        <SessionProvider session={session}>
+        <SessionProvider session={session as Record<string, unknown> | null}>
           <ComponentInitializer />
           <PerformanceMonitor />
           <FlashMessages />

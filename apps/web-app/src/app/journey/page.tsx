@@ -62,7 +62,7 @@ export default async function JourneyPage() {
       <div className="journey-hero">
         <div className="lg-container">
           <h1>Your Journey</h1>
-          <p>Track your progress, view your solutions, and see how you're growing as a developer.</p>
+          <p>Track your progress, view your solutions, and see how you&apos;re growing as a developer.</p>
         </div>
       </div>
       

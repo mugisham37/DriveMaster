@@ -105,7 +105,7 @@ export default function CohortsPage() {
             <h2 className="text-h1 mb-6">What are Learning Cohorts?</h2>
             <p className="text-p-xlarge max-w-4xl mx-auto text-gray-600">
               Learning cohorts are community-driven learning experiences where you work through 
-              programming exercises alongside other learners. They're designed to be flexible, 
+              programming exercises alongside other learners. They&apos;re designed to be flexible, 
               supportive, and fun - perfect for staying motivated and making connections.
             </p>
           </div>

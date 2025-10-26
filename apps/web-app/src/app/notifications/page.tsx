@@ -28,8 +28,8 @@ export default async function NotificationsPage({
   const notificationsRequest = {
     endpoint: '/api/notifications',
     query: {
-      status: searchParams.status || 'all',
-      type: searchParams.type,
+      status: (searchParams.status as 'all' | 'unread' | 'read') || 'all',
+      type: searchParams.type || '',
       page: searchParams.page ? parseInt(searchParams.page) : 1
     },
     options: { staleTime: 0 }

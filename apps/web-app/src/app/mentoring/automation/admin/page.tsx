@@ -51,8 +51,8 @@ export default async function AdminPage({
     endpoint: '/api/mentoring/representations/admin',
     query: {
       onlyMentoredSolutions: searchParams.only_mentored_solutions === 'true',
-      criteria: searchParams.criteria,
-      trackSlug: searchParams.track_slug,
+      criteria: searchParams.criteria || '',
+      trackSlug: searchParams.track_slug || '',
       order: searchParams.order || 'most_recent_feedback',
       page: searchParams.page ? parseInt(searchParams.page) : 1
     },

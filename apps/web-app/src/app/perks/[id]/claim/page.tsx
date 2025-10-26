@@ -138,7 +138,7 @@ export default async function ClaimPerkPage({ params }: { params: { id: string }
               <h4 className="font-semibold mb-2">How to claim:</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm">
                 <li>Copy the voucher code above</li>
-                <li>Click "{perk.buttonText}" to visit {perk.partner.websiteDomain}</li>
+                <li>Click &quot;{perk.buttonText}&quot; to visit {perk.partner.websiteDomain}</li>
                 <li>Enter the code during checkout or registration</li>
                 <li>Enjoy your exclusive Exercism member benefit!</li>
               </ol>

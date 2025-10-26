@@ -73,7 +73,7 @@ export default function CommunityPage() {
               </p>
               <p className="text-p-xlarge leading-150 mb-20">
                 <strong>
-                  Whether you're just starting out or you're an experienced developer, there's a place for you here.
+                  Whether you&apos;re just starting out or you&apos;re an experienced developer, there&apos;s a place for you here.
                 </strong>
               </p>
 

@@ -49,8 +49,8 @@ export default async function WithFeedbackPage({
   const representationsRequest = {
     endpoint: '/api/mentoring/representations/with-feedback',
     query: {
-      criteria: searchParams.criteria,
-      trackSlug: searchParams.track_slug,
+      criteria: searchParams.criteria || '',
+      trackSlug: searchParams.track_slug || '',
       order: searchParams.order || 'most_submissions',
       page: searchParams.page ? parseInt(searchParams.page) : 1
     },

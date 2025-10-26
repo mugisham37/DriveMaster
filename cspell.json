@@ -817,10 +817,14 @@
     "maxage",
     "RAII",
     "Functors",
-    "    "mockuser",
+    "mockuser",
     "metaprogramming",
     "rubydev",
-    "jsmaster""
+    "jsmaster",
+    "Exercism",
+    "golangbridge",
+    "johndoe",
+    "logomark"
   ],
   "ignorePaths": [
     "node_modules/**",

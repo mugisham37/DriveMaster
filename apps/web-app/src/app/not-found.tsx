@@ -15,7 +15,7 @@ export default function NotFound() {
             <div className="text-purple leading-110 text-[128px]">404</div>
             <h1 className="text-h1 mb-16">Page not found</h1>
             <p className="text-textColor6 text-24 leading-150 font-semibold mb-24">
-              The page you are looking for doesn't exist.
+              The page you are looking for doesn&apos;t exist.
             </p>
             <p className="text-p-xlarge max-w-[550px]">
               You might have mistyped the address, or the page may have moved. 
@@ -23,7 +23,7 @@ export default function NotFound() {
               <Link href="/" className="text-prominentLinkColor underline">
                 homepage
               </Link>{' '}
-              or use the navigation above to find what you're looking for.
+              or use the navigation above to find what you&apos;re looking for.
             </p>
           </div>
           <div className="ml-auto">

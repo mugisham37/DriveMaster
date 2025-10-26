@@ -5,16 +5,16 @@ interface SolutionChannelResponse {
 }
 
 export class SolutionWithLatestIterationChannel {
-  private solution: { uuid: string }
-  private callback: (response: SolutionChannelResponse) => void
-  private intervalId?: NodeJS.Timeout
+  private _solution: { uuid: string }
+  private _callback: (response: SolutionChannelResponse) => void
+  private intervalId?: NodeJS.Timeout | undefined
 
   constructor(
     solution: { uuid: string },
     callback: (response: SolutionChannelResponse) => void
   ) {
-    this.solution = solution
-    this.callback = callback
+    this._solution = solution
+    this._callback = callback
     this.connect()
   }
 

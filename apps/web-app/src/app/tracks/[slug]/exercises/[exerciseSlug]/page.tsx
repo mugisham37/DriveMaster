@@ -41,7 +41,11 @@ export default async function Exercise({ params }: ExercisePageProps) {
   return (
     <ExercisePage 
       {...exerciseData} 
-      user={session?.user || null}
+      user={session?.user ? {
+        ...session.user,
+        preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
+        tracks: []
+      } : null}
     />
   )
 }

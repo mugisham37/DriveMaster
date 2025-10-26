@@ -30,8 +30,7 @@ export default async function TrackLayout({ children, params }: TrackLayoutProps
       {trackInfo && session?.user && (
         <TrackWelcomeModal 
           track={trackInfo}
-          userSeniority={(session.user as any)?.seniority}
-          userJoinedDaysAgo={userJoinedDaysAgo}
+          userSeniority={(session.user as unknown)?.seniority}
         />
       )}
     </>

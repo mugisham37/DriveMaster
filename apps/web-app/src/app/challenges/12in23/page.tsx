@@ -101,7 +101,6 @@ async function get12in23Data() {
 
 export default async function Challenge12in23Page() {
   const { 
-    currentMonth: _currentMonth, 
     decemberTracks, 
     featuredExercises, 
     trackCounts, 
@@ -198,13 +197,13 @@ export default async function Challenge12in23Page() {
 
               <h2 className="text-h3 mt-32 mb-4">Learn from others… 🎥</h2>
               <p className="text-p-large mb-12 c-highlight-links">
-                Throughout the month we'll have interviews, walkthroughs from Exercism track contributors, and live streams of the community solving exercises. Our streaming team is really growing so definitely check out what's on!
+                Throughout the month we&apos;ll have interviews, walkthroughs from Exercism track contributors, and live streams of the community solving exercises. Our streaming team is really growing so definitely check out what&apos;s on!
                 Subscribe to our{' '}
                 <Link href="https://twitch.tv/exercismlive" className="underline">Twitch Channel</Link>
                 {' '}and{' '}
                 <Link href="https://www.youtube.com/exercism_videos?sub_confirmation=1" className="underline">YouTube Channel</Link>
                 {' '}to not miss out!
-                There's also a schedule at the top right of this page.
+                There&apos;s also a schedule at the top right of this page.
               </p>
 
               <h2 className="text-h3 mt-32 mb-4">Join the conversation… 💬</h2>
@@ -265,7 +264,7 @@ export default async function Challenge12in23Page() {
                       height={100}
                       className="mb-8 block w-full rounded-5"
                     />
-                    <div className="text-center text-h6">How's your #12in23 going?</div>
+                    <div className="text-center text-h6">How&apos;s your #12in23 going?</div>
                   </Link>
 
                   <Link 
@@ -295,7 +294,7 @@ export default async function Challenge12in23Page() {
               <div className="bg-backgroundColorD rounded-8 py-16 px-24 border-1 border-borderColor7">
                 <h2 className="text-h4 mb-4">Enjoying #12in23? Please donate 🙏</h2>
                 <p className="text-p-base mb-12">
-                  We keep Exercism free so that anyone can use it. But we rely on the generosity of people that could afford it to make that possible. If you're enjoying #12in23 and are financially able, please consider donating to keep Exercism going!
+                  We keep Exercism free so that anyone can use it. But we rely on the generosity of people that could afford it to make that possible. If you&apos;re enjoying #12in23 and are financially able, please consider donating to keep Exercism going!
                 </p>
                 <Link href="/donate" className="btn btn-primary">
                   Donate now
@@ -305,7 +304,7 @@ export default async function Challenge12in23Page() {
               <div className="bg-backgroundColorD rounded-8 py-16 px-24 border-1 border-borderColor7 mt-24">
                 <h2 className="text-h4 mb-4">The year-long #12in23 badge</h2>
                 <p className="text-p-base mb-12">
-                  At the end of the year we'll be awarding an exclusive badge to anyone who completes all the featured exercises in the correct paradigms. You can complete the exercise any time during 2023.
+                  At the end of the year we&apos;ll be awarding an exclusive badge to anyone who completes all the featured exercises in the correct paradigms. You can complete the exercise any time during 2023.
                   Hover over the exercises below or view{' '}
                   <Link href="https://forum.exercism.org/t/new-12in23-badge-for-completing-all-the-things/4183" className="font-semibold text-linkColor">
                     this forum post
@@ -363,11 +362,11 @@ export default async function Challenge12in23Page() {
           <div className="flex text-center flex-col items-center">
             <h1 className="text-h1 mb-16">Your #12in23 Progress</h1>
             <p className="text-p-xlarge">
-              Below you'll see a list of all the languages you've used during 2023.
+              Below you&apos;ll see a list of all the languages you&apos;ve used during 2023.
               Aim to complete 12 languages by the end of the year!
             </p>
             <p className="text-p-large cta">
-              Submit 5 exercises (not including "Hello World&quot;) in a track to tick off that language!
+              Submit 5 exercises (not including &quot;Hello World&quot;) in a track to tick off that language!
             </p>
           </div>
 

@@ -16,7 +16,7 @@ export default function DonationSuccessPage() {
 
         <p className="text-p-large mb-8">
           Your generous support helps us keep Exercism free and accessible to developers worldwide. 
-          We're incredibly grateful for your contribution to our mission.
+          We&apos;re incredibly grateful for your contribution to our mission.
         </p>
         
         <p className="text-p-large mb-24">

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
@@ -41,7 +41,7 @@ async function getProfileData(handle: string) {
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: ProfileImageProps
 ) {
   try {

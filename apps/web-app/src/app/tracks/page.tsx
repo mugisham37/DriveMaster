@@ -18,12 +18,16 @@ interface TracksPageProps {
 
 export default async function Tracks({ searchParams }: TracksPageProps) {
   const session = await getServerSession(authOptions)
-  const tracksData = await getTracksData(searchParams)
+  const tracksData = await getTracksData()
 
   return (
     <TracksPage 
       {...tracksData} 
-      user={session?.user || null}
+      user={session?.user ? {
+        ...session.user,
+        preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
+        tracks: []
+      } : null}
       searchParams={searchParams}
     />
   )

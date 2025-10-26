@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
@@ -44,7 +44,7 @@ module.exports = { hello };`,
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: SolutionImageProps
 ) {
   try {
@@ -150,7 +150,7 @@ export async function GET(
                 {solution.exercise.title}
               </span>
               <span style={{ margin: '0 8px', color: '#9ca3af' }}>
-                on Exercism's
+                on Exercism&apos;s
               </span>
               <span style={{ color: 'white' }}>
                 {solution.track.title} Track

@@ -93,7 +93,7 @@ async function get48in24Data() {
 }
 
 export default async function Challenge48in24Page() {
-  const { week, exercises: _exercises, liveExercises, featuredExercise, tracks, numPlaceholders } = await get48in24Data()
+  const { week, liveExercises, featuredExercise, tracks, numPlaceholders } = await get48in24Data()
 
   return (
     <div id="challenge-48in24-page">
@@ -112,9 +112,9 @@ export default async function Challenge48in24Page() {
 
               {featuredExercise ? (
                 <>
-                  <h1 className="text-h1 mb-8">This week, we're featuring {featuredExercise.title}.</h1>
+                  <h1 className="text-h1 mb-8">This week, we&apos;re featuring {featuredExercise.title}.</h1>
                   <p className="text-p-xlarge mb-12">
-                    For week {week} of #48in24, we're exploring{' '}
+                    For week {week} of #48in24, we&apos;re exploring{' '}
                     <Link href={`/exercises/${featuredExercise.slug}`} className="underline">
                       {featuredExercise.title}
                     </Link>.
@@ -125,7 +125,7 @@ export default async function Challenge48in24Page() {
                     Your task: {featuredExercise.blurb}
                   </p>
                   <p className="text-p-large mb-12">
-                    We're featuring it in the following languages:{' '}
+                    We&apos;re featuring it in the following languages:{' '}
                     {featuredExercise.featuredTracks.map((slug, index) => (
                       <span key={slug}>
                         <Link href={`/tracks/${slug}/exercises/${featuredExercise.slug}`} className="underline">
@@ -162,7 +162,7 @@ export default async function Challenge48in24Page() {
                     {' '}and{' '}
                     <Link href="https://www.youtube.com/exercism_videos?sub_confirmation=1" className="underline">YouTube Channel</Link>
                     {' '}to not miss out!
-                    There's also a schedule at the top right of this page.
+                    There&apos;s also a schedule at the top right of this page.
                   </p>
 
                   <p className="text-p-large">
@@ -176,11 +176,11 @@ export default async function Challenge48in24Page() {
                 <>
                   <h1 className="text-h1 mb-8">#48in24 starts on January 16th!</h1>
                   <p className="text-p-xlarge mb-20">
-                    Every Tuesday for 48 weeks, we'll be featuring a different exercise.
+                    Every Tuesday for 48 weeks, we&apos;ll be featuring a different exercise.
                     This page will tell you everything you need to know about the featured exercise, and show you your progress through the year.
                   </p>
                   <p className="text-p-xlarge mb-20">
-                    We'll email you when the challenge starts!
+                    We&apos;ll email you when the challenge starts!
                   </p>
 
                   <h2 className="text-h3 mt-32 mb-4">Subscribe to not miss out… 🎥</h2>
@@ -191,7 +191,7 @@ export default async function Challenge48in24Page() {
                     {' '}and{' '}
                     <Link href="https://www.youtube.com/exercism_videos?sub_confirmation=1" className="underline">YouTube Channel</Link>
                     {' '}to not miss out!
-                    There's also a schedule at the top right of this page.
+                    There&apos;s also a schedule at the top right of this page.
                   </p>
 
                   <p className="text-p-large">
@@ -205,7 +205,7 @@ export default async function Challenge48in24Page() {
 
               <h2 className="text-h3 mt-32 mb-6">#48in24 Badges</h2>
               <p className="text-p-large xl:mb-12 mb-24 c-highlight-links">
-                Throughout the year we'll be releasing badges as you earn bronze, silver and gold awards. Keep checking back here to see what badges have become available.
+                Throughout the year we&apos;ll be releasing badges as you earn bronze, silver and gold awards. Keep checking back here to see what badges have become available.
               </p>
             </div>
 
@@ -240,7 +240,7 @@ export default async function Challenge48in24Page() {
                 <div className="bg-backgroundColorD rounded-8 py-16 px-24 border-1 border-borderColor7 mt-24">
                   <h2 className="text-h4 mb-4">Enjoying #48in24? Please donate 🙏</h2>
                   <p className="xl:text-p-base text-p-large mb-12">
-                    We keep Exercism free so that anyone can use it. But we rely on the generosity of people that could afford it to make that possible. If you're enjoying #48in24 and are financially able, please consider donating to keep Exercism going!
+                    We keep Exercism free so that anyone can use it. But we rely on the generosity of people that could afford it to make that possible. If you&apos;re enjoying #48in24 and are financially able, please consider donating to keep Exercism going!
                   </p>
                   <Link href="/donate" className="btn btn-primary">
                     Donate now

@@ -39,7 +39,11 @@ export default async function Track({ params, searchParams }: TrackPageProps) {
   return (
     <TrackPage 
       {...trackData} 
-      user={session?.user || null}
+      user={session?.user ? {
+        ...session.user,
+        preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
+        tracks: []
+      } : null}
       searchParams={searchParams}
     />
   )

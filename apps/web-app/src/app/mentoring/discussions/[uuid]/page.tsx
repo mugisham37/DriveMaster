@@ -97,7 +97,19 @@ export default async function MentoringDiscussionPage({
       request: {
         uuid: params.uuid,
         status: 'pending',
-        isLocked: false
+        isLocked: false,
+        trackSlug: 'javascript',
+        exerciseSlug: 'hello-world',
+        studentHandle: 'student',
+        student: {
+          handle: 'student',
+          avatarUrl: '/assets/avatars/default.svg'
+        },
+        exercise: {
+          slug: 'hello-world',
+          title: 'Hello World',
+          iconUrl: '/assets/exercises/hello-world.svg'
+        }
       },
       discussion: null,
       track: {

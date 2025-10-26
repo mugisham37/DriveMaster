@@ -2,6 +2,9 @@ export { DonationsSettingsPage } from './DonationsSettingsPage'
 export { APICliSettings } from './APICliSettings'
 export { IntegrationsSettings } from './IntegrationsSettings'
 export { UnsubscribeForm } from './UnsubscribeForm'
+export { default as InsiderBenefitsForm } from './InsiderBenefitsForm'
+export { default as BootcampAffiliateCouponForm } from './BootcampAffiliateCouponForm'
+export { default as BootcampFreeCouponForm } from './BootcampFreeCouponForm'
 
 // Core settings components
 export { default as ProfileForm } from './ProfileForm'

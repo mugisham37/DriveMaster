@@ -24,8 +24,8 @@ export default async function TasksPage() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-8">Contributing Tasks</h2>
           <p className="text-lg text-gray-600 mb-8">
-            Find tasks that match your skills and interests. Whether you're a developer, 
-            writer, or designer, there's a way for you to contribute to Exercism.
+            Find tasks that match your skills and interests. Whether you&apos;re a developer, 
+            writer, or designer, there&apos;s a way for you to contribute to Exercism.
           </p>
           
           <TasksList />

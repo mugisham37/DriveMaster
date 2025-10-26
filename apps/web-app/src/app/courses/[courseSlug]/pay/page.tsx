@@ -44,7 +44,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
               </div>
 
               <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">What's Included:</h3>
+                <h3 className="font-semibold text-blue-900 mb-2">What&apos;s Included:</h3>
                 <ul className="text-blue-800 space-y-1">
                   <li>• 12 weeks of live instruction</li>
                   <li>• Personal mentoring sessions</li>

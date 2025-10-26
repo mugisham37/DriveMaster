@@ -66,7 +66,7 @@ export default async function FavoritesPage() {
             My Favorites
           </h1>
           <p className="text-gray-600">
-            Solutions you've starred from the community
+            Solutions you&apos;ve starred from the community
           </p>
         </div>
 

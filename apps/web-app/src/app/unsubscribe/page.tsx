@@ -30,7 +30,7 @@ export default function UnsubscribePage({ searchParams }: UnsubscribePageProps) 
           <h1 className="text-h1 mb-6">Unsubscribe from Emails</h1>
           
           <p className="text-p-large text-gray-600 dark:text-gray-300 mb-8">
-            We're sorry to see you go! You can unsubscribe from specific types of emails 
+            We&apos;re sorry to see you go! You can unsubscribe from specific types of emails 
             or manage your preferences below.
           </p>
 
@@ -43,7 +43,7 @@ export default function UnsubscribePage({ searchParams }: UnsubscribePageProps) 
           </Suspense>
 
           <div className="mt-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-left">
-            <h3 className="font-semibold mb-3">What you'll miss:</h3>
+            <h3 className="font-semibold mb-3">What you&apos;ll miss:</h3>
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>• Updates about new features and improvements</li>
               <li>• Notifications about mentoring discussions</li>

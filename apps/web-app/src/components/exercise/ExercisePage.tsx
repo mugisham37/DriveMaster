@@ -1,6 +1,6 @@
 'use client'
 
-import { User } from 'next-auth'
+import { ExercismUser } from '@/lib/auth/config'
 import { ExerciseData } from '@/lib/api/exercise'
 import { Layout } from '@/components/layout/Layout'
 import { ExerciseHeader } from './ExerciseHeader'
@@ -9,7 +9,7 @@ import { ExerciseFiles } from './ExerciseFiles'
 import { ExerciseActions } from './ExerciseActions'
 
 interface ExercisePageProps extends ExerciseData {
-  user: User | null
+  user: ExercismUser | null
 }
 
 export function ExercisePage({ 

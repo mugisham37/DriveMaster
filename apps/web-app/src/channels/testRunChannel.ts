@@ -1,12 +1,12 @@
 import { TestRun } from '../components/editor/types'
 
 export class TestRunChannel {
-  private testRun: TestRun
-  private callback: (testRun: TestRun) => void
+  private _testRun: TestRun
+  private _callback: (testRun: TestRun) => void
 
   constructor(testRun: TestRun, callback: (testRun: TestRun) => void) {
-    this.testRun = testRun
-    this.callback = callback
+    this._testRun = testRun
+    this._callback = callback
   }
 
   disconnect(): void {

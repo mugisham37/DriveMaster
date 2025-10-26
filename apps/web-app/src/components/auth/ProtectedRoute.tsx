@@ -67,6 +67,13 @@ interface UnauthenticatedOnlyProps {
   redirectTo?: string
 }
 
+export function AuthenticatedOnly({ 
+  children, 
+  redirectTo = '/auth/signin' 
+}: ProtectedRouteProps) {
+  return <ProtectedRoute redirectTo={redirectTo}>{children}</ProtectedRoute>
+}
+
 export function UnauthenticatedOnly({ 
   children, 
   redirectTo = '/dashboard' 

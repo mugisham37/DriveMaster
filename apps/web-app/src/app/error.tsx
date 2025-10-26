@@ -25,7 +25,7 @@ export default function Error({ error, reset }: ErrorProps) {
               An unexpected error occurred while processing your request.
             </p>
             <p className="text-p-xlarge max-w-[550px] mb-8">
-              We've been notified about this issue and are working to fix it. 
+              We&apos;ve been notified about this issue and are working to fix it. 
               Please try refreshing the page or go back to the homepage.
             </p>
             <div className="flex gap-4">

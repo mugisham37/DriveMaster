@@ -64,7 +64,7 @@ export default function CommunityInterviewsPage() {
                   className="text-linkColor font-semibold"
                 >
                   Get in touch
-                </Link> if you'd like to be featured!
+                </Link> if you&apos;d like to be featured!
               </p>
             </div>
 
@@ -72,7 +72,7 @@ export default function CommunityInterviewsPage() {
               <div className="border-2 border-gradient-lightPurple px-16 py-12 rounded-8">
                 <h3 className="text-h4 mb-2">Subscribe & Follow</h3>
                 <p className="text-p-base mb-8">
-                  Don't miss our latest interviews and community content.
+                  Don&apos;t miss our latest interviews and community content.
                 </p>
                 <ul className="text-p-base text-linkColor font-semibold list-disc pl-20">
                   <li>

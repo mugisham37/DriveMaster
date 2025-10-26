@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Manage your donations and subscriptions to Exercism'
 };
 
-async function getDonationsData(userId: number) {
+async function getDonationsData(_userId: number) {
   // TODO: Fetch actual donations data from database
   // This would typically fetch user's payment history and current subscription
   
@@ -62,7 +62,11 @@ export default async function DonationsSettingsPageRoute() {
 
   return (
     <DonationsSettingsPage
-      user={session.user}
+      user={{
+        ...session.user,
+        preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
+        tracks: []
+      }}
       payments={donationsData.payments}
       currentSubscription={donationsData.currentSubscription}
       totals={donationsData.totals}

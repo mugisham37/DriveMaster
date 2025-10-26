@@ -35,7 +35,7 @@ export default function FunctionalFebruaryPage() {
                 <li className="flex items-start">
                   <span className="text-20 mr-12">🔄</span>
                   <div>
-                    <strong>Immutability:</strong> Data structures that don't change after creation
+                    <strong>Immutability:</strong> Data structures that don&apos;t change after creation
                   </div>
                 </li>
                 <li className="flex items-start">

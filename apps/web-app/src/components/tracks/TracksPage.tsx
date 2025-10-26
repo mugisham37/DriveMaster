@@ -1,6 +1,6 @@
 'use client'
 
-import { User } from 'next-auth'
+import { ExercismUser } from '@/lib/auth/config'
 import { Track } from '@/types'
 import { Layout } from '@/components/layout/Layout'
 import { TracksHeader } from './TracksHeader'
@@ -10,7 +10,7 @@ interface TracksPageProps {
   tracks: Track[]
   numTracks: number
   trackIconUrls: string[]
-  user: User | null
+  user: ExercismUser | null
   searchParams: { [key: string]: string | string[] | undefined }
 }
 

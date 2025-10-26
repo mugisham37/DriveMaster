@@ -1,6 +1,6 @@
 'use client'
 
-import { User } from 'next-auth'
+import { ExercismUser } from '@/lib/auth/config'
 import { TrackData } from '@/lib/api/track'
 import { Layout } from '@/components/layout/Layout'
 import { TrackHeader } from './TrackHeader'
@@ -8,7 +8,7 @@ import { TrackExercises } from './TrackExercises'
 import { TrackConcepts } from './TrackConcepts'
 
 interface TrackPageProps extends TrackData {
-  user: User | null
+  user: ExercismUser | null
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
