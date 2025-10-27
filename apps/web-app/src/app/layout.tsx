@@ -72,6 +72,7 @@ export default async function RootLayout({
     <html lang="en">
       <body
         className={`${inter.variable} ${poppins.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         <SessionProvider session={session as Record<string, unknown> | null}>
           <I18nProvider>

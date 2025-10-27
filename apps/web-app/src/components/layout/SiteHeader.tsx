@@ -3,25 +3,37 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useNavigationDropdown } from "@/hooks/useNavigationDropdown";
+import {
+  LearnDropdown,
+  DiscoverDropdown,
+  ContributeDropdown,
+  MoreDropdown,
+} from "./navigation";
 
 export function SiteHeader() {
   const { data: session, status } = useSession();
   const [isClient, setIsClient] = useState(false);
+
+  // Navigation dropdown hooks
+  const learnDropdown = useNavigationDropdown();
+  const discoverDropdown = useNavigationDropdown();
+  const contributeDropdown = useNavigationDropdown();
+  const moreDropdown = useNavigationDropdown();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const isSignedIn = status === "authenticated" && !!session?.user;
-  const isLoading = status === "loading";
-
-  // Don't render until client-side to avoid hydration mismatch
-  if (!isClient) {
-    return null;
-  }
+  const isLoading = status === "loading" || !isClient;
 
   return (
-    <header id="site-header" className="bg-white">
+    <header
+      id="site-header"
+      className="bg-white"
+      suppressHydrationWarning={true}
+    >
       {/* Top Banner */}
       <TopBanner isSignedIn={isSignedIn} />
 
@@ -31,37 +43,83 @@ export function SiteHeader() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="text-[20px] font-bold text-[#1E1B4B]">
-              <span className="text-[#7C3AED]">{"{∧}"}</span>{" "}
-              exercism
+              <span className="text-[#7C3AED]">{"{∧}"}</span> exercism
             </div>
           </Link>
 
           {/* Navigation Items */}
           <nav className="hidden lg:flex items-center ml-[80px] space-x-[40px]">
-            <Link
-              href="/tracks"
-              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
+            <div
+              className="navigation-item-wrapper"
+              ref={learnDropdown.dropdownRef}
+              onMouseEnter={learnDropdown.handleMouseEnter}
+              onMouseLeave={learnDropdown.handleMouseLeave}
             >
-              Learn
-            </Link>
-            <Link
-              href="/community"
-              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
+              <Link
+                href="/tracks"
+                className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors navigation-link"
+              >
+                Learn
+              </Link>
+              <LearnDropdown
+                isOpen={learnDropdown.isOpen}
+                onClose={learnDropdown.close}
+              />
+            </div>
+
+            <div
+              className="navigation-item-wrapper"
+              ref={discoverDropdown.dropdownRef}
+              onMouseEnter={discoverDropdown.handleMouseEnter}
+              onMouseLeave={discoverDropdown.handleMouseLeave}
             >
-              Discover
-            </Link>
-            <Link
-              href="/contributing"
-              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
+              <Link
+                href="/community"
+                className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors navigation-link"
+              >
+                Discover
+              </Link>
+              <DiscoverDropdown
+                isOpen={discoverDropdown.isOpen}
+                onClose={discoverDropdown.close}
+              />
+            </div>
+
+            <div
+              className="navigation-item-wrapper"
+              ref={contributeDropdown.dropdownRef}
+              onMouseEnter={contributeDropdown.handleMouseEnter}
+              onMouseLeave={contributeDropdown.handleMouseLeave}
             >
-              Contribute
-            </Link>
-            <Link
-              href="/about"
-              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
+              <Link
+                href="/contributing"
+                className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors navigation-link"
+              >
+                Contribute
+              </Link>
+              <ContributeDropdown
+                isOpen={contributeDropdown.isOpen}
+                onClose={contributeDropdown.close}
+              />
+            </div>
+
+            <div
+              className="navigation-item-wrapper"
+              ref={moreDropdown.dropdownRef}
+              onMouseEnter={moreDropdown.handleMouseEnter}
+              onMouseLeave={moreDropdown.handleMouseLeave}
             >
-              More
-            </Link>
+              <Link
+                href="/about"
+                className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors navigation-link"
+              >
+                More
+              </Link>
+              <MoreDropdown
+                isOpen={moreDropdown.isOpen}
+                onClose={moreDropdown.close}
+              />
+            </div>
           </nav>
 
           {/* Auth Buttons */}
@@ -69,7 +127,7 @@ export function SiteHeader() {
             {isLoading ? (
               <div className="w-20 h-8 bg-gray-200 animate-pulse rounded" />
             ) : isSignedIn ? (
-              <SignedInSection user={session.user} />
+              <SignedInSection user={session?.user} />
             ) : (
               <SignedOutSection />
             )}
@@ -81,12 +139,14 @@ export function SiteHeader() {
 }
 
 function TopBanner({ isSignedIn }: { isSignedIn: boolean }) {
-  if (isSignedIn) {
-    return null;
-  }
-
+  // Always render the banner container to avoid hydration mismatch
+  // Hide content with CSS if signed in
   return (
-    <div className="bg-[#1E1B4B] h-[40px] flex items-center justify-center px-[60px]">
+    <div
+      className={`bg-[#1E1B4B] h-[40px] flex items-center justify-center px-[60px] ${
+        isSignedIn ? "hidden" : ""
+      }`}
+    >
       <div className="text-center text-[14px] text-white font-normal">
         <span className="mr-2">👋</span>
         <span>Learning to code? Check out our </span>

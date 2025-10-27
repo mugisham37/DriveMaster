@@ -675,3 +675,238 @@ body {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+
+/* Navigation Dropdown Styles - Pixel Perfect Implementation */
+.navigation-item-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.navigation-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.navigation-dropdown-content {
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  min-width: 320px;
+  max-width: 380px;
+}
+
+.navigation-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.navigation-dropdown-item:hover {
+  background-color: #F9FAFB;
+}
+
+.navigation-dropdown-item-icon {
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+.icon-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.icon-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.navigation-dropdown-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.navigation-dropdown-item-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.navigation-dropdown-item-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+.navigation-dropdown-item-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background-color: #F59E0B;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.navigation-dropdown-item-external {
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.external-link-icon {
+  width: 16px;
+  height: 16px;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+/* Special handling for rainbow gradient icon */
+.icon-placeholder[style*="gradient-rainbow"] {
+  background: linear-gradient(45deg, 
+    #FF6B6B 0%, 
+    #4ECDC4 25%, 
+    #45B7D1 50%, 
+    #96CEB4 75%, 
+    #FFEAA7 100%);
+}
+
+/* Hover animations */
+.navigation-link {
+  position: relative;
+}
+
+.navigation-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #7C3AED;
+  transition: width 0.2s ease;
+}
+
+.navigation-item-wrapper:hover .navigation-link::after {
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .navigation-dropdown-content {
+    min-width: 280px;
+    max-width: 320px;
+  }
+  
+  .navigation-dropdown-item {
+    padding: 10px 14px;
+  }
+  
+  .navigation-dropdown-item-icon {
+    margin-right: 12px;
+  }
+  
+  .icon-placeholder {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .navigation-dropdown-item-title {
+    font-size: 16px;
+  }
+  
+  .navigation-dropdown-item-subtitle {
+    font-size: 13px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .navigation-dropdown-content {
+    background: #1F2937;
+    border: 1px solid #374151;
+  }
+  
+  .navigation-dropdown-item:hover {
+    background-color: #374151;
+  }
+  
+  .navigation-dropdown-item-title {
+    color: #F9FAFB;
+  }
+  
+  .navigation-dropdown-item-subtitle {
+    color: #9CA3AF;
+  }
+  
+  .external-link-icon {
+    color: #6B7280;
+  }
+}
+
+/* Animation for dropdown appearance */
+.navigation-dropdown.visible {
+  animation: dropdownFadeIn 0.2s ease-out forwards;
+}
+
+.navigation-dropdown.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Focus states for accessibility */
+.navigation-dropdown-item:focus {
+  outline: 2px solid #7C3AED;
+  outline-offset: -2px;
+  background-color: #F9FAFB;
+}
+
+.navigation-link:focus {
+  outline: 2px solid #7C3AED;
+  outline-offset: 2px;
+}
+
+/* Ensure proper stacking */
+#site-header {
+  position: relative;
+  z-index: 100;
+}
+
+.navigation-dropdown {
+  z-index: 1000;
+}
