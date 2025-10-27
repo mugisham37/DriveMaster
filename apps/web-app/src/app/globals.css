@@ -72,14 +72,24 @@
 @import "../styles/components/flash-messages.css";
 
 :root {
-  /* Exact color values from existing Rails implementation */
-  --text-color-1: #1a1a1a;
-  --text-color-2: #4a4a4a;
-  --text-color-6: #888888;
+  /* Exact color values from reference image */
+  --primary-purple: #7C3AED;
+  --dark-navy: #1E1B4B;
+  --dark-gray: #374151;
+  --medium-gray: #4B5563;
+  --light-gray: #6B7280;
+  --background-light: #F8F9FF;
+  --orange-link: #FF9B5E;
+  --blue-link: #3B82F6;
+  
+  /* Existing color values maintained for compatibility */
+  --text-color-1: #1E1B4B;
+  --text-color-2: #374151;
+  --text-color-6: #4B5563;
   --background-color-a: #ffffff;
-  --background-color-b: #f8fafc;
+  --background-color-b: #F8F9FF;
   --background-color-d: #f1f5f9;
-  --prominent-link-color: #6366f1;
+  --prominent-link-color: #7C3AED;
   --alert: #ef4444;
   --very-light-blue: #f0f9ff;
   --light-blue: #e0f2fe;
@@ -444,6 +454,17 @@ nav a,
   margin-right: auto;
   padding-left: 20px;
   padding-right: 20px;
+}
+
+/* Hexagon shape for programming language icons */
+.hexagon {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
 }
 
 .md-container {

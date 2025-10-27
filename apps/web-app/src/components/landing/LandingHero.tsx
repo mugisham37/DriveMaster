@@ -5,136 +5,123 @@ import Link from 'next/link';
 
 export function LandingHero() {
   return (
-    <div className="bg-white">
+    <div className="bg-gradient-to-b from-[#F8F9FF] to-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
-        <div className="lg-container">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20">
-            {/* Left Content */}
-            <div className="flex-1 text-center lg:text-left max-w-[580px]">
-              <h1 className="text-[52px] lg:text-[64px] font-bold leading-[1.1] text-textColor1 mb-8">
+      <section className="pt-[80px] pb-[100px] px-[60px]">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex items-start justify-between gap-20">
+            {/* Left Content - 55% width */}
+            <div className="w-[55%] text-left">
+              {/* Main Heading */}
+              <h1 className="text-[62px] font-bold leading-[1.1] text-[#1E1B4B] mb-[24px] tracking-[-0.02em]">
                 Get really good at programming.
               </h1>
               
-              <div className="text-[18px] leading-[1.6] text-textColor2 mb-10 max-w-[500px] mx-auto lg:mx-0">
+              {/* Subheading */}
+              <div className="text-[20px] leading-[1.6] text-[#374151] mb-[40px]">
                 Develop fluency in{' '}
-                <span className="font-medium italic">78 programming languages</span>{' '}
+                <span className="italic">78 programming languages</span>{' '}
                 with our unique blend of learning, practice and mentoring. Exercism is fun, effective and{' '}
-                <span className="font-semibold">100% free, forever</span>.
+                <span className="font-bold">100% free, forever.</span>
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-16">
+              <div className="flex gap-[16px] mb-[60px]">
                 <Link
                   href="/auth/register"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-prominentLinkColor text-white font-semibold text-[16px] rounded-lg hover:bg-[#5856eb] transition-colors duration-200"
+                  className="inline-flex items-center justify-center px-[32px] py-[16px] bg-[#7C3AED] text-white font-semibold text-[18px] rounded-[8px] hover:bg-[#6D28D9] transition-colors duration-200 shadow-[0_4px_12px_rgba(124,58,237,0.3)]"
                 >
                   Sign up for free
                 </Link>
                 <Link
                   href="/tracks"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white text-prominentLinkColor font-semibold text-[16px] rounded-lg border-2 border-prominentLinkColor hover:bg-veryLightBlue transition-colors duration-200"
+                  className="inline-flex items-center justify-center px-[32px] py-[16px] bg-white text-[#7C3AED] font-semibold text-[18px] rounded-[8px] border-2 border-[#7C3AED] hover:bg-[#F8F9FF] transition-colors duration-200"
                 >
                   Explore languages
                 </Link>
               </div>
 
-              {/* Exercism Info Box */}
-              <div className="inline-flex items-start gap-4 p-6 bg-veryLightBlue rounded-lg border border-lightBlue max-w-[520px] mx-auto lg:mx-0">
-                <div className="flex-shrink-0">
-                  {/* Exercism Logo */}
-                  <div className="text-prominentLinkColor font-bold text-xl">
-                    {'{-}'}
-                  </div>
+              {/* Info Box */}
+              <div className="w-[680px] bg-white border-2 border-[#7C3AED] rounded-[12px] p-[20px_24px] flex items-center">
+                <div className="text-[#1E1B4B] font-bold text-[18px]">
+                  {'{∧}'} exercism
                 </div>
-                <div className="flex-1">
-                  <div className="text-[14px] text-textColor2 leading-[1.5]">
-                    <span className="font-semibold">exercism</span> is an independent, community-funded, not-for-profit organisation.
-                  </div>
-                  <Link
-                    href="/about"
-                    className="inline-flex items-center gap-1 text-[14px] text-prominentLinkColor font-medium mt-2 hover:underline"
-                  >
-                    Learn more
-                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                      <path fillRule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/>
-                    </svg>
-                  </Link>
+                <div className="text-[16px] text-[#4B5563] ml-[16px] flex-1">
+                  is an independent, community funded, not-for-profit organisation.
                 </div>
+                <Link
+                  href="/about"
+                  className="text-[#3B82F6] font-semibold text-[16px] hover:underline ml-auto"
+                >
+                  Learn more
+                </Link>
+                <div className="w-[40px] h-[40px] bg-[#7C3AED] rounded-full ml-[16px]"></div>
               </div>
             </div>
 
-            {/* Right Content - Illustration */}
-            <div className="flex-1 flex justify-center lg:justify-end">
-              <div className="relative">
+            {/* Right Content - 45% width */}
+            <div className="w-[45%] flex justify-end">
+              <div className="relative w-[550px]">
                 {/* Main Illustration Container */}
-                <div className="relative w-[400px] h-[320px] lg:w-[480px] lg:h-[380px]">
+                <div className="relative">
                   {/* Character Illustrations */}
                   <Image
                     src="/assets/graphics/exercism-characters.svg"
-                    alt="Exercism community characters coding together"
-                    width={480}
-                    height={380}
-                    className="w-full h-full object-contain"
+                    alt="Three diverse characters looking over laptop with programming language icons"
+                    width={550}
+                    height={400}
+                    className="w-full h-auto object-contain"
                     priority
                   />
 
-                  {/* Language Icons */}
-                  <div className="absolute -bottom-4 -left-4 flex gap-3">
+                  {/* Programming Language Icons in Arc Formation */}
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-[20px]">
                     {/* C# Icon */}
-                    <div className="w-16 h-16 rounded-full shadow-lg overflow-hidden">
+                    <div className="hexagon bg-[#7C3AED] text-white font-bold text-[14px] shadow-lg">
+                      C#
+                    </div>
+                    
+                    {/* Java Icon */}
+                    <div className="hexagon bg-[#DC2626] shadow-lg">
                       <Image
-                        src="/assets/tracks/csharp.svg"
-                        alt="C# Programming Language"
-                        width={64}
-                        height={64}
-                        className="w-full h-full"
+                        src="/assets/tracks/javascript-mno345.svg"
+                        alt="Java"
+                        width={30}
+                        height={30}
+                        className="w-[30px] h-[30px]"
                       />
                     </div>
                     
-                    {/* Elixir Icon */}
-                    <div className="w-16 h-16 rounded-full shadow-lg overflow-hidden">
-                      <Image
-                        src="/assets/tracks/elixir.svg"
-                        alt="Elixir Programming Language"
-                        width={64}
-                        height={64}
-                        className="w-full h-full"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="absolute -bottom-4 -right-4 flex gap-3">
                     {/* Python Icon */}
-                    <div className="w-16 h-16 rounded-full shadow-lg overflow-hidden">
+                    <div className="hexagon bg-[#3B82F6] shadow-lg">
                       <Image
                         src="/assets/tracks/python-pqr678.svg"
-                        alt="Python Programming Language"
-                        width={64}
-                        height={64}
-                        className="w-full h-full"
+                        alt="Python"
+                        width={30}
+                        height={30}
+                        className="w-[30px] h-[30px]"
                       />
                     </div>
                     
                     {/* Ruby Icon */}
-                    <div className="w-16 h-16 rounded-full shadow-lg overflow-hidden">
+                    <div className="hexagon bg-[#DC2626] shadow-lg">
                       <Image
                         src="/assets/tracks/ruby.svg"
-                        alt="Ruby Programming Language"
-                        width={64}
-                        height={64}
-                        className="w-full h-full"
+                        alt="Ruby"
+                        width={30}
+                        height={30}
+                        className="w-[30px] h-[30px]"
                       />
                     </div>
                     
-                    {/* Elixir Icon (duplicate) */}
-                    <div className="w-16 h-16 rounded-full shadow-lg overflow-hidden">
+                    {/* Elixir Icon */}
+                    <div className="hexagon bg-[#7C3AED] shadow-lg">
                       <Image
                         src="/assets/tracks/elixir.svg"
-                        alt="Elixir Programming Language"
-                        width={64}
-                        height={64}
-                        className="w-full h-full"
+                        alt="Elixir"
+                        width={30}
+                        height={30}
+                        className="w-[30px] h-[30px]"
                       />
                     </div>
                   </div>

@@ -22,54 +22,52 @@ export function SiteHeader() {
 
   return (
     <header id="site-header" className="bg-white">
-      {/* Announcement Bar */}
-      <AnnouncementBar isSignedIn={isSignedIn} />
+      {/* Top Banner */}
+      <TopBanner isSignedIn={isSignedIn} />
 
-      <div className="lg-container">
-        <div className="flex items-center justify-between h-16">
+      {/* Navigation Bar */}
+      <div className="h-[70px] px-[60px]">
+        <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="flex items-center gap-2">
-              {/* Exercism Logo - using the exact styling from image */}
-              <div className="text-2xl font-bold text-textColor1">
-                <span className="text-prominentLinkColor">{"{-}"}</span>{" "}
-                exercism
-              </div>
+            <div className="text-[20px] font-bold text-[#1E1B4B]">
+              <span className="text-[#7C3AED]">{"{∧}"}</span>{" "}
+              exercism
             </div>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          {/* Navigation Items */}
+          <nav className="hidden lg:flex items-center ml-[80px] space-x-[40px]">
             <Link
               href="/tracks"
-              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
             >
               Learn
             </Link>
             <Link
               href="/community"
-              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
             >
               Discover
             </Link>
             <Link
               href="/contributing"
-              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
             >
               Contribute
             </Link>
             <Link
               href="/about"
-              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+              className="text-[#4B5563] hover:text-[#7C3AED] font-medium text-[16px] transition-colors"
             >
               More
             </Link>
           </nav>
 
           {/* Auth Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-[12px]">
             {isLoading ? (
-              <div className="w-20 h-8 bg-borderColor animate-pulse rounded" />
+              <div className="w-20 h-8 bg-gray-200 animate-pulse rounded" />
             ) : isSignedIn ? (
               <SignedInSection user={session.user} />
             ) : (
@@ -82,26 +80,23 @@ export function SiteHeader() {
   );
 }
 
-function AnnouncementBar({ isSignedIn }: { isSignedIn: boolean }) {
+function TopBanner({ isSignedIn }: { isSignedIn: boolean }) {
   if (isSignedIn) {
-    // For signed-in users, show donation bar if they haven't donated recently
-    // This would need to check user's donation status
     return null;
   }
 
-  // For signed-out users, show coding fundamentals announcement
   return (
-    <div className="bg-[#1e1b4b] text-white py-3 text-center text-sm">
-      <div className="lg-container">
+    <div className="bg-[#1E1B4B] h-[40px] flex items-center justify-center px-[60px]">
+      <div className="text-center text-[14px] text-white font-normal">
+        <span className="mr-2">👋</span>
+        <span>Learning to code? Check out our </span>
         <Link
           href="/bootcamp/coding-fundamentals"
-          className="hover:underline inline-flex items-center"
+          className="text-[#FF9B5E] underline font-semibold hover:opacity-80"
         >
-          <span className="mr-2">👋</span>
-          <span>Learning to code? Check out our </span>
-          <strong className="mx-1 underline">Coding Fundamentals</strong>
-          <span> course for beginners!</span>
+          Coding Fundamentals
         </Link>
+        <span> course for beginners!</span>
       </div>
     </div>
   );
@@ -116,11 +111,11 @@ function SignedInSection({
     <div className="flex items-center gap-4">
       <Link
         href="/dashboard"
-        className="text-textColor1 hover:text-prominentLinkColor font-medium"
+        className="text-[#4B5563] hover:text-[#7C3AED] font-medium"
       >
         Dashboard
       </Link>
-      <div className="w-8 h-8 bg-prominentLinkColor rounded-full flex items-center justify-center">
+      <div className="w-8 h-8 bg-[#7C3AED] rounded-full flex items-center justify-center">
         <span className="text-white font-bold text-sm">
           {user?.handle?.charAt(0).toUpperCase() || "U"}
         </span>
@@ -131,16 +126,16 @@ function SignedInSection({
 
 function SignedOutSection() {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-[12px]">
       <Link
         href="/auth/register"
-        className="inline-flex items-center justify-center px-4 py-2 bg-prominentLinkColor text-white font-semibold text-sm rounded-md hover:bg-[#5856eb] transition-colors duration-200"
+        className="inline-flex items-center justify-center px-[24px] py-[12px] bg-[#7C3AED] text-white font-semibold text-[16px] rounded-[6px] hover:bg-[#6D28D9] transition-colors duration-200"
       >
         Sign up
       </Link>
       <Link
         href="/auth/signin"
-        className="inline-flex items-center justify-center px-4 py-2 bg-white text-textColor1 font-semibold text-sm rounded-md border border-borderColor hover:bg-backgroundColorB transition-colors duration-200"
+        className="inline-flex items-center justify-center px-[24px] py-[12px] bg-white text-[#7C3AED] font-semibold text-[16px] rounded-[6px] border-2 border-[#7C3AED] hover:bg-[#F8F9FF] transition-colors duration-200"
       >
         Log in
       </Link>
