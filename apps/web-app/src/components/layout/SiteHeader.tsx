@@ -1,44 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import { Icon } from '@/lib/assets';
-import { UserMenu } from './UserMenu';
-import { NotificationsDropdown } from './NotificationsDropdown';
-import { ReputationDropdown } from './ReputationDropdown';
-import { ExploreDropdown } from './ExploreDropdown';
-import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
-import { 
-  GenericNav, 
-  LEARN_SUBMENU, 
-  DISCOVER_SUBMENU, 
-  CONTRIBUTE_SUBMENU, 
-  MORE_SUBMENU 
-} from './navigation/NavigationHelpers';
-
-interface NavigationItem {
-  title: string;
-  path: string;
-  submenu?: NavigationItem[];
-  offset?: number;
-  hasView?: boolean;
-  view?: string;
-  cssClass?: string;
-}
-
-// Navigation submenus are now imported from NavigationHelpers
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export function SiteHeader() {
   const { data: session, status } = useSession();
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const isSignedIn = status === 'authenticated' && !!session?.user;
-  const isLoading = status === 'loading';
+  const isSignedIn = status === "authenticated" && !!session?.user;
+  const isLoading = status === "loading";
 
   // Don't render until client-side to avoid hydration mismatch
   if (!isClient) {
@@ -46,36 +21,61 @@ export function SiteHeader() {
   }
 
   return (
-    <header id="site-header">
+    <header id="site-header" className="bg-white">
       {/* Announcement Bar */}
       <AnnouncementBar isSignedIn={isSignedIn} />
-      
-      <div className="lg-container container">
-        {/* Logo */}
-        <Link href="/" className="exercism-link xl:block" data-turbo-frame="tf-main">
-          <Icon icon="exercism-with-logo-black" alt="Exercism" />
-        </Link>
 
-        {/* Docs Search */}
-        <div className="docs-search">
-          <div className="c-search-bar">
-            <input 
-              className="--search" 
-              placeholder="Search Exercism's docs..." 
-              type="text"
-            />
+      <div className="lg-container">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
+            <div className="flex items-center gap-2">
+              {/* Exercism Logo - using the exact styling from image */}
+              <div className="text-2xl font-bold text-textColor1">
+                <span className="text-prominentLinkColor">{"{-}"}</span>{" "}
+                exercism
+              </div>
+            </div>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8">
+            <Link
+              href="/tracks"
+              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+            >
+              Learn
+            </Link>
+            <Link
+              href="/community"
+              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+            >
+              Discover
+            </Link>
+            <Link
+              href="/contributing"
+              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+            >
+              Contribute
+            </Link>
+            <Link
+              href="/about"
+              className="text-textColor1 hover:text-prominentLinkColor font-medium text-[16px] transition-colors"
+            >
+              More
+            </Link>
+          </nav>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            {isLoading ? (
+              <div className="w-20 h-8 bg-borderColor animate-pulse rounded" />
+            ) : isSignedIn ? (
+              <SignedInSection user={session.user} />
+            ) : (
+              <SignedOutSection />
+            )}
           </div>
-        </div>
-
-        {/* Contextual Section */}
-        <div className="contextual-section">
-          {isLoading ? (
-            <div className="loading-placeholder" />
-          ) : isSignedIn ? (
-            <SignedInSection user={session.user} />
-          ) : (
-            <SignedOutSection />
-          )}
         </div>
       </div>
     </header>
@@ -91,188 +91,59 @@ function AnnouncementBar({ isSignedIn }: { isSignedIn: boolean }) {
 
   // For signed-out users, show coding fundamentals announcement
   return (
-    <Link 
-      href="/courses/coding-fundamentals" 
-      className="announcement-bar md:block hidden"
-    >
+    <div className="bg-[#1e1b4b] text-white py-3 text-center text-sm">
       <div className="lg-container">
-        <span className="emoji mr-6">👋</span>
-        <span>Learning to code? Check out our </span>
-        <strong>Coding Fundamentals</strong>
-        <span> course for beginners!</span>
-      </div>
-    </Link>
-  );
-}
-
-function SignedInSection({ user }: { user: { handle?: string; name?: string; reputation?: string; isMentor?: boolean; isInsider?: boolean } }) {
-  return (
-    <>
-      <SignedInNav />
-      <div className="user-section">
-        <NewTestimonialIcon />
-        <NewBadgeIcon />
-        <Link href="/notifications" className="notifications-link">
-          <Icon icon="notification" alt="Notifications" />
+        <Link
+          href="/bootcamp/coding-fundamentals"
+          className="hover:underline inline-flex items-center"
+        >
+          <span className="mr-2">👋</span>
+          <span>Learning to code? Check out our </span>
+          <strong className="mx-1 underline">Coding Fundamentals</strong>
+          <span> course for beginners!</span>
         </Link>
-        <NotificationsDropdown />
-        <ReputationDropdown user={user} />
-        {user.isInsider && (
-          <Link href="/admin" className="admin-link">
-            <Icon icon="settings" alt="Admin" />
-          </Link>
-        )}
-        <UserMenu />
       </div>
-    </>
+    </div>
   );
 }
 
-function SignedInNav() {
-  const { data: session } = useSession();
-  const isMentor = session?.user?.isMentor;
-
-  const MENTORING_SUBMENU: NavigationItem[] = [
-    { 
-      title: 'Inbox', 
-      description: 'Your mentoring discussions',
-      path: '/mentoring/inbox',
-      icon: 'overview'
-    },
-    { 
-      title: 'Queue', 
-      description: 'Find students to help',
-      path: '/mentoring/queue',
-      icon: 'queue'
-    },
-    { 
-      title: 'Automation', 
-      description: 'Automated feedback tools',
-      path: '/mentoring/automation',
-      icon: 'automation'
-    },
-  ];
-
+function SignedInSection({
+  user,
+}: {
+  user: { handle?: string; name?: string } | null;
+}) {
   return (
-    <nav className="signed-in" role="navigation">
-      <ul>
-        <GenericNav 
-          navTitle="Learn" 
-          submenu={LEARN_SUBMENU} 
-          path="/tracks" 
-          hasView={true} 
-        />
-        <GenericNav 
-          navTitle="Discover" 
-          submenu={DISCOVER_SUBMENU} 
-          path="/community" 
-          offset={20} 
-        />
-        <GenericNav 
-          navTitle="Contribute" 
-          submenu={CONTRIBUTE_SUBMENU} 
-          path="/contributing" 
-          offset={20} 
-        />
-        {isMentor && (
-          <GenericNav 
-            navTitle="Mentoring" 
-            submenu={MENTORING_SUBMENU} 
-            path="/mentoring" 
-            offset={20} 
-            cssClass="mentoring" 
-          />
-        )}
-        <GenericNav 
-          navTitle="More" 
-          submenu={MORE_SUBMENU} 
-          offset={0} 
-        />
-        <GenericNav 
-          navTitle="Insiders" 
-          path="/insiders" 
-          offset={150} 
-          hasView={true} 
-          cssClass="insiders" 
-        />
-        <ThemeToggleButton />
-      </ul>
-    </nav>
+    <div className="flex items-center gap-4">
+      <Link
+        href="/dashboard"
+        className="text-textColor1 hover:text-prominentLinkColor font-medium"
+      >
+        Dashboard
+      </Link>
+      <div className="w-8 h-8 bg-prominentLinkColor rounded-full flex items-center justify-center">
+        <span className="text-white font-bold text-sm">
+          {user?.handle?.charAt(0).toUpperCase() || "U"}
+        </span>
+      </div>
+    </div>
   );
 }
 
 function SignedOutSection() {
   return (
-    <>
-      <SignedOutNav />
-      <div className="auth-buttons">
-        <Link href="/auth/register" className="btn-primary btn-xs">
-          Sign up
-        </Link>
-        <Link href="/auth/signin" className="btn-secondary btn-xs">
-          Log in
-        </Link>
-      </div>
-      <ExploreDropdown />
-    </>
-  );
-}
-
-function SignedOutNav() {
-  return (
-    <nav role="navigation">
-      <ul>
-        <GenericNav 
-          navTitle="Learn" 
-          submenu={LEARN_SUBMENU} 
-          path="/tracks" 
-        />
-        <GenericNav 
-          navTitle="Discover" 
-          submenu={DISCOVER_SUBMENU} 
-          path="/community" 
-          offset={20} 
-        />
-        <GenericNav 
-          navTitle="Contribute" 
-          submenu={CONTRIBUTE_SUBMENU} 
-          path="/contributing" 
-          offset={20} 
-        />
-        <GenericNav 
-          navTitle="More" 
-          submenu={MORE_SUBMENU} 
-          offset={0} 
-        />
-      </ul>
-    </nav>
-  );
-}
-
-// GenericNav is now imported from NavigationHelpers
-
-function NewTestimonialIcon() {
-  // TODO: Check if user has unrevealed testimonials
-  const hasUnrevealedTestimonials = false;
-  
-  if (!hasUnrevealedTestimonials) return null;
-  
-  return (
-    <Link href="/mentoring/testimonials" className="new-testimonial">
-      <span className="sr-only">New testimonial available</span>
-    </Link>
-  );
-}
-
-function NewBadgeIcon() {
-  // TODO: Check if user has unrevealed badges
-  const hasUnrevealedBadges = false;
-  
-  if (!hasUnrevealedBadges) return null;
-  
-  return (
-    <Link href="/journey#journey-content" className="new-badge">
-      <span className="sr-only">New badge available</span>
-    </Link>
+    <div className="flex items-center gap-3">
+      <Link
+        href="/auth/register"
+        className="inline-flex items-center justify-center px-4 py-2 bg-prominentLinkColor text-white font-semibold text-sm rounded-md hover:bg-[#5856eb] transition-colors duration-200"
+      >
+        Sign up
+      </Link>
+      <Link
+        href="/auth/signin"
+        className="inline-flex items-center justify-center px-4 py-2 bg-white text-textColor1 font-semibold text-sm rounded-md border border-borderColor hover:bg-backgroundColorB transition-colors duration-200"
+      >
+        Log in
+      </Link>
+    </div>
   );
 }
