@@ -72,6 +72,22 @@
 @import "../styles/components/flash-messages.css";
 
 :root {
+  /* Footer specific colors - exact values from reference image */
+  --footer-bg: #2e2456;
+  --footer-text: rgba(255, 255, 255, 0.75);
+  --footer-text-bright: #ffffff;
+  --footer-accent: #6b4de6;
+  --footer-teal: #12c9ba;
+  --footer-yellow: #f4d35e;
+  --footer-divider: rgba(255, 255, 255, 0.15);
+  --footer-cta-box-bg: #3a2d5f;
+  
+  /* Footer spacing - exact values */
+  --footer-padding-x: 80px;
+  --footer-padding-y: 80px;
+  --footer-column-gap: 70px;
+  --footer-link-spacing: 2.2;
+  
   /* Exact color values from reference image */
   --primary-purple: #7C3AED;
   --dark-navy: #1E1B4B;

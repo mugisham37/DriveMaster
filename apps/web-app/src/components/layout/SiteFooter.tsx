@@ -1,282 +1,200 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import { GraphicalIcon } from '@/lib/assets';
-import { DonationsFooterForm } from '@/components/common/DonationsFooterForm';
-
-interface Track {
-  title: string;
-  slug: string;
-}
-
-// This would normally come from an API call
-const TRACKS: Track[] = [
-  { title: 'JavaScript', slug: 'javascript' },
-  { title: 'Python', slug: 'python' },
-  { title: 'Java', slug: 'java' },
-  { title: 'C#', slug: 'csharp' },
-  { title: 'Ruby', slug: 'ruby' },
-  { title: 'Go', slug: 'go' },
-  { title: 'Rust', slug: 'rust' },
-  { title: 'TypeScript', slug: 'typescript' },
-  { title: 'C++', slug: 'cpp' },
-  { title: 'PHP', slug: 'php' },
-  // Add more tracks as needed
-];
+import Link from "next/link";
+import {
+  navigationColumns,
+  socialLinks,
+  programmingLanguages,
+  legalLinks,
+} from "@/data/footerData";
 
 export function SiteFooter() {
-  const { data: session } = useSession();
-  const isSignedIn = !!session?.user;
-
   return (
-    <footer id="site-footer">
-      {!isSignedIn && <ExternalSection />}
-      <SharedSection isSignedIn={isSignedIn} />
-    </footer>
-  );
-}
+    <footer id="site-footer" className="bg-[#2e2456] px-[80px] py-[80px]">
+      {/* Hero Section */}
+      <div className="relative mb-[100px]">
+        <div className="flex justify-between items-start">
+          {/* Left Content */}
+          <div className="max-w-[650px]">
+            {/* Logo */}
+            <div className="flex items-center mb-[32px]">
+              <span className="text-white text-[26px] font-semibold mr-2">
+                •
+              </span>
+              <span className="text-white text-[26px] font-semibold">
+                exercism
+              </span>
+            </div>
 
-function ExternalSection() {
-  return (
-    <div className="external-section pt-48 pb-0">
-      <div className="lg-container flex flex-col lg:flex-row">
-        <div className="lhs mr-auto mb-20 lg:mb-0">
-          <GraphicalIcon icon="exercism-with-logo-black" />
-          <h2 className="text-h3 mb-4">
-            Code practice and mentorship for everyone
-          </h2>
-          <p className="text-p-large">
-            Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.
-          </p>
-        </div>
-        <div className="rhs flex lg:ml-24 flex-col sm:flex-row items-stretch sm:items-center">
-          <Link 
-            href="/auth/register" 
-            className="btn-l btn-primary mb-16 sm:mb-0 sm:mr-32"
-          >
-            Sign up for free
-          </Link>
-          <Link 
-            href="/tracks" 
-            className="btn-l btn-enhanced"
-          >
-            Explore languages
-          </Link>
+            {/* Headline */}
+            <h1 className="text-[42px] font-bold leading-[1.25] text-white mb-[20px]">
+              Code practice and mentorship for everyone
+            </h1>
+
+            {/* Subheadline */}
+            <p className="text-[19px] leading-[1.65] text-[rgba(255,255,255,0.9)] max-w-[650px]">
+              Develop fluency in 78 programming languages with our unique blend
+              of learning, practice and mentoring. Exercism is fun, effective
+              and 100% free, forever.
+            </p>
+          </div>
+
+          {/* Right Content - CTA Buttons */}
+          <div className="flex gap-[16px] mt-[100px]">
+            <Link
+              href="/auth/register"
+              className="bg-[#6b4de6] text-white text-[17px] font-semibold px-[32px] py-[14px] rounded-[8px] hover:bg-[#5a3dd4] transition-colors"
+            >
+              Sign up for free
+            </Link>
+            <Link
+              href="/tracks"
+              className="border-2 border-[#6b4de6] text-white text-[17px] font-semibold px-[32px] py-[14px] rounded-[8px] hover:border-[#5a3dd4] transition-colors"
+            >
+              Explore languages
+            </Link>
+          </div>
         </div>
       </div>
-      <div className="bottom" />
-    </div>
-  );
-}
 
-function SharedSection({ isSignedIn }: { isSignedIn: boolean }) {
-  return (
-    <div className="lg-container">
-      {isSignedIn && <NonProfitSection />}
-      
-      <hr />
-      
-      <SiteLinksSection />
-      <SocialsSection />
-      
-      <hr />
-      
-      <TracksSection />
-      
-      <hr />
-      
-      <LegalsSection />
-    </div>
-  );
-}
+      {/* Divider */}
+      <div className="h-[1px] bg-[rgba(255,255,255,0.15)] my-[90px]" />
 
-function NonProfitSection() {
-  return (
-    <div className="nfp mb-40 md:mb-58">
-      <GraphicalIcon icon="exercism-face-gradient" />
-      <h2 className="text-h2 mb-32">
-        Help us build the best coding education platform, for everyone, for free.
-      </h2>
-      <DonationsFooterForm />
-      <h3 className="text-h4 mt-32 mb-8">
-        Exercism is a not-for-profit
-      </h3>
-      <p className="text-p-large">
-        Our goal is to provide the best possible learning experience for everyone, 
-        regardless of their financial situation. We rely on donations to keep the platform free.
-      </p>
-    </div>
-  );
-}
-
-function SiteLinksSection() {
-  return (
-    <div className="site-links mt-24 md:mt-56">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-x-40">
-        <div className="col">
-          <h3>Editions</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/">Exercism</Link></li>
-            <li><Link href="/courses/coding-fundamentals">Learn to Code</Link></li>
-            <li><Link href="/courses/coding-fundamentals">Coding Fundamentals</Link></li>
-            <li><Link href="/courses/front-end-fundamentals">Front-end Course</Link></li>
-            <li><Link href="/bootcamp">Bootcamp</Link></li>
-            <li><Link href="/docs/using/editions/teams">Teams</Link></li>
-            <li><Link href="/docs/using/editions/research">Research</Link></li>
-          </ul>
-        </div>
-
-        <div className="col">
-          <h3>About</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/about">About Exercism</Link></li>
-            <li><Link href="/about/team">Our Team</Link></li>
-            <li><Link href="/about/testimonials">Testimonials</Link></li>
-            <li><Link href="/about/hiring">Hiring</Link></li>
-            <li><Link href="/contributing/contributors">Contributors</Link></li>
-          </ul>
-        </div>
-
-        <div className="col">
-          <h3>Get Involved</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/insiders">Exercism Insiders</Link></li>
-            <li><Link href="/contributing">Contribute</Link></li>
-            <li><Link href="/mentoring">Mentor</Link></li>
-            <li><Link href="/donate">Donate</Link></li>
-          </ul>
-        </div>
-
-        <div className="col">
-          <h3>Legal & Policies</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/docs/using/legal/terms-of-service">Terms of Usage</Link></li>
-            <li><Link href="/docs/using/legal/privacy-policy">Privacy Policy</Link></li>
-            <li><Link href="/docs/using/legal/cookie-policy">Cookie Policy</Link></li>
-            <li><Link href="/docs/using/legal/code-of-conduct">Code of Conduct</Link></li>
-            <li><Link href="/docs/using/legal/accessibility">Accessibility Statement</Link></li>
-          </ul>
-        </div>
-
-        <div className="col">
-          <h3>Keep in Touch</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/blog">Blog</Link></li>
-            <li><Link href="/challenges">Challenges</Link></li>
-            <li><Link href="https://github.com/exercism/exercism">GitHub</Link></li>
-            <li><Link href="/docs/using/contact">Contact Us</Link></li>
-            <li><Link href="/docs/using/report-abuse">Report Abuse</Link></li>
-          </ul>
-        </div>
-
-        <div className="col">
-          <h3>Get Help</h3>
-          <hr className="c-divider --small" />
-          <ul>
-            <li><Link href="/docs">Docs</Link></li>
-            <li><Link href="/docs/using/getting-started">Getting Started</Link></li>
-            <li><Link href="/docs/using/faqs">FAQs</Link></li>
-            <li><Link href="/docs/using/solving-exercises/working-locally">Installing CLI</Link></li>
-            <li><Link href="/cli-walkthrough">CLI Walkthrough</Link></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SocialsSection() {
-  return (
-    <div className="socials mt-24 mb-40 md:mb-56">
-      <Link href="https://twitter.com/exercism_io" className="icon twitter">
-        <GraphicalIcon icon="external-site-twitter" />
-      </Link>
-      <Link href="https://facebook.com/exercism.io" className="icon facebook">
-        <GraphicalIcon icon="external-site-facebook" />
-      </Link>
-      <Link href="https://github.com/exercism" className="icon github">
-        <GraphicalIcon icon="external-site-github" />
-      </Link>
-    </div>
-  );
-}
-
-function TracksSection() {
-  // Group tracks into columns of 5
-  const trackGroups = [];
-  for (let i = 0; i < TRACKS.length; i += 5) {
-    trackGroups.push(TRACKS.slice(i, i + 5));
-  }
-
-  return (
-    <div className="tracks mt-32 md:mt-48 mb-32 md:mb-48 md:items-center">
-      <div className="hidden md:block">
-        <h2 className="text-h3">Programming Languages</h2>
-        <hr className="c-divider mt-28 mb-36" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-x-32">
-        {trackGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="col">
-            <ul>
-              {group.map((track) => (
-                <li key={track.slug}>
-                  <Link href={`/tracks/${track.slug}`}>
-                    {track.title}
+      {/* Navigation Columns */}
+      <nav className="grid grid-cols-6 gap-[70px] mb-[40px]">
+        {navigationColumns.map((column, index) => (
+          <div key={index} className="col">
+            <h3 className="text-[19px] font-bold text-white mb-[20px] tracking-[0.3px]">
+              {column.title}
+            </h3>
+            <div className="text-[#12c9ba] text-[20px] mb-[16px]">~~~</div>
+            <ul className="space-y-0">
+              {column.links.map((link, linkIndex) => (
+                <li key={linkIndex} className="leading-[2.2]">
+                  <Link
+                    href={link.href}
+                    className="text-[16px] text-[rgba(255,255,255,0.75)] hover:text-white transition-colors"
+                  >
+                    {link.text}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
         ))}
+      </nav>
 
-        <div className="col hidden md:block mt-32 xl:mt-0">
-          <h3 className="text-h6">Add your language</h3>
-          <p className="text-p-base">
-            Exercism is open-source and we welcome contributions. 
-            <Link href="https://forum.exercism.org/c/exercism/4">
-              Add your language
-            </Link> 
-            {' '}to help others learn.
-          </p>
+      {/* Social Icons */}
+      <div className="flex justify-center gap-[16px] my-[40px]">
+        {socialLinks.map((social, index) => (
+          <Link
+            key={index}
+            href={social.href}
+            className="w-[48px] h-[48px] rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
+            style={{ backgroundColor: social.backgroundColor }}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <SocialIcon platform={social.platform} />
+          </Link>
+        ))}
+      </div>
+
+      {/* Languages Section */}
+      <section className="mt-[80px]">
+        {/* Header */}
+        <div className="text-center mb-[40px]">
+          <h2 className="text-[34px] font-bold text-white mb-[16px]">
+            Our programming language tracks
+          </h2>
+          <div className="text-[#12c9ba] text-[20px]">~~~</div>
+        </div>
+
+        {/* Languages Grid with CTA Box */}
+        <div className="relative">
+          <div className="grid grid-cols-5 gap-x-[45px] gap-y-[22px] pr-[300px]">
+            {programmingLanguages.map((language, index) => (
+              <Link
+                key={index}
+                href={`/tracks/${language.slug}`}
+                className="text-[16px] text-[rgba(255,255,255,0.75)] hover:text-white transition-colors"
+              >
+                {language.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* CTA Box */}
+          <div className="absolute top-0 right-0 bg-[#3a2d5f] rounded-[8px] p-[24px] max-w-[280px]">
+            <h3 className="text-[17px] font-semibold text-white leading-[1.4] mb-[12px]">
+              Want to add a language track to Exercism?
+            </h3>
+            <p className="text-[15px] text-[rgba(255,255,255,0.75)]">
+              Start a new topic in the{" "}
+              <Link
+                href="https://forum.exercism.org/c/exercism/4"
+                className="text-[#f4d35e] font-semibold hover:brightness-110 transition-all"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                forum
+              </Link>{" "}
+              and let&apos;s discuss it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom Bar */}
+      <div className="mt-[60px] pt-[60px] border-t border-[rgba(255,255,255,0.15)]">
+        <div className="flex justify-between items-center">
+          {/* Legal Text */}
+          <div className="text-[14px] text-[rgba(255,255,255,0.75)]">
+            Exercism is a not-for-profit organisation{" "}
+            {legalLinks.map((link, index) => (
+              <span key={index}>
+                <Link
+                  href={link.href}
+                  className="underline hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.text}
+                </Link>
+                {index < legalLinks.length - 1 &&
+                  (index === 0 ? ". Its trustees are " : ", ")}
+                {index === legalLinks.length - 1 && "."}
+              </span>
+            ))}
+          </div>
+
+          {/* Copyright */}
+          <div className="text-[14px] text-[rgba(255,255,255,0.75)]">
+            © 2025 Exercism
+          </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 }
 
-function LegalsSection() {
-  const currentYear = new Date().getFullYear();
+// Social Icon Component
+function SocialIcon({ platform }: { platform: string }) {
+  const iconPaths: Record<string, string> = {
+    twitter:
+      "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
+    facebook:
+      "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
+    github:
+      "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z",
+  };
+
+  const path = iconPaths[platform];
+  if (!path) return null;
 
   return (
-    <div className="legals mt-24 md:mt-32 mb-32 md:mb-40 flex md:items-center flex-col md:flex-row">
-      <div className="company mb-16 md:mb-0 md:mr-32">
-        Exercism is a{' '}
-        <Link 
-          href="https://find-and-update.company-information.service.gov.uk/company/11733062"
-          rel="noopener"
-          target="_blank"
-        >
-          registered company
-        </Link>
-        {' '}in England & Wales (no. 11733062) founded by{' '}
-        <Link href="https://exercism.github.io/kytrinyx/">Katrina Owen</Link>
-        {', '}
-        <Link href="https://ihid.info/">Jeremy Walker</Link>
-        {' and '}
-        <Link href="https://erikschierboom.com/">Erik Schierboom</Link>
-        .
-      </div>
-      <div className="copyright md:ml-auto">
-        © {currentYear} Exercism
-      </div>
-    </div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d={path} />
+    </svg>
   );
 }
-
