@@ -1126,3 +1126,6 @@ export * from "./helpers";
 
 // Advanced bootcamp types
 export * from "./bootcamp-advanced";
+
+// Auth service types
+export * from "./auth-service";
