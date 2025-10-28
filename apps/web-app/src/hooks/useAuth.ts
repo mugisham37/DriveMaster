@@ -1,17 +1,46 @@
 'use client'
 
 /**
- * Legacy authentication hook for backward compatibility
+ * Main authentication hooks export
  * 
- * This hook provides backward compatibility with the existing NextAuth.js setup
- * while gradually migrating to the new auth-service integration.
- * 
- * For new code, use the AuthContext directly via useAuth from @/contexts/AuthContext
+ * This file exports the primary authentication hooks for component use.
+ * It provides a clean interface for the new auth-service integration.
  */
 
+// Export the new authentication hooks
+export {
+  useAuth,
+  useRequireAuth,
+  useRequireMentor,
+  useRequireInsider,
+  useAuthActions,
+  useAuthStatus,
+  useAuthRedirect,
+  useAuthStateChange,
+  useConditionalAuth,
+  withAuth,
+  withAuthActions,
+  withRequireAuth,
+  withRequireMentor,
+  withRequireInsider
+} from './useAuthHooks'
+
+// Export types for external use
+export type {
+  UseRequireAuthOptions,
+  UseRequireAuthReturn,
+  UseRequireMentorOptions,
+  UseRequireMentorReturn,
+  UseRequireInsiderOptions,
+  UseRequireInsiderReturn,
+  WithAuthProps,
+  WithAuthActionsProps
+} from './useAuthHooks'
+
+// Legacy compatibility exports (deprecated - use new hooks above)
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useAuth as useNewAuth } from '@/contexts/AuthContext'
+import { useAuth as useNewAuth } from './useAuthHooks'
 import type { ExercismUser } from '@/lib/auth'
 
 export interface UseAuthReturn {
@@ -26,12 +55,10 @@ export interface UseAuthReturn {
 }
 
 /**
- * Client-side authentication hook with backward compatibility
- * 
- * This hook tries to use the new auth context first, then falls back to NextAuth.js
- * Use this in existing Client Components during the migration period
+ * @deprecated Use the new useAuth hook from useAuthHooks instead
+ * Legacy authentication hook for backward compatibility
  */
-export function useAuth(): UseAuthReturn {
+export function useLegacyAuth(): UseAuthReturn {
   const router = useRouter()
   
   // Always call useSession to avoid conditional hook calls
@@ -115,50 +142,4 @@ export function useAuth(): UseAuthReturn {
     signOut,
     redirectToSignIn
   }
-}
-
-/**
- * Hook to require authentication on client side
- * Redirects to sign in page if not authenticated
- */
-export function useRequireAuth(redirectTo?: string): UseAuthReturn {
-  const auth = useAuth()
-  const router = useRouter()
-  
-  if (!auth.isLoading && !auth.isAuthenticated) {
-    const callbackUrl = redirectTo || window.location.pathname
-    router.push(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`)
-  }
-  
-  return auth
-}
-
-/**
- * Hook to require mentor privileges
- * Redirects to dashboard if not a mentor
- */
-export function useRequireMentor(): UseAuthReturn {
-  const auth = useAuth()
-  const router = useRouter()
-  
-  if (!auth.isLoading && auth.isAuthenticated && !auth.isMentor) {
-    router.push('/dashboard')
-  }
-  
-  return auth
-}
-
-/**
- * Hook to require insider privileges
- * Redirects to appropriate page if not an insider
- */
-export function useRequireInsider(): UseAuthReturn {
-  const auth = useAuth()
-  const router = useRouter()
-  
-  if (!auth.isLoading && auth.isAuthenticated && !auth.isInsider) {
-    router.push('/dashboard')
-  }
-  
-  return auth
 }
