@@ -46,7 +46,14 @@ export function GraphicalIcon({
     'insiders-lock': '🔒',
     'error-404': '❓',
     'error-500': '⚠️',
-    'error-429': '🚦'
+    'error-429': '🚦',
+    // About page specific icons
+    'exercism-face': '😊',
+    'target-sparkle': '🎯',
+    'pencil-edit': '✏️',
+    'circle-arrow-right': '→',
+    'purpose': '🎯',
+    'principles': '✏️'
   }
 
   const iconContent = iconMap[icon] || '📄'

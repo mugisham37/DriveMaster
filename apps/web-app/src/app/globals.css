@@ -472,6 +472,100 @@ nav a,
   padding-right: 20px;
 }
 
+/* About page specific styles - exact pixel-perfect implementation */
+.text-26 {
+  font-size: 26px;
+}
+
+.text-5xl {
+  font-size: 48px;
+}
+
+.text-6xl {
+  font-size: 60px;
+}
+
+.w-70 {
+  width: 280px;
+}
+
+.h-70 {
+  height: 280px;
+}
+
+.py-25 {
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+
+.py-32 {
+  padding-top: 120px;
+  padding-bottom: 120px;
+}
+
+.px-24 {
+  padding-left: 100px;
+  padding-right: 100px;
+}
+
+.py-20 {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.gap-7 {
+  gap: 28px;
+}
+
+.p-11 {
+  padding: 44px;
+}
+
+.w-11 {
+  width: 44px;
+}
+
+.h-11 {
+  height: 44px;
+}
+
+.mb-5 {
+  margin-bottom: 20px;
+}
+
+.mb-7 {
+  margin-bottom: 28px;
+}
+
+.mb-11 {
+  margin-bottom: 44px;
+}
+
+.mb-14 {
+  margin-bottom: 56px;
+}
+
+.mr-6 {
+  margin-right: 22px;
+}
+
+.space-y-9 > * + * {
+  margin-top: 36px;
+}
+
+.px-9 {
+  padding-left: 36px;
+  padding-right: 36px;
+}
+
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+.opacity-3 {
+  opacity: 0.03;
+}
+
 /* Hexagon shape for programming language icons */
 .hexagon {
   width: 60px;
