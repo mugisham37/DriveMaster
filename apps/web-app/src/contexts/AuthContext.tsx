@@ -512,20 +512,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (tokenInfo.hasAccessToken && tokenInfo.isAccessTokenValid) {
           // Try to fetch user profile
           try {
-            const response = await authClient.getProfile()
+            const user = await authClient.getProfile()
             
-            if (isMounted && response && 'success' in response && response.success && response.data) {
+            if (isMounted && user) {
               dispatch({ 
                 type: 'INITIALIZE_SUCCESS', 
                 payload: { 
-                  user: response.data, 
+                  user, 
                   isAuthenticated: true 
                 } 
               })
               return
             }
-          } catch (error) {
-            console.warn('Failed to fetch profile during initialization:', error)
+          } catch {
+            // Log the error but continue with initialization
+            console.warn('Failed to fetch profile during initialization')
           }
         }
         
@@ -539,7 +540,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             } 
           })
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           dispatch({ 
             type: 'INITIALIZE_ERROR', 
@@ -619,22 +620,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'LOGIN_START' })
     
     try {
-      const response = await authClient.login(credentials)
+      const { tokens, user } = await authClient.login(credentials)
       
-      if (response && 'success' in response && response.success && response.data) {
-        const { tokens, user } = response.data
-        
-        // Store tokens using integrated token manager
-        await integratedTokenManager.storeTokens(tokens, user)
-        
-        dispatch({ 
-          type: 'LOGIN_SUCCESS', 
-          payload: { user, tokens } 
-        })
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Login failed'
-        throw new Error(errorMessage || 'Login failed')
-      }
+      // Store tokens using integrated token manager
+      await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
+      
+      dispatch({ 
+        type: 'LOGIN_SUCCESS', 
+        payload: { user, tokens } 
+      })
     } catch (error) {
       const authError: AuthError = error instanceof Error 
         ? {
@@ -660,22 +654,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'REGISTER_START' })
     
     try {
-      const response = await authClient.register(userData)
+      const { tokens, user } = await authClient.register(userData)
       
-      if (response && 'success' in response && response.success && response.data) {
-        const { tokens, user } = response.data
-        
-        // Store tokens using integrated token manager
-        await integratedTokenManager.storeTokens(tokens, user)
-        
-        dispatch({ 
-          type: 'REGISTER_SUCCESS', 
-          payload: { user, tokens } 
-        })
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Registration failed'
-        throw new Error(errorMessage || 'Registration failed')
-      }
+      // Store tokens using integrated token manager
+      await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
+      
+      dispatch({ 
+        type: 'REGISTER_SUCCESS', 
+        payload: { user, tokens } 
+      })
     } catch (error) {
       const authError: AuthError = error instanceof Error 
         ? {
@@ -785,19 +772,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       type: 'OAUTH_START', 
       payload: { 
         provider, 
-        redirectUrl: redirectUrl || undefined 
+        ...(redirectUrl && { redirectUrl })
       } 
     })
     
     try {
       const response = await authClient.initiateOAuth(provider, redirectUrl)
       
-      if (response && 'success' in response && response.success && response.data) {
+      if (response && typeof response === 'object' && 'authorizationUrl' in response) {
         // Redirect to OAuth provider
-        window.location.href = response.data.authorizationUrl
+        window.location.href = response.authorizationUrl
       } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'OAuth initiation failed'
-        throw new Error(errorMessage || 'OAuth initiation failed')
+        throw new Error('OAuth initiation failed')
       }
     } catch (error) {
       const authError: AuthError = error instanceof Error 
@@ -828,17 +814,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
-      const response = await authClient.getProfile()
+      const user = await authClient.getProfile()
       
-      if (response && 'success' in response && response.success && response.data) {
-        dispatch({ 
-          type: 'PROFILE_FETCH_SUCCESS', 
-          payload: { user: response.data } 
-        })
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Failed to fetch profile'
-        throw new Error(errorMessage || 'Failed to fetch profile')
-      }
+      dispatch({ 
+        type: 'PROFILE_FETCH_SUCCESS', 
+        payload: { user } 
+      })
     } catch (error) {
       const authError: AuthError = error instanceof Error 
         ? {
@@ -864,17 +845,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
-      const response = await authClient.updateProfile(updates)
+      const user = await authClient.updateProfile(updates)
       
-      if (response && 'success' in response && response.success && response.data) {
-        dispatch({ 
-          type: 'PROFILE_UPDATE_SUCCESS', 
-          payload: { user: response.data } 
-        })
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Failed to update profile'
-        throw new Error(errorMessage || 'Failed to update profile')
-      }
+      dispatch({ 
+        type: 'PROFILE_UPDATE_SUCCESS', 
+        payload: { user } 
+      })
     } catch (error) {
       const authError: AuthError = error instanceof Error 
         ? {
@@ -901,7 +877,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ============================================================================
   
   const clearError = useCallback((errorType?: keyof Pick<AuthState, 'error' | 'loginError' | 'registerError' | 'profileError' | 'oauthError'>) => {
-    dispatch({ type: 'CLEAR_ERROR', payload: errorType ? { errorType } : undefined })
+    if (errorType) {
+      dispatch({ type: 'CLEAR_ERROR', payload: { errorType } })
+    } else {
+      dispatch({ type: 'CLEAR_ERROR' })
+    }
   }, [])
   
   const clearAllErrors = useCallback(() => {
@@ -929,8 +909,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Try to refresh
         await refreshSession()
       }
-    } catch (error) {
+    } catch (sessionError) {
       // Session is invalid
+      console.warn('Session validation failed:', sessionError)
       dispatch({ type: 'SESSION_INVALID' })
     }
   }, [state.isAuthenticated, refreshSession])

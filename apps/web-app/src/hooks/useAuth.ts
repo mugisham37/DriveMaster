@@ -34,51 +34,51 @@ export interface UseAuthReturn {
 export function useAuth(): UseAuthReturn {
   const router = useRouter()
   
-  // Try to use new auth context first
-  try {
-    const newAuth = useNewAuth()
+  // Always call useSession to avoid conditional hook calls
+  const { data: session, status } = useSession()
+  
+  // Always call useNewAuth to avoid conditional hook calls
+  const newAuth = useNewAuth()
+  const hasNewAuth = newAuth.isInitialized
+  
+  // Use new auth context if available and initialized
+  if (hasNewAuth && newAuth && newAuth.isInitialized) {
+    const user: ExercismUser | null = newAuth.user ? {
+      id: newAuth.user.id,
+      handle: newAuth.user.handle,
+      ...(newAuth.user.name && { name: newAuth.user.name }),
+      email: newAuth.user.email,
+      avatarUrl: newAuth.user.avatarUrl,
+      reputation: newAuth.user.reputation,
+      flair: newAuth.user.flair,
+      isMentor: newAuth.user.isMentor,
+      isInsider: newAuth.user.isInsider,
+      preferences: newAuth.user.preferences,
+      tracks: newAuth.user.tracks
+    } : null
     
-    if (newAuth.isInitialized) {
-      const user: ExercismUser | null = newAuth.user ? {
-        id: newAuth.user.id,
-        handle: newAuth.user.handle,
-        ...(newAuth.user.name && { name: newAuth.user.name }),
-        email: newAuth.user.email,
-        avatarUrl: newAuth.user.avatarUrl,
-        reputation: newAuth.user.reputation,
-        flair: newAuth.user.flair,
-        isMentor: newAuth.user.isMentor,
-        isInsider: newAuth.user.isInsider,
-        preferences: newAuth.user.preferences,
-        tracks: newAuth.user.tracks
-      } : null
-      
-      const redirectToSignIn = (callbackUrl?: string) => {
-        const url = callbackUrl || window.location.pathname
-        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(url)}`)
-      }
-      
-      return {
-        user,
-        isLoading: newAuth.isLoading,
-        isAuthenticated: newAuth.isAuthenticated,
-        isMentor: newAuth.isMentor,
-        isInsider: newAuth.isInsider,
-        signIn,
-        signOut: async () => {
-          await newAuth.logout()
-        },
-        redirectToSignIn
-      }
+    const redirectToSignIn = (callbackUrl?: string) => {
+      const url = callbackUrl || window.location.pathname
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(url)}`)
     }
-  } catch (error) {
-    // New auth context not available, fall back to NextAuth.js
-    console.warn('New auth context not available, falling back to NextAuth.js:', error)
+    
+    return {
+      user,
+      isLoading: newAuth.isLoading,
+      isAuthenticated: newAuth.isAuthenticated,
+      isMentor: newAuth.isMentor,
+      isInsider: newAuth.isInsider,
+      signIn,
+      signOut: async () => {
+        await newAuth.logout()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return undefined as any
+      },
+      redirectToSignIn
+    }
   }
   
   // Fallback to NextAuth.js
-  const { data: session, status } = useSession()
-  
   const isLoading = status === 'loading'
   const isAuthenticated = !!session?.user
   

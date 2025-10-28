@@ -11,7 +11,7 @@
  * - Requirements: 1.1, 1.2, 1.3, 5.1, 5.2
  */
 
-import { useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { authClient, oauthClient } from '@/lib/auth/api-client'
@@ -184,10 +184,11 @@ export function useAuthActions(): UseAuthActionsReturn {
       const validation = validateLoginCredentials(credentials)
       
       if (!validation.isValid) {
+        const firstField = Object.keys(validation.errors)[0]
         const validationError: ValidationError = {
           type: 'validation',
           message: 'Please correct the following errors',
-          field: Object.keys(validation.errors)[0],
+          field: firstField || 'credentials',
           constraints: Object.values(validation.errors),
           recoverable: true
         }
@@ -222,10 +223,11 @@ export function useAuthActions(): UseAuthActionsReturn {
       const validation = validateRegistrationData(userData)
       
       if (!validation.isValid) {
+        const firstField = Object.keys(validation.errors)[0]
         const validationError: ValidationError = {
           type: 'validation',
           message: 'Please correct the following errors',
-          field: Object.keys(validation.errors)[0],
+          field: firstField || 'userData',
           constraints: Object.values(validation.errors),
           recoverable: true
         }
@@ -261,13 +263,13 @@ export function useAuthActions(): UseAuthActionsReturn {
       // Get all sessions and invalidate them
       const sessionsResponse = await authClient.getSessions()
       
-      if (sessionsResponse && 'success' in sessionsResponse && sessionsResponse.success && sessionsResponse.data) {
-        const sessions = sessionsResponse.data.sessions
+      if (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse) {
+        const sessions = sessionsResponse.sessions
         
         // Invalidate all sessions except current
         const invalidationPromises = sessions
-          .filter((session: any) => !session.isCurrent)
-          .map((session: any) => authClient.invalidateSession(session.id))
+          .filter((session: { isCurrent: boolean }) => !session.isCurrent)
+          .map((session: { id: string }) => authClient.invalidateSession(session.id))
         
         await Promise.allSettled(invalidationPromises)
       }
@@ -281,95 +283,6 @@ export function useAuthActions(): UseAuthActionsReturn {
       throw error
     }
   }, [logout])
-  
-  // ============================================================================
-  // OAuth Actions
-  // ============================================================================
-  
-  const initiateOAuth = useCallback(async (provider: OAuthProviderType, options: OAuthOptions = {}) => {
-    try {
-      await auth.initiateOAuth(provider, options.redirectUrl)
-    } catch (error) {
-      throw error
-    }
-  }, [auth])
-  
-  const handleOAuthCallback = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
-    try {
-      const response = await oauthClient.handleCallback(provider, code, state)
-      
-      if (response && 'success' in response && response.success && response.data) {
-        const { user } = response.data
-        
-        // Store tokens and update auth state
-        await auth.login({ email: user.email, password: '' }) // This will be handled by the OAuth flow
-        
-        // Redirect to dashboard or intended destination
-        const redirectTo = sessionStorage.getItem('oauth_redirect_url') || '/dashboard'
-        sessionStorage.removeItem('oauth_redirect_url')
-        router.push(redirectTo)
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'OAuth callback failed'
-        throw new Error(errorMessage || 'OAuth callback failed')
-      }
-    } catch (error) {
-      const authError = handleAuthError(error)
-      auth.clearError('oauthError')
-      throw authError
-    }
-  }, [auth, router])
-  
-  const linkOAuthProvider = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
-    try {
-      const response = await oauthClient.linkProvider(provider, code, state)
-      
-      if (response && 'success' in response && response.success) {
-        // Refresh user profile to get updated linked providers
-        await auth.fetchProfile()
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Failed to link provider'
-        throw new Error(errorMessage || 'Failed to link provider')
-      }
-    } catch (error) {
-      throw handleAuthError(error)
-    }
-  }, [auth])
-  
-  const unlinkOAuthProvider = useCallback(async (provider: OAuthProviderType) => {
-    try {
-      const response = await oauthClient.unlinkProvider(provider)
-      
-      if (response && 'success' in response && response.success) {
-        // Refresh user profile to get updated linked providers
-        await auth.fetchProfile()
-      } else {
-        const errorMessage = response && 'error' in response ? response.error?.message : 'Failed to unlink provider'
-        throw new Error(errorMessage || 'Failed to unlink provider')
-      }
-    } catch (error) {
-      throw handleAuthError(error)
-    }
-  }, [auth])
-  
-  // ============================================================================
-  // Utility Actions
-  // ============================================================================
-  
-  const refreshSession = useCallback(async () => {
-    try {
-      await auth.refreshSession()
-    } catch (error) {
-      throw error
-    }
-  }, [auth])
-  
-  const validateCredentials = useCallback((credentials: LoginCredentials): ValidationResult => {
-    return validateLoginCredentials(credentials)
-  }, [])
-  
-  const validateRegistrationDataCallback = useCallback((userData: RegisterData): ValidationResult => {
-    return validateRegistrationData(userData)
-  }, [])
   
   // ============================================================================
   // Error Handling
@@ -436,6 +349,84 @@ export function useAuthActions(): UseAuthActionsReturn {
   }, [])
   
   // ============================================================================
+  // OAuth Actions
+  // ============================================================================
+  
+  const initiateOAuth = useCallback(async (provider: OAuthProviderType, options: OAuthOptions = {}) => {
+    try {
+      await auth.initiateOAuth(provider, options.redirectUrl)
+    } catch (error) {
+      throw error
+    }
+  }, [auth])
+  
+  const handleOAuthCallback = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
+    try {
+      const response = await oauthClient.handleCallback(provider, code, state)
+      
+      if (response && typeof response === 'object' && 'user' in response) {
+        const { user } = response
+        
+        // Store tokens and update auth state
+        await auth.login({ email: user.email, password: '' }) // This will be handled by the OAuth flow
+        
+        // Redirect to dashboard or intended destination
+        const redirectTo = sessionStorage.getItem('oauth_redirect_url') || '/dashboard'
+        sessionStorage.removeItem('oauth_redirect_url')
+        router.push(redirectTo)
+      } else {
+        throw new Error('OAuth callback failed')
+      }
+    } catch (error) {
+      const authError = handleAuthError(error)
+      auth.clearError('oauthError')
+      throw authError
+    }
+  }, [auth, router, handleAuthError])
+  
+  const linkOAuthProvider = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
+    try {
+      await oauthClient.linkProvider(provider, code, state)
+      
+      // Refresh user profile to get updated linked providers
+      await auth.fetchProfile()
+    } catch (error) {
+      throw handleAuthError(error)
+    }
+  }, [auth, handleAuthError])
+  
+  const unlinkOAuthProvider = useCallback(async (provider: OAuthProviderType) => {
+    try {
+      await oauthClient.unlinkProvider(provider)
+      
+      // Refresh user profile to get updated linked providers
+      await auth.fetchProfile()
+    } catch (error) {
+      throw handleAuthError(error)
+    }
+  }, [auth, handleAuthError])
+  
+  // ============================================================================
+  // Utility Actions
+  // ============================================================================
+  
+  const refreshSession = useCallback(async () => {
+    try {
+      await auth.refreshSession()
+    } catch (error) {
+      throw error
+    }
+  }, [auth])
+  
+  const validateCredentials = useCallback((credentials: LoginCredentials): ValidationResult => {
+    return validateLoginCredentials(credentials)
+  }, [])
+  
+  const validateRegistrationDataCallback = useCallback((userData: RegisterData): ValidationResult => {
+    return validateRegistrationData(userData)
+  }, [])
+  
+  // ============================================================================
   // Return Hook Interface
   // ============================================================================
   
@@ -479,11 +470,11 @@ export interface WithAuthActionsProps {
 
 export function withAuthActions<P extends WithAuthActionsProps>(
   Component: React.ComponentType<P>
-) {
-  const WithAuthActionsComponent = (props: Omit<P, 'authActions'>) => {
+): React.ComponentType<Omit<P, 'authActions'>> {
+  const WithAuthActionsComponent: React.FC<Omit<P, 'authActions'>> = (props) => {
     const authActions = useAuthActions()
     
-    return <Component {...(props as P)} authActions={authActions} />
+    return React.createElement(Component, { ...props, authActions } as P)
   }
   
   WithAuthActionsComponent.displayName = `withAuthActions(${Component.displayName || Component.name})`

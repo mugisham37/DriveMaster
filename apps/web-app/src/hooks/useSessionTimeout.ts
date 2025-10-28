@@ -105,8 +105,8 @@ export function useSessionTimeout(config: SessionTimeoutConfig = {}): UseSession
   })
   
   // Refs for cleanup and throttling
-  const activityTimeoutRef = useRef<NodeJS.Timeout>()
-  const checkIntervalRef = useRef<NodeJS.Timeout>()
+  const activityTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const checkIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const lastActivityUpdateRef = useRef<Date>(new Date())
   const configRef = useRef(finalConfig)
   
@@ -164,6 +164,26 @@ export function useSessionTimeout(config: SessionTimeoutConfig = {}): UseSession
     return new Date(lastActivity.getTime() + configRef.current.sessionTimeout)
   }, [])
   
+  const forceTimeout = useCallback(() => {
+    setState(prevState => ({
+      ...prevState,
+      isExpired: true,
+      timeRemaining: 0
+    }))
+    
+    // Clear auth state and redirect
+    auth.logout().then(() => {
+      router.push('/auth/signin?reason=session_expired')
+    }).catch((logoutError) => {
+      console.error('Error during forced logout:', logoutError)
+      router.push('/auth/signin?reason=session_expired')
+    })
+    
+    configRef.current.onTimeout?.()
+    
+    console.log('Session forcefully expired')
+  }, [auth, router])
+  
   const extendSession = useCallback(async () => {
     try {
       // Refresh the session tokens
@@ -206,26 +226,6 @@ export function useSessionTimeout(config: SessionTimeoutConfig = {}): UseSession
     
     console.log('Activity reset, session timer restarted')
   }, [calculateSessionExpiration])
-  
-  const forceTimeout = useCallback(() => {
-    setState(prevState => ({
-      ...prevState,
-      isExpired: true,
-      timeRemaining: 0
-    }))
-    
-    // Clear auth state and redirect
-    auth.logout().then(() => {
-      router.push('/auth/signin?reason=session_expired')
-    }).catch((logoutError) => {
-      console.error('Error during forced logout:', logoutError)
-      router.push('/auth/signin?reason=session_expired')
-    })
-    
-    configRef.current.onTimeout?.()
-    
-    console.log('Session forcefully expired')
-  }, [auth, router])
   
   // ============================================================================
   // Session Monitoring

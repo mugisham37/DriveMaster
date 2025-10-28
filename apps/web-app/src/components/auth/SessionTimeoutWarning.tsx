@@ -32,6 +32,13 @@ export function SessionTimeoutWarning({
   const [isExtending, setIsExtending] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   
+  const handleLogout = useCallback(() => {
+    if (isLoggingOut) return
+    
+    setIsLoggingOut(true)
+    logout()
+  }, [isLoggingOut, logout])
+  
   const handleExtendSession = useCallback(async () => {
     if (isExtending) return
     
@@ -46,14 +53,7 @@ export function SessionTimeoutWarning({
     } finally {
       setIsExtending(false)
     }
-  }, [extendSession, logout])
-  
-  const handleLogout = useCallback(() => {
-    if (isLoggingOut) return
-    
-    setIsLoggingOut(true)
-    logout()
-  }, [isLoggingOut, logout])
+  }, [extendSession, handleLogout, isExtending])
   
   // Auto-extend if user is very active near expiration
   useEffect(() => {
