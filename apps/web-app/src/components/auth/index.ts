@@ -28,6 +28,11 @@ export {
   useFilteredNavigation
 } from './RoleBasedAccess'
 
+// OAuth Components
+export { OAuthButton, OAuthButtonGroup, useOAuthProviderStatus, PROVIDER_CONFIGS } from './OAuthButton'
+export { OAuthProviderManager } from './OAuthProviderManager'
+export { SignInForm } from './SignInForm'
+
 // Export types
 export type {
   RouteGuardProps,
@@ -37,3 +42,5 @@ export type {
   NavigationItemProps,
   NavigationMenuItem
 } from './RoleBasedAccess'
+
+// OAuth component types are exported from their respective modules
