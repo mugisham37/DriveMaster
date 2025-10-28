@@ -107,7 +107,7 @@ const config: Config = {
       fontFamily: {
         // Exact font family preservation
         'poppins': ['Poppins', 'sans-serif'],
-        'inter': ['Inter', 'sans-serif'], 
+        'inter': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'], 
         'monaco': ['Monaco', 'Consolas', 'monospace']
       },
       lineHeight: {
