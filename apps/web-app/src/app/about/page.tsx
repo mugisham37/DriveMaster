@@ -2,7 +2,6 @@ import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Layout } from "@/components/layout/Layout";
-import { AboutNav } from "@/components/about";
 import { GraphicalIcon } from "@/components/common/GraphicalIcon";
 
 export const metadata: Metadata = {
@@ -15,8 +14,6 @@ export default function AboutPage() {
   return (
     <Layout>
       <div className="bg-white">
-        <AboutNav activeTab="about" />
-
         {/* Mission Section - Image 3 */}
         <section className="relative bg-white py-32 overflow-hidden">
           {/* Subtle hexagon background pattern */}
