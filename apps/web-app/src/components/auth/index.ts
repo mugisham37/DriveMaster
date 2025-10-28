@@ -31,12 +31,22 @@ export {
 // OAuth Components
 export { OAuthButton, OAuthButtonGroup, useOAuthProviderStatus, PROVIDER_CONFIGS } from './OAuthButton'
 export { OAuthProviderManager } from './OAuthProviderManager'
+
+// Authentication Forms
 export { SignInForm } from './SignInForm'
+export { SignUpForm } from './SignUpForm'
+export { ForgotPasswordForm } from './ForgotPasswordForm'
+export { ResetPasswordForm } from './ResetPasswordForm'
+
+// Profile Management
+export { ProfileManagement } from './ProfileManagement'
+
+// Session Management
+export { SessionExpiredDialog } from './SessionExpiredDialog'
+export { SessionManagement } from './SessionManagement'
 
 // Export types
 export type {
-  RouteGuardProps,
-  RouteGuardFallbackProps,
   RoleBasedAccessProps,
   ConditionalRenderProps,
   NavigationItemProps,
