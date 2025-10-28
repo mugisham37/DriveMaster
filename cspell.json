@@ -913,7 +913,13 @@
     "ndarrays",
     "keyspace",
     "favourites",
-    "favourited"
+    "favourited",
+    "exactOptionalPropertyTypes",
+    "isolatedModules",
+    "substr",
+    "substring",
+    "uuidv",
+    "correlationId"
   ],
   "ignorePaths": [
     "node_modules/**",
