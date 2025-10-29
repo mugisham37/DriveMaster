@@ -5,9 +5,13 @@
  * Generates TypeScript types and gRPC client stubs from user-service protobuf definitions
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Colors for output
 const colors = {
@@ -22,9 +26,7 @@ function printStatus(message) {
   console.log(`${colors.green}[INFO]${colors.reset} ${message}`);
 }
 
-function printWarning(message) {
-  console.log(`${colors.yellow}[WARNING]${colors.reset} ${message}`);
-}
+// Removed unused printWarning function
 
 function printError(message) {
   console.log(`${colors.red}[ERROR]${colors.reset} ${message}`);
@@ -560,7 +562,7 @@ async function main() {
       process.exit(1);
     }
     
-    await installDependencies();
+    installDependencies();
     createDirectories();
     copyProtoFiles();
     generateTypeScriptTypes();
@@ -591,8 +593,8 @@ async function main() {
 }
 
 // Run the script
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { main };
+export { main };
