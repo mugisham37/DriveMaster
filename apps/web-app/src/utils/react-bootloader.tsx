@@ -210,13 +210,15 @@ if (typeof window !== "undefined" && !window.queryClient) {
   // Initialize user-service cache management
   // Note: userServiceClient will be initialized when the unified client is available
   try {
-    const { initializeUserServiceCache } = require('@/lib/cache/user-service-cache');
-    const { initializeIntelligentCacheManager } = require('@/lib/cache/cache-strategies');
-    const { initializeCrossTabSync } = require('@/lib/cache/cross-tab-sync');
-    
-    initializeUserServiceCache(window.queryClient);
-    initializeIntelligentCacheManager(window.queryClient);
-    initializeCrossTabSync(window.queryClient);
+    import('@/lib/cache/user-service-cache').then(({ initializeUserServiceCache }) => {
+      initializeUserServiceCache(window.queryClient!);
+    });
+    import('@/lib/cache/cache-strategies').then(({ initializeIntelligentCacheManager }) => {
+      initializeIntelligentCacheManager(window.queryClient!);
+    });
+    import('@/lib/cache/cross-tab-sync').then(({ initializeCrossTabSync }) => {
+      initializeCrossTabSync(window.queryClient!);
+    });
   } catch (error) {
     console.warn('User service cache initialization deferred:', error);
   }

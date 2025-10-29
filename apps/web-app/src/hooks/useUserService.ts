@@ -89,12 +89,14 @@ export function useUpdateUserProfile(
   options?: UseMutationOptions<
     UserProfile,
     UserServiceError,
-    { userId: string; updates: UserUpdateRequest }
+    { userId: string; updates: UserUpdateRequest },
+    { previousData: UserProfile | undefined; queryKey: readonly ["user-service", "users", string, "profile"]; userId: string }
   >
 ): UseMutationResult<
   UserProfile,
   UserServiceError,
-  { userId: string; updates: UserUpdateRequest }
+  { userId: string; updates: UserUpdateRequest },
+  { previousData: UserProfile | undefined; queryKey: readonly ["user-service", "users", string, "profile"]; userId: string }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -108,14 +110,7 @@ export function useUpdateUserProfile(
   return useMutation({
     mutationFn: ({ userId, updates }) =>
       userServiceClient.updateUser(userId, updates),
-    onMutate: async ({
-      userId,
-      updates,
-    }): Promise<{
-      previousData: UserProfile | undefined;
-      queryKey: readonly string[];
-      userId: string;
-    }> => {
+    onMutate: async ({ userId, updates }) => {
       // Optimistic update
       const { previousData, queryKey } =
         await optimisticManager.optimisticUserProfileUpdate(
@@ -136,7 +131,7 @@ export function useUpdateUserProfile(
           }
         );
 
-      return { previousData, queryKey: queryKey as readonly string[], userId };
+      return { previousData, queryKey, userId };
     },
     onError: (_error, _variables, context) => {
       // Rollback optimistic update on error
@@ -164,12 +159,14 @@ export function useUpdateUserPreferences(
   options?: UseMutationOptions<
     UserPreferences,
     UserServiceError,
-    { userId: string; preferences: Partial<PreferencesData> }
+    { userId: string; preferences: Partial<PreferencesData> },
+    { previousData: UserPreferences | undefined; queryKey: readonly ["user-service", "users", string, "preferences"] }
   >
 ): UseMutationResult<
   UserPreferences,
   UserServiceError,
-  { userId: string; preferences: Partial<PreferencesData> }
+  { userId: string; preferences: Partial<PreferencesData> },
+  { previousData: UserPreferences | undefined; queryKey: readonly ["user-service", "users", string, "preferences"] }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -199,7 +196,7 @@ export function useUpdateUserPreferences(
 
       return { previousData, queryKey };
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousData && context?.queryKey) {
         optimisticManager.rollback(context.queryKey, context.previousData);
       }
@@ -302,12 +299,14 @@ export function useUpdateSkillMastery(
   options?: UseMutationOptions<
     SkillMastery,
     UserServiceError,
-    { userId: string; topic: string; attempts: AttemptRecord[] }
+    { userId: string; topic: string; attempts: AttemptRecord[] },
+    { previousData: SkillMastery | undefined; queryKey: readonly ["user-service", "progress", string, "mastery", string] | readonly ["user-service", "progress", string, "mastery"] }
   >
 ): UseMutationResult<
   SkillMastery,
   UserServiceError,
-  { userId: string; topic: string; attempts: AttemptRecord[] }
+  { userId: string; topic: string; attempts: AttemptRecord[] },
+  { previousData: SkillMastery | undefined; queryKey: readonly ["user-service", "progress", string, "mastery", string] | readonly ["user-service", "progress", string, "mastery"] }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -342,7 +341,7 @@ export function useUpdateSkillMastery(
 
       return { previousData, queryKey };
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousData && context?.queryKey) {
         optimisticManager.rollback(context.queryKey, context.previousData);
       }
@@ -488,10 +487,10 @@ export function useGdprExportStatus(
     ),
     ...options,
     enabled: !!userId && !!requestId && options?.enabled !== false,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 5 seconds if export is still processing
-      return data?.state.data?.status === "processing" ||
-        data?.state.data?.status === "pending"
+      const data = query?.state?.data
+      return data?.status === "processing" || data?.status === "pending"
         ? 5000
         : false;
     },
@@ -607,7 +606,7 @@ export function useServiceHealth(
   return useQuery({
     queryKey: queryKeys.serviceHealth(),
     queryFn: () => userServiceClient.getHealth(),
-    ...createUserServiceQueryOptions(
+    ...createUserServiceQueryOptions<ServiceHealthStatus>(
       CACHE_TIMES.SERVICE_HEALTH,
       GC_TIMES.SHORT
     ),
@@ -623,7 +622,7 @@ export function useServiceInfo(
   return useQuery({
     queryKey: queryKeys.serviceInfo(),
     queryFn: () => userServiceClient.getServiceInfo(),
-    ...createUserServiceQueryOptions(CACHE_TIMES.SERVICE_INFO, GC_TIMES.MEDIUM),
+    ...createUserServiceQueryOptions<ServiceInfo>(CACHE_TIMES.SERVICE_INFO, GC_TIMES.MEDIUM),
     ...options,
   });
 }
