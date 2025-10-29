@@ -1129,3 +1129,6 @@ export * from "./bootcamp-advanced";
 
 // Auth service types
 export * from "./auth-service";
+
+// User service types
+export * from "./user-service";
