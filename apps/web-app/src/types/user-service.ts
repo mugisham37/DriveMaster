@@ -178,12 +178,13 @@ export type ActivityType =
   | 'quiz_start' | 'quiz_complete' | 'quiz_abandon'
   | 'video_start' | 'video_complete' | 'video_pause' | 'video_seek'
   | 'reading_start' | 'reading_complete'
-  | 'practice_start' | 'practice_complete'
-  | 'login' | 'logout' | 'session_timeout'
+  | 'practice_start' | 'practice_complete' | 'practice' | 'review' | 'assessment'
+  | 'login' | 'logout' | 'session_timeout' | 'session_start' | 'session_end'
   | 'profile_update' | 'preferences_update'
   | 'search' | 'navigation' | 'help_request'
 
 export interface ActivityRecord {
+  id?: string
   userId: string
   activityType: ActivityType
   sessionId?: string
@@ -221,6 +222,7 @@ export interface EngagementMetrics {
   dailyActiveStreak: number
   weeklyActiveStreak: number
   averageSessionLength: number
+  averageSessionDuration: number
   sessionsPerDay: number
   activitiesPerSession: number
   returnRate: number
@@ -235,7 +237,9 @@ export interface ActivityInsight {
   title: string
   description: string
   severity: 'info' | 'warning' | 'critical'
-  category: 'engagement' | 'performance' | 'behavior'
+  category: 'engagement' | 'performance' | 'behavior' | 'progress' | 'optimization'
+  priority: number
+  actionable: boolean
   metadata: Record<string, unknown>
   actionItems: string[]
   generatedAt: Date
@@ -249,7 +253,9 @@ export interface ActivityRecommendation {
   title: string
   description: string
   priority: number // 1-10
-  category: 'study_schedule' | 'content' | 'strategy'
+  category: 'study_schedule' | 'content' | 'strategy' | 'timing' | 'improvement' | 'engagement'
+  estimatedImpact: number
+  actionable: boolean
   metadata: Record<string, unknown>
   actions: RecommendationAction[]
   generatedAt: Date
@@ -270,6 +276,7 @@ export interface TopicActivitySummary {
   activities: number
   timeSpent: number
   lastActivity: Date
+  averageScore: number
 }
 
 export interface BehaviorPattern {
@@ -277,6 +284,9 @@ export interface BehaviorPattern {
   frequency: number
   confidence: number
   description: string
+  type: string
+  name: string
+  metadata: Record<string, unknown>
 }
 
 // ============================================================================
