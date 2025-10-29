@@ -201,11 +201,25 @@ if (typeof window !== "undefined" && !window.queryClient) {
     dehydrateOptions: {
       shouldDehydrateQuery: (query) => {
         const [key] = query.queryKey;
-        // only persist notifications and reputation in localStorage cache
-        return ["notifications", "reputation"].includes(key as string);
+        // Persist notifications, reputation, and critical user-service data
+        return ["notifications", "reputation", "user-service"].includes(key as string);
       },
     },
   });
+
+  // Initialize user-service cache management
+  // Note: userServiceClient will be initialized when the unified client is available
+  try {
+    const { initializeUserServiceCache } = require('@/lib/cache/user-service-cache');
+    const { initializeIntelligentCacheManager } = require('@/lib/cache/cache-strategies');
+    const { initializeCrossTabSync } = require('@/lib/cache/cross-tab-sync');
+    
+    initializeUserServiceCache(window.queryClient);
+    initializeIntelligentCacheManager(window.queryClient);
+    initializeCrossTabSync(window.queryClient);
+  } catch (error) {
+    console.warn('User service cache initialization deferred:', error);
+  }
 }
 
 function onGoogleTranslateDetected(): void {
