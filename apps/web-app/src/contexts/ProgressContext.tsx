@@ -41,6 +41,21 @@ import type {
   TimeRange
 } from '@/types/user-service'
 
+// Import types from progress analytics and calculation modules
+import type {
+  ProgressTrend,
+  TopicComparison,
+  PeerComparison,
+  ChartData,
+  ChartType,
+  HeatmapData
+} from '@/lib/user-service/progress-analytics'
+
+import type {
+  ProgressPrediction,
+  PracticeRecommendation
+} from '@/lib/user-service/progress-calculation'
+
 // ============================================================================
 // State Types
 // ============================================================================
@@ -84,61 +99,8 @@ export interface ProgressState {
 }
 
 // ============================================================================
-// Additional Types for Analytics and Visualization
+// Additional Types for Context State
 // ============================================================================
-
-export interface ProgressTrend {
-  timeRange: TimeRange
-  masteryTrend: number[]
-  accuracyTrend: number[]
-  studyTimeTrend: number[]
-  timestamps: Date[]
-}
-
-export interface TopicComparison {
-  topic: string
-  userMastery: number
-  averageMastery: number
-  percentile: number
-  rank: number
-  totalUsers: number
-}
-
-export interface PeerComparison {
-  countryCode?: string
-  userRank: number
-  totalUsers: number
-  averageMastery: number
-  userMastery: number
-  percentile: number
-}
-
-export interface ChartData {
-  type: ChartType
-  data: unknown[]
-  labels: string[]
-  datasets: ChartDataset[]
-  generatedAt: Date
-}
-
-export interface ChartDataset {
-  label: string
-  data: number[]
-  backgroundColor?: string
-  borderColor?: string
-  fill?: boolean
-}
-
-export interface HeatmapData {
-  topics: string[]
-  weeks: string[]
-  values: number[][]
-  maxValue: number
-  minValue: number
-  generatedAt: Date
-}
-
-export type ChartType = 'line' | 'bar' | 'radar' | 'doughnut' | 'heatmap'
 
 // ============================================================================
 // Action Types
@@ -564,6 +526,12 @@ export interface ProgressContextValue {
   subscribeToProgressUpdates: () => void
   unsubscribeFromProgressUpdates: () => void
   
+  // Progress calculation and optimization (Task 6.4)
+  generateProgressPredictions: () => Promise<ProgressPrediction[]>
+  generateOptimizedSummary: () => Promise<ProgressSummary | null>
+  prefetchProgressData: (trigger: string) => Promise<void>
+  generateLearningRecommendations: () => Promise<PracticeRecommendation[]>
+  
   // Utility functions
   clearError: (errorType?: keyof Pick<ProgressState, 'error' | 'summaryError' | 'masteryError' | 'streakError' | 'milestonesError'>) => void
   clearAllErrors: () => void
@@ -798,8 +766,46 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   }, [userId, progressSummaryQuery])
   
   const updateProgress = useCallback(async (topic: string, attempts: AttemptRecord[]) => {
+    // Task 6.4: Client-side progress calculation for immediate feedback
+    try {
+      const currentMastery = state.skillMasteries.get(topic)
+      if (currentMastery && attempts.length > 0) {
+        // Calculate immediate feedback using the new ProgressCalculationManager
+        const { ProgressCalculationManager } = await import('@/lib/user-service/progress-calculation')
+        const calculator = new ProgressCalculationManager()
+        
+        const immediateFeedback = calculator.calculateImmediateFeedback(currentMastery, attempts)
+        
+        // Update local state with immediate feedback
+        const optimisticMastery: SkillMastery = {
+          ...currentMastery,
+          mastery: immediateFeedback.mastery,
+          confidence: immediateFeedback.confidence,
+          lastPracticed: new Date(),
+          practiceCount: currentMastery.practiceCount + attempts.length,
+          updatedAt: new Date(),
+        }
+        
+        dispatch({
+          type: 'MASTERY_UPDATE_SUCCESS',
+          payload: { mastery: optimisticMastery }
+        })
+        
+        console.log('Immediate progress feedback:', {
+          topic,
+          improvement: immediateFeedback.improvement,
+          newMastery: immediateFeedback.mastery,
+          confidence: immediateFeedback.confidence,
+          recommendations: immediateFeedback.recommendations,
+        })
+      }
+    } catch (error) {
+      console.warn('Failed to calculate immediate feedback:', error)
+    }
+    
+    // Continue with server update
     await progressUpdateMutation.mutateAsync({ topic, attempts })
-  }, [progressUpdateMutation])
+  }, [progressUpdateMutation, state.skillMasteries])
   
   const recalculateAllMasteries = useCallback(async () => {
     if (!userId) return
@@ -913,15 +919,10 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     if (!userId || !state.summary) return []
     
     try {
-      // This would typically call a dedicated analytics endpoint
-      // For now, we'll generate trends from available data
-      const trend: ProgressTrend = {
-        timeRange,
-        masteryTrend: state.weeklyProgress.map(p => p.mastery),
-        accuracyTrend: state.weeklyProgress.map(p => p.accuracy),
-        studyTimeTrend: state.weeklyProgress.map(p => p.studyTime),
-        timestamps: state.weeklyProgress.map(p => new Date(p.week)),
-      }
+      // Use the new ProgressAnalyticsManager for comprehensive trend analysis
+      const { ProgressTrendAnalyzer } = await import('@/lib/user-service/progress-analytics')
+      
+      const trend = ProgressTrendAnalyzer.analyzeProgressTrends(state.weeklyProgress, timeRange)
       
       dispatch({ type: 'TRENDS_UPDATE', payload: { trends: [trend] } })
       return [trend]
@@ -935,28 +936,22 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     if (!userId || !state.skillMasteries.size) return []
     
     try {
-      // This would call an analytics endpoint for peer comparison data
-      // For now, we'll generate mock comparison data
-      const comparisons: TopicComparison[] = topics.map(topic => {
-        const userMastery = state.skillMasteries.get(topic)?.mastery || 0
-        
-        return {
-          topic,
-          userMastery,
-          averageMastery: 0.6, // Mock average
-          percentile: Math.min(95, Math.max(5, userMastery * 100)),
-          rank: Math.floor(Math.random() * 1000) + 1,
-          totalUsers: 10000,
-        }
-      })
+      // Use the new TopicComparisonAnalyzer for peer benchmarking
+      const { TopicComparisonAnalyzer } = await import('@/lib/user-service/progress-analytics')
+      
+      const comparisons = await TopicComparisonAnalyzer.generateTopicComparisons(
+        topics,
+        state.skillMasteries,
+        state.weeklyProgress
+      )
       
       dispatch({ type: 'TOPIC_COMPARISON_UPDATE', payload: { comparisons } })
       return comparisons
     } catch (error) {
-      console.warn('Failed to get topic comparison:', error)
+      console.warn('Failed to get topic comparisons:', error)
       return []
     }
-  }, [userId, state.skillMasteries])
+  }, [userId, state.skillMasteries, state.weeklyProgress])
   
   const getPeerComparison = useCallback(async (countryCode?: string): Promise<PeerComparison> => {
     if (!userId || !state.summary) {
@@ -967,20 +962,17 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         averageMastery: 0,
         userMastery: 0,
         percentile: 0,
+        topPerformers: [],
+        similarPeers: [],
+        improvementOpportunities: [],
       }
     }
     
     try {
-      // This would call a peer comparison endpoint
-      // For now, we'll generate mock data
-      const comparison: PeerComparison = {
-        countryCode: countryCode || '',
-        userRank: Math.floor(Math.random() * 1000) + 1,
-        totalUsers: 10000,
-        averageMastery: 0.65,
-        userMastery: state.summary.overallMastery,
-        percentile: Math.min(95, Math.max(5, state.summary.overallMastery * 100)),
-      }
+      // Use the new PeerComparisonAnalyzer for comprehensive peer analysis
+      const { PeerComparisonAnalyzer } = await import('@/lib/user-service/progress-analytics')
+      
+      const comparison = await PeerComparisonAnalyzer.generatePeerComparison(state.summary, countryCode)
       
       dispatch({ type: 'PEER_COMPARISON_UPDATE', payload: { comparison } })
       return comparison
@@ -993,6 +985,9 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         averageMastery: 0,
         userMastery: 0,
         percentile: 0,
+        topPerformers: [],
+        similarPeers: [],
+        improvementOpportunities: [],
       }
     }
   }, [userId, state.summary])
@@ -1009,68 +1004,36 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       return cached
     }
     
-    let chartData: ChartData
-    
-    switch (type) {
-      case 'line':
-        chartData = {
-          type,
-          data: state.weeklyProgress,
-          labels: state.weeklyProgress.map(p => p.week),
-          datasets: [
-            {
-              label: 'Mastery Progress',
-              data: state.weeklyProgress.map(p => p.mastery * 100),
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-            },
-            {
-              label: 'Accuracy',
-              data: state.weeklyProgress.map(p => p.accuracy * 100),
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              fill: false,
-            },
-          ],
-          generatedAt: new Date(),
-        }
-        break
-        
-      case 'radar':
-        const topTopics = Array.from(state.skillMasteries.entries())
-          .sort(([, a], [, b]) => b.mastery - a.mastery)
-          .slice(0, 6)
-        
-        chartData = {
-          type,
-          data: topTopics,
-          labels: topTopics.map(([topic]) => topic),
-          datasets: [
-            {
-              label: 'Skill Mastery',
-              data: topTopics.map(([, mastery]) => mastery.mastery * 100),
-              backgroundColor: 'rgba(59, 130, 246, 0.2)',
-              borderColor: '#3b82f6',
-            },
-          ],
-          generatedAt: new Date(),
-        }
-        break
-        
-      default:
-        chartData = {
-          type,
-          data: [],
-          labels: [],
-          datasets: [],
-          generatedAt: new Date(),
-        }
+    try {
+      // Use the new ChartDataGenerator for comprehensive chart generation
+      const { ChartDataGenerator } = await import('@/lib/user-service/progress-analytics')
+      
+      const progressData = {
+        weeklyProgress: state.weeklyProgress,
+        skillMasteries: state.skillMasteries,
+        summary: state.summary!,
+      }
+      
+      const chartData = ChartDataGenerator.generateProgressChartData(type, progressData)
+      
+      dispatch({ type: 'CHART_DATA_CACHE', payload: { key: cacheKey, data: chartData } })
+      return chartData
+    } catch (error) {
+      console.warn('Failed to generate chart data:', error)
+      
+      // Fallback to empty chart
+      const emptyChart: ChartData = {
+        type,
+        data: [],
+        labels: [],
+        datasets: [],
+        generatedAt: new Date(),
+        cacheKey,
+      }
+      
+      return emptyChart
     }
-    
-    dispatch({ type: 'CHART_DATA_CACHE', payload: { key: cacheKey, data: chartData } })
-    return chartData
-  }, [userId, state.chartDataCache, state.weeklyProgress, state.skillMasteries])
+  }, [userId, state.chartDataCache, state.weeklyProgress, state.skillMasteries, state.summary])
   
   const getMasteryHeatmapData = useCallback(async (): Promise<HeatmapData> => {
     if (state.heatmapDataCache && 
@@ -1078,27 +1041,34 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       return state.heatmapDataCache
     }
     
-    // Generate heatmap data from skill masteries and weekly progress
-    const topics = Array.from(state.skillMasteries.keys()).slice(0, 10) // Top 10 topics
-    const weeks = state.weeklyProgress.map(p => p.week).slice(-12) // Last 12 weeks
-    
-    const values: number[][] = topics.map(topic => {
-      const mastery = state.skillMasteries.get(topic)
-      return weeks.map(() => mastery ? mastery.mastery : 0)
-    })
-    
-    const allValues = values.flat()
-    const heatmapData: HeatmapData = {
-      topics,
-      weeks,
-      values,
-      maxValue: Math.max(...allValues, 1),
-      minValue: Math.min(...allValues, 0),
-      generatedAt: new Date(),
+    try {
+      // Use the new HeatmapDataGenerator for comprehensive heatmap generation
+      const { HeatmapDataGenerator } = await import('@/lib/user-service/progress-analytics')
+      
+      const heatmapData = HeatmapDataGenerator.generateMasteryHeatmapData(
+        state.skillMasteries,
+        state.weeklyProgress
+      )
+      
+      dispatch({ type: 'HEATMAP_DATA_CACHE', payload: { data: heatmapData } })
+      return heatmapData
+    } catch (error) {
+      console.warn('Failed to generate heatmap data:', error)
+      
+      // Fallback to empty heatmap
+      const emptyHeatmap: HeatmapData = {
+        topics: [],
+        weeks: [],
+        values: [],
+        maxValue: 1,
+        minValue: 0,
+        colorScale: [],
+        tooltipData: [],
+        generatedAt: new Date(),
+      }
+      
+      return emptyHeatmap
     }
-    
-    dispatch({ type: 'HEATMAP_DATA_CACHE', payload: { data: heatmapData } })
-    return heatmapData
   }, [state.heatmapDataCache, state.skillMasteries, state.weeklyProgress])
   
   // ============================================================================
@@ -1197,10 +1167,164 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     }
   }, [])
   
+  // ============================================================================
+  // Progress Calculation and Optimization Functions (Task 6.4)
+  // ============================================================================
+  
+  const generateProgressPredictions = useCallback(async () => {
+    if (!userId || !state.summary || state.skillMasteries.size === 0) return []
+    
+    try {
+      const { ProgressCalculationManager, LearningPatternAnalyzer } = await import('@/lib/user-service/progress-calculation')
+      
+      // Analyze learning patterns
+      const learningPattern = LearningPatternAnalyzer.analyzeLearningPattern(
+        userId,
+        state.summary,
+        state.skillMasteries,
+        state.weeklyProgress
+      )
+      
+      // Generate progress predictions
+      const calculator = new ProgressCalculationManager()
+      const predictions = calculator.generateProgressPredictions(
+        state.skillMasteries,
+        state.weeklyProgress,
+        learningPattern
+      )
+      
+      console.log('Generated progress predictions:', {
+        learningPattern,
+        predictions: predictions.slice(0, 5), // Log top 5 predictions
+      })
+      
+      return predictions
+    } catch (error) {
+      console.warn('Failed to generate progress predictions:', error)
+      return []
+    }
+  }, [userId, state.summary, state.skillMasteries, state.weeklyProgress])
+  
+  const generateOptimizedSummary = useCallback(async () => {
+    if (!state.skillMasteries.size || !state.learningStreak) return null
+    
+    try {
+      const { ProgressCalculationManager } = await import('@/lib/user-service/progress-calculation')
+      
+      const calculator = new ProgressCalculationManager()
+      const optimizedSummary = calculator.generateOptimizedSummary(
+        state.skillMasteries,
+        state.weeklyProgress,
+        state.learningStreak,
+        state.milestones
+      )
+      
+      // Update the summary with optimized data
+      dispatch({
+        type: 'SUMMARY_FETCH_SUCCESS',
+        payload: { summary: { ...optimizedSummary, userId: userId! } }
+      })
+      
+      return optimizedSummary
+    } catch (error) {
+      console.warn('Failed to generate optimized summary:', error)
+      return null
+    }
+  }, [state.skillMasteries, state.weeklyProgress, state.learningStreak, state.milestones, userId])
+  
+  const prefetchProgressData = useCallback(async (trigger: string) => {
+    if (!userId || !state.summary) return
+    
+    try {
+      const { ProgressCalculationManager, LearningPatternAnalyzer } = await import('@/lib/user-service/progress-calculation')
+      
+      // Analyze learning patterns to determine prefetch strategy
+      const learningPattern = LearningPatternAnalyzer.analyzeLearningPattern(
+        userId,
+        state.summary,
+        state.skillMasteries,
+        state.weeklyProgress
+      )
+      
+      const calculator = new ProgressCalculationManager()
+      const strategies = calculator.generatePrefetchStrategies(learningPattern, state.summary)
+      
+      // Execute high-priority prefetch strategies
+      const highPriorityStrategies = strategies.filter(s => s.priority === 'high')
+      
+      for (const strategy of highPriorityStrategies) {
+        if (strategy.triggerConditions.includes(trigger)) {
+          console.log('Executing prefetch strategy:', strategy)
+          
+          // Prefetch data for preferred topics
+          if (strategy.topics.length > 0) {
+            for (const topic of strategy.topics) {
+              // Trigger prefetch for topic-specific data
+              queryClient.prefetchQuery({
+                queryKey: queryKeys.skillMastery(userId, topic),
+                queryFn: () => userServiceClient.getSkillMastery(userId, topic),
+                staleTime: strategy.cacheTime,
+              })
+            }
+          }
+          
+          // Prefetch general progress data
+          if (strategy.dataTypes.includes('summary')) {
+            queryClient.prefetchQuery({
+              queryKey: queryKeys.progressSummary(userId),
+              queryFn: () => userServiceClient.getProgressSummary(userId),
+              staleTime: strategy.cacheTime,
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to execute prefetch strategies:', error)
+    }
+  }, [userId, state.summary, state.skillMasteries, state.weeklyProgress, queryClient])
+  
+  const generateLearningRecommendations = useCallback(async () => {
+    if (!userId || !state.summary || state.skillMasteries.size === 0) return []
+    
+    try {
+      const { ProgressCalculationManager, LearningPatternAnalyzer } = await import('@/lib/user-service/progress-calculation')
+      
+      // Analyze learning patterns
+      const learningPattern = LearningPatternAnalyzer.analyzeLearningPattern(
+        userId,
+        state.summary,
+        state.skillMasteries,
+        state.weeklyProgress
+      )
+      
+      // Generate predictions with recommendations
+      const calculator = new ProgressCalculationManager()
+      const predictions = calculator.generateProgressPredictions(
+        state.skillMasteries,
+        state.weeklyProgress,
+        learningPattern
+      )
+      
+      // Extract and prioritize recommendations
+      const allRecommendations = predictions
+        .flatMap(p => p.recommendations)
+        .sort((a, b) => b.estimatedImpact - a.estimatedImpact)
+        .slice(0, 10) // Top 10 recommendations
+      
+      return allRecommendations
+    } catch (error) {
+      console.warn('Failed to generate learning recommendations:', error)
+      return []
+    }
+  }, [userId, state.summary, state.skillMasteries, state.weeklyProgress])
+
   // Auto-subscribe when user is available and authenticated
   useEffect(() => {
     if (userId && isAuthenticated) {
       subscribeToProgressUpdates()
+      
+      // Task 6.4: Trigger prefetching on user login
+      prefetchProgressData('user_login').catch(console.warn)
     } else {
       unsubscribeFromProgressUpdates()
     }
@@ -1209,7 +1333,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     return () => {
       unsubscribeFromProgressUpdates()
     }
-  }, [userId, isAuthenticated, subscribeToProgressUpdates, unsubscribeFromProgressUpdates])
+  }, [userId, isAuthenticated, subscribeToProgressUpdates, unsubscribeFromProgressUpdates, prefetchProgressData])
   
   // ============================================================================
   // Utility Functions
@@ -1288,6 +1412,12 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     // Real-time updates
     subscribeToProgressUpdates,
     unsubscribeFromProgressUpdates,
+    
+    // Progress calculation and optimization (Task 6.4)
+    generateProgressPredictions,
+    generateOptimizedSummary,
+    prefetchProgressData,
+    generateLearningRecommendations,
     
     // Utility functions
     clearError,
