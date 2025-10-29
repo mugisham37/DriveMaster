@@ -18,16 +18,16 @@ export interface CircuitBreakerMetrics {
   timeouts: number;
   circuitBreakerTrips: number;
   averageResponseTime: number;
-  lastFailureTime?: Date;
-  lastSuccessTime?: Date;
+  lastFailureTime?: Date | undefined;
+  lastSuccessTime?: Date | undefined;
 }
 
 export class UserServiceCircuitBreaker {
   private state: CircuitBreakerState['state'] = 'closed';
   private failureCount = 0;
   private successCount = 0;
-  private lastFailureTime?: Date;
-  private nextAttemptTime?: Date;
+  private lastFailureTime?: Date | undefined;
+  private nextAttemptTime?: Date | undefined;
   private halfOpenCallCount = 0;
   private metrics: CircuitBreakerMetrics;
 
@@ -38,7 +38,9 @@ export class UserServiceCircuitBreaker {
       failedRequests: 0,
       timeouts: 0,
       circuitBreakerTrips: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
+      lastFailureTime: undefined,
+      lastSuccessTime: undefined
     };
   }
 
@@ -258,11 +260,10 @@ export class UserServiceCircuitBreaker {
       failedRequests: 0,
       timeouts: 0,
       circuitBreakerTrips: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
+      lastFailureTime: undefined,
+      lastSuccessTime: undefined
     };
-    
-    delete this.metrics.lastFailureTime;
-    delete this.metrics.lastSuccessTime;
     
     console.info('[Circuit Breaker] Reset to initial state');
   }
