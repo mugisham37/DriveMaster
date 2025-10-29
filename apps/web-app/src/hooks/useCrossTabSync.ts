@@ -61,7 +61,7 @@ export function useCrossTabSync() {
     getConflictStatus: () => synchronizer.getConflictStatus(),
     
     // Consistency methods
-    verifyConsistency: (userId: string) => synchronizer.verifyCacheConsistency(userId),
+    verifyConsistency: () => synchronizer.verifyCacheConsistency(),
     repairInconsistencies: (userId: string) => synchronizer.repairCacheInconsistencies(userId)
   }
 }
@@ -206,7 +206,7 @@ export function useCacheConsistency(userId?: string) {
 
     setIsChecking(true)
     try {
-      const consistent = await verifyConsistency(userId)
+      const consistent = await verifyConsistency()
       setIsConsistent(consistent)
     } catch (error) {
       console.warn('Consistency check failed:', error)
