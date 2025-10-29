@@ -120,6 +120,7 @@
     "xstate": "^5.23.0",
     "xxhashjs": "^0.2.2",
     "yaml": "^2.6.1",
+    "zod": "^4.1.12",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

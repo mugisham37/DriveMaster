@@ -308,6 +308,18 @@ export interface GDPRDeleteResponse {
   createdAt: Date
 }
 
+export interface ConsentRecord {
+  id: string
+  userId: string
+  consentType: 'data_processing' | 'marketing' | 'analytics' | 'cookies' | 'third_party_sharing'
+  granted: boolean
+  version: string
+  source: 'user_action' | 'registration' | 'settings_update'
+  timestamp: Date
+  ipAddress: string
+  userAgent: string
+}
+
 export interface ConsentPreferences {
   analytics: boolean
   marketing: boolean
@@ -331,14 +343,19 @@ export interface CommunicationPreferences {
 }
 
 export interface PrivacyReport {
+  id: string
   userId: string
+  type: 'data_usage' | 'consent_history' | 'privacy_audit' | 'compliance_summary' | 'comprehensive'
   generatedAt: Date
-  dataCategories: DataCategoryReport[]
-  processingActivities: ProcessingActivity[]
-  thirdPartySharing: ThirdPartySharing[]
-  retentionPolicies: RetentionPolicy[]
-  userRights: UserRightsStatus
-  complianceStatus: ComplianceStatus
+  dateRange: DateRange
+  summary: Record<string, unknown>
+  details: Record<string, unknown>
+  dataCategories?: DataCategoryReport[]
+  processingActivities?: ProcessingActivity[]
+  thirdPartySharing?: ThirdPartySharing[]
+  retentionPolicies?: RetentionPolicy[]
+  userRights?: UserRightsStatus
+  complianceStatus?: ComplianceStatus
 }
 
 export interface DataCategoryReport {
