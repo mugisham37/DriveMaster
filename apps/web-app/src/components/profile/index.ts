@@ -30,3 +30,8 @@ export { TrackDropdown } from "./community-solutions-list/TrackDropdown";
 export { CroppingModal } from "./avatar-selector/CroppingModal";
 export { Photo } from "./avatar-selector/Photo";
 export { useImageCrop } from "./avatar-selector/use-image-crop";
+// User Service Integration Components (Task 13.1)
+export { default as UserProfile } from './UserProfile'
+export { default as UserPreferences } from './UserPreferences'
+export { default as AccountSettings } from './AccountSettings'
+export { default as ProfileCompletion } from './ProfileCompletion'

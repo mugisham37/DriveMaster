@@ -1,575 +1,586 @@
+'use client'
+
 /**
  * Activity Dashboard Component
  * 
- * Demonstrates the new activity monitoring and analytics capabilities
- * implemented in tasks 7.1, 7.2, 7.3, and 7.4
+ * Implements comprehensive activity monitoring with:
+ * - Real-time activity data and engagement metrics
+ * - Interactive activity visualization and trends
+ * - Personalized insights and recommendations
+ * - Session tracking and analytics
+ * - Requirements: 4.1, 4.2, 4.3, 4.4
  */
 
-'use client'
-
-import React, { useState, useEffect } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useActivity } from '@/contexts/ActivityContext'
-import type {
-  ActivityType,
-  DateRange
-} from '@/types/user-service'
-import type {
-  EngagementTrend,
-  ActivityReport,
-  UsageAnalytics
-} from '@/contexts/ActivityContext'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { 
+  Loader2, 
+  Activity, 
+  TrendingUp, 
+  Clock, 
+  Target,
+  BarChart3,
+  Calendar,
+  Lightbulb,
+  RefreshCw,
+  Play,
+  Pause,
+  Users
+} from 'lucide-react'
+import type { DateRange, ActivityType } from '@/types/user-service'
 
-interface ActivityDashboardProps {
+export interface ActivityDashboardProps {
   className?: string
+  showRecommendations?: boolean
+  showInsights?: boolean
 }
 
-export function ActivityDashboard({ className = '' }: ActivityDashboardProps) {
+export function ActivityDashboard({ 
+  className,
+  showRecommendations = true,
+  showInsights = true
+}: ActivityDashboardProps) {
   const {
     summary,
     engagementMetrics,
     insights,
     recommendations,
     currentSession,
+    recentActivities,
     isLoading,
     error,
-    recordActivity,
-    calculateEngagementTrends,
-    detectBehaviorPatterns,
-    generateActivityReport,
-    getUsageAnalytics,
-    exportActivityData,
-    enableBatching,
+    fetchActivitySummary,
+    fetchEngagementMetrics,
+    getCurrentSessionDuration,
+    getActivityCount,
     getSessionStats,
-    state,
+    clearError,
   } = useActivity()
 
-  // State for analytics data
-  const [engagementTrends, setEngagementTrends] = useState<EngagementTrend[]>([])
-  const [activityReport, setActivityReport] = useState<ActivityReport | null>(null)
-  const [usageAnalytics, setUsageAnalytics] = useState<UsageAnalytics | null>(null)
-  const [selectedDateRange] = useState<DateRange>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-    end: new Date(),
-  })
-  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false)
-  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json')
+  const [selectedDateRange, setSelectedDateRange] = useState<string>('last-30-days')
+  const [selectedActivityType, setSelectedActivityType] = useState<ActivityType | 'all'>('all')
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Load analytics data
-  useEffect(() => {
-    if (!summary) return
-
-    const loadAnalytics = async () => {
-      setIsAnalyticsLoading(true)
-      try {
-        // Load engagement trends
-        const trends = await calculateEngagementTrends(7)
-        setEngagementTrends(trends)
-
-        // Generate activity report
-        const report = await generateActivityReport(selectedDateRange)
-        setActivityReport(report)
-
-        // Get usage analytics
-        const analytics = await getUsageAnalytics()
-        setUsageAnalytics(analytics)
-
-        // Detect behavior patterns
-        await detectBehaviorPatterns()
-
-      } catch (error) {
-        console.error('Failed to load analytics data:', error)
-      } finally {
-        setIsAnalyticsLoading(false)
+  const handleRefresh = useCallback(async () => {
+    try {
+      setIsRefreshing(true)
+      const dateRange: DateRange = {
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        end: new Date()
       }
-    }
-
-    loadAnalytics()
-  }, [summary, selectedDateRange, calculateEngagementTrends, generateActivityReport, getUsageAnalytics, detectBehaviorPatterns])
-
-  // Handle activity recording for demo purposes
-  const handleRecordActivity = async (activityType: ActivityType) => {
-    try {
-      await recordActivity(activityType, {
-        source: 'dashboard_demo',
-        timestamp: new Date().toISOString(),
-      })
+      await Promise.all([
+        fetchActivitySummary(dateRange),
+        fetchEngagementMetrics(dateRange)
+      ])
     } catch (error) {
-      console.error('Failed to record activity:', error)
+      console.error('Failed to refresh activity data:', error)
+    } finally {
+      setIsRefreshing(false)
     }
-  }
+  }, [fetchActivitySummary, fetchEngagementMetrics])
 
-  // Handle data export
-  const handleExportData = async () => {
-    try {
-      const exportedData = await exportActivityData(exportFormat)
-      
-      // Create download link
-      const blob = new Blob([exportedData], { 
-        type: exportFormat === 'json' ? 'application/json' : 'text/csv' 
-      })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `activity-data-${new Date().toISOString().split('T')[0]}.${exportFormat}`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Failed to export data:', error)
+  const handleDateRangeChange = useCallback(async (range: string) => {
+    setSelectedDateRange(range)
+    
+    let days = 30
+    switch (range) {
+      case 'last-7-days': days = 7; break
+      case 'last-30-days': days = 30; break
+      case 'last-90-days': days = 90; break
+      case 'last-year': days = 365; break
     }
-  }
+
+    const dateRange: DateRange = {
+      start: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+      end: new Date()
+    }
+
+    try {
+      await Promise.all([
+        fetchActivitySummary(dateRange),
+        fetchEngagementMetrics(dateRange)
+      ])
+    } catch (error) {
+      console.error('Failed to fetch activity data:', error)
+    }
+  }, [fetchActivitySummary, fetchEngagementMetrics])
 
   const sessionStats = getSessionStats()
+  const currentSessionDuration = getCurrentSessionDuration()
+
+  const filteredActivities = useMemo(() => {
+    if (selectedActivityType === 'all') {
+      return recentActivities
+    }
+    return recentActivities.filter(activity => activity.activityType === selectedActivityType)
+  }, [recentActivities, selectedActivityType])
+
+  const topActivities = useMemo(() => {
+    if (!summary?.topActivities) return []
+    return summary.topActivities.slice(0, 5)
+  }, [summary])
+
+  const formatDuration = useCallback((milliseconds: number) => {
+    const minutes = Math.floor(milliseconds / 60000)
+    const hours = Math.floor(minutes / 60)
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`
+    }
+    return `${minutes}m`
+  }, [])
+
+  const getEngagementLevel = useCallback((score: number) => {
+    if (score >= 0.8) return { label: 'Excellent', color: 'text-green-600' }
+    if (score >= 0.6) return { label: 'Good', color: 'text-blue-600' }
+    if (score >= 0.4) return { label: 'Fair', color: 'text-yellow-600' }
+    return { label: 'Low', color: 'text-red-600' }
+  }, [])
 
   if (isLoading) {
     return (
-      <div className={`activity-dashboard ${className}`}>
-        <div className="loading-state">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded mb-4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className={`activity-dashboard ${className}`}>
-        <div className="error-state text-center py-8">
-          <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Activity Data</h3>
-          <p className="text-red-600">{error.message}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!summary) {
-    return (
-      <div className={`activity-dashboard ${className}`}>
-        <div className="empty-state text-center py-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Activity Data</h3>
-          <p className="text-gray-600">Start using the platform to see your activity dashboard.</p>
-          <div className="mt-4 space-x-2">
-            <button
-              onClick={() => handleRecordActivity('practice_start')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
-            >
-              Record Practice Activity
-            </button>
-            <button
-              onClick={() => handleRecordActivity('navigation')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-700"
-            >
-              Record Navigation
-            </button>
-          </div>
-        </div>
-      </div>
+      <Card className={className}>
+        <CardContent className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading activity data...</span>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className={`activity-dashboard ${className}`}>
-      <div className="dashboard-header mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Activity Dashboard</h2>
-        <p className="text-gray-600">
-          Comprehensive insights into your learning activity and engagement patterns
-        </p>
-      </div>
-
-      {isAnalyticsLoading && (
-        <div className="loading-overlay mb-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-blue-800 text-sm">Loading analytics...</span>
-            </div>
-          </div>
-        </div>
+    <div className={`space-y-6 ${className}`}>
+      {error && (
+        <Alert variant="destructive">
+          <Activity className="h-4 w-4" />
+          <AlertDescription>
+            {error.message}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2"
+              onClick={() => clearError()}
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div className="dashboard-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        
-        {/* Activity Overview */}
-        <div className="overview-card bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Overview</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total Activities</span>
-              <span className="font-medium">{summary.totalActivities.toLocaleString()}</span>
+      {/* Header with Controls */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Activity Dashboard</h2>
+          <p className="text-muted-foreground">
+            Monitor your learning activities and engagement
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedDateRange} onValueChange={handleDateRangeChange}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="last-7-days">Last 7 days</SelectItem>
+              <SelectItem value="last-30-days">Last 30 days</SelectItem>
+              <SelectItem value="last-90-days">Last 90 days</SelectItem>
+              <SelectItem value="last-year">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Current Session Card */}
+      {currentSession && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {currentSession.isActive ? (
+                <Play className="h-5 w-5 text-green-500" />
+              ) : (
+                <Pause className="h-5 w-5 text-gray-500" />
+              )}
+              Current Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <div className="text-2xl font-bold">
+                  {formatDuration(currentSessionDuration)}
+                </div>
+                <p className="text-sm text-muted-foreground">Duration</p>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {currentSession.activities.length}
+                </div>
+                <p className="text-sm text-muted-foreground">Activities</p>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {currentSession.metadata.deviceType}
+                </div>
+                <p className="text-sm text-muted-foreground">Device</p>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Active Days</span>
-              <span className="font-medium">{Object.keys(summary.dailyDistribution).length}</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Overview Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summary?.totalActivities || 0}
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Top Topics</span>
-              <span className="font-medium">{summary.topTopics.length}</span>
+            <p className="text-xs text-muted-foreground">
+              {summary?.dailyAverage || 0} per day average
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Engagement Score</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {engagementMetrics ? Math.round(engagementMetrics.overallScore * 100) : 0}%
             </div>
             {engagementMetrics && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Daily Streak</span>
-                  <span className="font-medium">{engagementMetrics.dailyActiveStreak} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Avg Session</span>
-                  <span className="font-medium">
-                    {Math.round((engagementMetrics.averageSessionDuration || engagementMetrics.averageSessionLength) / 60)} min
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Current Session */}
-        {currentSession && (
-          <div className="session-card bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Session</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Status</span>
-                <span className="font-medium text-green-600">Active</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Started</span>
-                <span className="font-medium">
-                  {currentSession.startTime.toLocaleTimeString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Duration</span>
-                <span className="font-medium">
-                  {Math.round((Date.now() - currentSession.startTime.getTime()) / 60000)} min
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Activities</span>
-                <span className="font-medium">{currentSession.activities.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Device</span>
-                <span className="font-medium capitalize">{currentSession.metadata.deviceType}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Session Statistics */}
-        <div className="session-stats-card bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Session Statistics</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total Sessions</span>
-              <span className="font-medium">{sessionStats.totalSessions}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Average Duration</span>
-              <span className="font-medium">
-                {Math.round(sessionStats.averageDuration / 60000)} min
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Longest Session</span>
-              <span className="font-medium">
-                {Math.round(sessionStats.longestSession / 60000)} min
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Active Sessions</span>
-              <span className="font-medium">{sessionStats.activeSessions}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Engagement Trends */}
-        {engagementTrends.length > 0 && (
-          <div className="trends-card bg-white rounded-lg shadow p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Engagement Trends (Last 7 Days)</h3>
-            <div className="space-y-3">
-              {engagementTrends.slice(-5).map((trend, index) => (
-                <div key={index} className="trend-item border-b border-gray-100 pb-3 last:border-b-0">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">
-                      {trend.date.toLocaleDateString()}
-                    </span>
-                    <span className={`text-sm font-medium ${
-                      trend.engagementScore > 0.7 ? 'text-green-600' : 
-                      trend.engagementScore > 0.4 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {Math.round(trend.engagementScore * 100)}% engaged
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>{trend.activityCount} activities</span>
-                    <span>{Math.round(trend.sessionDuration / 60)} min session</span>
-                  </div>
-                  {trend.topActivities.length > 0 && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      Top: {trend.topActivities.join(', ')}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Activity Insights */}
-        {insights.length > 0 && (
-          <div className="insights-card bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Insights</h3>
-            <div className="space-y-3">
-              {insights.slice(0, 4).map((insight) => (
-                <div key={insight.id} className="insight-item border-l-4 border-blue-400 pl-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-medium px-2 py-1 rounded ${
-                      insight.priority >= 8 ? 'bg-red-100 text-red-800' :
-                      insight.priority >= 6 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {insight.type.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Priority: {insight.priority}/10
-                    </span>
-                  </div>
-                  <h4 className="font-medium text-gray-900 text-sm">{insight.title}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{insight.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Activity Recommendations */}
-        {recommendations.length > 0 && (
-          <div className="recommendations-card bg-white rounded-lg shadow p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
-            <div className="space-y-3">
-              {recommendations.slice(0, 4).map((recommendation) => (
-                <div key={recommendation.id} className="recommendation-item border-l-4 border-green-400 pl-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-medium px-2 py-1 rounded ${
-                      recommendation.priority >= 8 ? 'bg-red-100 text-red-800' :
-                      recommendation.priority >= 6 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {recommendation.type.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Impact: {Math.round(recommendation.estimatedImpact * 100)}%
-                    </span>
-                  </div>
-                  <h4 className="font-medium text-gray-900 text-sm">{recommendation.title}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{recommendation.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Usage Analytics */}
-        {usageAnalytics && (
-          <div className="usage-analytics-card bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Usage Analytics</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Engagement Score</span>
-                <span className="font-medium">
-                  {Math.round(usageAnalytics.engagementScore * 100)}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Retention Rate</span>
-                <span className="font-medium">
-                  {Math.round(usageAnalytics.retentionRate * 100)}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Avg Sessions</span>
-                <span className="font-medium">{usageAnalytics.averageSessionsPerUser}</span>
-              </div>
-              {usageAnalytics.mostActiveHours.length > 0 && (
-                <div>
-                  <span className="text-gray-600 text-sm">Most Active Hours:</span>
-                  <div className="mt-1 text-sm font-medium">
-                    {usageAnalytics.mostActiveHours.map(hour => `${hour}:00`).join(', ')}
-                  </div>
-                </div>
-              )}
-              {usageAnalytics.topFeatures.length > 0 && (
-                <div>
-                  <span className="text-gray-600 text-sm">Top Features:</span>
-                  <div className="mt-1 text-sm font-medium">
-                    {usageAnalytics.topFeatures.slice(0, 3).join(', ')}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Activity Report Summary */}
-        {activityReport && (
-          <div className="report-card bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Report</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Report Period</span>
-                <span className="font-medium text-sm">
-                  {activityReport.dateRange.start.toLocaleDateString()} - {activityReport.dateRange.end.toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Activities</span>
-                <span className="font-medium">{activityReport.totalActivities}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Unique Days</span>
-                <span className="font-medium">{activityReport.uniqueDays}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Avg Session</span>
-                <span className="font-medium">
-                  {Math.round(activityReport.averageSessionDuration / 60)} min
-                </span>
-              </div>
-              {activityReport.topActivities.length > 0 && activityReport.topActivities[0] && (
-                <div>
-                  <span className="text-gray-600 text-sm">Top Activity:</span>
-                  <div className="mt-1 text-sm font-medium">
-                    {activityReport.topActivities[0].type} ({activityReport.topActivities[0].count})
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Performance Controls */}
-        <div className="controls-card bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Controls</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={state.batchingEnabled}
-                  onChange={(e) => enableBatching(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Enable Activity Batching</span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                Batch activities for better performance
+              <p className={`text-xs ${getEngagementLevel(engagementMetrics.overallScore).color}`}>
+                {getEngagementLevel(engagementMetrics.overallScore).label}
               </p>
-            </div>
-            
-            <div>
-              <span className="text-sm text-gray-600">Pending Activities:</span>
-              <span className="ml-2 font-medium">{state.pendingActivities.length}</span>
-            </div>
-            
-            <div>
-              <span className="text-sm text-gray-600">Last Batch:</span>
-              <span className="ml-2 font-medium text-xs">
-                {state.lastBatchTime ? state.lastBatchTime.toLocaleTimeString() : 'Never'}
-              </span>
-            </div>
-          </div>
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Data Export */}
-        <div className="export-card bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Export</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Export Format
-              </label>
-              <select
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="json">JSON</option>
-                <option value="csv">CSV</option>
-              </select>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Days</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summary?.activeDays || 0}
             </div>
-            
-            <button
-              onClick={handleExportData}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md text-sm hover:bg-blue-700 transition-colors"
-            >
-              Export Activity Data
-            </button>
-            
-            <div className="text-xs text-gray-500">
-              Exports recent activities, sessions, and metrics
+            <p className="text-xs text-muted-foreground">
+              {summary?.streakDays || 0} day streak
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Session Time</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summary ? formatDuration(summary.totalTimeSpent * 60000) : '0m'}
             </div>
-          </div>
-        </div>
-
-        {/* Demo Activity Recording */}
-        <div className="demo-card bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Demo Activities</h3>
-          <div className="space-y-2">
-            <button
-              onClick={() => handleRecordActivity('practice')}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-md text-sm hover:bg-green-700"
-            >
-              Record Practice
-            </button>
-            <button
-              onClick={() => handleRecordActivity('review')}
-              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-md text-sm hover:bg-yellow-700"
-            >
-              Record Review
-            </button>
-            <button
-              onClick={() => handleRecordActivity('assessment')}
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md text-sm hover:bg-purple-700"
-            >
-              Record Assessment
-            </button>
-            <button
-              onClick={() => handleRecordActivity('navigation')}
-              className="w-full bg-gray-600 text-white py-2 px-4 rounded-md text-sm hover:bg-gray-700"
-            >
-              Record Navigation
-            </button>
-          </div>
-          <div className="mt-3 text-xs text-gray-500">
-            Click buttons to record demo activities and see real-time updates
-          </div>
-        </div>
-
+            <p className="text-xs text-muted-foreground">
+              Avg: {summary ? formatDuration(summary.averageSessionDuration * 60000) : '0m'}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Debug Information */}
-      <div className="debug-info mt-8 p-4 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">Debug Information</h4>
-        <div className="text-xs text-gray-600 space-y-1">
-          <div>Analytics loaded: {isAnalyticsLoading ? 'Loading...' : 'Complete'}</div>
-          <div>Insights: {insights.length} items</div>
-          <div>Recommendations: {recommendations.length} items</div>
-          <div>Engagement trends: {engagementTrends.length} items</div>
-          <div>Current session: {currentSession ? 'Active' : 'None'}</div>
-          <div>Total activities: {summary.totalActivities}</div>
-          <div>Batching enabled: {state.batchingEnabled ? 'Yes' : 'No'}</div>
-          <div>Pending activities: {state.pendingActivities.length}</div>
-          <div>Real-time enabled: {state.isRealTimeEnabled ? 'Yes' : 'No'}</div>
-        </div>
-      </div>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="activities">Recent Activities</TabsTrigger>
+          {showInsights && <TabsTrigger value="insights">Insights</TabsTrigger>}
+          {showRecommendations && <TabsTrigger value="recommendations">Recommendations</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Top Activities
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topActivities.length > 0 ? (
+                  <div className="space-y-3">
+                    {topActivities.map((activity, index) => (
+                      <div key={activity.type} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium">{activity.type}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{activity.count}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {Math.round((activity.count / (summary?.totalActivities || 1)) * 100)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    No activity data available yet.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Session Statistics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span>Total Sessions</span>
+                    <span className="font-medium">{sessionStats.totalSessions}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Average Duration</span>
+                    <span className="font-medium">
+                      {formatDuration(sessionStats.averageDuration)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Longest Session</span>
+                    <span className="font-medium">
+                      {formatDuration(sessionStats.longestSession)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Active Sessions</span>
+                    <Badge variant={sessionStats.activeSessions > 0 ? "default" : "secondary"}>
+                      {sessionStats.activeSessions}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {engagementMetrics && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Engagement Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Frequency</span>
+                      <span className="text-sm font-medium">
+                        {Math.round(engagementMetrics.frequencyScore * 100)}%
+                      </span>
+                    </div>
+                    <Progress value={engagementMetrics.frequencyScore * 100} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Duration</span>
+                      <span className="text-sm font-medium">
+                        {Math.round(engagementMetrics.durationScore * 100)}%
+                      </span>
+                    </div>
+                    <Progress value={engagementMetrics.durationScore * 100} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Consistency</span>
+                      <span className="text-sm font-medium">
+                        {Math.round(engagementMetrics.consistencyScore * 100)}%
+                      </span>
+                    </div>
+                    <Progress value={engagementMetrics.consistencyScore * 100} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="activities" className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Select 
+              value={selectedActivityType} 
+              onValueChange={(value: ActivityType | 'all') => setSelectedActivityType(value)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Activities</SelectItem>
+                <SelectItem value="exercise_start">Exercise Start</SelectItem>
+                <SelectItem value="exercise_complete">Exercise Complete</SelectItem>
+                <SelectItem value="lesson_view">Lesson View</SelectItem>
+                <SelectItem value="solution_submit">Solution Submit</SelectItem>
+                <SelectItem value="hint_request">Hint Request</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {filteredActivities.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredActivities.slice(0, 20).map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Activity className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{activity.activityType}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {activity.metadata?.topic || 'General activity'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {new Date(activity.timestamp).toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(activity.timestamp).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  No activities found for the selected filter.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {showInsights && (
+          <TabsContent value="insights" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5" />
+                  Personalized Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {insights.length > 0 ? (
+                  <div className="space-y-4">
+                    {insights.map((insight) => (
+                      <div key={insight.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <Lightbulb className="h-4 w-4 text-yellow-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{insight.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {insight.description}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline">{insight.category}</Badge>
+                              <Badge variant="secondary">{insight.confidence}% confidence</Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">
+                    No insights available yet. Keep learning to generate personalized insights!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {showRecommendations && (
+          <TabsContent value="recommendations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Recommendations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recommendations.length > 0 ? (
+                  <div className="space-y-4">
+                    {recommendations.map((recommendation) => (
+                      <div key={recommendation.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Target className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{recommendation.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {recommendation.description}
+                            </p>
+                            <div className="flex items-center gap-2 mt-3">
+                              <Button size="sm">
+                                {recommendation.actionText}
+                              </Button>
+                              <Badge variant="outline">{recommendation.priority}</Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">
+                    No recommendations available yet. Continue your learning journey to get personalized suggestions!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   )
 }
