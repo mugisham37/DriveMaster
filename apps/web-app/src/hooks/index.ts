@@ -121,6 +121,22 @@ export type {
   PreferenceValidationResult
 } from './useNotificationPreferences'
 
+// Notification filtering hooks
+export {
+  useNotificationFiltering,
+  useChannelNotifications,
+  usePushNotifications,
+  useInAppNotifications,
+  useEmailNotifications,
+  useNotificationTypeStatus,
+  useNotificationInsights
+} from './useNotificationFiltering'
+export type {
+  UseNotificationFilteringOptions,
+  FilteredNotificationResult,
+  UseNotificationFilteringResult
+} from './useNotificationFiltering'
+
 // Analytics hooks
 export {
   useAnalyticsTracking,

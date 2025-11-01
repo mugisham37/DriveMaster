@@ -2,16 +2,16 @@ import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/config'
 import { redirect } from 'next/navigation'
+import { NotificationPreferences } from '@/components/notifications'
 import { CommunicationPreferencesForm } from '@/components/settings'
 
 export const metadata: Metadata = {
   title: 'Notification Settings - Exercism',
-  description: 'Manage your email and notification preferences'
+  description: 'Manage your notification preferences, quiet hours, and delivery channels'
 }
 
 async function getCommunicationPreferences() {
-  // TODO: Fetch actual communication preferences from database
-  
+  // Legacy communication preferences for backward compatibility
   const mockPreferences = [
     {
       key: 'email_on_mentor_started_discussion',
@@ -40,41 +40,6 @@ async function getCommunicationPreferences() {
       description: 'When you earn a new badge',
       enabled: false,
       category: 'email' as const
-    },
-    {
-      key: 'notification_on_mentor_started_discussion',
-      label: 'Mentor started discussion',
-      description: 'In-app notification when a mentor starts discussing your solution',
-      enabled: true,
-      category: 'notifications' as const
-    },
-    {
-      key: 'notification_on_mentor_replied_to_discussion',
-      label: 'Mentor replied to discussion',
-      description: 'In-app notification when a mentor replies in a discussion',
-      enabled: true,
-      category: 'notifications' as const
-    },
-    {
-      key: 'notification_on_acquired_badge',
-      label: 'Badge acquired',
-      description: 'In-app notification when you earn a new badge',
-      enabled: true,
-      category: 'notifications' as const
-    },
-    {
-      key: 'marketing_emails',
-      label: 'Marketing emails',
-      description: 'Updates about new features, courses, and community events',
-      enabled: false,
-      category: 'marketing' as const
-    },
-    {
-      key: 'product_updates',
-      label: 'Product updates',
-      description: 'Important announcements about Exercism platform changes',
-      enabled: true,
-      category: 'marketing' as const
     }
   ]
 
@@ -93,13 +58,28 @@ export default async function NotificationSettingsPage() {
   return (
     <div id="page-settings-notifications" className="page-settings">
       <div className="lg-container">
-        <article>
-          <CommunicationPreferencesForm
-            preferences={communicationPreferences}
-            links={{
-              update: '/api/settings/communication-preferences'
-            }}
-          />
+        <article className="space-y-8">
+          {/* Enhanced Notification Preferences */}
+          <section>
+            <NotificationPreferences />
+          </section>
+
+          {/* Legacy Communication Preferences for backward compatibility */}
+          <section className="border-t border-borderColor6 pt-8">
+            <div className="mb-6">
+              <h3 className="text-h4 mb-2">Legacy Email Preferences</h3>
+              <p className="text-textColor6 text-sm">
+                These are legacy email preferences. For comprehensive notification management, 
+                use the notification preferences above.
+              </p>
+            </div>
+            <CommunicationPreferencesForm
+              preferences={communicationPreferences}
+              links={{
+                update: '/api/settings/communication-preferences'
+              }}
+            />
+          </section>
         </article>
       </div>
     </div>
