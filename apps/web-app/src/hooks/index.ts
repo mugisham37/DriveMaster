@@ -120,3 +120,21 @@ export type {
   UseNotificationPreferencesResult,
   PreferenceValidationResult
 } from './useNotificationPreferences'
+
+// Analytics hooks
+export {
+  useAnalyticsTracking,
+  useAnalyticsData,
+  useRealtimeAnalytics,
+  useAnalyticsMetrics,
+  useAutoAnalyticsTracking,
+  useAnalyticsSummary,
+  analyticsQueryKeys
+} from './useNotificationAnalytics'
+export type {
+  UseAnalyticsTrackingResult,
+  UseAnalyticsDataOptions,
+  UseAnalyticsDataResult,
+  UseRealtimeAnalyticsOptions,
+  UseRealtimeAnalyticsResult
+} from './useNotificationAnalytics'
