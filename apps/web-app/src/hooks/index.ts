@@ -65,3 +65,58 @@ export type {
   UseRouteProtectionOptions,
   UseRouteProtectionReturn
 } from './useAuthGuards'
+
+// Notification hooks
+export {
+  useNotifications,
+  useInfiniteNotifications,
+  useNotificationMutations,
+  useNotificationCounts,
+  useNotification,
+  notificationQueryKeys
+} from './useNotifications'
+export type {
+  UseNotificationsOptions,
+  UseNotificationsResult,
+  UseInfiniteNotificationsResult,
+  UseNotificationMutationsResult,
+  UseNotificationCountsResult,
+  UseNotificationResult
+} from './useNotifications'
+
+export {
+  useNotificationPermission,
+  useDeviceTokenRegistration,
+  useDeviceTokens,
+  useDeviceTokenStats,
+  deviceTokenQueryKeys
+} from './useDeviceTokens'
+export type {
+  NotificationPermissionState,
+  UseNotificationPermissionResult,
+  UseDeviceTokenRegistrationOptions,
+  UseDeviceTokenRegistrationResult,
+  UseDeviceTokensOptions,
+  UseDeviceTokensResult,
+  UseDeviceTokenStatsResult
+} from './useDeviceTokens'
+
+export {
+  useRealtimeNotifications,
+  useNotificationConnection
+} from './useRealtimeNotifications'
+export type {
+  UseRealtimeNotificationsOptions,
+  UseRealtimeNotificationsResult,
+  UseNotificationConnectionResult
+} from './useRealtimeNotifications'
+
+export {
+  useNotificationPreferences,
+  usePreferenceValidation,
+  preferencesQueryKeys
+} from './useNotificationPreferences'
+export type {
+  UseNotificationPreferencesResult,
+  PreferenceValidationResult
+} from './useNotificationPreferences'
