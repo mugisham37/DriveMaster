@@ -1,68 +1,65 @@
-export interface NotificationStatus {
-  isRead: boolean;
-  updatedAt: string;
-}
+/**
+ * Local Notification Component Types
+ * 
+ * Types specific to notification UI components that may differ from
+ * the main notification service types.
+ */
 
-export interface NotificationLinks {
-  self: string;
-  view: string;
-}
+import type { NotificationType } from '@/types/notification-service'
+
+// ============================================================================
+// Local Notification Types
+// ============================================================================
 
 export interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  content: string;
-  status: NotificationStatus;
-  links: NotificationLinks;
-  timestamp: string;
+  id: string
+  title: string
+  body?: string
+  type: NotificationType
+  timestamp: Date
+  isRead?: boolean
+  actionUrl?: string
+  imageUrl?: string
+  iconUrl?: string
+  data?: Record<string, unknown>
 }
 
-export interface NotificationsChannelData {
-  type: 'notifications.changed';
-  payload: {
-    id: string;
-    status: string;
-  };
+// ============================================================================
+// Component Props Types
+// ============================================================================
+
+export interface NotificationComponentProps {
+  className?: string
+  onClose?: () => void
 }
 
-export interface APIResponse {
-  results: Notification[];
-  meta: {
-    total: number;
-    unreadCount: number;
-    links: {
-      all: string;
-    };
-  };
+export interface NotificationListProps extends NotificationComponentProps {
+  notifications: Notification[]
+  onNotificationClick?: (notification: Notification) => void
+  onNotificationAction?: (notification: Notification, action: string) => void
 }
 
-export interface DropdownAttributes {
-  buttonAttributes: {
-    id: string;
-    onClick: () => void;
-    'aria-expanded': boolean;
-    'aria-haspopup': 'menu';
-  };
-  panelAttributes: {
-    id: string;
-    role: 'menu';
-    'aria-labelledby': string;
-  };
-  listAttributes: {
-    role: string;
-    'aria-labelledby': string;
-    hidden: boolean;
-  };
-  itemAttributes: (index: number) => {
-    role: string;
-    'aria-selected': boolean;
-    onClick: () => void;
-  };
-  isOpen: boolean;
-  setIsOpen: (value: boolean) => void;
+// ============================================================================
+// Event Types
+// ============================================================================
+
+export interface NotificationActionEvent {
+  notification: Notification
+  action: 'read' | 'delete' | 'click' | 'dismiss'
+  timestamp: Date
 }
 
-export interface NotificationsDropdownProps {
-  endpoint: string;
+// ============================================================================
+// Filter and Sort Types
+// ============================================================================
+
+export interface NotificationFilters {
+  type?: NotificationType | 'all'
+  status?: 'read' | 'unread' | 'all'
+  dateRange?: 'today' | 'week' | 'month' | 'all'
+}
+
+export interface NotificationSort {
+  field: 'timestamp' | 'type' | 'status'
+  direction: 'asc' | 'desc'
 }
