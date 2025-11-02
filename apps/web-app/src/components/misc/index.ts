@@ -1,5 +1,0 @@
-export { default as CodeMirror } from './CodeMirror'
-export type { Handler } from './CodeMirror'
-export { ExercismTippy, GenericTooltip } from './ExercismTippy'
-export { LazyTippy } from './LazyTippy'
-export type { LazyTippyProps } from './LazyTippy'
