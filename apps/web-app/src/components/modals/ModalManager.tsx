@@ -3,9 +3,6 @@
 import React from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { BegModal } from './BegModal'
-import { SenioritySurveyModal } from './SenioritySurveyModal'
-import { WelcomeModal } from './WelcomeModal'
-import WelcomeToInsidersModal from './WelcomeToInsidersModal'
 
 interface ModalManagerProps {
   trackData?: {
@@ -27,10 +24,7 @@ export function ModalManager({
 
   return (
     <>
-      <WelcomeModal numTracks={numTracks} />
-      <SenioritySurveyModal />
       <BegModal previousDonor={user?.totalDonatedInDollars ? user.totalDonatedInDollars > 0 : false} />
-      <WelcomeToInsidersModal />
     </>
   )
 }

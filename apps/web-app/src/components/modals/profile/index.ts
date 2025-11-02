@@ -1,1 +1,0 @@
-export { FirstTimeModal } from './FirstTimeModal'
