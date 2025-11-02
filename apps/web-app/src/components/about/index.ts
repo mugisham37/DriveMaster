@@ -1,1 +1,0 @@
-export { AboutNav } from './AboutNav';
