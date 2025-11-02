@@ -1132,3 +1132,9 @@ export * from "./auth-service";
 
 // User service types
 export * from "./user-service";
+
+// Analytics service types
+export * from "./analytics-service";
+
+// Environment types
+export * from "./env";

@@ -2,28 +2,28 @@
 
 Convert the feature design into a series of prompts for a code-generation LLM that will implement each step with incremental progress. Make sure that each prompt builds on the previous prompts, and ends with wiring things together. There should be no hanging or orphaned code that isn't integrated into a previous step. Focus ONLY on tasks that involve writing, modifying, or testing code.
 
-- [ ] 1. Foundation Layer - Configuration and Environment Setup
+- [x] 1. Foundation Layer - Configuration and Environment Setup
   - Create analytics service configuration following existing service patterns (user-service, notification-service)
   - Add environment variables for analytics-dashboard service URLs (HTTP and WebSocket)
   - Implement configuration validation and type-safe access
   - Create analytics service health check utilities
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 1.1 Create analytics service configuration module
+- [x] 1.1 Create analytics service configuration module
   - Create `src/lib/config/analytics-service.ts` following the pattern from `src/lib/config/user-service.ts`
   - Define `AnalyticsServiceConfig` interface with baseUrl, wsUrl, timeout, retry settings
   - Implement environment variable loading with validation
   - Add configuration to Next.js environment types
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 1.2 Add environment variables and validation
+- [x] 1.2 Add environment variables and validation
   - Update `.env.example` with analytics service configuration variables
   - Add `NEXT_PUBLIC_ANALYTICS_SERVICE_URL` and `NEXT_PUBLIC_ANALYTICS_SERVICE_WS_URL`
   - Implement runtime configuration validation in `src/lib/config/analytics-service.ts`
   - Create configuration error handling with clear error messages
   - _Requirements: 1.1, 1.4, 1.5_
 
-- [ ] 1.3 Implement service health check utilities
+- [x] 1.3 Implement service health check utilities
   - Create `src/lib/analytics-service/health-check.ts` for service availability monitoring
   - Implement lightweight health check endpoint calls
   - Add health status state management following existing patterns
