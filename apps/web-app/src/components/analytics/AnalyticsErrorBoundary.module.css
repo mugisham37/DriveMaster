@@ -1,0 +1,188 @@
+/* Analytics Error Boundary Styles */
+
+.analytics-error-boundary {
+  @apply w-full h-full flex items-center justify-center p-6;
+  min-height: 200px;
+}
+
+.analytics-error-container {
+  @apply max-w-md mx-auto text-center bg-white rounded-lg shadow-lg border border-gray-200 p-6;
+}
+
+.analytics-error-icon {
+  @apply flex justify-center mb-4;
+  color: #ef4444; /* red-500 */
+}
+
+.analytics-error-icon-svg {
+  @apply w-12 h-12;
+}
+
+.analytics-error-content {
+  @apply space-y-4;
+}
+
+.analytics-error-title {
+  @apply text-lg font-semibold text-gray-900 mb-2;
+}
+
+.analytics-error-message {
+  @apply text-gray-600 mb-4;
+}
+
+.analytics-error-actions {
+  @apply flex gap-3 justify-center;
+}
+
+.analytics-retry-button {
+  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+}
+
+.analytics-reset-button {
+  @apply px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors;
+}
+
+.analytics-retry-button-small {
+  @apply px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors;
+}
+
+.analytics-error-info {
+  @apply space-y-3;
+}
+
+.analytics-error-help {
+  @apply text-sm text-gray-500;
+}
+
+.analytics-error-details {
+  @apply mt-4 text-left;
+}
+
+.analytics-error-details summary {
+  @apply cursor-pointer text-sm text-gray-500 hover:text-gray-700;
+}
+
+.analytics-error-stack {
+  @apply mt-2 p-3 bg-gray-100 rounded text-xs font-mono text-gray-700 overflow-auto max-h-40;
+}
+
+/* Specialized Error Boundary Styles */
+
+.analytics-dashboard-error {
+  @apply w-full h-64 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300;
+}
+
+.analytics-dashboard-error-content {
+  @apply text-center space-y-4;
+}
+
+.analytics-dashboard-error h2 {
+  @apply text-xl font-semibold text-gray-700;
+}
+
+.analytics-dashboard-error p {
+  @apply text-gray-500;
+}
+
+.analytics-chart-error {
+  @apply w-full h-48 flex items-center justify-center bg-gray-50 rounded border border-gray-200;
+}
+
+.analytics-chart-error-content {
+  @apply text-center space-y-2;
+}
+
+.analytics-chart-error-content p {
+  @apply text-sm text-gray-500;
+}
+
+.analytics-realtime-error {
+  @apply w-full p-3 bg-yellow-50 border border-yellow-200 rounded-md;
+}
+
+.analytics-realtime-error-content {
+  @apply flex items-center justify-between;
+}
+
+.analytics-realtime-error-icon {
+  @apply text-yellow-600 mr-2;
+}
+
+.analytics-realtime-error-content p {
+  @apply text-sm text-yellow-800 font-medium;
+}
+
+.analytics-realtime-error-content small {
+  @apply text-xs text-yellow-600 block;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .analytics-error-container {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .analytics-error-title {
+    @apply text-gray-100;
+  }
+
+  .analytics-error-message {
+    @apply text-gray-300;
+  }
+
+  .analytics-error-help {
+    @apply text-gray-400;
+  }
+
+  .analytics-error-stack {
+    @apply bg-gray-700 text-gray-300;
+  }
+
+  .analytics-dashboard-error {
+    @apply bg-gray-800 border-gray-600;
+  }
+
+  .analytics-dashboard-error h2 {
+    @apply text-gray-200;
+  }
+
+  .analytics-dashboard-error p {
+    @apply text-gray-400;
+  }
+
+  .analytics-chart-error {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .analytics-chart-error-content p {
+    @apply text-gray-400;
+  }
+
+  .analytics-realtime-error {
+    @apply bg-yellow-900 border-yellow-700;
+  }
+
+  .analytics-realtime-error-content p {
+    @apply text-yellow-200;
+  }
+
+  .analytics-realtime-error-content small {
+    @apply text-yellow-300;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .analytics-error-container {
+    @apply mx-4 p-4;
+  }
+
+  .analytics-error-actions {
+    @apply flex-col;
+  }
+
+  .analytics-retry-button,
+  .analytics-reset-button {
+    @apply w-full;
+  }
+}

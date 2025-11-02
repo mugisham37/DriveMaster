@@ -32,3 +32,12 @@ export {
   type DataPriority,
   type ProgressiveDataLoaderProps
 } from './ProgressiveDataLoader'
+
+// Error Boundary Components
+export {
+  AnalyticsErrorBoundary,
+  AnalyticsDashboardErrorBoundary,
+  AnalyticsChartErrorBoundary,
+  AnalyticsRealtimeErrorBoundary,
+  useAnalyticsErrorBoundary
+} from './AnalyticsErrorBoundary'
