@@ -212,6 +212,8 @@ export interface Alert {
   resolvedAt?: string
 }
 
+export type AlertSeverity = 'info' | 'warning' | 'error' | 'critical'
+
 export interface BehaviorInsights {
   userId?: string
   timestamp: string
@@ -454,7 +456,7 @@ export interface WebSocketMessage {
   /** Type of WebSocket message */
   type: 'metrics_update' | 'alert' | 'subscription_ack' | 'error' | 'heartbeat' | 'connection_status' | 'ping' | 'pong' | 'metrics' | 'system' | 'message'
   /** Message payload data */
-  data?: MetricsUpdate | AlertMessage | SubscriptionAckMessage | ErrorMessage | HeartbeatMessage | ConnectionStatusMessage | any
+  data?: MetricsUpdate | AlertMessage | SubscriptionAckMessage | ErrorMessage | HeartbeatMessage | ConnectionStatusMessage | unknown
   /** Correlation ID for request/response tracking */
   correlationId?: string
   /** Message sequence number for ordering */

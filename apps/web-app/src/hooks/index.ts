@@ -137,7 +137,7 @@ export type {
   UseNotificationFilteringResult
 } from './useNotificationFiltering'
 
-// Analytics hooks
+// Notification Analytics hooks
 export {
   useAnalyticsTracking,
   useAnalyticsData,
@@ -154,3 +154,42 @@ export type {
   UseRealtimeAnalyticsOptions,
   UseRealtimeAnalyticsResult
 } from './useNotificationAnalytics'
+
+// Analytics Dashboard hooks
+export {
+  useAnalytics,
+  useEngagementMetrics,
+  useHourlyEngagement,
+  useProgressMetrics,
+  useUserJourney,
+  useCohortRetention,
+  useContentMetrics,
+  useContentGaps,
+  useSystemMetrics,
+  useSystemStatus,
+  useAlerts,
+  useBehaviorInsights,
+  useBehaviorPatterns,
+  useEffectivenessReport,
+  useHistoricalMetrics,
+  useUserSegments,
+  useRealtimeSnapshot,
+  useHealthStatus,
+  useSystemPerformance,
+  useAnalyticsSummary as useAnalyticsDashboardSummary,
+  useAnalyticsMutations
+} from './useAnalytics'
+
+export {
+  useRealtimeMetrics,
+  useRealtimeEngagement,
+  useRealtimeAlerts,
+  useRealtimeConnection
+} from './useRealtimeMetrics'
+
+export {
+  useAnalyticsCrossTabSync,
+  useAnalyticsOptimisticUpdates,
+  useAnalyticsMutationsWithOptimistic,
+  useAnalyticsSync
+} from './useAnalyticsSync'
