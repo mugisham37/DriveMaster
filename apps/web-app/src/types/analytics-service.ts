@@ -452,9 +452,9 @@ export interface WebSocketMessage {
   /** ISO timestamp when the message was created */
   timestamp: string
   /** Type of WebSocket message */
-  type: 'metrics_update' | 'alert' | 'subscription_ack' | 'error' | 'heartbeat' | 'connection_status'
+  type: 'metrics_update' | 'alert' | 'subscription_ack' | 'error' | 'heartbeat' | 'connection_status' | 'ping' | 'pong' | 'metrics' | 'system' | 'message'
   /** Message payload data */
-  data?: MetricsUpdate | AlertMessage | SubscriptionAckMessage | ErrorMessage | HeartbeatMessage | ConnectionStatusMessage
+  data?: MetricsUpdate | AlertMessage | SubscriptionAckMessage | ErrorMessage | HeartbeatMessage | ConnectionStatusMessage | any
   /** Correlation ID for request/response tracking */
   correlationId?: string
   /** Message sequence number for ordering */
@@ -469,13 +469,15 @@ export interface SubscriptionMessage {
   /** Subscription action type */
   type: 'subscribe' | 'unsubscribe'
   /** Type of metrics to subscribe to */
-  metricsType: string
+  messageType: string
   /** Specific user ID for user-scoped subscriptions (optional) */
   userId?: string
   /** Additional subscription filters */
   filters?: Record<string, unknown>
   /** Correlation ID for tracking subscription requests */
   correlationId?: string
+  /** ISO timestamp when the message was created */
+  timestamp: string
 }
 
 /**
@@ -713,6 +715,28 @@ export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 're
 export interface WebSocketConfig {
   /** WebSocket server URL */
   url: string
+  /** WebSocket protocols */
+  protocols?: string[]
+  /** Maximum reconnection attempts */
+  maxReconnectAttempts?: number
+  /** Reconnection delay in milliseconds */
+  reconnectDelay?: number
+  /** Heartbeat interval in milliseconds */
+  heartbeatInterval?: number
+  /** Connection timeout in milliseconds */
+  connectionTimeout?: number
+  /** Enable request logging */
+  enableLogging?: boolean
+  /** Enable metrics collection */
+  enableMetrics?: boolean
+  /** Maximum message queue size */
+  maxMessageQueue?: number
+  /** Message timeout in milliseconds */
+  messageTimeout?: number
+  /** Use exponential backoff for reconnection */
+  useExponentialBackoff?: boolean
+  /** Authentication token */
+  authToken?: string
   /** Connection timeout in milliseconds */
   connectionTimeout: number
   /** Heartbeat interval in milliseconds */
