@@ -7,3 +7,12 @@ export { UserProvider, useUser, type UserContextValue, type UserState } from './
 export { ProgressProvider, useProgress, type ProgressContextValue, type ProgressState } from './ProgressContext'
 export { ActivityProvider, useActivity, type ActivityContextValue, type ActivityState } from './ActivityContext'
 export { GDPRProvider, useGDPR, type GDPRContextValue, type GDPRState } from './GDPRContext'
+export { 
+  AnalyticsProvider, 
+  useAnalyticsContext, 
+  useAnalyticsAvailable, 
+  useAnalyticsPermissions, 
+  useAnalyticsConnection,
+  type AnalyticsContextValue,
+  type AnalyticsProviderProps
+} from './AnalyticsContext'

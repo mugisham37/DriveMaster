@@ -600,6 +600,8 @@ export type AnalyticsServiceErrorType =
   | 'service'
   | 'timeout'
 
+export type AlertSeverity = 'info' | 'warning' | 'error' | 'critical'
+
 /**
  * Standardized error response from analytics service.
  * Matches Python Pydantic model: AnalyticsServiceError
@@ -709,7 +711,7 @@ export interface UseRealtimeMetricsResult {
   lastUpdate?: string
 }
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'disconnecting' | 'error'
 
 /**
  * WebSocket connection configuration.
@@ -796,14 +798,76 @@ export interface MessageRouterConfig {
 // Permission Types
 // ============================================================================
 
+export type UserRole = 'admin' | 'mentor' | 'learner'
+
+export type AnalyticsFeature = 
+  | 'engagement-dashboard'
+  | 'progress-tracking'
+  | 'content-analytics'
+  | 'system-monitoring'
+  | 'alert-management'
+  | 'behavior-insights'
+  | 'effectiveness-reports'
+  | 'user-analytics'
+  | 'system-metrics'
+  | 'data-export'
+  | 'realtime-updates'
+
+export type AnalyticsDataType = 
+  | 'engagement'
+  | 'progress'
+  | 'content'
+  | 'system'
+  | 'alerts'
+  | 'insights'
+  | 'reports'
+  | 'user-analytics'
+  | 'system-metrics'
+
 export interface AnalyticsPermissions {
-  canViewEngagement: boolean
-  canViewProgress: boolean
-  canViewContent: boolean
-  canViewSystem: boolean
-  canViewUserData: boolean
-  canExportData: boolean
-  canManageAlerts: boolean
+  viewEngagement: boolean
+  viewProgress: boolean
+  viewContent: boolean
+  viewSystem: boolean
+  viewAlerts: boolean
+  viewInsights: boolean
+  viewReports: boolean
+  viewUserAnalytics: boolean
+  viewSystemMetrics: boolean
+  manageAlerts: boolean
+  exportData: boolean
+  viewRealtime: boolean
+}
+
+// ============================================================================
+// Client Types (Forward Declarations)
+// ============================================================================
+
+export interface AnalyticsServiceClient {
+  getEngagementMetrics: (params?: EngagementMetricsParams) => Promise<UserEngagementMetrics>
+  getProgressMetrics: (params?: ProgressMetricsParams) => Promise<LearningProgressMetrics>
+  getContentMetrics: (params?: ContentMetricsParams) => Promise<ContentPerformanceMetrics>
+  getSystemMetrics: (params?: SystemMetricsParams) => Promise<SystemPerformanceMetrics>
+  getRealtimeSnapshot: () => Promise<RealtimeMetricsSnapshot>
+  queryHistoricalMetrics: (query: HistoricalQuery) => Promise<TimeSeriesData[]>
+  getBehaviorInsights: (userId?: string) => Promise<BehaviorInsights>
+  getContentGaps: () => Promise<ContentGapAnalysis>
+  getEffectivenessReport: (filters?: ReportFilters) => Promise<EffectivenessReport>
+  getAlerts: (severity?: AlertSeverity) => Promise<Alert[]>
+  getSystemStatus: () => Promise<ServiceHealthStatus>
+  getHourlyEngagement: (userId: string, date?: Date) => Promise<HourlyEngagement>
+  getCohortRetention: (cohortId: string) => Promise<CohortRetention>
+  getUserSegments: () => Promise<UserSegment[]>
+  getUserJourney: (userId: string) => Promise<UserJourney>
+  getHealthStatus: () => Promise<ServiceHealthStatus>
+  testConnectivity: () => Promise<{ success: boolean; latency: number }>
+}
+
+export interface CompleteAnalyticsWebSocketManager {
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  addEventListener: (event: string, handler: (data: any) => void) => void
+  removeEventListener: (event: string, handler: (data: any) => void) => void
 }
 
 // ============================================================================
@@ -811,10 +875,49 @@ export interface AnalyticsPermissions {
 // ============================================================================
 
 export interface AnalyticsContextValue {
-  client: unknown // Will be properly typed when client is implemented
-  webSocketManager: unknown // Will be properly typed when WebSocket manager is implemented
+  // Core clients
+  client: AnalyticsServiceClient
+  webSocketManager: CompleteAnalyticsWebSocketManager
+  
+  // Connection state
   isConnected: boolean
   connectionStatus: ConnectionStatus
+  lastConnectionAttempt: Date | null
+  
+  // Configuration
   config: AnalyticsServiceConfig
   permissions: AnalyticsPermissions
+  
+  // Service health
+  serviceHealth: ServiceHealthStatus | null
+  isServiceAvailable: boolean
+  
+  // Operations
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  reconnect: () => Promise<void>
+  refreshPermissions: () => Promise<void>
+  checkServiceHealth: () => Promise<void>
+  
+  // State management
+  isInitialized: boolean
+  isInitializing: boolean
+  initializationError: Error | null
+}
+
+// User Context Types
+export interface UserContext {
+  userId: string
+  role: UserRole
+  classIds?: string[]
+  permissions: AnalyticsPermissions
+  organizationId?: string
+  teamIds?: string[]
+}
+
+export interface FilteredRequest<T = any> {
+  originalParams: T
+  filteredParams: T
+  appliedFilters: string[]
+  restrictions: string[]
 }

@@ -193,3 +193,21 @@ export {
   useAnalyticsMutationsWithOptimistic,
   useAnalyticsSync
 } from './useAnalyticsSync'
+
+// Permission-aware analytics hooks
+export {
+  useAnalyticsWithPermissions,
+  useEngagementMetricsWithPermissions,
+  useHourlyEngagementWithPermissions,
+  useProgressMetricsWithPermissions,
+  useUserJourneyWithPermissions,
+  useContentMetricsWithPermissions,
+  useContentGapsWithPermissions,
+  useSystemMetricsWithPermissions,
+  useAlertsWithPermissions,
+  useBehaviorInsightsWithPermissions,
+  useEffectivenessReportWithPermissions,
+  useHistoricalMetricsWithPermissions,
+  useAnalyticsSummaryWithPermissions,
+  useAnalyticsComponentVisibility
+} from './useAnalyticsWithPermissions'

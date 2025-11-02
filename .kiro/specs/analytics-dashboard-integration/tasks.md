@@ -170,30 +170,30 @@ Convert the feature design into a series of prompts for a code-generation LLM th
   - Implement selective state broadcasting (filters, time ranges, not all data)
   - _Requirements: 4.4, 4.5, 9.1, 9.3_
 
-- [ ] 6. Analytics Context Provider and Permission Management
+- [x] 6. Analytics Context Provider and Permission Management
   - Create centralized analytics context for state and configuration
   - Implement role-based access control for analytics features
   - Add user permission filtering for analytics data access
   - Create analytics feature availability based on user roles
   - _Requirements: 7.3, 7.5, 9.1, 9.5, 10.2_
 
-- [ ] 6.1 Create Analytics Context Provider
+- [x] 6.1 Create Analytics Context Provider
   - Create `src/contexts/AnalyticsContext.tsx` for centralized analytics state
   - Implement `AnalyticsProvider` component with client and WebSocket manager initialization
   - Add connection status and configuration management
   - Provide analytics operations and state throughout component tree
   - _Requirements: 4.1, 4.2, 10.2_
 
-- [ ] 6.2 Implement permission-based access control
+- [x] 6.2 Implement permission-based access control
   - Create `src/lib/analytics-service/permissions.ts` for role-based access control
   - Define analytics permissions: view engagement, view progress, view system metrics, etc.
   - Implement permission checking functions based on user roles
   - Add permission filtering for analytics endpoints and features
   - _Requirements: 7.3, 7.5, 9.5_
 
-- [ ] 6.3 Add user context propagation and filtering
+- [x] 6.3 Add user context propagation and filtering
   - Implement automatic user context inclusion in analytics requests
-  - Add user-specific data filtering: students see personal data, teachers see class data
+  - Add user-specific data filtering: learners see personal data, mentors see class data
   - Create permission-based UI component rendering
   - Handle permission changes and user role updates
   - _Requirements: 7.3, 7.5, 9.1, 9.5_
