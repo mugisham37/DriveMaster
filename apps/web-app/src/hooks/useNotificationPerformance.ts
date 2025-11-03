@@ -269,6 +269,8 @@ export function useNotificationPerformance(
         }
       }
     }
+    
+    return undefined
   }, [isInitialized, performanceManager, refreshInterval, refresh])
 
   // Cleanup on unmount

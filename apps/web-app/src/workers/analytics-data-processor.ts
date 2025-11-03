@@ -384,9 +384,12 @@ async function performAggregation(data: DataRecord[], options: AggregationOption
   // Apply filters
   if (filters) {
     processedData = processedData.filter(item => 
-      Object.entries(filters).every(([key, value]) => 
-        evaluateFilter(item, { field: key, operator: 'equals', value: value as string | number | boolean })
-      )
+      Object.entries(filters).every(([key, value]) => {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          return evaluateFilter(item, { field: key, operator: 'equals', value })
+        }
+        return true
+      })
     )
   }
 
@@ -443,7 +446,10 @@ async function performAggregation(data: DataRecord[], options: AggregationOption
 
   // Apply sorting
   if (sort && sort.length > 0) {
-    return sortData(results, sort[0])
+    const sortConfig = sort[0]
+    if (sortConfig) {
+      return sortData(results, sortConfig)
+    }
   }
 
   return results
@@ -501,6 +507,11 @@ function sortData(data: DataRecord[], sortConfig: SortConfig): DataRecord[] {
     const aVal = a[field]
     const bVal = b[field]
     
+    // Handle null/undefined values
+    if (aVal == null && bVal == null) return 0
+    if (aVal == null) return 1
+    if (bVal == null) return -1
+    
     if (aVal === bVal) return 0
     
     const comparison = aVal < bVal ? -1 : 1
@@ -517,11 +528,14 @@ function groupData(data: DataRecord[], config: GroupConfig): DataRecord[] {
     return groups
   }, {})
 
-  return Object.entries(grouped).map(([key, groupItems]) => ({
-    [field]: key,
-    items: groupItems,
-    count: groupItems.length
-  }))
+  return Object.entries(grouped).map(([key, groupItems]) => {
+    const result: DataRecord = {}
+    result[field] = key
+    result['count'] = groupItems.length
+    // Store items as a serializable representation
+    result['itemCount'] = groupItems.length
+    return result
+  })
 }
 
 function groupDataByFields(data: DataRecord[], fields: string[]): GroupedData {
@@ -580,11 +594,13 @@ function aggregateByTime(data: DataRecord[], timeField: string, granularity: str
     return groups
   }, {})
 
-  return Object.entries(grouped).map(([key, groupItems]) => ({
-    [timeField]: key,
-    items: groupItems,
-    count: groupItems.length
-  }))
+  return Object.entries(grouped).map(([key, groupItems]) => {
+    const result: DataRecord = {}
+    result[timeField] = key
+    result['count'] = groupItems.length
+    result['itemCount'] = groupItems.length
+    return result
+  })
 }
 
 function formatTimeSeriesData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
@@ -624,12 +640,21 @@ function formatPieChartData(data: DataRecord[], xAxis: string, yAxis: string | s
 
 function formatScatterData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
   // Format data for scatter plots
-  return data.map(item => ({
-    x: Number(item[xAxis]) || 0,
-    y: Array.isArray(yAxis) && yAxis.length > 0 
-      ? Number(item[yAxis[0]]) || 0 
-      : Number(item[yAxis as string]) || 0
-  }))
+  return data.map(item => {
+    let yValue: number
+    
+    if (Array.isArray(yAxis)) {
+      const firstYAxis = yAxis[0]
+      yValue = firstYAxis ? Number(item[firstYAxis]) || 0 : 0
+    } else {
+      yValue = Number(item[yAxis]) || 0
+    }
+    
+    return {
+      x: Number(item[xAxis]) || 0,
+      y: yValue
+    }
+  })
 }
 
 function calculateMedian(values: number[]): number {
@@ -641,9 +666,10 @@ function calculateMedian(values: number[]): number {
   if (sorted.length % 2 === 0) {
     const midLeft = sorted[mid - 1]
     const midRight = sorted[mid]
-    return midLeft !== undefined && midRight !== undefined 
-      ? (midLeft + midRight) / 2 
-      : 0
+    if (midLeft !== undefined && midRight !== undefined) {
+      return (midLeft + midRight) / 2
+    }
+    return 0
   } else {
     const midValue = sorted[mid]
     return midValue !== undefined ? midValue : 0

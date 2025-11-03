@@ -98,7 +98,7 @@ export function usePerformanceManager(
 
   // Setup navigation tracking
   useEffect(() => {
-    if (!performanceManager || !enableNavigationTracking) return
+    if (!performanceManager || !enableNavigationTracking) return undefined
 
     const handleRouteChange = (url: string) => {
       const previousRoute = currentRoute.current
@@ -148,11 +148,13 @@ export function usePerformanceManager(
         window.removeEventListener('popstate', handlePopState)
       }
     }
+    
+    return undefined
   }, [performanceManager, enableNavigationTracking])
 
   // Setup idle prefetching
   useEffect(() => {
-    if (!performanceManager || !enableIdlePrefetching) return
+    if (!performanceManager || !enableIdlePrefetching) return undefined
 
     const scheduleIdlePrefetch = () => {
       if (idleTimer.current) {
@@ -199,6 +201,8 @@ export function usePerformanceManager(
         }
       }
     }
+    
+    return undefined
   }, [performanceManager, enableIdlePrefetching])
 
   // Setup periodic stats collection and logging

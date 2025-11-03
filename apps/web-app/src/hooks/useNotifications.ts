@@ -190,11 +190,21 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     wsClient.on('notification.deleted', handleNotificationDeleted)
 
     // Subscribe to user notifications
-    const subscriptionId = wsClient.subscribeToUserNotifications(user.id.toString(), {
-      types: params.type ? (Array.isArray(params.type) ? params.type : [params.type]) : undefined,
-      priorities: params.priority ? (Array.isArray(params.priority) ? params.priority : [params.priority]) : undefined,
-      channels: params.channels
-    })
+    const filters: { types?: string[]; priorities?: string[]; channels?: string[] } = {}
+    
+    if (params.type) {
+      filters.types = Array.isArray(params.type) ? params.type : [params.type]
+    }
+    
+    if (params.priority) {
+      filters.priorities = Array.isArray(params.priority) ? params.priority : [params.priority]
+    }
+    
+    if (params.channels) {
+      filters.channels = params.channels
+    }
+    
+    const subscriptionId = wsClient.subscribeToUserNotifications(user.id.toString(), filters)
 
     return () => {
       wsClient.off('notification.received')
@@ -202,7 +212,8 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       wsClient.off('notification.deleted')
       wsClient.unsubscribe(subscriptionId)
     }
-  }, [user?.id, enabled, queryClient, JSON.stringify(params)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, enabled, queryClient, params.type, params.priority, params.channels, params.status, params.limit, params.cursor])
 
   return {
     notifications: query.data?.results || [],

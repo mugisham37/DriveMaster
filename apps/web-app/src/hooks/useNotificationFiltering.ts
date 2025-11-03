@@ -55,22 +55,45 @@ function isInQuietHours(quietHours: NonNullable<NotificationPreferences['quietHo
  * Check if notification should be displayed based on preferences
  */
 function shouldDisplayNotification(
-  _notification: Notification,
+  notification: Notification,
   preferences: NotificationPreferences,
-  _channel: DeliveryChannel
+  channel: DeliveryChannel
 ): { 
   allowed: boolean
   reason?: string
   suggestedDelay?: number
   alternativeChannels?: DeliveryChannel[]
 } {
-  // Simple check for now - can be expanded based on actual preferences structure
-  // Check quiet hours
-  if (preferences.quietHours?.enabled && isInQuietHours(preferences.quietHours)) {
+  // Check if notification type is enabled
+  if (!preferences.enabledTypes.includes(notification.type)) {
     return {
       allowed: false,
-      reason: 'Currently in quiet hours',
-      suggestedDelay: 3600000 // 1 hour
+      reason: 'Notification type is disabled'
+    }
+  }
+
+  // Check if channel is allowed for this notification type
+  const allowedChannels = preferences.channels?.[notification.type] || []
+  if (!allowedChannels.includes(channel)) {
+    return {
+      allowed: false,
+      reason: 'Channel not allowed for this notification type',
+      alternativeChannels: allowedChannels
+    }
+  }
+
+  // Check quiet hours
+  if (preferences.quietHours?.enabled && isInQuietHours(preferences.quietHours)) {
+    // Allow critical notifications to override quiet hours if configured
+    const isCritical = notification.priority === 'high' || notification.priority === 'urgent'
+    const allowCritical = preferences.globalSettings?.allowCriticalOverride ?? true
+    
+    if (!isCritical || !allowCritical) {
+      return {
+        allowed: false,
+        reason: 'Currently in quiet hours',
+        suggestedDelay: 3600000 // 1 hour
+      }
     }
   }
   
@@ -78,33 +101,113 @@ function shouldDisplayNotification(
 }
 
 /**
- * Placeholder for frequency tracking (not implemented)
+ * Track notification frequency for batching logic
  */
-function updateFrequencyTracking(_notification: Notification): void {
-  // This would track notification frequency for batching
-  // Not implemented in this version
+function updateFrequencyTracking(notification: Notification): void {
+  // Track notification frequency in localStorage for persistence
+  if (typeof window === 'undefined') return
+  
+  try {
+    const key = `notification_frequency_${notification.type}`
+    const now = Date.now()
+    const stored = localStorage.getItem(key)
+    const history: number[] = stored ? JSON.parse(stored) : []
+    
+    // Add current timestamp
+    history.push(now)
+    
+    // Keep only last 24 hours
+    const oneDayAgo = now - (24 * 60 * 60 * 1000)
+    const filtered = history.filter(ts => ts > oneDayAgo)
+    
+    localStorage.setItem(key, JSON.stringify(filtered))
+  } catch (error) {
+    console.error('Failed to update frequency tracking:', error)
+  }
 }
 
 /**
- * Placeholder for getting batched notifications (not implemented)
+ * Get batched notifications for a specific type
  */
-function getBatchedNotifications(_type: NotificationType): { notifications: Notification[] } | null {
-  // This would return batched notifications
-  // Not implemented in this version
-  return null
+function getBatchedNotifications(type: NotificationType): { notifications: Notification[] } | null {
+  // Retrieve batched notifications from localStorage
+  if (typeof window === 'undefined') return null
+  
+  try {
+    const key = `notification_batch_${type}`
+    const stored = localStorage.getItem(key)
+    
+    if (!stored) return null
+    
+    const data = JSON.parse(stored)
+    
+    // Check if batch is still valid (within last hour)
+    const oneHourAgo = Date.now() - (60 * 60 * 1000)
+    if (data.timestamp < oneHourAgo) {
+      localStorage.removeItem(key)
+      return null
+    }
+    
+    return { notifications: data.notifications || [] }
+  } catch (error) {
+    console.error('Failed to get batched notifications:', error)
+    return null
+  }
 }
 
 /**
- * Placeholder for getting next scheduled time (not implemented)
+ * Calculate next scheduled time based on frequency settings
  */
 function getNextScheduledTime(
-  _type: NotificationType,
-  _settings: FrequencySettings,
-  _timezone?: string
+  type: NotificationType,
+  settings: FrequencySettings,
+  timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): Date {
-  // This would calculate next batch time
-  // Not implemented in this version
-  return new Date()
+  const now = new Date()
+  
+  // Log for debugging purposes
+  console.debug(`Calculating next scheduled time for ${type} in ${timezone}`)
+  
+  switch (settings.type) {
+    case 'immediate':
+      return now
+      
+    case 'batched': {
+      const intervalMs = (settings.batchInterval || 60) * 60 * 1000
+      const nextTime = new Date(now.getTime() + intervalMs)
+      return nextTime
+    }
+      
+    case 'daily': {
+      const [hours = 9, minutes = 0] = (settings.dailyTime || '09:00').split(':').map(Number)
+      const scheduledTime = new Date(now)
+      scheduledTime.setHours(hours, minutes, 0, 0)
+      
+      // If time has passed today, schedule for tomorrow
+      if (scheduledTime <= now) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1)
+      }
+      
+      return scheduledTime
+    }
+      
+    case 'weekly': {
+      const [hours = 10, minutes = 0] = (settings.weeklyTime || '10:00').split(':').map(Number)
+      const targetDay = settings.weeklyDay || 1 // Default to Monday
+      const scheduledTime = new Date(now)
+      
+      // Set to target day of week
+      const currentDay = scheduledTime.getDay()
+      const daysUntilTarget = (targetDay - currentDay + 7) % 7 || 7
+      scheduledTime.setDate(scheduledTime.getDate() + daysUntilTarget)
+      scheduledTime.setHours(hours, minutes, 0, 0)
+      
+      return scheduledTime
+    }
+      
+    default:
+      return now
+  }
 }
 
 // ============================================================================
