@@ -11,7 +11,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
-import { requireStringUserId } from '@/utils/user-id-helpers'
 // import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
 import type { 
   MockTestReminderRequest,
@@ -200,25 +199,53 @@ export function useMockTestReminders(
         status: 'pending'
       })
       
-      return response.notifications.map(notification => ({
-        id: notification.id,
-        userId: notification.userId,
-        testType: notification.notification.data?.testType || 'practice',
-        testName: notification.notification.data?.testName || 'Mock Test',
-        passRate: notification.notification.data?.passRate || 0,
-        reminderTime: notification.scheduledFor,
-        preparationTips: notification.notification.data?.preparationTips || [],
-        estimatedDuration: notification.notification.data?.estimatedDuration,
-        difficultyLevel: (notification.notification.data?.difficultyLevel || 'intermediate') as 'beginner' | 'intermediate' | 'advanced',
-        scheduledFor: notification.scheduledFor,
-        isActive: notification.status === 'pending',
-        lastTestScore: notification.notification.data?.lastTestScore,
-        averageScore: notification.notification.data?.averageScore,
-        testsCompleted: notification.notification.data?.testsCompleted || 0,
-        improvementTrend: notification.notification.data?.improvementTrend,
-        testHistory: notification.notification.data?.testHistory || [],
-        nextSuggestedTest: notification.notification.data?.nextSuggestedTest ? new Date(notification.notification.data.nextSuggestedTest) : new Date()
-      }))
+      return response.notifications.map(notification => {
+        const data = notification.notification.data as Record<string, unknown> || {}
+        
+        const reminder: MockTestReminderDisplay = {
+          id: notification.id,
+          userId: notification.userId,
+          testType: (data.testType as string) || 'practice',
+          testName: (data.testName as string) || 'Mock Test',
+          passRate: (data.passRate as number) || 0,
+          reminderTime: notification.scheduledFor,
+          scheduledFor: notification.scheduledFor,
+          isActive: notification.status === 'pending',
+          testsCompleted: (data.testsCompleted as number) || 0,
+          testHistory: (data.testHistory as TestResult[]) || []
+        }
+        
+        // Only add optional properties if they have values
+        if (data.preparationTips && Array.isArray(data.preparationTips)) {
+          reminder.preparationTips = data.preparationTips as string[]
+        }
+        
+        if (typeof data.estimatedDuration === 'number') {
+          reminder.estimatedDuration = data.estimatedDuration
+        }
+        
+        if (data.difficultyLevel) {
+          reminder.difficultyLevel = data.difficultyLevel as 'beginner' | 'intermediate' | 'advanced'
+        }
+        
+        if (typeof data.lastTestScore === 'number') {
+          reminder.lastTestScore = data.lastTestScore
+        }
+        
+        if (typeof data.averageScore === 'number') {
+          reminder.averageScore = data.averageScore
+        }
+        
+        if (typeof data.improvementTrend === 'number') {
+          reminder.improvementTrend = data.improvementTrend
+        }
+        
+        if (data.nextSuggestedTest) {
+          reminder.nextSuggestedTest = new Date(data.nextSuggestedTest as string | number | Date)
+        }
+        
+        return reminder
+      })
     },
     enabled: !!user?.id,
     refetchInterval: 300000, // Refetch every 5 minutes
@@ -335,22 +362,30 @@ export function useMockTestReminders(
     )
     
     if (relatedReminder) {
-      const updatedHistory = [newResult, ...relatedReminder.testHistory]
+      const updatedHistory = [newResult, ...(relatedReminder.testHistory || [])]
       const averageScore = updatedHistory.reduce((sum, test) => sum + test.score, 0) / updatedHistory.length
       // Calculate improvement trend for future use
       calculateImprovementTrend(updatedHistory)
       
+      const updates: Partial<MockTestReminderRequest> = {
+        testType: relatedReminder.testType,
+        testName: relatedReminder.testName,
+        passRate: averageScore,
+        reminderTime: relatedReminder.reminderTime,
+        preparationTips: relatedReminder.preparationTips || []
+      }
+      
+      if (relatedReminder.difficultyLevel) {
+        updates.difficultyLevel = relatedReminder.difficultyLevel
+      }
+      
+      if (relatedReminder.estimatedDuration !== undefined) {
+        updates.estimatedDuration = relatedReminder.estimatedDuration
+      }
+      
       await updateReminderMutation.mutateAsync({
         reminderId: relatedReminder.id,
-        updates: {
-          testType: relatedReminder.testType,
-          testName: relatedReminder.testName,
-          passRate: averageScore,
-          reminderTime: relatedReminder.reminderTime,
-          preparationTips: relatedReminder.preparationTips,
-          estimatedDuration: relatedReminder.estimatedDuration,
-          difficultyLevel: relatedReminder.difficultyLevel
-        }
+        updates
       })
     }
     

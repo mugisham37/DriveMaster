@@ -114,6 +114,14 @@ export interface DeviceTokenResponse {
   message?: string
 }
 
+export interface DeviceTokenStats {
+  total: number
+  active: number
+  byPlatform: Record<string, number>
+  lastRegistered?: Date
+  oldestToken?: Date
+}
+
 // ============================================================================
 // Notification Templates
 // ============================================================================

@@ -16,6 +16,7 @@ import type {
   DeviceToken,
   DeviceTokenRequest,
   DeviceTokenResponse,
+  DeviceTokenStats,
   DeviceMetadata,
   NotificationError
 } from '@/types/notification-service'
@@ -337,7 +338,7 @@ export interface UseDeviceTokensResult {
  * Hook for managing user's device tokens
  * Requirements: 2.2, 2.3, 2.5
  */
-export function useDeviceTokens(options: UseDeviceTokensOptions = {}): UseDeviceTokensResult {
+export function useDeviceTokens(): UseDeviceTokensResult {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
@@ -373,7 +374,8 @@ export function useDeviceTokens(options: UseDeviceTokensOptions = {}): UseDevice
   
   // Refresh token mutation - placeholder until API method is implemented
   const refreshTokenMutation = useMutation({
-    mutationFn: async (tokenId: string): Promise<DeviceToken> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mutationFn: async (_tokenId: string): Promise<DeviceToken> => {
       // TODO: Implement refreshDeviceToken in NotificationApiClient
       throw new Error('refreshDeviceToken not implemented yet')
     },
@@ -386,7 +388,8 @@ export function useDeviceTokens(options: UseDeviceTokensOptions = {}): UseDevice
 
   // Validate token mutation - placeholder until API method is implemented
   const validateTokenMutation = useMutation({
-    mutationFn: async (tokenId: string): Promise<{ isValid: boolean; error?: string }> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mutationFn: async (_tokenId: string): Promise<{ isValid: boolean; error?: string }> => {
       // TODO: Implement validateDeviceToken in NotificationApiClient
       throw new Error('validateDeviceToken not implemented yet')
     }
@@ -447,7 +450,7 @@ export function useDeviceTokenStats(): UseDeviceTokenStatsResult {
 
   const query = useQuery({
     queryKey: deviceTokenQueryKeys.userStats(userIdStr),
-    queryFn: async () => {
+    queryFn: async (): Promise<DeviceTokenStats> => {
       if (!userIdStr) throw new Error('User not authenticated')
       // TODO: getDeviceTokenStats needs to be implemented in NotificationApiClient
       // For now, we'll return a mock response
@@ -458,12 +461,14 @@ export function useDeviceTokenStats(): UseDeviceTokenStatsResult {
     gcTime: 300000 // gcTime replaces cacheTime
   })
 
+  const stats = query.data as DeviceTokenStats | undefined
+
   return {
-    total: (query.data as any)?.total || 0,
-    active: (query.data as any)?.active || 0,
-    byPlatform: (query.data as any)?.byPlatform || {},
-    lastRegistered: (query.data as any)?.lastRegistered,
-    oldestToken: (query.data as any)?.oldestToken,
+    total: stats?.total || 0,
+    active: stats?.active || 0,
+    byPlatform: stats?.byPlatform || {},
+    ...(stats?.lastRegistered && { lastRegistered: stats.lastRegistered }),
+    ...(stats?.oldestToken && { oldestToken: stats.oldestToken }),
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error as NotificationError | null
@@ -496,16 +501,16 @@ function getBrowserVersion(): string {
   const userAgent = navigator.userAgent
   
   const chromeMatch = userAgent.match(/Chrome\/(\d+)/)
-  if (chromeMatch) return chromeMatch[1]
+  if (chromeMatch && chromeMatch[1]) return chromeMatch[1]
   
   const firefoxMatch = userAgent.match(/Firefox\/(\d+)/)
-  if (firefoxMatch) return firefoxMatch[1]
+  if (firefoxMatch && firefoxMatch[1]) return firefoxMatch[1]
   
   const safariMatch = userAgent.match(/Version\/(\d+)/)
-  if (safariMatch && userAgent.includes('Safari')) return safariMatch[1]
+  if (safariMatch && safariMatch[1] && userAgent.includes('Safari')) return safariMatch[1]
   
   const edgeMatch = userAgent.match(/Edg\/(\d+)/)
-  if (edgeMatch) return edgeMatch[1]
+  if (edgeMatch && edgeMatch[1]) return edgeMatch[1]
   
   return 'Unknown'
 }

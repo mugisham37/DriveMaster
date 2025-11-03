@@ -18,7 +18,8 @@ import type {
   DeliveryChannel,
   NotificationType,
   NotificationPreferences,
-  NotificationError
+  NotificationError,
+  FrequencySettings
 } from '@/types/notification-service'
 
 // ============================================================================
@@ -54,9 +55,9 @@ function isInQuietHours(quietHours: NonNullable<NotificationPreferences['quietHo
  * Check if notification should be displayed based on preferences
  */
 function shouldDisplayNotification(
-  notification: Notification,
+  _notification: Notification,
   preferences: NotificationPreferences,
-  channel: DeliveryChannel
+  _channel: DeliveryChannel
 ): { 
   allowed: boolean
   reason?: string
@@ -98,7 +99,7 @@ function getBatchedNotifications(_type: NotificationType): { notifications: Noti
  */
 function getNextScheduledTime(
   _type: NotificationType,
-  _settings: any,
+  _settings: FrequencySettings,
   _timezone?: string
 ): Date {
   // This would calculate next batch time
@@ -369,7 +370,7 @@ export function useNotificationTypeStatus(type: NotificationType) {
     const channels = preferences.channels[type] || []
     const frequency = preferences.frequency[type] || null
     const inQuietHours = preferences.quietHours?.enabled 
-      ? preferenceEnforcementManager.isInQuietHours(preferences.quietHours)
+      ? isInQuietHours(preferences.quietHours)
       : false
 
     return {
