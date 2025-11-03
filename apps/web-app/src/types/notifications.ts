@@ -1,5 +1,3 @@
-import { Ref } from 'react';
-
 export interface NotificationStatus {
   isRead: boolean;
   updatedAt: string;

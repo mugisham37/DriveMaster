@@ -37,12 +37,12 @@ export interface Notification {
   type: NotificationType
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   status: NotificationStatus
   priority: NotificationPriority
   channels: DeliveryChannel[]
   templateId?: string
-  templateData?: Record<string, any>
+  templateData?: Record<string, unknown>
   scheduledFor?: Date
   expiresAt?: Date
   actionUrl?: string
@@ -124,7 +124,7 @@ export interface NotificationTemplate {
   type: NotificationType
   titleTemplate: string
   bodyTemplate: string
-  defaultData?: Record<string, any>
+  defaultData?: Record<string, unknown>
   requiredVariables?: string[]
   supportedChannels: DeliveryChannel[]
   isActive: boolean
@@ -136,7 +136,7 @@ export interface NotificationTemplate {
 export interface RenderedNotification {
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   actionUrl?: string
   imageUrl?: string
   iconUrl?: string
@@ -144,7 +144,7 @@ export interface RenderedNotification {
 
 export interface TemplateRenderRequest {
   templateId: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   userId?: string
 }
 
@@ -194,7 +194,7 @@ export interface DeliveryResult {
   channel: DeliveryChannel
   timestamp: Date
   error?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface NotificationAnalytics {
@@ -206,7 +206,7 @@ export interface NotificationAnalytics {
   clickedAt?: Date
   dismissedAt?: Date
   engagementScore: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface AnalyticsQueryParams {
@@ -283,7 +283,7 @@ export type NotificationEventType =
 
 export interface NotificationEvent {
   type: NotificationEventType
-  data: any
+  data: unknown
   timestamp: Date
   correlationId?: string
 }
@@ -297,12 +297,12 @@ export interface RealtimeNotification extends Notification {
 
 export interface WebSocketMessage {
   event: NotificationEventType
-  data: any
+  data: unknown
   timestamp: string
   correlationId?: string
 }
 
-export type EventHandler = (data: any) => void
+export type EventHandler = (data: unknown) => void
 
 // ============================================================================
 // Learning-Specific Notifications
@@ -367,7 +367,7 @@ export interface NotificationError {
   type: NotificationErrorType
   message: string
   code?: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   recoverable: boolean
   retryAfter?: number
   correlationId?: string
@@ -393,7 +393,7 @@ export interface ErrorHandlingResult {
 // API Response Types
 // ============================================================================
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: NotificationError
@@ -433,7 +433,7 @@ export interface NotificationServiceClientConfig {
   vapidPublicKey?: string
 }
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   data: T
   timestamp: number
   ttl: number

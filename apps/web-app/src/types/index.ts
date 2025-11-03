@@ -1127,14 +1127,275 @@ export * from "./helpers";
 // Advanced bootcamp types
 export * from "./bootcamp-advanced";
 
-// Auth service types
-export * from "./auth-service";
+// Auth service types - with explicit re-exports to avoid conflicts
+export type {
+  // Authentication types
+  LoginCredentials,
+  RegisterData,
+  TokenPair,
+  RefreshTokenRequest,
+  
+  // User profile (Auth Service version - aliased)
+  UserProfile as AuthUserProfile,
+  UserPreferences as AuthUserPreferences,
+  
+  // OAuth types
+  OAuthProviderType,
+  OAuthProvider,
+  OAuthInitiationRequest,
+  OAuthInitiationResponse,
+  OAuthCallbackRequest,
+  OAuthCallbackResponse,
+  OAuthLinkRequest,
+  OAuthUnlinkRequest,
+  LinkedProvider,
+  
+  // Profile and track types
+  ProfileUpdateRequest,
+  
+  // Session types
+  Session,
+  SessionListResponse,
+  SessionInvalidationRequest,
+  
+  // Error types
+  AuthErrorType,
+  AuthError,
+  ValidationError as AuthValidationError,
+  NetworkError as AuthNetworkError,
+  AuthenticationError,
+  AuthorizationError as AuthAuthorizationError,
+  OAuthError,
+  ServerError,
+  
+  // Response types (Auth Service - aliased)
+  ApiResponse as AuthApiResponse,
+  LoginResponse,
+  RegisterResponse,
+  RefreshTokenResponse,
+  ProfileResponse,
+  ProvidersResponse,
+  HealthResponse as AuthHealthResponse,
+  
+  // Service endpoints
+  AuthServiceEndpoints,
+  ExtractRequest,
+  ExtractResponse,
+  
+  // Service configuration
+  AuthServiceConfig,
+  CircuitBreakerState as AuthCircuitBreakerState,
+  
+  // Sync types
+  AuthSyncMessage,
+  LoginSyncPayload,
+  LogoutSyncPayload,
+  TokenRefreshSyncPayload,
+  ProfileUpdateSyncPayload,
+} from "./auth-service";
 
-// User service types
-export * from "./user-service";
+// Export auth error type guards with aliases
+export {
+  isValidationError as isAuthValidationError,
+  isNetworkError as isAuthNetworkError,
+  isAuthenticationError,
+  isAuthorizationError as isAuthAuthorizationError,
+  isOAuthError,
+  isServerError,
+} from "./auth-service";
 
-// Analytics service types
-export * from "./analytics-service";
+// User service types - with explicit re-exports to avoid conflicts
+export type {
+  // Core user types (User Service version - primary)
+  UserProfile,
+  UserUpdateRequest,
+  UserPreferences,
+  PreferencesData,
+  NotificationPreferences,
+  PrivacyPreferences,
+  LearningPreferences,
+  AccessibilityPreferences,
+  
+  // Progress tracking
+  ProgressSummary,
+  SkillMastery,
+  AttemptRecord,
+  LearningStreak,
+  Milestone,
+  WeeklyProgressPoint,
+  TopicProgressPoint,
+  
+  // Activity tracking
+  ActivityType,
+  ActivityRecord,
+  ActivitySummary,
+  EngagementMetrics,
+  ActivityInsight,
+  ActivityRecommendation,
+  RecommendationAction,
+  TopicActivitySummary,
+  
+  // Behavior analysis (User Service version)
+  BehaviorPattern,
+  
+  // GDPR and compliance
+  GDPRExportResponse,
+  GDPRDeleteResponse,
+  ConsentRecord,
+  ConsentPreferences,
+  DataRetentionPreference,
+  CommunicationPreferences as UserCommunicationPreferences,
+  PrivacyReport,
+  DataCategoryReport,
+  ProcessingActivity,
+  ThirdPartySharing,
+  RetentionPolicy,
+  UserRightsStatus,
+  ComplianceStatus,
+  
+  // Time management (User Service version)
+  DateRange,
+  TimeRange,
+  
+  // Error types (User Service)
+  UserServiceErrorType,
+  UserServiceError,
+  
+  // Service health and configuration (User Service - aliased)
+  CircuitBreakerState as UserCircuitBreakerState,
+  ServiceHealthStatus as UserServiceHealthStatus,
+  ServiceInfo,
+  UserServiceConfig,
+  ProtocolType,
+  ServiceDiscoveryConfig as UserServiceDiscoveryConfig,
+  
+  // Response types (User Service - aliased where needed)
+  ApiResponse as UserApiResponse,
+  UserProfileResponse,
+  UserPreferencesResponse,
+  ProgressSummaryResponse,
+  SkillMasteryResponse,
+  ActivitySummaryResponse,
+  EngagementMetricsResponse,
+  ActivityInsightsResponse,
+  ActivityRecommendationsResponse,
+  HealthResponse as UserHealthResponse,
+  ServiceInfoResponse,
+} from "./user-service";
+
+// Export user service error type guards with aliases
+export {
+  isUserServiceError,
+  isValidationError as isUserValidationError,
+  isNetworkError as isUserNetworkError,
+  isAuthorizationError as isUserAuthorizationError,
+  isServiceError,
+  isTimeoutError,
+  isCircuitBreakerError,
+} from "./user-service";
+
+// Analytics service types - with explicit re-exports to avoid conflicts
+export type {
+  // Configuration
+  AnalyticsServiceConfig,
+  
+  // Core analytics (Analytics Service versions - aliased where needed)
+  ServiceDiscoveryConfig as AnalyticsServiceDiscoveryConfig,
+  ServiceHealthStatus as AnalyticsServiceHealthStatus,
+  
+  // Engagement metrics
+  UserEngagementMetrics,
+  LearningProgressMetrics,
+  ContentPerformanceMetrics,
+  SystemPerformanceMetrics,
+  RealtimeMetricsSnapshot,
+  
+  // Content analytics
+  ContentItem,
+  ContentGap,
+  Alert,
+  AlertSeverity,
+  
+  // Behavior insights
+  BehaviorInsights,
+  BehaviorPattern as AnalyticsBehaviorPattern,
+  RiskFactor,
+  ContentGapAnalysis,
+  EffectivenessReport,
+  TrendData,
+  
+  // Query parameters
+  EngagementMetricsParams,
+  ProgressMetricsParams,
+  ContentMetricsParams,
+  SystemMetricsParams,
+  HistoricalQuery,
+  ReportFilters,
+  
+  // Time-based types (Analytics Service - aliased)
+  TimeRange as AnalyticsTimeRange,
+  EngagementFilters,
+  ContentFilters,
+  TimeSeriesData,
+  
+  // Pagination and sorting
+  PaginationParams,
+  SortingParams,
+  
+  // WebSocket and real-time
+  MetricsUpdate,
+  AlertMessage,
+  WebSocketMessage,
+  SubscriptionMessage,
+  SubscriptionAckMessage,
+  ErrorMessage,
+  HeartbeatMessage,
+  ConnectionStatusMessage,
+  
+  // Advanced analytics
+  HourlyEngagement,
+  CohortRetention,
+  UserSegment,
+  UserJourney,
+  
+  // Error handling
+  AnalyticsServiceErrorType,
+  AnalyticsServiceError,
+  ValidationErrorDetail,
+  
+  // Response types (Analytics Service - aliased)
+  ApiResponse as AnalyticsApiResponse,
+  
+  // Client configuration
+  AnalyticsClientConfig,
+  CircuitBreakerConfig,
+  RequestQueueConfig,
+  
+  // React hooks types
+  UseAnalyticsResult,
+  UseEngagementMetricsResult,
+  UseRealtimeMetricsResult,
+  
+  // WebSocket configuration
+  ConnectionStatus,
+  WebSocketConfig,
+  WebSocketConnectionState,
+  SubscriptionHandler,
+  MessageRouterConfig,
+  
+  // Permissions and authorization
+  UserRole,
+  AnalyticsFeature,
+  AnalyticsDataType,
+  AnalyticsPermissions,
+  
+  // Service interfaces
+  AnalyticsServiceClient,
+  CompleteAnalyticsWebSocketManager,
+  AnalyticsContextValue,
+  UserContext,
+  FilteredRequest,
+} from "./analytics-service";
 
 // Environment types
 export * from "./env";

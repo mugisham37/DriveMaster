@@ -600,8 +600,6 @@ export type AnalyticsServiceErrorType =
   | 'service'
   | 'timeout'
 
-export type AlertSeverity = 'info' | 'warning' | 'error' | 'critical'
-
 /**
  * Standardized error response from analytics service.
  * Matches Python Pydantic model: AnalyticsServiceError
@@ -722,13 +720,13 @@ export interface WebSocketConfig {
   /** WebSocket protocols */
   protocols?: string[]
   /** Maximum reconnection attempts */
-  maxReconnectAttempts?: number
+  maxReconnectAttempts: number
   /** Reconnection delay in milliseconds */
-  reconnectDelay?: number
+  reconnectDelay: number
   /** Heartbeat interval in milliseconds */
-  heartbeatInterval?: number
+  heartbeatInterval: number
   /** Connection timeout in milliseconds */
-  connectionTimeout?: number
+  connectionTimeout: number
   /** Enable request logging */
   enableLogging?: boolean
   /** Enable metrics collection */
@@ -737,18 +735,6 @@ export interface WebSocketConfig {
   maxMessageQueue?: number
   /** Message timeout in milliseconds */
   messageTimeout?: number
-  /** Use exponential backoff for reconnection */
-  useExponentialBackoff?: boolean
-  /** Authentication token */
-  authToken?: string
-  /** Connection timeout in milliseconds */
-  connectionTimeout: number
-  /** Heartbeat interval in milliseconds */
-  heartbeatInterval: number
-  /** Maximum reconnection attempts */
-  maxReconnectAttempts: number
-  /** Reconnection delay in milliseconds */
-  reconnectDelay: number
   /** Whether to use exponential backoff for reconnection */
   useExponentialBackoff: boolean
   /** Authentication token for WebSocket connection */
@@ -866,8 +852,8 @@ export interface AnalyticsServiceClient {
 export interface CompleteAnalyticsWebSocketManager {
   connect: () => Promise<void>
   disconnect: () => Promise<void>
-  addEventListener: (event: string, handler: (data: any) => void) => void
-  removeEventListener: (event: string, handler: (data: any) => void) => void
+  addEventListener: (event: string, handler: (data: WebSocketMessage) => void) => void
+  removeEventListener: (event: string, handler: (data: WebSocketMessage) => void) => void
 }
 
 // ============================================================================
@@ -915,7 +901,7 @@ export interface UserContext {
   teamIds?: string[]
 }
 
-export interface FilteredRequest<T = any> {
+export interface FilteredRequest<T = unknown> {
   originalParams: T
   filteredParams: T
   appliedFilters: string[]
