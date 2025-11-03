@@ -919,7 +919,11 @@
     "substr",
     "substring",
     "uuidv",
-    "correlationId"
+    "correlationId",
+    "Embla",
+    "cmdk",
+    "vaul",
+    "nums"
   ],
   "ignorePaths": [
     "node_modules/**",
