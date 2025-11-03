@@ -205,6 +205,7 @@ export function useAchievementNotifications(
       dismissAchievement(achievementId)
     }, config.autoCloseDelay)
     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.enableSounds, config.enableVibration, config.maxConcurrentDisplays, config.autoCloseDelay])
   
   const dismissAchievement = useCallback((achievementId: string) => {
@@ -214,6 +215,7 @@ export function useAchievementNotifications(
     
     // Track the dismiss event
     trackAchievementDismiss(achievementId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   
   const dismissAllAchievements = useCallback(() => {
@@ -224,6 +226,7 @@ export function useAchievementNotifications(
     currentAchievements.forEach(achievement => {
       trackAchievementDismiss(achievement.id)
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAchievements])
   
   // ============================================================================

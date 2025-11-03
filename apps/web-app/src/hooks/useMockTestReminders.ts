@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
+import { requireStringUserId } from '@/utils/user-id-helpers'
 // import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
 import type { 
   MockTestReminderRequest,
@@ -187,8 +188,8 @@ export function useMockTestReminders(
   const {
     data: scheduledReminders = [],
     isLoading,
-    error,
-    refetch
+    error
+    // refetch - unused but available if needed
   } = useQuery({
     queryKey: ['mock-test-reminders', user?.id],
     queryFn: async () => {
@@ -336,7 +337,8 @@ export function useMockTestReminders(
     if (relatedReminder) {
       const updatedHistory = [newResult, ...relatedReminder.testHistory]
       const averageScore = updatedHistory.reduce((sum, test) => sum + test.score, 0) / updatedHistory.length
-      const improvementTrend = calculateImprovementTrend(updatedHistory)
+      // Calculate improvement trend for future use
+      calculateImprovementTrend(updatedHistory)
       
       await updateReminderMutation.mutateAsync({
         reminderId: relatedReminder.id,
@@ -418,7 +420,9 @@ export function useMockTestReminders(
   const getSuggestedTestTime = useCallback(async (testType: string, difficultyLevel: 'beginner' | 'intermediate' | 'advanced'): Promise<Date> => {
     if (!config.enableSmartScheduling) {
       // Default to configured time
-      const [hours, minutes] = config.defaultReminderTime.split(':').map(Number)
+      const timeParts = config.defaultReminderTime.split(':')
+      const hours = parseInt(timeParts[0] || '14', 10)
+      const minutes = parseInt(timeParts[1] || '0', 10)
       const suggestedTime = new Date()
       suggestedTime.setHours(hours, minutes, 0, 0)
       
@@ -451,7 +455,11 @@ export function useMockTestReminders(
       }))
       
       if (hourAverages.length > 0) {
-        optimalHour = hourAverages.sort((a, b) => b.average - a.average)[0].hour
+        const sortedAverages = hourAverages.sort((a, b) => b.average - a.average)
+        const bestHour = sortedAverages[0]
+        if (bestHour) {
+          optimalHour = bestHour.hour
+        }
       }
     }
     
@@ -476,7 +484,7 @@ export function useMockTestReminders(
     return suggestedTime
   }, [config.enableSmartScheduling, config.defaultReminderTime, testHistory])
   
-  const getPersonalizedPreparationTips = useCallback((testType: string, userPerformance: number): string[] => {
+  const getPersonalizedPreparationTips = useCallback((_testType: string, userPerformance: number): string[] => {
     const difficultyTips = userPerformance >= 80 ? PREPARATION_TIPS.advanced :
                           userPerformance >= 60 ? PREPARATION_TIPS.intermediate :
                           PREPARATION_TIPS.beginner
@@ -522,10 +530,16 @@ export function useMockTestReminders(
     })
     
     // Difficulty progression
-    const difficultyScores: Record<string, number[]> = {}
+    const difficultyScores: Record<string, number[]> = {
+      beginner: [],
+      intermediate: [],
+      advanced: []
+    }
     relevantTests.forEach(test => {
-      if (!difficultyScores[test.difficultyLevel]) difficultyScores[test.difficultyLevel] = []
-      difficultyScores[test.difficultyLevel].push(test.score)
+      const level = test.difficultyLevel
+      if (difficultyScores[level]) {
+        difficultyScores[level].push(test.score)
+      }
     })
     
     const difficultyProgression: Record<string, number> = {}

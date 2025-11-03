@@ -4,7 +4,7 @@ import {
   UseMutateFunction,
   useMutation,
 } from '@tanstack/react-query'
-import { AIHelpRecordsChannel } from '@/channels/aiHelpRecordsChannel'
+import { AIHelpRecordsChannel } from '@/lib/realtime/channels/ai-help-records-channel'
 import { sendRequest } from '@/utils/send-request'
 import { camelizeKeysAs } from '@/utils/camelize-keys-as'
 import { Submission } from '../types'

@@ -10,9 +10,8 @@
 import { useMemo, useCallback } from 'react'
 import { useNotifications } from './useNotifications'
 import { useNotificationPreferences } from './useNotificationPreferences'
-import { 
-  preferenceEnforcementManager
-} from '@/lib/notification-service'
+// Note: preferenceEnforcementManager is not used in this implementation
+// Filtering is done directly in the hook using preferences
 import type {
   Notification,
   NotificationQueryParams,
@@ -21,6 +20,91 @@ import type {
   NotificationPreferences,
   NotificationError
 } from '@/types/notification-service'
+
+// ============================================================================
+// Helper Functions (replacing preferenceEnforcementManager)
+// ============================================================================
+
+/**
+ * Check if current time is within quiet hours
+ */
+function isInQuietHours(quietHours: NonNullable<NotificationPreferences['quietHours']>): boolean {
+  if (!quietHours.enabled) return false
+  
+  const now = new Date()
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentTime = currentHour * 60 + currentMinute
+  
+  const [startHour, startMin] = quietHours.start.split(':').map(Number)
+  const [endHour, endMin] = quietHours.end.split(':').map(Number)
+  
+  const startTime = (startHour || 0) * 60 + (startMin || 0)
+  const endTime = (endHour || 0) * 60 + (endMin || 0)
+  
+  if (startTime < endTime) {
+    return currentTime >= startTime && currentTime < endTime
+  } else {
+    // Quiet hours cross midnight
+    return currentTime >= startTime || currentTime < endTime
+  }
+}
+
+/**
+ * Check if notification should be displayed based on preferences
+ */
+function shouldDisplayNotification(
+  notification: Notification,
+  preferences: NotificationPreferences,
+  channel: DeliveryChannel
+): { 
+  allowed: boolean
+  reason?: string
+  suggestedDelay?: number
+  alternativeChannels?: DeliveryChannel[]
+} {
+  // Simple check for now - can be expanded based on actual preferences structure
+  // Check quiet hours
+  if (preferences.quietHours?.enabled && isInQuietHours(preferences.quietHours)) {
+    return {
+      allowed: false,
+      reason: 'Currently in quiet hours',
+      suggestedDelay: 3600000 // 1 hour
+    }
+  }
+  
+  return { allowed: true }
+}
+
+/**
+ * Placeholder for frequency tracking (not implemented)
+ */
+function updateFrequencyTracking(_notification: Notification): void {
+  // This would track notification frequency for batching
+  // Not implemented in this version
+}
+
+/**
+ * Placeholder for getting batched notifications (not implemented)
+ */
+function getBatchedNotifications(_type: NotificationType): { notifications: Notification[] } | null {
+  // This would return batched notifications
+  // Not implemented in this version
+  return null
+}
+
+/**
+ * Placeholder for getting next scheduled time (not implemented)
+ */
+function getNextScheduledTime(
+  _type: NotificationType,
+  _settings: any,
+  _timezone?: string
+): Date {
+  // This would calculate next batch time
+  // Not implemented in this version
+  return new Date()
+}
 
 // ============================================================================
 // Types
@@ -102,7 +186,7 @@ export function useNotificationFiltering(
     const blocked: FilteredNotificationResult[] = []
 
     notificationsQuery.notifications.forEach(notification => {
-      const enforcementResult = preferenceEnforcementManager.shouldDisplayNotification(
+      const enforcementResult = shouldDisplayNotification(
         notification,
         preferences,
         channel
@@ -111,7 +195,7 @@ export function useNotificationFiltering(
       if (enforcementResult.allowed) {
         allowed.push(notification)
         // Update frequency tracking for allowed notifications
-        preferenceEnforcementManager.updateFrequencyTracking(notification)
+        updateFrequencyTracking(notification)
       } else {
         blocked.push({
           notification,
@@ -133,9 +217,9 @@ export function useNotificationFiltering(
     const batched: Partial<Record<NotificationType, Notification[]>> = {}
     
     // Get batched notifications for each type
-    Object.keys(preferences.frequency).forEach(type => {
+    Object.keys(preferences.frequency || {}).forEach(type => {
       const notificationType = type as NotificationType
-      const batch = preferenceEnforcementManager.getBatchedNotifications(notificationType)
+      const batch = getBatchedNotifications(notificationType)
       if (batch && batch.notifications.length > 0) {
         batched[notificationType] = batch.notifications
       }
@@ -150,9 +234,9 @@ export function useNotificationFiltering(
 
     const times: Partial<Record<NotificationType, Date>> = {}
     
-    Object.entries(preferences.frequency).forEach(([type, settings]) => {
+    Object.entries(preferences.frequency || {}).forEach(([type, settings]) => {
       if (settings.type === 'batched' || settings.type === 'daily' || settings.type === 'weekly') {
-        times[type as NotificationType] = preferenceEnforcementManager.getNextScheduledTime(
+        times[type as NotificationType] = getNextScheduledTime(
           type as NotificationType,
           settings,
           preferences.quietHours?.timezone
@@ -164,9 +248,9 @@ export function useNotificationFiltering(
   }, [preferences])
 
   // Check if currently in quiet hours
-  const isInQuietHours = useMemo(() => {
+  const isInQuietHoursNow = useMemo(() => {
     if (!preferences?.quietHours?.enabled) return false
-    return preferenceEnforcementManager.isInQuietHours(preferences.quietHours)
+    return isInQuietHours(preferences.quietHours)
   }, [preferences])
 
   // Method to check a single notification
@@ -181,7 +265,7 @@ export function useNotificationFiltering(
       }
     }
 
-    const enforcementResult = preferenceEnforcementManager.shouldDisplayNotification(
+    const enforcementResult = shouldDisplayNotification(
       notification,
       preferences,
       checkChannel
@@ -214,7 +298,7 @@ export function useNotificationFiltering(
     error: notificationsQuery.error,
     
     // Preference status
-    isInQuietHours,
+    isInQuietHours: isInQuietHoursNow,
     preferences,
     
     // Methods

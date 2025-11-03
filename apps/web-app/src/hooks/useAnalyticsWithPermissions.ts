@@ -62,13 +62,15 @@ export function useAnalyticsWithPermissions() {
       return null
     }
     
+    // Derive role from UserProfile properties
+    const role: UserRole = user.isMentor ? 'mentor' : user.isInsider ? 'admin' : 'learner'
+    
     return createUserContext(
       {
         id: requireStringUserId(user.id),
-        role: (user.role || 'student') as UserRole,
-        classIds: undefined, // Not available in UserProfile
-        organizationId: undefined, // Not available in UserProfile
-        teamIds: undefined // Not available in UserProfile
+        role
+        // classIds, organizationId, and teamIds are not available in UserProfile
+        // They will be handled as optional in createUserContext
       },
       permissions
     )

@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef } from 'react'
 import { TestRun, TestRunner, TestRunStatus } from '../types'
-import { TestRunChannel } from '../../../channels/testRunChannel'
+import { TestRunChannel } from '../../../lib/realtime/channels/test-run-channel'
 import { fetchJSON } from '../../../utils/fetch-json'
 import { useRequestQuery } from '../../../hooks/request-query'
 import { TestRunSummary } from './TestRunSummary'

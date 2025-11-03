@@ -370,7 +370,9 @@ export function usePerformanceAwareRendering(componentName: string) {
   // Auto-measure render on mount
   useEffect(() => {
     startRender()
-    return endRender
+    return () => {
+      endRender()
+    }
   }, [startRender, endRender])
 
   return {

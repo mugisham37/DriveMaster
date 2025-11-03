@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
+import { requireStringUserId } from '@/utils/user-id-helpers'
 import type {
   DeviceToken,
   DeviceTokenRequest,
@@ -183,10 +184,16 @@ export function useDeviceTokenRegistration(
       }
 
       // Subscribe to push notifications
-      const subscription = await registrationRef.current.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey
-      })
+      const subscriptionOptions: PushSubscriptionOptionsInit = {
+        userVisibleOnly: true
+      }
+      
+      // Only add applicationServerKey if it's provided
+      if (vapidPublicKey) {
+        subscriptionOptions.applicationServerKey = vapidPublicKey
+      }
+      
+      const subscription = await registrationRef.current.pushManager.subscribe(subscriptionOptions)
 
       // Extract token from subscription
       const token = subscription.endpoint
@@ -202,7 +209,7 @@ export function useDeviceTokenRegistration(
 
       // Register with notification service
       const request: DeviceTokenRequest = {
-        userId: user.id,
+        userId: requireStringUserId(user.id),
         token,
         platform: 'web',
         metadata
@@ -214,8 +221,9 @@ export function useDeviceTokenRegistration(
       setIsRegistered(true)
       
       // Invalidate device token queries
-      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(user.id) })
-      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(user.id) })
+      const userIdStr = requireStringUserId(user.id)
+      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(userIdStr) })
+      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(userIdStr) })
       
       return response
     },
@@ -241,15 +249,21 @@ export function useDeviceTokenRegistration(
         }
       }
 
-      // Remove from notification service
-      await notificationApiClient.removeDeviceTokenByValue(user.id, currentToken)
+      // Remove from notification service - removeDeviceToken expects token ID, not token value
+      // We'll need to fetch tokens first to find the ID
+      const userIdStr = requireStringUserId(user.id)
+      const tokens = await notificationApiClient.getDeviceTokens(userIdStr)
+      const tokenToRemove = tokens.find(t => t.token === currentToken)
+      if (tokenToRemove) {
+        await notificationApiClient.removeDeviceToken(tokenToRemove.id)
+      }
       
       setCurrentToken(null)
       setIsRegistered(false)
       
       // Invalidate device token queries
-      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(user.id) })
-      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(user.id) })
+      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(userIdStr) })
+      queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(userIdStr) })
     },
     onError: (error) => {
       console.error('Device token unregistration failed:', error)
@@ -289,7 +303,7 @@ export function useDeviceTokenRegistration(
 
   return {
     isRegistered,
-    isRegistering: registrationMutation.isLoading,
+    isRegistering: registrationMutation.isPending,
     registrationError: registrationMutation.error as NotificationError | null,
     register: () => registrationMutation.mutateAsync(),
     unregister: () => unregistrationMutation.mutateAsync(),
@@ -327,60 +341,74 @@ export function useDeviceTokens(options: UseDeviceTokensOptions = {}): UseDevice
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
+  // Convert user ID to string safely
+  const userIdStr = user?.id ? requireStringUserId(user.id) : ''
+
   // Fetch device tokens
   const query = useQuery({
-    queryKey: deviceTokenQueryKeys.list(user?.id || ''),
-    queryFn: () => {
-      if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.getDeviceTokens(user.id, options)
+    queryKey: deviceTokenQueryKeys.list(userIdStr),
+    queryFn: async () => {
+      if (!userIdStr) throw new Error('User not authenticated')
+      // getDeviceTokens only accepts userId parameter, options are not supported
+      return await notificationApiClient.getDeviceTokens(userIdStr)
     },
-    enabled: !!user?.id,
+    enabled: !!userIdStr,
     staleTime: 60000,
-    cacheTime: 300000
+    gcTime: 300000 // gcTime replaces cacheTime in newer versions of react-query
   })
 
   // Remove token mutation
   const removeTokenMutation = useMutation({
     mutationFn: (tokenId: string) => notificationApiClient.removeDeviceToken(tokenId),
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(user.id) })
-        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(user.id) })
+      if (userIdStr) {
+        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(userIdStr) })
+        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(userIdStr) })
       }
     }
   })
 
-  // Refresh token mutation
+  // Note: The following methods are not implemented in the API client yet
+  // They will need to be added to notificationApiClient
+  
+  // Refresh token mutation - placeholder until API method is implemented
   const refreshTokenMutation = useMutation({
-    mutationFn: (tokenId: string) => notificationApiClient.refreshDeviceToken(tokenId),
-    onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(user.id) })
-      }
-    }
-  })
-
-  // Validate token mutation
-  const validateTokenMutation = useMutation({
-    mutationFn: (tokenId: string) => notificationApiClient.validateDeviceToken(tokenId)
-  })
-
-  // Cleanup tokens mutation
-  const cleanupTokensMutation = useMutation({
-    mutationFn: () => {
-      if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.cleanupDeviceTokens(user.id)
+    mutationFn: async (tokenId: string): Promise<DeviceToken> => {
+      // TODO: Implement refreshDeviceToken in NotificationApiClient
+      throw new Error('refreshDeviceToken not implemented yet')
     },
     onSuccess: () => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(user.id) })
-        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(user.id) })
+      if (userIdStr) {
+        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(userIdStr) })
+      }
+    }
+  })
+
+  // Validate token mutation - placeholder until API method is implemented
+  const validateTokenMutation = useMutation({
+    mutationFn: async (tokenId: string): Promise<{ isValid: boolean; error?: string }> => {
+      // TODO: Implement validateDeviceToken in NotificationApiClient
+      throw new Error('validateDeviceToken not implemented yet')
+    }
+  })
+
+  // Cleanup tokens mutation - placeholder until API method is implemented
+  const cleanupTokensMutation = useMutation({
+    mutationFn: async (): Promise<{ removed: number; remaining: number }> => {
+      if (!userIdStr) throw new Error('User not authenticated')
+      // TODO: Implement cleanupDeviceTokens in NotificationApiClient
+      throw new Error('cleanupDeviceTokens not implemented yet')
+    },
+    onSuccess: () => {
+      if (userIdStr) {
+        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.list(userIdStr) })
+        queryClient.invalidateQueries({ queryKey: deviceTokenQueryKeys.userStats(userIdStr) })
       }
     }
   })
 
   return {
-    deviceTokens: query.data || [],
+    deviceTokens: (query.data as DeviceToken[]) || [],
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error as NotificationError | null,
@@ -413,24 +441,29 @@ export interface UseDeviceTokenStatsResult {
  */
 export function useDeviceTokenStats(): UseDeviceTokenStatsResult {
   const { user } = useAuth()
+  
+  // Convert user ID to string safely
+  const userIdStr = user?.id ? requireStringUserId(user.id) : ''
 
   const query = useQuery({
-    queryKey: deviceTokenQueryKeys.userStats(user?.id || ''),
-    queryFn: () => {
-      if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.getDeviceTokenStats(user.id)
+    queryKey: deviceTokenQueryKeys.userStats(userIdStr),
+    queryFn: async () => {
+      if (!userIdStr) throw new Error('User not authenticated')
+      // TODO: getDeviceTokenStats needs to be implemented in NotificationApiClient
+      // For now, we'll return a mock response
+      throw new Error('getDeviceTokenStats not implemented yet')
     },
-    enabled: !!user?.id,
+    enabled: !!userIdStr,
     staleTime: 60000,
-    cacheTime: 300000
+    gcTime: 300000 // gcTime replaces cacheTime
   })
 
   return {
-    total: query.data?.total || 0,
-    active: query.data?.active || 0,
-    byPlatform: query.data?.byPlatform || {},
-    lastRegistered: query.data?.lastRegistered,
-    oldestToken: query.data?.oldestToken,
+    total: (query.data as any)?.total || 0,
+    active: (query.data as any)?.active || 0,
+    byPlatform: (query.data as any)?.byPlatform || {},
+    lastRegistered: (query.data as any)?.lastRegistered,
+    oldestToken: (query.data as any)?.oldestToken,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error as NotificationError | null
