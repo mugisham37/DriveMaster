@@ -29,14 +29,18 @@ export interface DataRecord {
   [key: string]: string | number | boolean | Date | null | undefined
 }
 
-export interface ProcessingOptions {
-  [key: string]: unknown
-}
+export type ProcessingOptions = 
+  | CSVExportOptions 
+  | ChartDataOptions 
+  | AggregationOptions 
+  | TransformationOptions
 
 export type ResponsePayload = 
   | { content: string }
   | { data: DataRecord[] | ChartDataResult[] }
   | { blob: Blob; filename: string }
+  | { message: string; stack?: string }
+  | { progress: number }
 
 export type ProcessingPayload = ProcessingTask | ExportPayload | TransformPayload | AggregatePayload
 
@@ -75,6 +79,9 @@ export interface AggregationOptions {
 }
 
 export interface TransformationOptions {
+  normalize?: boolean
+  deduplicate?: boolean
+  fillMissing?: Record<string, string | number>
   [key: string]: unknown
 }
 
@@ -160,10 +167,10 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
         result = await exportData(payload as ExportPayload)
         break
       case 'transform':
-        result = await transformData(payload as TransformPayload)
+        result = { data: await transformData(payload as TransformPayload) }
         break
       case 'aggregate':
-        result = await aggregateData(payload as AggregatePayload)
+        result = { data: await aggregateData(payload as AggregatePayload) }
         break
       default:
         throw new Error(`Unknown task type: ${type}`)
@@ -177,13 +184,18 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 
     self.postMessage(response)
   } catch (error) {
+    const errorPayload: { message: string; stack?: string } = {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }
+    
+    if (error instanceof Error && error.stack) {
+      errorPayload.stack = error.stack
+    }
+    
     const response: WorkerResponse = {
       id,
       type: 'error',
-      payload: {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      }
+      payload: errorPayload
     }
 
     self.postMessage(response)
@@ -325,11 +337,12 @@ async function generateCSV(data: DataRecord[], options: CSVExportOptions): Promi
     // Report progress for large datasets
     if (data.length > 5000) {
       const progress = Math.min(100, ((i + chunkSize) / data.length) * 100)
-      self.postMessage({
+      const progressResponse: WorkerResponse = {
         id: 'progress',
         type: 'progress',
         payload: { progress }
-      } as WorkerResponse)
+      }
+      self.postMessage(progressResponse)
     }
 
     // Yield control to prevent blocking
@@ -494,7 +507,10 @@ function applyMapping(item: DataRecord, mapping: MappingConfig): DataRecord {
       result[key] = transform(item[key])
     } else if (typeof transform === 'string') {
       // Simple field mapping
-      result[key] = item[transform]
+      const sourceValue = item[transform]
+      if (sourceValue !== undefined) {
+        result[key] = sourceValue
+      }
     }
   })
 
@@ -589,8 +605,10 @@ function aggregateByTime(data: DataRecord[], timeField: string, granularity: str
         key = String(item[timeField] || 'undefined')
     }
 
-    if (!groups[key]) groups[key] = []
-    groups[key].push(item)
+    if (!groups[key]) {
+      groups[key] = []
+    }
+    groups[key]!.push(item)
     return groups
   }, {})
 
