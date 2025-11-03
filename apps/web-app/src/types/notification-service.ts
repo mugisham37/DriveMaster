@@ -63,12 +63,12 @@ export interface NotificationList {
 }
 
 export interface NotificationQueryParams {
-  userId?: string
+  userId?: string | undefined
   type?: NotificationType | NotificationType[]
   status?: 'read' | 'unread' | 'all'
   priority?: NotificationPriority | NotificationPriority[]
   limit?: number
-  cursor?: string
+  cursor?: string | undefined
   startDate?: Date
   endDate?: Date
   channels?: DeliveryChannel[]

@@ -64,7 +64,7 @@ export function useAnalyticsCrossTabSync(options: AnalyticsSyncOptions = {}) {
   const [connectedTabs] = useState<string[]>([])
   
   // Message handlers
-  const handleFilterChange = useCallback((_payload: Record<string, unknown>) => {
+  const handleFilterChange = useCallback(() => {
     // Update local filter state and invalidate relevant queries
     queryClient.invalidateQueries({ 
       queryKey: analyticsQueryKeys.all,
@@ -76,7 +76,7 @@ export function useAnalyticsCrossTabSync(options: AnalyticsSyncOptions = {}) {
     })
   }, [queryClient])
   
-  const handleTimeRangeChange = useCallback((_payload: Record<string, unknown>) => {
+  const handleTimeRangeChange = useCallback(() => {
     // Invalidate time-sensitive queries
     queryClient.invalidateQueries({ 
       queryKey: analyticsQueryKeys.all,
@@ -132,17 +132,24 @@ export function useAnalyticsCrossTabSync(options: AnalyticsSyncOptions = {}) {
       
       switch (type) {
         case 'filter_change':
-          handleFilterChange(payload)
+          handleFilterChange()
           break
         case 'time_range_change':
-          handleTimeRangeChange(payload)
+          handleTimeRangeChange()
           break
         case 'invalidate_cache':
           handleCacheInvalidation(payload)
           break
         case 'optimistic_update':
           // Reconstruct OptimisticUpdate from payload
-          const update = payload as Record<string, unknown>
+          const update = payload as {
+            id: string
+            queryKey: unknown[]
+            previousData: Record<string, unknown>
+            optimisticData: Record<string, unknown>
+            timestamp: string | number | Date
+            operation: string
+          }
           handleOptimisticUpdate({
             id: update.id,
             queryKey: update.queryKey,

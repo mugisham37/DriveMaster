@@ -12,6 +12,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
 import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
+import { requireStringUserId } from '@/utils/user-id-helpers'
 import type { 
   AchievementNotificationRequest,
   NotificationError 
@@ -38,7 +39,7 @@ export interface UseAchievementNotificationsOptions {
 export interface UseAchievementNotificationsResult {
   // State
   activeAchievements: AchievementNotificationDisplay[]
-  isLoading: boolean
+  isPending: boolean
   error: NotificationError | null
   
   // Actions
@@ -51,6 +52,12 @@ export interface UseAchievementNotificationsResult {
   trackAchievementView: (achievementId: string) => void
   trackAchievementShare: (achievementId: string, platform: string) => void
   trackAchievementDismiss: (achievementId: string) => void
+  
+  // Predefined helpers
+  sendCourseCompletionAchievement: (courseName: string, points?: number) => Promise<void>
+  sendStreakAchievement: (streakCount: number, streakType?: 'daily' | 'weekly') => Promise<void>
+  sendScoreAchievement: (testName: string, score: number, isPersonalBest?: boolean) => Promise<void>
+  sendMilestoneAchievement: (milestone: string, description: string, points?: number) => Promise<void>
 }
 
 // ============================================================================
@@ -108,9 +115,9 @@ export function useAchievementNotifications(
         throw new Error('User must be authenticated to send achievement notifications')
       }
       
-      const achievementWithUser = {
+      const achievementWithUser: AchievementNotificationRequest = {
         ...achievement,
-        userId: user.id
+        userId: requireStringUserId(user.id)
       }
       
       await notificationApiClient.sendAchievementNotification(achievementWithUser)
@@ -133,12 +140,26 @@ export function useAchievementNotifications(
       console.error('Failed to send achievement notification:', error)
       
       // Show error toast
-      showToast({
-        type: 'error',
-        title: 'Achievement Error',
-        message: 'Failed to send achievement notification. Please try again.',
-        duration: 5000
-      })
+      if (user?.id) {
+        showToast({
+          id: `error-${Date.now()}`,
+          userId: requireStringUserId(user.id),
+          type: 'system',
+          title: 'Achievement Error',
+          body: 'Failed to send achievement notification. Please try again.',
+          priority: 'normal',
+          channels: ['in_app'],
+          status: {
+            isRead: false,
+            isDelivered: true,
+            deliveredAt: new Date()
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }, {
+          duration: 5000
+        })
+      }
     }
   })
   
@@ -213,7 +234,7 @@ export function useAchievementNotifications(
     if (!user?.id) return
     
     // Track with notification service analytics
-    notificationApiClient.trackOpen(achievementId, user.id).catch(error => {
+    notificationApiClient.trackOpen(achievementId, requireStringUserId(user.id)).catch(error => {
       console.warn('Failed to track achievement view:', error)
     })
   }, [user?.id])
@@ -222,7 +243,7 @@ export function useAchievementNotifications(
     if (!user?.id) return
     
     // Track with notification service analytics
-    notificationApiClient.trackClick(achievementId, user.id, `share_${platform}`).catch(error => {
+    notificationApiClient.trackClick(achievementId, requireStringUserId(user.id), `share_${platform}`).catch(error => {
       console.warn('Failed to track achievement share:', error)
     })
   }, [user?.id])
@@ -231,7 +252,7 @@ export function useAchievementNotifications(
     if (!user?.id) return
     
     // Track with notification service analytics
-    notificationApiClient.trackClick(achievementId, user.id, 'dismiss').catch(error => {
+    notificationApiClient.trackClick(achievementId, requireStringUserId(user.id), 'dismiss').catch(error => {
       console.warn('Failed to track achievement dismiss:', error)
     })
   }, [user?.id])
@@ -244,7 +265,7 @@ export function useAchievementNotifications(
     if (!user?.id) return
     
     await sendAchievementMutation.mutateAsync({
-      userId: user.id,
+      userId: requireStringUserId(user.id),
       achievementName: 'Course Completed',
       achievementDescription: `Congratulations! You've successfully completed the "${courseName}" course. Keep up the great work!`,
       achievementIcon: '🎓',
@@ -260,7 +281,7 @@ export function useAchievementNotifications(
     const points = streakCount * (streakType === 'daily' ? 10 : 50)
     
     await sendAchievementMutation.mutateAsync({
-      userId: user.id,
+      userId: requireStringUserId(user.id),
       achievementName: `${streakCount} ${streakText.charAt(0).toUpperCase() + streakText.slice(1)} Streak`,
       achievementDescription: `Amazing! You've maintained a ${streakCount} ${streakText} learning streak. Your consistency is paying off!`,
       achievementIcon: '🔥',
@@ -278,7 +299,7 @@ export function useAchievementNotifications(
       : `Excellent work! You scored ${score}% on "${testName}". Keep pushing your limits!`
     
     await sendAchievementMutation.mutateAsync({
-      userId: user.id,
+      userId: requireStringUserId(user.id),
       achievementName,
       achievementDescription: description,
       achievementIcon: isPersonalBest ? '🏆' : '⭐',
@@ -291,7 +312,7 @@ export function useAchievementNotifications(
     if (!user?.id) return
     
     await sendAchievementMutation.mutateAsync({
-      userId: user.id,
+      userId: requireStringUserId(user.id),
       achievementName: milestone,
       achievementDescription: description,
       achievementIcon: '🎯',
@@ -307,11 +328,13 @@ export function useAchievementNotifications(
   return {
     // State
     activeAchievements,
-    isLoading: sendAchievementMutation.isLoading,
+    isPending: sendAchievementMutation.isPending,
     error: sendAchievementMutation.error as NotificationError | null,
     
     // Actions
-    sendAchievementNotification: sendAchievementMutation.mutateAsync,
+    sendAchievementNotification: async (achievement: AchievementNotificationRequest) => {
+      await sendAchievementMutation.mutateAsync(achievement)
+    },
     displayAchievement,
     dismissAchievement,
     dismissAllAchievements,

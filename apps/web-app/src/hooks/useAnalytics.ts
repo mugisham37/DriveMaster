@@ -18,27 +18,14 @@ import type {
   LearningProgressMetrics,
   ContentPerformanceMetrics,
   SystemPerformanceMetrics,
-  RealtimeMetricsSnapshot,
-  BehaviorInsights,
-  ContentGapAnalysis,
-  EffectivenessReport,
   Alert,
-  HourlyEngagement,
-  CohortRetention,
-  UserSegment,
-  UserJourney,
-  BehaviorPattern,
   EngagementMetricsParams,
   ProgressMetricsParams,
   ContentMetricsParams,
   SystemMetricsParams,
   HistoricalQuery,
   ReportFilters,
-  AlertSeverity,
-  TimeSeriesData,
-  SystemPerformanceMetrics as SystemPerformanceDetails,
-  ServiceHealthStatus,
-  AnalyticsServiceError
+  AlertSeverity
 } from '../types/analytics-service'
 
 // ============================================================================

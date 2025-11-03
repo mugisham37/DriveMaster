@@ -8,12 +8,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { 
-  notificationApiClient,
-  getNotificationWebSocketClient
+  notificationApiClient
 } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
+import { toStringUserId, requireStringUserId } from '@/utils/user-id-helpers'
 import type {
   Notification,
   NotificationList,
@@ -78,7 +78,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Set userId from auth if not provided
   const params: NotificationQueryParams = {
-    userId: user?.id,
+    userId: user?.id?.toString() || undefined,
     limit: 20,
     ...queryParams
   }
@@ -89,18 +89,22 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     enabled: enabled && !!user?.id,
     refetchInterval,
     staleTime,
-    cacheTime,
+    gcTime: cacheTime,
     retry: (failureCount, error) => {
       // Don't retry on authentication errors
       if (error && typeof error === 'object' && 'type' in error && error.type === 'authentication') {
         return false
       }
       return failureCount < 3
-    },
-    onError: (error: NotificationError) => {
-      console.error('Failed to fetch notifications:', error)
     }
   })
+
+  // Log errors
+  useEffect(() => {
+    if (query.error) {
+      console.error('Failed to fetch notifications:', query.error)
+    }
+  }, [query.error])
 
   // Set up real-time updates
   useEffect(() => {
@@ -241,19 +245,20 @@ export function useInfiniteNotifications(
 ): UseInfiniteNotificationsResult {
   const { user } = useAuth()
 
-  const query = useInfiniteQuery({
+  const query = useInfiniteQuery<NotificationList, Error>({
     queryKey: [...notificationQueryKeys.lists(), 'infinite', params],
-    queryFn: ({ pageParam = undefined }) => 
+    queryFn: ({ pageParam }) => 
       notificationApiClient.getNotifications({
-        userId: user?.id,
+        userId: toStringUserId(user?.id),
         limit: 20,
         ...params,
-        cursor: pageParam
+        cursor: pageParam as string | undefined
       }),
     enabled: !!user?.id,
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
     staleTime: 30000,
-    cacheTime: 300000
+    gcTime: 300000
   })
 
   const notifications = query.data?.pages.flatMap(page => page.results) || []
@@ -277,22 +282,22 @@ export function useInfiniteNotifications(
 export interface UseNotificationMutationsResult {
   markAsRead: {
     mutate: (notificationId: string) => void
-    isLoading: boolean
+    isPending: boolean
     error: NotificationError | null
   }
   markAllAsRead: {
     mutate: () => void
-    isLoading: boolean
+    isPending: boolean
     error: NotificationError | null
   }
   deleteNotification: {
     mutate: (notificationId: string) => void
-    isLoading: boolean
+    isPending: boolean
     error: NotificationError | null
   }
   updateStatus: {
     mutate: (params: { notificationId: string; status: Partial<NotificationStatus> }) => void
-    isLoading: boolean
+    isPending: boolean
     error: NotificationError | null
   }
 }
@@ -350,7 +355,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
 
       return { previousData }
     },
-    onError: (error, notificationId, context) => {
+    onError: (_error, _notificationId, context) => {
       // Rollback optimistic updates
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
@@ -362,7 +367,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() })
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(user.id) })
+        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(requireStringUserId(user.id)) })
       }
     }
   })
@@ -371,7 +376,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
   const markAllAsReadMutation = useMutation({
     mutationFn: () => {
       if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.markAllAsRead(user.id)
+      return notificationApiClient.markAllAsRead(requireStringUserId(user.id))
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: notificationQueryKeys.lists() })
@@ -406,7 +411,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
 
       return { previousData }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -416,7 +421,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() })
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(user.id) })
+        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(requireStringUserId(user.id)) })
       }
     }
   })
@@ -454,7 +459,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
 
       return { previousData }
     },
-    onError: (error, notificationId, context) => {
+    onError: (_error, _notificationId, context) => {
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -464,7 +469,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() })
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(user.id) })
+        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(requireStringUserId(user.id)) })
       }
     }
   })
@@ -514,7 +519,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
 
       return { previousData }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -524,7 +529,7 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() })
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(user.id) })
+        queryClient.invalidateQueries({ queryKey: notificationQueryKeys.userCounts(requireStringUserId(user.id)) })
       }
     }
   })
@@ -532,22 +537,22 @@ export function useNotificationMutations(): UseNotificationMutationsResult {
   return {
     markAsRead: {
       mutate: markAsReadMutation.mutate,
-      isLoading: markAsReadMutation.isLoading,
+      isPending: markAsReadMutation.isPending,
       error: markAsReadMutation.error as NotificationError | null
     },
     markAllAsRead: {
       mutate: markAllAsReadMutation.mutate,
-      isLoading: markAllAsReadMutation.isLoading,
+      isPending: markAllAsReadMutation.isPending,
       error: markAllAsReadMutation.error as NotificationError | null
     },
     deleteNotification: {
       mutate: deleteNotificationMutation.mutate,
-      isLoading: deleteNotificationMutation.isLoading,
+      isPending: deleteNotificationMutation.isPending,
       error: deleteNotificationMutation.error as NotificationError | null
     },
     updateStatus: {
       mutate: updateStatusMutation.mutate,
-      isLoading: updateStatusMutation.isLoading,
+      isPending: updateStatusMutation.isPending,
       error: updateStatusMutation.error as NotificationError | null
     }
   }
@@ -562,7 +567,6 @@ export interface UseNotificationCountsResult {
   unread: number
   read: number
   byType: Record<string, number>
-  byPriority: Record<string, number>
   isLoading: boolean
   isError: boolean
   error: NotificationError | null
@@ -576,14 +580,14 @@ export function useNotificationCounts(): UseNotificationCountsResult {
   const { user } = useAuth()
 
   const query = useQuery({
-    queryKey: notificationQueryKeys.userCounts(user?.id || ''),
+    queryKey: notificationQueryKeys.userCounts(toStringUserId(user?.id) || ''),
     queryFn: () => {
       if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.getNotificationCounts(user.id)
+      return notificationApiClient.getNotificationCounts(requireStringUserId(user.id))
     },
     enabled: !!user?.id,
     staleTime: 30000,
-    cacheTime: 300000,
+    gcTime: 300000,
     refetchInterval: 60000
   })
 
@@ -592,7 +596,6 @@ export function useNotificationCounts(): UseNotificationCountsResult {
     unread: query.data?.unread || 0,
     read: query.data?.read || 0,
     byType: query.data?.byType || {},
-    byPriority: query.data?.byPriority || {},
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error as NotificationError | null
@@ -616,16 +619,16 @@ export interface UseNotificationResult {
  * Requirements: 1.1, 7.1
  */
 export function useNotification(notificationId: string): UseNotificationResult {
-  const query = useQuery({
+  const query = useQuery<Notification, Error>({
     queryKey: notificationQueryKeys.detail(notificationId),
     queryFn: () => notificationApiClient.getNotification(notificationId),
     enabled: !!notificationId,
     staleTime: 60000,
-    cacheTime: 300000
+    gcTime: 300000
   })
 
   return {
-    notification: query.data || null,
+    notification: query.data ?? null,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error as NotificationError | null,

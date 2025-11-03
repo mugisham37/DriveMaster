@@ -11,6 +11,7 @@ import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAnalyticsContext } from '@/contexts/AnalyticsContext'
 import { useAuth } from '@/hooks/useAuth'
+import { requireStringUserId } from '@/utils/user-id-helpers'
 import { 
   analyticsQueryKeys, 
   analyticsQueryConfig 
@@ -26,21 +27,13 @@ import {
   shouldRenderComponent,
   getDataViewLevel
 } from '@/lib/analytics-service/user-context'
-import { getPermissionsForRole } from '@/lib/analytics-service/permissions'
 import type {
   UserEngagementMetrics,
   LearningProgressMetrics,
   ContentPerformanceMetrics,
   SystemPerformanceMetrics,
-  BehaviorInsights,
-  ContentGapAnalysis,
   EffectivenessReport,
   Alert,
-  HourlyEngagement,
-  CohortRetention,
-  UserSegment,
-  UserJourney,
-  BehaviorPattern,
   EngagementMetricsParams,
   ProgressMetricsParams,
   ContentMetricsParams,
@@ -48,8 +41,7 @@ import type {
   HistoricalQuery,
   ReportFilters,
   AlertSeverity,
-  UserRole,
-  AnalyticsPermissions
+  UserRole
 } from '@/types/analytics-service'
 
 // ============================================================================
@@ -72,8 +64,8 @@ export function useAnalyticsWithPermissions() {
     
     return createUserContext(
       {
-        id: user.id,
-        role: user.userRole as UserRole,
+        id: requireStringUserId(user.id),
+        role: (user.role || 'student') as UserRole,
         classIds: undefined, // Not available in UserProfile
         organizationId: undefined, // Not available in UserProfile
         teamIds: undefined // Not available in UserProfile
