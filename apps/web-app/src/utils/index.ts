@@ -9,3 +9,7 @@ export { redirectTo } from './redirect-to'
 export { useLocalStorage } from './use-storage'
 export { generateHexString } from './generate-hex-string'
 export { copyToClipboard } from './copyToClipboard'
+
+// Minimal UI utilities (kept due to existing usage)
+export { scrollToTop } from './scroll-to-top'
+export { assembleClassNames } from './assemble-classnames'
