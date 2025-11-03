@@ -1,6 +1,0 @@
-/* Video Length Component Styles */
-
-.video-length {
-  @apply text-xs font-bold tracking-wider uppercase;
-  @apply text-yellow-600 bg-yellow-100 px-2 py-1 rounded;
-}
