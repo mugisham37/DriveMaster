@@ -10,9 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import { 
-  getNotificationWebSocketClient,
-  type NotificationWebSocketState,
-  type NotificationConnectionStats
+  getNotificationWebSocketClient
 } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
 import type {
@@ -20,6 +18,25 @@ import type {
   Notification,
   NotificationError
 } from '@/types/notification-service'
+
+// ============================================================================
+// Connection State Type
+// ============================================================================
+
+export type NotificationWebSocketState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+
+export interface NotificationConnectionStats {
+  totalConnections: number
+  totalReconnections: number
+  totalMessages: number
+  totalErrors: number
+  averageLatency: number
+  lastConnectedAt?: Date
+  lastDisconnectedAt?: Date
+  connectionDuration: number
+  messagesReceived: number
+  messagesSent: number
+}
 
 // ============================================================================
 // Real-Time Notifications Hook

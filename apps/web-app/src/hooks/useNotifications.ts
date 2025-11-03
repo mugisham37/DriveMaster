@@ -10,7 +10,8 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { 
-  notificationApiClient
+  notificationApiClient,
+  getNotificationWebSocketClient
 } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
 import { toStringUserId, requireStringUserId } from '@/utils/user-id-helpers'
@@ -189,7 +190,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     wsClient.on('notification.deleted', handleNotificationDeleted)
 
     // Subscribe to user notifications
-    const subscriptionId = wsClient.subscribeToUserNotifications(user.id, {
+    const subscriptionId = wsClient.subscribeToUserNotifications(user.id.toString(), {
       types: params.type ? (Array.isArray(params.type) ? params.type : [params.type]) : undefined,
       priorities: params.priority ? (Array.isArray(params.priority) ? params.priority : [params.priority]) : undefined,
       channels: params.channels

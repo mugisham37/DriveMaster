@@ -59,14 +59,14 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
 
   // Fetch preferences
   const query = useQuery({
-    queryKey: preferencesQueryKeys.user(user?.id || ''),
+    queryKey: preferencesQueryKeys.user(user?.id?.toString() || ''),
     queryFn: () => {
       if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.getPreferences(user.id)
+      return notificationApiClient.getPreferences(user.id.toString())
     },
     enabled: !!user?.id,
     staleTime: 60000,
-    cacheTime: 300000,
+    gcTime: 300000,
     retry: (failureCount, error) => {
       if (error && typeof error === 'object' && 'type' in error && error.type === 'authentication') {
         return false
@@ -79,18 +79,18 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
   const updatePreferencesMutation = useMutation({
     mutationFn: (updates: Partial<NotificationPreferences>) => {
       if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.updatePreferences(user.id, updates)
+      return notificationApiClient.updatePreferences(user.id.toString(), updates)
     },
     onMutate: async (updates) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: preferencesQueryKeys.user(user?.id || '') })
+      await queryClient.cancelQueries({ queryKey: preferencesQueryKeys.user(user?.id?.toString() || '') })
 
       // Snapshot previous value
-      const previousPreferences = queryClient.getQueryData(preferencesQueryKeys.user(user?.id || ''))
+      const previousPreferences = queryClient.getQueryData(preferencesQueryKeys.user(user?.id?.toString() || ''))
 
       // Optimistically update preferences
       queryClient.setQueryData<NotificationPreferences>(
-        preferencesQueryKeys.user(user?.id || ''),
+        preferencesQueryKeys.user(user?.id?.toString() || ''),
         (oldData) => {
           if (!oldData) return oldData
           return {
@@ -103,18 +103,18 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
 
       return { previousPreferences }
     },
-    onError: (error, updates, context) => {
+    onError: (_error, _updates, context) => {
       // Rollback on error
       if (context?.previousPreferences) {
         queryClient.setQueryData(
-          preferencesQueryKeys.user(user?.id || ''),
+          preferencesQueryKeys.user(user?.id?.toString() || ''),
           context.previousPreferences
         )
       }
     },
     onSettled: () => {
       // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user?.id || '') })
+      queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user?.id?.toString() || '') })
     }
   })
 
@@ -213,46 +213,6 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
     [updatePreferencesMutation]
   )
 
-  // Remove token helper
-  const removeToken = useCallback(
-    async (tokenId: string) => {
-      await notificationApiClient.removeDeviceToken(tokenId)
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user.id) })
-      }
-    },
-    [user?.id, queryClient]
-  )
-
-  // Refresh token helper
-  const refreshToken = useCallback(
-    async (tokenId: string) => {
-      const result = await notificationApiClient.refreshDeviceToken(tokenId)
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user.id) })
-      }
-      return result
-    },
-    [user?.id, queryClient]
-  )
-
-  // Validate token helper
-  const validateToken = useCallback(
-    (tokenId: string) => notificationApiClient.validateDeviceToken(tokenId),
-    []
-  )
-
-  // Cleanup tokens helper
-  const cleanupTokens = useCallback(
-    async () => {
-      if (!user?.id) throw new Error('User not authenticated')
-      const result = await notificationApiClient.cleanupDeviceTokens(user.id)
-      queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user.id) })
-      return result
-    },
-    [user?.id, queryClient]
-  )
-
   // ============================================================================
   // Real-Time Preference Updates
   // ============================================================================
@@ -265,14 +225,14 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
     const handlePreferencesUpdated = (updatedPreferences: NotificationPreferences) => {
       // Update the query cache with new preferences
       queryClient.setQueryData<NotificationPreferences>(
-        preferencesQueryKeys.user(user.id),
+        preferencesQueryKeys.user(user.id.toString()),
         updatedPreferences
       )
     }
 
     // Subscribe to preference changes
     wsClient.on('preferences.updated', handlePreferencesUpdated)
-    const subscriptionId = wsClient.subscribeToPreferenceChanges(user.id)
+    const subscriptionId = wsClient.subscribeToPreferenceChanges(user.id.toString())
 
     return () => {
       wsClient.off('preferences.updated')
@@ -454,190 +414,6 @@ export function usePreferenceValidation() {
   }
 }
 
-/**
- * Main notification preferences hook
- */
-export function useNotificationPreferences(): UseNotificationPreferencesResult {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-
-  // Fetch preferences
-  const query = useQuery({
-    queryKey: preferencesQueryKeys.user(user?.id || ''),
-    queryFn: () => {
-      if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.getPreferences(user.id)
-    },
-    enabled: !!user?.id,
-    staleTime: 60000,
-    cacheTime: 300000
-  })
-
-  // Update preferences mutation with optimistic updates
-  const updatePreferencesMutation = useMutation({
-    mutationFn: (updates: Partial<NotificationPreferences>) => {
-      if (!user?.id) throw new Error('User not authenticated')
-      return notificationApiClient.updatePreferences(user.id, updates)
-    },
-    onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: preferencesQueryKeys.user(user?.id || '') })
-
-      const previousPreferences = queryClient.getQueryData(preferencesQueryKeys.user(user?.id || ''))
-
-      queryClient.setQueryData<NotificationPreferences>(
-        preferencesQueryKeys.user(user?.id || ''),
-        (oldData) => {
-          if (!oldData) return oldData
-          return {
-            ...oldData,
-            ...updates,
-            updatedAt: new Date()
-          }
-        }
-      )
-
-      return { previousPreferences }
-    },
-    onError: (error, updates, context) => {
-      if (context?.previousPreferences) {
-        queryClient.setQueryData(
-          preferencesQueryKeys.user(user?.id || ''),
-          context.previousPreferences
-        )
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: preferencesQueryKeys.user(user?.id || '') })
-    }
-  })
-
-  // Convenience methods
-  const updateEnabledTypes = useCallback(
-    (types: NotificationType[]) => updatePreferencesMutation.mutateAsync({ enabledTypes: types }),
-    [updatePreferencesMutation]
-  )
-
-  const updateQuietHours = useCallback(
-    (quietHours: QuietHours) => updatePreferencesMutation.mutateAsync({ quietHours }),
-    [updatePreferencesMutation]
-  )
-
-  const updateFrequency = useCallback(
-    (type: NotificationType, settings: FrequencySettings) => {
-      const currentPreferences = query.data
-      if (!currentPreferences) throw new Error('Preferences not loaded')
-      
-      return updatePreferencesMutation.mutateAsync({
-        frequency: {
-          ...currentPreferences.frequency,
-          [type]: settings
-        }
-      })
-    },
-    [query.data, updatePreferencesMutation]
-  )
-
-  const updateChannels = useCallback(
-    (type: NotificationType, channels: DeliveryChannel[]) => {
-      const currentPreferences = query.data
-      if (!currentPreferences) throw new Error('Preferences not loaded')
-      
-      return updatePreferencesMutation.mutateAsync({
-        channels: {
-          ...currentPreferences.channels,
-          [type]: channels
-        }
-      })
-    },
-    [query.data, updatePreferencesMutation]
-  )
-
-  const updateGlobalSettings = useCallback(
-    (settings: GlobalNotificationSettings) => updatePreferencesMutation.mutateAsync({ globalSettings: settings }),
-    [updatePreferencesMutation]
-  )
-
-  const resetToDefaults = useCallback(() => {
-    const defaultPreferences: Partial<NotificationPreferences> = {
-      enabledTypes: ['achievement', 'spaced_repetition', 'streak_reminder', 'system'],
-      quietHours: {
-        enabled: false,
-        start: '22:00',
-        end: '08:00',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      frequency: {
-        achievement: { type: 'immediate' },
-        spaced_repetition: { type: 'immediate' },
-        streak_reminder: { type: 'daily', dailyTime: '09:00' },
-        mock_test_reminder: { type: 'immediate' },
-        system: { type: 'immediate' },
-        mentoring: { type: 'immediate' },
-        course_update: { type: 'batched', batchInterval: 60 },
-        community: { type: 'daily', dailyTime: '18:00' },
-        marketing: { type: 'weekly', weeklyDay: 1, weeklyTime: '10:00' }
-      },
-      channels: {
-        achievement: ['push', 'in_app'],
-        spaced_repetition: ['push', 'in_app'],
-        streak_reminder: ['push', 'in_app'],
-        mock_test_reminder: ['push', 'in_app', 'email'],
-        system: ['push', 'in_app', 'email'],
-        mentoring: ['push', 'in_app', 'email'],
-        course_update: ['in_app', 'email'],
-        community: ['in_app'],
-        marketing: ['email']
-      },
-      globalSettings: {
-        enabled: true,
-        maxPerDay: 50,
-        maxPerHour: 10,
-        respectQuietHours: true,
-        allowCriticalOverride: true
-      }
-    }
-    
-    return updatePreferencesMutation.mutateAsync(defaultPreferences)
-  }, [updatePreferencesMutation])
-
-  // Set up real-time preference updates
-  useEffect(() => {
-    if (!user?.id) return
-
-    const wsClient = getNotificationWebSocketClient()
-    
-    const handlePreferencesUpdated = (updatedPreferences: NotificationPreferences) => {
-      queryClient.setQueryData<NotificationPreferences>(
-        preferencesQueryKeys.user(user.id),
-        updatedPreferences
-      )
-    }
-
-    wsClient.on('preferences.updated', handlePreferencesUpdated)
-    const subscriptionId = wsClient.subscribeToPreferenceChanges(user.id)
-
-    return () => {
-      wsClient.off('preferences.updated')
-      wsClient.unsubscribe(subscriptionId)
-    }
-  }, [user?.id, queryClient])
-
-  return {
-    preferences: query.data || null,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error as NotificationError | null,
-    updatePreferences: updatePreferencesMutation.mutateAsync,
-    updateEnabledTypes,
-    updateQuietHours,
-    updateFrequency,
-    updateChannels,
-    updateGlobalSettings,
-    resetToDefaults,
-    refetch: query.refetch
-  }
-}
-
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -646,6 +422,6 @@ export function useNotificationPreferences(): UseNotificationPreferencesResult {
  * Parses time string (HH:MM) to minutes since midnight
  */
 function parseTime(timeString: string): number {
-  const [hours, minutes] = timeString.split(':').map(Number)
+  const [hours = 0, minutes = 0] = timeString.split(':').map(Number)
   return hours * 60 + minutes
 }

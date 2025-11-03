@@ -389,9 +389,14 @@ export function useEngagementMetrics(
   days: number,
   options?: Partial<UseQueryOptions<EngagementMetrics, UserServiceError>>
 ): UseQueryResult<EngagementMetrics, UserServiceError> {
+  const dateRange: DateRange = {
+    start: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+    end: new Date()
+  }
+  
   return useQuery({
     queryKey: queryKeys.engagementMetrics(userId, days),
-    queryFn: () => userServiceClient.getEngagementMetrics(userId, days),
+    queryFn: () => userServiceClient.getEngagementMetrics(userId, dateRange),
     ...createUserServiceQueryOptions<EngagementMetrics>(
       CACHE_TIMES.ENGAGEMENT_METRICS,
       GC_TIMES.SHORT
@@ -407,7 +412,7 @@ export function useActivityInsights(
 ): UseQueryResult<ActivityInsight[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.activityInsights(userId),
-    queryFn: () => userServiceClient.generateInsights(userId),
+    queryFn: () => userServiceClient.getActivityInsights(userId),
     ...createUserServiceQueryOptions<ActivityInsight[]>(
       CACHE_TIMES.ACTIVITY_INSIGHTS,
       GC_TIMES.SHORT
@@ -423,7 +428,7 @@ export function useActivityRecommendations(
 ): UseQueryResult<ActivityRecommendation[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.activityRecommendations(userId),
-    queryFn: () => userServiceClient.generateRecommendations(userId),
+    queryFn: () => userServiceClient.getActivityRecommendations(userId),
     ...createUserServiceQueryOptions<ActivityRecommendation[]>(
       CACHE_TIMES.ACTIVITY_RECOMMENDATIONS,
       GC_TIMES.SHORT
@@ -657,7 +662,7 @@ export function usePrefetchUserData() {
     prefetchActivityInsights: (userId: string) => {
       return queryClient.prefetchQuery({
         queryKey: queryKeys.activityInsights(userId),
-        queryFn: () => userServiceClient.generateInsights(userId),
+        queryFn: () => userServiceClient.getActivityInsights(userId),
         staleTime: CACHE_TIMES.ACTIVITY_INSIGHTS,
       });
     },

@@ -8,7 +8,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
 import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
@@ -127,14 +127,13 @@ export function useSpacedRepetitionReminders(
   const {
     data: scheduledReminders = [],
     isLoading,
-    error,
-    refetch
+    error
   } = useQuery({
     queryKey: ['spaced-repetition-reminders', user?.id],
     queryFn: async () => {
       if (!user?.id) return []
       
-      const response = await notificationApiClient.getScheduledNotifications(user.id, {
+      const response = await notificationApiClient.getScheduledNotifications(user.id.toString(), {
         type: 'spaced_repetition',
         status: 'pending',
         includeRecurring: true
@@ -144,17 +143,17 @@ export function useSpacedRepetitionReminders(
         id: notification.id,
         userId: notification.userId,
         topicName: notification.notification.title || 'Unknown Topic',
-        itemCount: notification.notification.data?.itemCount || 1,
+        itemCount: Number(notification.notification.data?.itemCount) || 1,
         dueDate: notification.scheduledFor,
         difficulty: (notification.notification.data?.difficulty || config.defaultDifficulty) as 'easy' | 'medium' | 'hard',
-        lastReviewDate: notification.notification.data?.lastReviewDate ? new Date(notification.notification.data.lastReviewDate) : undefined,
+        lastReviewDate: notification.notification.data?.lastReviewDate ? new Date(String(notification.notification.data.lastReviewDate)) : undefined,
         nextReviewDate: notification.scheduledFor,
         scheduledFor: notification.scheduledFor,
         isActive: notification.status === 'pending',
-        reviewCount: notification.notification.data?.reviewCount || 0,
-        averageScore: notification.notification.data?.averageScore,
-        retentionRate: notification.notification.data?.retentionRate
-      }))
+        reviewCount: Number(notification.notification.data?.reviewCount) || 0,
+        averageScore: notification.notification.data?.averageScore as number | undefined,
+        retentionRate: notification.notification.data?.retentionRate as number | undefined
+      } as SpacedRepetitionReminderDisplay))
     },
     enabled: !!user?.id,
     refetchInterval: 60000, // Refetch every minute
@@ -187,29 +186,43 @@ export function useSpacedRepetitionReminders(
         throw new Error('User must be authenticated')
       }
       
-      const enhancedRequest = {
+      const enhancedRequest: SpacedRepetitionRequest = {
         ...request,
-        userId: user.id
+        userId: user.id.toString()
       }
       
       return await notificationApiClient.scheduleSpacedRepetitionReminder(enhancedRequest)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaced-repetition-reminders'] })
+      if (!user) return
       showToast({
-        type: 'success',
+        id: `toast-${Date.now()}`,
+        userId: user.id.toString(),
+        type: 'system',
         title: 'Reminder Scheduled',
-        message: 'Your spaced repetition reminder has been scheduled successfully.',
-        duration: 3000
+        body: 'Your spaced repetition reminder has been scheduled successfully.',
+        status: { isRead: false, isDelivered: true },
+        priority: 'normal',
+        channels: ['in_app'],
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
     },
     onError: (error: NotificationError) => {
       console.error('Failed to schedule spaced repetition reminder:', error)
+      if (!user) return
       showToast({
-        type: 'error',
+        id: `toast-${Date.now()}`,
+        userId: user.id.toString(),
+        type: 'system',
         title: 'Scheduling Failed',
-        message: 'Failed to schedule reminder. Please try again.',
-        duration: 5000
+        body: 'Failed to schedule reminder. Please try again.',
+        status: { isRead: false, isDelivered: true },
+        priority: 'high',
+        channels: ['in_app'],
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
     }
   })
@@ -233,11 +246,18 @@ export function useSpacedRepetitionReminders(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaced-repetition-reminders'] })
+      if (!user) return
       showToast({
-        type: 'info',
+        id: `toast-${Date.now()}`,
+        userId: user.id.toString(),
+        type: 'system',
         title: 'Reminder Cancelled',
-        message: 'The spaced repetition reminder has been cancelled.',
-        duration: 3000
+        body: 'The spaced repetition reminder has been cancelled.',
+        status: { isRead: false, isDelivered: true },
+        priority: 'normal',
+        channels: ['in_app'],
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
     }
   })
@@ -249,14 +269,56 @@ export function useSpacedRepetitionReminders(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['spaced-repetition-reminders'] })
+      if (!user) return
       showToast({
-        type: 'info',
+        id: `toast-${Date.now()}`,
+        userId: user.id.toString(),
+        type: 'system',
         title: 'Reminder Snoozed',
-        message: 'The reminder has been rescheduled.',
-        duration: 3000
+        body: 'The reminder has been rescheduled.',
+        status: { isRead: false, isDelivered: true },
+        priority: 'normal',
+        channels: ['in_app'],
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
     }
   })
+  
+  // ============================================================================
+  // Helper Functions
+  // ============================================================================
+  
+  const getPerformanceLevel = (score: number): keyof typeof PERFORMANCE_MULTIPLIERS => {
+    if (score >= 90) return 'excellent'
+    if (score >= 80) return 'good'
+    if (score >= 70) return 'average'
+    if (score >= 60) return 'poor'
+    return 'failed'
+  }
+
+  const calculateNextReviewDate = useCallback((reminder: SpacedRepetitionReminderDisplay, score: number): Date => {
+    const performanceLevel = getPerformanceLevel(score)
+    const multiplier = PERFORMANCE_MULTIPLIERS[performanceLevel]
+    
+    const reviewCount = reminder.reviewCount || 0
+    const intervalIndex = Math.min(reviewCount, SPACED_REPETITION_INTERVALS[reminder.difficulty].length - 1)
+    const baseInterval = SPACED_REPETITION_INTERVALS[reminder.difficulty][intervalIndex] ?? 1
+    
+    const adjustedInterval = Math.round(baseInterval * multiplier)
+    return new Date(Date.now() + adjustedInterval * 24 * 60 * 60 * 1000)
+  }, [])
+
+  const adjustDifficultyBasedOnScore = (currentDifficulty: 'easy' | 'medium' | 'hard', score: number): 'easy' | 'medium' | 'hard' => {
+    if (score >= 90 && currentDifficulty !== 'easy') {
+      // Excellent performance - make it easier
+      return currentDifficulty === 'hard' ? 'medium' : 'easy'
+    } else if (score < 60 && currentDifficulty !== 'hard') {
+      // Poor performance - make it harder
+      return currentDifficulty === 'easy' ? 'medium' : 'hard'
+    }
+    return currentDifficulty
+  }
   
   // ============================================================================
   // Learning Optimization Functions
@@ -300,9 +362,9 @@ export function useSpacedRepetitionReminders(
     // Schedule next review
     if (nextReviewDate > new Date()) {
       await scheduleReminderMutation.mutateAsync({
-        userId: user.id,
+        userId: user.id.toString(),
         topicName: reminder.topicName,
-        itemCount: reminder.itemCount,
+        itemCount: Number(reminder.itemCount) || 0,
         dueDate: nextReviewDate,
         difficulty: adjustDifficultyBasedOnScore(reminder.difficulty, score),
         lastReviewDate: new Date()
@@ -310,16 +372,16 @@ export function useSpacedRepetitionReminders(
     }
     
     // Track analytics
-    await notificationApiClient.trackClick(reminderId, user.id, `review_completed_score_${score}`)
+    await notificationApiClient.trackClick(reminderId, user.id.toString(), `review_completed_score_${score}`)
     
-  }, [user?.id, scheduledReminders, performanceData, updateReminderMutation, scheduleReminderMutation])
+  }, [user?.id, scheduledReminders, performanceData, updateReminderMutation, scheduleReminderMutation, calculateNextReviewDate])
   
   const getOptimalSchedule = useCallback(async (topicName: string, difficulty: 'easy' | 'medium' | 'hard'): Promise<Date> => {
     const performanceHistory = performanceData.get(topicName)
     
     if (!performanceHistory || performanceHistory.scores.length === 0) {
       // First review - use default interval
-      const defaultInterval = SPACED_REPETITION_INTERVALS[difficulty][0]
+      const defaultInterval = SPACED_REPETITION_INTERVALS[difficulty][0] ?? 1
       return new Date(Date.now() + defaultInterval * 24 * 60 * 60 * 1000)
     }
     
@@ -331,7 +393,7 @@ export function useSpacedRepetitionReminders(
     // Get next interval based on review count
     const reviewCount = performanceHistory.scores.length
     const intervalIndex = Math.min(reviewCount, SPACED_REPETITION_INTERVALS[difficulty].length - 1)
-    const baseInterval = SPACED_REPETITION_INTERVALS[difficulty][intervalIndex]
+    const baseInterval = SPACED_REPETITION_INTERVALS[difficulty][intervalIndex] ?? 1
     
     // Apply performance multiplier
     const adjustedInterval = Math.round(baseInterval * multiplier)
@@ -390,41 +452,6 @@ export function useSpacedRepetitionReminders(
     }
   }, [performanceData])
   
-  // ============================================================================
-  // Helper Functions
-  // ============================================================================
-  
-  const calculateNextReviewDate = (reminder: SpacedRepetitionReminderDisplay, score: number): Date => {
-    const performanceLevel = getPerformanceLevel(score)
-    const multiplier = PERFORMANCE_MULTIPLIERS[performanceLevel]
-    
-    const reviewCount = reminder.reviewCount || 0
-    const intervalIndex = Math.min(reviewCount, SPACED_REPETITION_INTERVALS[reminder.difficulty].length - 1)
-    const baseInterval = SPACED_REPETITION_INTERVALS[reminder.difficulty][intervalIndex]
-    
-    const adjustedInterval = Math.round(baseInterval * multiplier)
-    return new Date(Date.now() + adjustedInterval * 24 * 60 * 60 * 1000)
-  }
-  
-  const getPerformanceLevel = (score: number): keyof typeof PERFORMANCE_MULTIPLIERS => {
-    if (score >= 90) return 'excellent'
-    if (score >= 80) return 'good'
-    if (score >= 70) return 'average'
-    if (score >= 60) return 'poor'
-    return 'failed'
-  }
-  
-  const adjustDifficultyBasedOnScore = (currentDifficulty: 'easy' | 'medium' | 'hard', score: number): 'easy' | 'medium' | 'hard' => {
-    if (score >= 90 && currentDifficulty !== 'easy') {
-      // Excellent performance - make it easier
-      return currentDifficulty === 'hard' ? 'medium' : 'easy'
-    } else if (score < 60 && currentDifficulty !== 'hard') {
-      // Poor performance - make it harder
-      return currentDifficulty === 'easy' ? 'medium' : 'hard'
-    }
-    return currentDifficulty
-  }
-  
   const calculateStreakCount = (reviewDates: Date[]): number => {
     if (reviewDates.length === 0) return 0
     
@@ -434,12 +461,14 @@ export function useSpacedRepetitionReminders(
     
     let streak = 1
     let currentDate = sortedDates[0]
+    if (!currentDate) return 0
     
     for (let i = 1; i < sortedDates.length; i++) {
       const prevDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000)
-      if (sortedDates[i].getTime() === prevDate.getTime()) {
+      const sortedDate = sortedDates[i]
+      if (sortedDate && sortedDate.getTime() === prevDate.getTime()) {
         streak++
-        currentDate = sortedDates[i]
+        currentDate = sortedDate
       } else {
         break
       }

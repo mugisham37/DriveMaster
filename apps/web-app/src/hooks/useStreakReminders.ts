@@ -153,28 +153,28 @@ export function useStreakReminders(
       return response.notifications.map(notification => ({
         id: notification.id,
         userId: notification.userId,
-        streakCount: notification.notification.data?.streakCount || 0,
+        streakCount: Number(notification.notification.data?.streakCount) || 0,
         streakType: (notification.notification.data?.streakType || 'daily') as 'daily' | 'weekly' | 'monthly',
         reminderTime: notification.scheduledFor,
-        motivationalMessage: notification.notification.data?.motivationalMessage,
-        streakGoal: notification.notification.data?.streakGoal,
+        motivationalMessage: notification.notification.data?.motivationalMessage as string | undefined,
+        streakGoal: Number(notification.notification.data?.streakGoal) || undefined,
         scheduledFor: notification.scheduledFor,
         isActive: notification.status === 'pending',
         streakData: {
           userId: String(user.id),
-          streakType: notification.notification.data?.streakType || 'daily',
-          currentStreak: notification.notification.data?.streakCount || 0,
-          longestStreak: notification.notification.data?.longestStreak || 0,
-          lastActivityDate: notification.notification.data?.lastActivityDate ? new Date(notification.notification.data.lastActivityDate) : new Date(),
-          streakGoal: notification.notification.data?.streakGoal,
+          streakType: (notification.notification.data?.streakType || 'daily') as 'daily' | 'weekly' | 'monthly',
+          currentStreak: Number(notification.notification.data?.streakCount) || 0,
+          longestStreak: Number(notification.notification.data?.longestStreak) || 0,
+          lastActivityDate: notification.notification.data?.lastActivityDate ? new Date(String(notification.notification.data.lastActivityDate)) : new Date(),
+          streakGoal: Number(notification.notification.data?.streakGoal) || undefined,
           isActive: true,
-          streakStartDate: notification.notification.data?.streakStartDate ? new Date(notification.notification.data.streakStartDate) : new Date(),
-          totalActiveDays: notification.notification.data?.totalActiveDays || 0
+          streakStartDate: notification.notification.data?.streakStartDate ? new Date(String(notification.notification.data.streakStartDate)) : new Date(),
+          totalActiveDays: Number(notification.notification.data?.totalActiveDays) || 0
         },
-        isStreakBroken: notification.notification.data?.isStreakBroken || false,
-        daysSinceLastActivity: notification.notification.data?.daysSinceLastActivity || 0,
+        isStreakBroken: Boolean(notification.notification.data?.isStreakBroken),
+        daysSinceLastActivity: Number(notification.notification.data?.daysSinceLastActivity) || 0,
         riskLevel: (notification.notification.data?.riskLevel || 'safe') as 'safe' | 'at-risk' | 'critical' | 'broken'
-      }))
+      } as StreakReminderDisplay))
     },
     enabled: !!user?.id,
     refetchInterval: 300000, // Refetch every 5 minutes
@@ -314,12 +314,34 @@ export function useStreakReminders(
     
   }, [user?.id, streakData, config.defaultStreakGoals])
   
-  const getStreakStats = useCallback(async (streakType?: 'daily' | 'weekly' | 'monthly') => {
+  const getStreakStats = useCallback(async (streakType?: 'daily' | 'weekly' | 'monthly'): Promise<StreakData | Record<string, StreakData>> => {
     if (streakType) {
-      return streakData[streakType]
+      const data = streakData[streakType]
+      if (data) {
+        return data
+      }
+      // Return a default StreakData if not found
+      return {
+        userId: user?.id?.toString() || '',
+        streakType,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityDate: new Date(),
+        isActive: false,
+        streakStartDate: new Date(),
+        totalActiveDays: 0
+      }
     }
-    return streakData
-  }, [streakData])
+    // Filter out null values and return the record
+    const filteredData: Record<string, StreakData> = {}
+    for (const key in streakData) {
+      const value = streakData[key as keyof typeof streakData]
+      if (value) {
+        filteredData[key] = value
+      }
+    }
+    return filteredData
+  }, [streakData, user?.id])
   
   const setStreakGoal = useCallback(async (streakType: 'daily' | 'weekly' | 'monthly', goal: number) => {
     if (!user?.id) return
@@ -335,8 +357,6 @@ export function useStreakReminders(
   }, [user?.id, streakData])
   
   const getStreakAnalytics = useCallback(async (streakType?: 'daily' | 'weekly' | 'monthly') => {
-    const data = streakType ? streakData[streakType] : Object.values(streakData).filter(Boolean)
-    
     if (streakType && streakData[streakType]) {
       const streak = streakData[streakType]!
       return {

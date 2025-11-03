@@ -2,31 +2,50 @@
 // Analytics Data Processor Web Worker
 // ============================================================================
 
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
 export interface WorkerMessage {
   id: string
   type: 'process' | 'export' | 'transform' | 'aggregate'
-  payload: any
+  payload: ProcessingPayload
 }
 
 export interface WorkerResponse {
   id: string
   type: 'success' | 'error' | 'progress'
-  payload: any
+  payload: ResponsePayload
 }
 
 export interface ProcessingTask {
   id: string
   type: 'csv-export' | 'chart-data' | 'data-aggregation' | 'data-transformation'
-  data: any
-  options?: any
+  data: DataRecord[]
+  options?: ProcessingOptions
 }
+
+export interface DataRecord {
+  [key: string]: string | number | boolean | Date | null | undefined
+}
+
+export interface ProcessingOptions {
+  [key: string]: unknown
+}
+
+export type ResponsePayload = 
+  | { content: string }
+  | { data: DataRecord[] | ChartDataResult[] }
+  | { blob: Blob; filename: string }
+
+export type ProcessingPayload = ProcessingTask | ExportPayload | TransformPayload | AggregatePayload
 
 export interface CSVExportOptions {
   filename: string
   columns: Array<{
     key: string
     header: string
-    formatter?: (value: any) => string
+    formatter?: (value: string | number | boolean | Date | null | undefined) => string
   }>
   includeHeaders: boolean
   delimiter: string
@@ -48,32 +67,103 @@ export interface AggregationOptions {
     operation: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'median'
     alias?: string
   }>
-  filters?: Record<string, any>
+  filters?: Record<string, FilterValue>
   sort?: Array<{
     field: string
     direction: 'asc' | 'desc'
   }>
 }
 
+export interface TransformationOptions {
+  [key: string]: unknown
+}
+
+export interface FilterValue {
+  [key: string]: unknown
+}
+
+export interface FilterConfig {
+  field: string
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains'
+  value: string | number | boolean
+}
+
+export interface MappingConfig {
+  [key: string]: string | ((value: string | number | boolean | Date | null | undefined) => string | number | boolean | Date | null | undefined)
+}
+
+export interface SortConfig {
+  field: string
+  direction: 'asc' | 'desc'
+}
+
+export interface GroupConfig {
+  field: string
+}
+
+export interface PivotConfig {
+  rows: string[]
+  columns: string[]
+  values: string[]
+}
+
+export interface ExportPayload {
+  data: DataRecord[]
+  format: 'csv' | 'json' | 'xlsx'
+  options?: CSVExportOptions
+}
+
+export interface TransformPayload {
+  data: DataRecord[]
+  transformations: Array<{
+    type: 'filter' | 'map' | 'sort' | 'group' | 'pivot'
+    config: FilterConfig | MappingConfig | SortConfig | GroupConfig | PivotConfig
+  }>
+}
+
+export interface AggregatePayload {
+  data: DataRecord[]
+  options: AggregationOptions
+}
+
+export interface ChartDataResult {
+  x: string | number
+  y: string | number
+  label?: string
+  name?: string
+  value?: string | number
+}
+
+export interface GroupedData {
+  [key: string]: DataRecord[]
+}
+
+export interface TimeGroupedData {
+  [key: string]: DataRecord[]
+}
+
+// ============================================================================
 // Main worker message handler
+// ============================================================================
+
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { id, type, payload } = event.data
 
   try {
-    let result: any
+    let result: ResponsePayload
 
     switch (type) {
       case 'process':
-        result = await processData(payload)
+        result = await processData(payload as ProcessingTask)
         break
       case 'export':
-        result = await exportData(payload)
+        result = await exportData(payload as ExportPayload)
         break
       case 'transform':
-        result = await transformData(payload)
+        result = await transformData(payload as TransformPayload)
         break
       case 'aggregate':
-        result = await aggregateData(payload)
+        result = await aggregateData(payload as AggregatePayload)
         break
       default:
         throw new Error(`Unknown task type: ${type}`)
@@ -103,16 +193,20 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 /**
  * Process analytics data based on task type
  */
-async function processData(task: ProcessingTask): Promise<any> {
+async function processData(task: ProcessingTask): Promise<ResponsePayload> {
+  if (!task.options) {
+    throw new Error('Processing options are required')
+  }
+
   switch (task.type) {
     case 'csv-export':
-      return await generateCSV(task.data, task.options as CSVExportOptions)
+      return { content: await generateCSV(task.data, task.options as CSVExportOptions) }
     case 'chart-data':
-      return await formatChartData(task.data, task.options as ChartDataOptions)
+      return { data: await formatChartData(task.data, task.options as ChartDataOptions) }
     case 'data-aggregation':
-      return await performAggregation(task.data, task.options as AggregationOptions)
+      return { data: await performAggregation(task.data, task.options as AggregationOptions) }
     case 'data-transformation':
-      return await performTransformation(task.data, task.options)
+      return { data: await performTransformation(task.data, task.options as TransformationOptions) }
     default:
       throw new Error(`Unknown processing task type: ${task.type}`)
   }
@@ -121,25 +215,21 @@ async function processData(task: ProcessingTask): Promise<any> {
 /**
  * Export data to various formats
  */
-async function exportData(payload: {
-  data: any[]
-  format: 'csv' | 'json' | 'xlsx'
-  options?: any
-}): Promise<{ blob: Blob; filename: string }> {
+async function exportData(payload: ExportPayload): Promise<{ blob: Blob; filename: string }> {
   const { data, format, options = {} } = payload
 
   switch (format) {
     case 'csv':
-      const csvContent = await generateCSV(data, options)
+      const csvContent = await generateCSV(data, options as CSVExportOptions)
       return {
         blob: new Blob([csvContent], { type: 'text/csv' }),
-        filename: options.filename || 'analytics-export.csv'
+        filename: (options as CSVExportOptions).filename || 'analytics-export.csv'
       }
     case 'json':
       const jsonContent = JSON.stringify(data, null, 2)
       return {
         blob: new Blob([jsonContent], { type: 'application/json' }),
-        filename: options.filename || 'analytics-export.json'
+        filename: 'analytics-export.json'
       }
     default:
       throw new Error(`Unsupported export format: ${format}`)
@@ -149,31 +239,25 @@ async function exportData(payload: {
 /**
  * Transform data structures
  */
-async function transformData(payload: {
-  data: any[]
-  transformations: Array<{
-    type: 'filter' | 'map' | 'sort' | 'group' | 'pivot'
-    config: any
-  }>
-}): Promise<any[]> {
+async function transformData(payload: TransformPayload): Promise<DataRecord[]> {
   let result = [...payload.data]
 
   for (const transformation of payload.transformations) {
     switch (transformation.type) {
       case 'filter':
-        result = result.filter(item => evaluateFilter(item, transformation.config))
+        result = result.filter(item => evaluateFilter(item, transformation.config as FilterConfig))
         break
       case 'map':
-        result = result.map(item => applyMapping(item, transformation.config))
+        result = result.map(item => applyMapping(item, transformation.config as MappingConfig))
         break
       case 'sort':
-        result = sortData(result, transformation.config)
+        result = sortData(result, transformation.config as SortConfig)
         break
       case 'group':
-        result = groupData(result, transformation.config)
+        result = groupData(result, transformation.config as GroupConfig)
         break
       case 'pivot':
-        result = pivotData(result, transformation.config)
+        result = pivotData(result, transformation.config as PivotConfig)
         break
     }
   }
@@ -184,17 +268,37 @@ async function transformData(payload: {
 /**
  * Aggregate data
  */
-async function aggregateData(payload: {
-  data: any[]
-  options: AggregationOptions
-}): Promise<any[]> {
+async function aggregateData(payload: AggregatePayload): Promise<DataRecord[]> {
   return performAggregation(payload.data, payload.options)
+}
+
+/**
+ * Perform data transformation operations
+ */
+async function performTransformation(data: DataRecord[], options: TransformationOptions): Promise<DataRecord[]> {
+  // Apply transformations based on options
+  let result = [...data]
+  
+  // Example transformation logic - can be extended based on specific needs
+  if (options.normalize && typeof options.normalize === 'boolean') {
+    result = result.map(item => normalizeRecord(item))
+  }
+  
+  if (options.deduplicate && typeof options.deduplicate === 'boolean') {
+    result = deduplicateRecords(result)
+  }
+  
+  if (options.fillMissing && typeof options.fillMissing === 'object') {
+    result = result.map(item => fillMissingValues(item, options.fillMissing as Record<string, string | number>))
+  }
+  
+  return result
 }
 
 /**
  * Generate CSV content from data
  */
-async function generateCSV(data: any[], options: CSVExportOptions): Promise<string> {
+async function generateCSV(data: DataRecord[], options: CSVExportOptions): Promise<string> {
   const { columns, includeHeaders, delimiter } = options
   let csv = ''
 
@@ -238,8 +342,8 @@ async function generateCSV(data: any[], options: CSVExportOptions): Promise<stri
 /**
  * Format data for chart visualization
  */
-async function formatChartData(data: any[], options: ChartDataOptions): Promise<any> {
-  const { chartType, xAxis, yAxis, groupBy, aggregation, timeGranularity } = options
+async function formatChartData(data: DataRecord[], options: ChartDataOptions): Promise<ChartDataResult[]> {
+  const { chartType, xAxis, yAxis, groupBy, timeGranularity } = options
 
   let processedData = [...data]
 
@@ -257,11 +361,11 @@ async function formatChartData(data: any[], options: ChartDataOptions): Promise<
   switch (chartType) {
     case 'line':
     case 'area':
-      return formatTimeSeriesData(processedData, xAxis, yAxis, aggregation)
+      return formatTimeSeriesData(processedData, xAxis, yAxis)
     case 'bar':
-      return formatBarChartData(processedData, xAxis, yAxis, aggregation)
+      return formatBarChartData(processedData, xAxis, yAxis)
     case 'pie':
-      return formatPieChartData(processedData, xAxis, yAxis, aggregation)
+      return formatPieChartData(processedData, xAxis, yAxis)
     case 'scatter':
       return formatScatterData(processedData, xAxis, yAxis)
     default:
@@ -272,7 +376,7 @@ async function formatChartData(data: any[], options: ChartDataOptions): Promise<
 /**
  * Perform data aggregation
  */
-async function performAggregation(data: any[], options: AggregationOptions): Promise<any[]> {
+async function performAggregation(data: DataRecord[], options: AggregationOptions): Promise<DataRecord[]> {
   const { groupBy, metrics, filters, sort } = options
 
   let processedData = [...data]
@@ -281,7 +385,7 @@ async function performAggregation(data: any[], options: AggregationOptions): Pro
   if (filters) {
     processedData = processedData.filter(item => 
       Object.entries(filters).every(([key, value]) => 
-        evaluateFilter(item, { field: key, operator: 'equals', value })
+        evaluateFilter(item, { field: key, operator: 'equals', value: value as string | number | boolean })
       )
     )
   }
@@ -293,41 +397,43 @@ async function performAggregation(data: any[], options: AggregationOptions): Pro
 
   // Calculate metrics for each group
   const results = Object.entries(grouped).map(([groupKey, groupData]) => {
-    const result: any = {}
+    const result: DataRecord = {}
 
     // Add group keys
     if (groupBy.length > 0) {
       const groupKeys = groupKey.split('|')
       groupBy.forEach((field, index) => {
-        result[field] = groupKeys[index]
+        result[field] = groupKeys[index] || ''
       })
     }
 
     // Calculate metrics
     metrics.forEach(metric => {
-      const values = groupData.map(item => item[metric.field]).filter(v => v != null)
+      const values = groupData
+        .map(item => item[metric.field])
+        .filter((v): v is number => v != null && typeof v === 'number')
       const fieldName = metric.alias || metric.field
 
       switch (metric.operation) {
         case 'sum':
-          result[fieldName] = values.reduce((sum, val) => sum + Number(val), 0)
+          result[fieldName] = values.reduce((sum, val) => sum + val, 0)
           break
         case 'avg':
           result[fieldName] = values.length > 0 
-            ? values.reduce((sum, val) => sum + Number(val), 0) / values.length 
+            ? values.reduce((sum, val) => sum + val, 0) / values.length 
             : 0
           break
         case 'count':
           result[fieldName] = values.length
           break
         case 'min':
-          result[fieldName] = values.length > 0 ? Math.min(...values.map(Number)) : 0
+          result[fieldName] = values.length > 0 ? Math.min(...values) : 0
           break
         case 'max':
-          result[fieldName] = values.length > 0 ? Math.max(...values.map(Number)) : 0
+          result[fieldName] = values.length > 0 ? Math.max(...values) : 0
           break
         case 'median':
-          result[fieldName] = calculateMedian(values.map(Number))
+          result[fieldName] = calculateMedian(values)
           break
       }
     })
@@ -337,13 +443,15 @@ async function performAggregation(data: any[], options: AggregationOptions): Pro
 
   // Apply sorting
   if (sort && sort.length > 0) {
-    return sortData(results, sort)
+    return sortData(results, sort[0])
   }
 
   return results
 }
 
+// ============================================================================
 // Helper functions
+// ============================================================================
 
 function escapeCSVValue(value: string): string {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -352,7 +460,7 @@ function escapeCSVValue(value: string): string {
   return value
 }
 
-function evaluateFilter(item: any, filter: any): boolean {
+function evaluateFilter(item: DataRecord, filter: FilterConfig): boolean {
   const { field, operator, value } = filter
   const itemValue = item[field]
 
@@ -372,10 +480,10 @@ function evaluateFilter(item: any, filter: any): boolean {
   }
 }
 
-function applyMapping(item: any, mapping: any): any {
+function applyMapping(item: DataRecord, mapping: MappingConfig): DataRecord {
   const result = { ...item }
   
-  Object.entries(mapping).forEach(([key, transform]: [string, any]) => {
+  Object.entries(mapping).forEach(([key, transform]) => {
     if (typeof transform === 'function') {
       result[key] = transform(item[key])
     } else if (typeof transform === 'string') {
@@ -387,51 +495,51 @@ function applyMapping(item: any, mapping: any): any {
   return result
 }
 
-function sortData(data: any[], sortConfig: any): any[] {
+function sortData(data: DataRecord[], sortConfig: SortConfig): DataRecord[] {
   return data.sort((a, b) => {
-    for (const sort of Array.isArray(sortConfig) ? sortConfig : [sortConfig]) {
-      const { field, direction } = sort
-      const aVal = a[field]
-      const bVal = b[field]
-      
-      if (aVal === bVal) continue
-      
-      const comparison = aVal < bVal ? -1 : 1
-      return direction === 'desc' ? -comparison : comparison
-    }
-    return 0
+    const { field, direction } = sortConfig
+    const aVal = a[field]
+    const bVal = b[field]
+    
+    if (aVal === bVal) return 0
+    
+    const comparison = aVal < bVal ? -1 : 1
+    return direction === 'desc' ? -comparison : comparison
   })
 }
 
-function groupData(data: any[], config: any): any[] {
+function groupData(data: DataRecord[], config: GroupConfig): DataRecord[] {
   const { field } = config
-  const grouped = data.reduce((groups, item) => {
-    const key = item[field]
+  const grouped = data.reduce((groups: GroupedData, item) => {
+    const key = String(item[field] || 'undefined')
     if (!groups[key]) groups[key] = []
     groups[key].push(item)
     return groups
-  }, {} as Record<string, any[]>)
+  }, {})
 
-  return Object.entries(grouped).map(([key, items]) => ({
+  return Object.entries(grouped).map(([key, groupItems]) => ({
     [field]: key,
-    items,
-    count: items.length
+    items: groupItems,
+    count: groupItems.length
   }))
 }
 
-function groupDataByFields(data: any[], fields: string[]): Record<string, any[]> {
-  return data.reduce((groups, item) => {
-    const key = fields.map(field => item[field]).join('|')
+function groupDataByFields(data: DataRecord[], fields: string[]): GroupedData {
+  return data.reduce((groups: GroupedData, item) => {
+    const key = fields.map(field => String(item[field] || 'undefined')).join('|')
     if (!groups[key]) groups[key] = []
     groups[key].push(item)
     return groups
-  }, {} as Record<string, any[]>)
+  }, {})
 }
 
-function pivotData(data: any[], config: any): any[] {
+function pivotData(data: DataRecord[], config: PivotConfig): DataRecord[] {
   // Simplified pivot implementation
   const { rows, columns, values } = config
-  // Implementation would depend on specific pivot requirements
+  
+  // For now, return the original data
+  // A full pivot implementation would be more complex and depends on specific requirements
+  console.log('Pivot operation requested with config:', { rows, columns, values })
   return data
 }
 
@@ -441,10 +549,11 @@ function isDateField(field: string): boolean {
          field.toLowerCase().includes('timestamp')
 }
 
-function aggregateByTime(data: any[], timeField: string, granularity: string): any[] {
+function aggregateByTime(data: DataRecord[], timeField: string, granularity: string): DataRecord[] {
   // Group data by time granularity
-  const grouped = data.reduce((groups, item) => {
-    const date = new Date(item[timeField])
+  const grouped = data.reduce((groups: TimeGroupedData, item) => {
+    const dateValue = item[timeField]
+    const date = new Date(dateValue as string | number | Date)
     let key: string
 
     switch (granularity) {
@@ -463,56 +572,63 @@ function aggregateByTime(data: any[], timeField: string, granularity: string): a
         key = `${date.getFullYear()}-${date.getMonth()}`
         break
       default:
-        key = item[timeField]
+        key = String(item[timeField] || 'undefined')
     }
 
     if (!groups[key]) groups[key] = []
     groups[key].push(item)
     return groups
-  }, {} as Record<string, any[]>)
+  }, {})
 
-  return Object.entries(grouped).map(([key, items]) => ({
+  return Object.entries(grouped).map(([key, groupItems]) => ({
     [timeField]: key,
-    items,
-    count: items.length
+    items: groupItems,
+    count: groupItems.length
   }))
 }
 
-function formatTimeSeriesData(data: any[], xAxis: string, yAxis: string | string[], aggregation?: string): any {
+function formatTimeSeriesData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
   // Format data for time series charts
   return data.map(item => ({
-    x: item[xAxis],
+    x: item[xAxis] as string | number,
     y: Array.isArray(yAxis) 
       ? yAxis.reduce((sum, field) => sum + (Number(item[field]) || 0), 0)
       : Number(item[yAxis]) || 0
   }))
 }
 
-function formatBarChartData(data: any[], xAxis: string, yAxis: string | string[], aggregation?: string): any {
+function formatBarChartData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
   // Format data for bar charts
   return data.map(item => ({
-    label: item[xAxis],
-    value: Array.isArray(yAxis)
+    x: item[xAxis] as string | number,
+    y: Array.isArray(yAxis)
       ? yAxis.reduce((sum, field) => sum + (Number(item[field]) || 0), 0)
-      : Number(item[yAxis]) || 0
+      : Number(item[yAxis]) || 0,
+    label: String(item[xAxis] || '')
   }))
 }
 
-function formatPieChartData(data: any[], xAxis: string, yAxis: string | string[], aggregation?: string): any {
+function formatPieChartData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
   // Format data for pie charts
   return data.map(item => ({
-    name: item[xAxis],
+    x: item[xAxis] as string | number,
+    y: Array.isArray(yAxis)
+      ? yAxis.reduce((sum, field) => sum + (Number(item[field]) || 0), 0)
+      : Number(item[yAxis]) || 0,
+    name: String(item[xAxis] || ''),
     value: Array.isArray(yAxis)
       ? yAxis.reduce((sum, field) => sum + (Number(item[field]) || 0), 0)
       : Number(item[yAxis]) || 0
   }))
 }
 
-function formatScatterData(data: any[], xAxis: string, yAxis: string | string[]): any {
+function formatScatterData(data: DataRecord[], xAxis: string, yAxis: string | string[]): ChartDataResult[] {
   // Format data for scatter plots
   return data.map(item => ({
     x: Number(item[xAxis]) || 0,
-    y: Array.isArray(yAxis) ? Number(item[yAxis[0]]) || 0 : Number(item[yAxis]) || 0
+    y: Array.isArray(yAxis) && yAxis.length > 0 
+      ? Number(item[yAxis[0]]) || 0 
+      : Number(item[yAxis as string]) || 0
   }))
 }
 
@@ -522,9 +638,62 @@ function calculateMedian(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
   
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid]
+  if (sorted.length % 2 === 0) {
+    const midLeft = sorted[mid - 1]
+    const midRight = sorted[mid]
+    return midLeft !== undefined && midRight !== undefined 
+      ? (midLeft + midRight) / 2 
+      : 0
+  } else {
+    const midValue = sorted[mid]
+    return midValue !== undefined ? midValue : 0
+  }
+}
+
+// ============================================================================
+// Additional helper functions for data transformation
+// ============================================================================
+
+function normalizeRecord(record: DataRecord): DataRecord {
+  const normalized: DataRecord = {}
+  
+  Object.entries(record).forEach(([key, value]) => {
+    // Normalize string values
+    if (typeof value === 'string') {
+      normalized[key] = value.trim().toLowerCase()
+    } else {
+      normalized[key] = value
+    }
+  })
+  
+  return normalized
+}
+
+function deduplicateRecords(records: DataRecord[]): DataRecord[] {
+  const seen = new Set<string>()
+  const result: DataRecord[] = []
+  
+  for (const record of records) {
+    const key = JSON.stringify(record)
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(record)
+    }
+  }
+  
+  return result
+}
+
+function fillMissingValues(record: DataRecord, fillValues: Record<string, string | number>): DataRecord {
+  const filled = { ...record }
+  
+  Object.entries(fillValues).forEach(([field, defaultValue]) => {
+    if (filled[field] == null) {
+      filled[field] = defaultValue
+    }
+  })
+  
+  return filled
 }
 
 export {}
