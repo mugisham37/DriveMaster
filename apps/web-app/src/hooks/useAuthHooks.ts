@@ -32,13 +32,13 @@ import type { UseAuthActionsReturn } from '@/hooks/useAuthActions'
  * Provides access to authentication state and basic user information
  * Optimized to prevent unnecessary re-renders
  * 
- * @returns AuthContextValue - Complete authentication context
+ * @returns AuthContextValue - Complete authentication context with type safety
  */
 export function useAuth(): AuthContextValue {
   const context = useAuthContext()
   
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider. Make sure your component is wrapped with <AuthProvider>.')
   }
   
   return context
@@ -62,9 +62,9 @@ export interface UseRequireAuthOptions {
 
 export interface UseRequireAuthReturn extends AuthContextValue {
   /** Whether a redirect is in progress */
-  isRedirecting: boolean
+  readonly isRedirecting: boolean
   /** Whether the component should render (authenticated and not redirecting) */
-  shouldRender: boolean
+  readonly shouldRender: boolean
 }
 
 /**
@@ -138,7 +138,7 @@ export interface UseRequireMentorOptions extends UseRequireAuthOptions {
 
 export interface UseRequireMentorReturn extends UseRequireAuthReturn {
   /** Whether a mentor-specific redirect is in progress */
-  isMentorRedirecting: boolean
+  readonly isMentorRedirecting: boolean
 }
 
 /**
@@ -212,7 +212,7 @@ export interface UseRequireInsiderOptions extends UseRequireAuthOptions {
 
 export interface UseRequireInsiderReturn extends UseRequireAuthReturn {
   /** Whether an insider-specific redirect is in progress */
-  isInsiderRedirecting: boolean
+  readonly isInsiderRedirecting: boolean
 }
 
 /**
@@ -294,15 +294,50 @@ export function useAuthActions(): UseAuthActionsReturn {
 // ============================================================================
 
 /**
+ * Type-safe role definition for authentication status checks
+ */
+export type AuthRole = 'mentor' | 'insider' | 'user'
+
+/**
+ * Return type for useAuthStatus hook with comprehensive type safety
+ */
+export interface UseAuthStatusReturn {
+  // Basic state
+  readonly isInitialized: boolean
+  readonly isAuthenticated: boolean
+  readonly isLoading: boolean
+  readonly user: AuthContextValue['user']
+  
+  // Role checks
+  readonly isMentor: boolean
+  readonly isInsider: boolean
+  
+  // Error state
+  readonly error: AuthContextValue['state']['error']
+  readonly hasError: boolean
+  
+  // Computed status
+  readonly isReady: boolean
+  
+  // Permission checks
+  readonly canAccessMentoring: boolean
+  readonly canAccessInsiderFeatures: boolean
+  readonly canAccessDashboard: boolean
+  
+  // Role validation helper with type safety
+  readonly hasRole: (role: AuthRole) => boolean
+}
+
+/**
  * Hook for checking authentication status without redirects
  * Useful for components that need to know auth state but handle redirects themselves
- * Optimized to prevent unnecessary re-renders
+ * Optimized to prevent unnecessary re-renders with comprehensive type safety
  */
-export function useAuthStatus() {
+export function useAuthStatus(): UseAuthStatusReturn {
   const auth = useAuth()
 
   // Memoize role validation helper to prevent recreation on every render
-  const hasRole = useStableAuthCallback((role: 'mentor' | 'insider' | 'user') => {
+  const hasRole = useStableAuthCallback((role: AuthRole): boolean => {
     switch (role) {
       case 'mentor':
         return auth.isAuthenticated && auth.isMentor
@@ -311,12 +346,14 @@ export function useAuthStatus() {
       case 'user':
         return auth.isAuthenticated
       default:
+        // TypeScript will catch this at compile time, but runtime safety
+        const _exhaustiveCheck: never = role
         return false
     }
   }, [auth.isAuthenticated, auth.isMentor, auth.isInsider])
 
   // Memoize the entire return object to prevent unnecessary re-renders
-  return useMemo(() => ({
+  return useMemo((): UseAuthStatusReturn => ({
     // Basic state
     isInitialized: auth.isInitialized,
     isAuthenticated: auth.isAuthenticated,
@@ -341,7 +378,7 @@ export function useAuthStatus() {
     
     // Role validation helper
     hasRole
-  }), [
+  } as const), [
     auth.isInitialized,
     auth.isAuthenticated,
     auth.isLoading,

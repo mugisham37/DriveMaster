@@ -29,6 +29,104 @@ import type {
   RegisterData,
   OAuthProviderType
 } from '@/types/auth-service'
+import { 
+  isValidationError,
+  isNetworkError,
+  isAuthenticationError,
+  isAuthorizationError,
+  isOAuthError,
+  isServerError
+} from '@/types/auth-service'
+
+// ============================================================================
+// Type Utilities
+// ============================================================================
+
+/**
+ * Type-safe conversion of UserProfile to Record<string, unknown>
+ * This is needed for the token manager which expects a generic record
+ */
+function userProfileToRecord(user: UserProfile): Record<string, unknown> {
+  return {
+    id: user.id,
+    handle: user.handle,
+    name: user.name,
+    email: user.email,
+    avatarUrl: user.avatarUrl,
+    reputation: user.reputation,
+    flair: user.flair,
+    isMentor: user.isMentor,
+    isInsider: user.isInsider,
+    seniority: user.seniority,
+    totalDonatedInDollars: user.totalDonatedInDollars,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    preferences: user.preferences,
+    tracks: user.tracks
+  }
+}
+
+/**
+ * Type-safe error handler with discriminated union support
+ * Provides better error classification and handling
+ */
+function handleAuthError(error: unknown, context: string): AuthError {
+  // If it's already an AuthError, return it
+  if (error && typeof error === 'object' && 'type' in error) {
+    return error as AuthError
+  }
+
+  // Process through AuthErrorHandler for proper classification
+  return AuthErrorHandler.processError(error, context)
+}
+
+/**
+ * Type-safe error classification helper
+ * Uses discriminated unions for better type safety
+ */
+function classifyAuthError(error: AuthError): {
+  isRecoverable: boolean
+  shouldRetry: boolean
+  shouldLogout: boolean
+  userMessage: string
+} {
+  let isRecoverable = error.recoverable
+  let shouldRetry = false
+  let shouldLogout = false
+  let userMessage = error.message
+
+  if (isNetworkError(error)) {
+    shouldRetry = true
+    userMessage = 'Network connection issue. Please check your internet connection and try again.'
+  } else if (isValidationError(error)) {
+    // Validation errors are not recoverable through retry
+    isRecoverable = false
+    userMessage = `Please check your ${error.field}: ${error.message}`
+  } else if (isAuthenticationError(error)) {
+    shouldLogout = ['TOKEN_EXPIRED', 'TOKEN_INVALID', 'SESSION_EXPIRED'].includes(error.code)
+    if (shouldLogout) {
+      userMessage = 'Your session has expired. Please sign in again.'
+    }
+  } else if (isAuthorizationError(error)) {
+    userMessage = 'You do not have permission to perform this action.'
+  } else if (isOAuthError(error)) {
+    userMessage = 'Social login failed. Please try again or use email login.'
+  } else if (isServerError(error)) {
+    shouldRetry = error.code !== 'RATE_LIMITED'
+    if (error.code === 'RATE_LIMITED') {
+      userMessage = 'Too many requests. Please wait a moment before trying again.'
+    } else {
+      userMessage = 'Server is temporarily unavailable. Please try again later.'
+    }
+  }
+
+  return {
+    isRecoverable,
+    shouldRetry,
+    shouldLogout,
+    userMessage
+  }
+}
 
 // ============================================================================
 // State Types
@@ -638,14 +736,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Authentication Actions
   // ============================================================================
   
-  const login = useStableAuthCallback(async (credentials: LoginCredentials) => {
+  const login = useStableAuthCallback(async (credentials: LoginCredentials): Promise<void> => {
     dispatch({ type: 'LOGIN_START' })
     
     try {
       // Use optimized login with caching and deduplication
-      const { tokens, user } = await optimizedAuthOps.login(
+      const { tokens, user }: { tokens: TokenPair; user: UserProfile } = await optimizedAuthOps.login(
         credentials,
-        async (creds) => {
+        async (creds: LoginCredentials) => {
           return await authResilience.executeWithResilience(
             () => authClient.login(creds),
             {
@@ -658,38 +756,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
       )
       
       // Store tokens using integrated token manager
-      await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
+      await integratedTokenManager.storeTokens(tokens, userProfileToRecord(user))
       
       dispatch({ 
         type: 'LOGIN_SUCCESS', 
         payload: { user, tokens } 
       })
     } catch (error) {
-      const authError = AuthErrorHandler.processError(error, 'login')
+      const authError: AuthError = handleAuthError(error, 'login')
+      const errorClassification = classifyAuthError(authError)
       
       // Handle partial failure gracefully
       const failureResult = authResilience.handlePartialFailure(authError, 'login')
       
       dispatch({ 
         type: 'LOGIN_ERROR', 
-        payload: { error: authError } 
+        payload: { error: { ...authError, message: errorClassification.userMessage } } 
       })
       
       // Log technical details for debugging
-      console.error('Login failed:', failureResult.technicalMessage)
+      console.error('Login failed:', {
+        type: authError.type,
+        code: authError.code,
+        classification: errorClassification,
+        technicalMessage: failureResult.technicalMessage
+      })
       
       throw authError
     }
   }, [])
   
-  const register = useStableAuthCallback(async (userData: RegisterData) => {
+  const register = useStableAuthCallback(async (userData: RegisterData): Promise<void> => {
     dispatch({ type: 'REGISTER_START' })
     
     try {
       // Use optimized register with deduplication
-      const { tokens, user } = await optimizedAuthOps.register(
+      const { tokens, user }: { tokens: TokenPair; user: UserProfile } = await optimizedAuthOps.register(
         userData,
-        async (data) => {
+        async (data: RegisterData) => {
           return await authResilience.executeWithResilience(
             () => authClient.register(data),
             {
@@ -702,24 +806,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
       )
       
       // Store tokens using integrated token manager
-      await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
+      await integratedTokenManager.storeTokens(tokens, userProfileToRecord(user))
       
       dispatch({ 
         type: 'REGISTER_SUCCESS', 
         payload: { user, tokens } 
       })
     } catch (error) {
-      const authError = AuthErrorHandler.processError(error, 'register')
+      const authError: AuthError = handleAuthError(error, 'register')
+      const errorClassification = classifyAuthError(authError)
       
       dispatch({ 
         type: 'REGISTER_ERROR', 
-        payload: { error: authError } 
+        payload: { error: { ...authError, message: errorClassification.userMessage } } 
       })
+      
+      // Log technical details for debugging
+      console.error('Registration failed:', {
+        type: authError.type,
+        code: authError.code,
+        classification: errorClassification
+      })
+      
       throw authError
     }
   }, [])
   
-  const logout = useStableAuthCallback(async () => {
+  const logout = useStableAuthCallback(async (): Promise<void> => {
     dispatch({ type: 'LOGOUT_START' })
     
     try {
@@ -753,7 +866,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const authError = AuthErrorHandler.processError(error, 'logout')
       
       // Handle partial failure - logout should always succeed locally
-      const failureResult = authResilience.handlePartialFailure(authError, 'logout')
+      const failureResult = authResilience.handlePartialFailure(authError, 'profile')
       
       console.warn('Logout API failed, but local state cleared:', failureResult.technicalMessage)
       
@@ -767,13 +880,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [state.user?.id])
   
-  const refreshSession = useStableAuthCallback(async () => {
+  const refreshSession = useStableAuthCallback(async (): Promise<void> => {
     dispatch({ type: 'REFRESH_START' })
     
     try {
       // Use optimized token refresh with deduplication
-      const accessToken = await optimizedAuthOps.refreshTokens(
-        async () => {
+      const accessToken: string = await optimizedAuthOps.refreshTokens(
+        async (): Promise<string> => {
           return await authResilience.executeWithResilience(
             () => integratedTokenManager.getValidAccessToken(),
             {
@@ -825,7 +938,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // OAuth Actions
   // ============================================================================
   
-  const initiateOAuth = useStableAuthCallback(async (provider: OAuthProviderType, redirectUrl?: string) => {
+  const initiateOAuth = useStableAuthCallback(async (provider: OAuthProviderType, redirectUrl?: string): Promise<void> => {
     dispatch({ 
       type: 'OAUTH_START', 
       payload: { 
@@ -836,15 +949,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       // Use optimized OAuth initiation with deduplication
-      const response = await optimizedAuthOps.initiateOAuth(
+      const response: unknown = await optimizedAuthOps.initiateOAuth(
         provider,
         redirectUrl,
-        (prov, redirUrl) => authClient.initiateOAuth(prov, redirUrl)
+        (prov: OAuthProviderType, redirUrl?: string) => authClient.initiateOAuth(prov, redirUrl)
       )
       
       if (response && typeof response === 'object' && 'authorizationUrl' in response) {
         // Redirect to OAuth provider
-        window.location.href = response.authorizationUrl
+        const oauthResponse = response as { authorizationUrl: string }
+        window.location.href = oauthResponse.authorizationUrl
       } else {
         throw new Error('OAuth initiation failed')
       }
@@ -873,13 +987,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Profile Actions
   // ============================================================================
   
-  const fetchProfile = useStableAuthCallback(async () => {
+  const fetchProfile = useStableAuthCallback(async (): Promise<void> => {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
       // Use optimized profile fetching with caching and deduplication
-      const user = await optimizedAuthOps.getProfile(
-        async () => {
+      const user: UserProfile = await optimizedAuthOps.getProfile(
+        async (): Promise<UserProfile> => {
           const profileResult = await authResilience.getUserProfile(
             state.user?.id || 0,
             () => authClient.getProfile()
@@ -919,11 +1033,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [state.user?.id])
   
-  const updateProfile = useStableAuthCallback(async (updates: Partial<UserProfile>) => {
+  const updateProfile = useStableAuthCallback(async (updates: Partial<UserProfile>): Promise<void> => {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
-      const user = await authClient.updateProfile(updates)
+      const user: UserProfile = await authClient.updateProfile(updates)
       
       // Invalidate profile cache after update
       optimizedAuthOps.invalidateUserCache(user.id)
