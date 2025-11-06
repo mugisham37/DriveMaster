@@ -43,6 +43,8 @@
     "fcm",
     "webhooks",
     "oauth",
+    "nextauth",
+    "signup",
     "PKCE",
     "jwt",
     "bcrypt",
