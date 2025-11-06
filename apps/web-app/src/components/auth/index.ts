@@ -46,3 +46,19 @@ export type {
   RoleDisplayProps,
   AccessControlProps
 } from './RoleBasedAccess'
+
+// Health Status Components
+export {
+  AuthHealthStatus,
+  AuthHealthIndicator
+} from './AuthHealthStatus'
+
+// System Error Boundary
+export {
+  AuthSystemBoundary,
+  withAuthSystemBoundary,
+  useAuthSystemRecovery
+} from './AuthSystemBoundary'
+
+// Enhanced Error Display
+export { AuthError } from './AuthError'

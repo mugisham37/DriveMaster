@@ -14,6 +14,9 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react'
 import { integratedTokenManager } from '@/lib/auth/token-manager'
 import { authClient } from '@/lib/auth/api-client'
+import { AuthErrorHandler } from '@/lib/auth/error-handler'
+import { circuitBreakerManager } from '@/lib/auth/circuit-breaker'
+import { authResilience, initializeAuthResilience } from '@/lib/auth/resilience-integration'
 import type { 
   UserProfile, 
   TokenPair, 
@@ -506,27 +509,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: 'INITIALIZE_START' })
       
       try {
+        // Initialize resilience systems
+        const authServiceUrl = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3001'
+        initializeAuthResilience(authServiceUrl)
+        
         // Check if we have valid tokens
         const tokenInfo = integratedTokenManager.getTokenInfo()
         
         if (tokenInfo.hasAccessToken && tokenInfo.isAccessTokenValid) {
-          // Try to fetch user profile
+          // Try to fetch user profile with resilience
           try {
-            const user = await authClient.getProfile()
+            const profileResult = await authResilience.getUserProfile(
+              0, // We don't have user ID yet, will be handled by the fetch function
+              () => authClient.getProfile()
+            )
             
-            if (isMounted && user) {
+            if (isMounted && profileResult.data) {
               dispatch({ 
                 type: 'INITIALIZE_SUCCESS', 
                 payload: { 
-                  user, 
+                  user: profileResult.data, 
                   isAuthenticated: true 
                 } 
               })
+              
+              // Log if we're using degraded mode
+              if (profileResult.degraded) {
+                console.warn('Authentication initialized in degraded mode:', profileResult.source)
+              }
+              
               return
             }
-          } catch {
-            // Log the error but continue with initialization
-            console.warn('Failed to fetch profile during initialization')
+          } catch (error) {
+            // Handle partial failure gracefully
+            const failureResult = authResilience.handlePartialFailure(
+              AuthErrorHandler.processError(error, 'initialization'),
+              'profile'
+            )
+            
+            if (!failureResult.shouldLogout) {
+              console.warn('Profile fetch failed during initialization, continuing without user data:', failureResult.technicalMessage)
+            }
           }
         }
         
@@ -540,17 +563,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             } 
           })
         }
-      } catch {
+      } catch (error) {
         if (isMounted) {
+          const authError = AuthErrorHandler.processError(error, 'initialization')
           dispatch({ 
             type: 'INITIALIZE_ERROR', 
-            payload: { 
-              error: {
-                type: 'authentication',
-                message: 'Failed to initialize authentication',
-                recoverable: true
-              }
-            } 
+            payload: { error: authError } 
           })
         }
       }
@@ -620,7 +638,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'LOGIN_START' })
     
     try {
-      const { tokens, user } = await authClient.login(credentials)
+      const { tokens, user } = await authResilience.executeWithResilience(
+        () => authClient.login(credentials),
+        {
+          operationType: 'login',
+          cacheKey: `login_${credentials.email}`,
+          retryAttempts: 3
+        }
+      )
       
       // Store tokens using integrated token manager
       await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
@@ -630,23 +655,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         payload: { user, tokens } 
       })
     } catch (error) {
-      const authError: AuthError = error instanceof Error 
-        ? {
-            type: 'authentication',
-            message: error.message,
-            recoverable: true
-          }
-        : {
-            type: 'authentication',
-            message: 'Login failed',
-            recoverable: true
-          }
+      const authError = AuthErrorHandler.processError(error, 'login')
+      
+      // Handle partial failure gracefully
+      const failureResult = authResilience.handlePartialFailure(authError, 'login')
       
       dispatch({ 
         type: 'LOGIN_ERROR', 
         payload: { error: authError } 
       })
-      throw error
+      
+      // Log technical details for debugging
+      console.error('Login failed:', failureResult.technicalMessage)
+      
+      throw authError
     }
   }, [])
   
@@ -654,7 +676,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'REGISTER_START' })
     
     try {
-      const { tokens, user } = await authClient.register(userData)
+      const { tokens, user } = await authResilience.executeWithResilience(
+        () => authClient.register(userData),
+        {
+          operationType: 'register',
+          cacheKey: `register_${userData.email}`,
+          retryAttempts: 3
+        }
+      )
       
       // Store tokens using integrated token manager
       await integratedTokenManager.storeTokens(tokens, user as unknown as Record<string, unknown>)
@@ -664,23 +693,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         payload: { user, tokens } 
       })
     } catch (error) {
-      const authError: AuthError = error instanceof Error 
-        ? {
-            type: 'validation',
-            message: error.message,
-            recoverable: true
-          }
-        : {
-            type: 'validation',
-            message: 'Registration failed',
-            recoverable: true
-          }
+      const authError = AuthErrorHandler.processError(error, 'register')
       
       dispatch({ 
         type: 'REGISTER_ERROR', 
         payload: { error: authError } 
       })
-      throw error
+      throw authError
     }
   }, [])
   
@@ -688,35 +707,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'LOGOUT_START' })
     
     try {
-      // Call logout API
-      await authClient.logout()
+      // Try to call logout API with resilience
+      await authResilience.executeWithResilience(
+        () => authClient.logout(),
+        {
+          operationType: 'logout',
+          retryAttempts: 2 // Fewer retries for logout
+        }
+      )
       
       // Clear tokens using integrated token manager (broadcasts to other tabs)
       await integratedTokenManager.clearTokens()
       
       dispatch({ type: 'LOGOUT_SUCCESS' })
     } catch (error) {
-      // Even if API call fails, clear local tokens
+      // Even if API call fails, clear local tokens for graceful degradation
       await integratedTokenManager.clearTokens()
       
-      const authError: AuthError = error instanceof Error 
-        ? {
-            type: 'network',
-            message: error.message,
-            recoverable: false
-          }
-        : {
-            type: 'network',
-            message: 'Logout failed',
-            recoverable: false
-          }
+      const authError = AuthErrorHandler.processError(error, 'logout')
+      
+      // Handle partial failure - logout should always succeed locally
+      const failureResult = authResilience.handlePartialFailure(authError, 'logout')
+      
+      console.warn('Logout API failed, but local state cleared:', failureResult.technicalMessage)
       
       dispatch({ 
         type: 'LOGOUT_ERROR', 
         payload: { error: authError } 
       })
       
-      // Still dispatch success to clear local state
+      // Still dispatch success to clear local state for graceful degradation
       dispatch({ type: 'LOGOUT_SUCCESS' })
     }
   }, [])
@@ -725,7 +745,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'REFRESH_START' })
     
     try {
-      const accessToken = await integratedTokenManager.getValidAccessToken()
+      const accessToken = await authResilience.executeWithResilience(
+        () => integratedTokenManager.getValidAccessToken(),
+        {
+          operationType: 'refresh',
+          cacheKey: 'token_refresh',
+          retryAttempts: 2
+        }
+      )
       
       if (accessToken) {
         const tokenInfo = integratedTokenManager.getTokenInfo()
@@ -743,23 +770,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Failed to refresh tokens')
       }
     } catch (error) {
-      const authError: AuthError = error instanceof Error 
-        ? {
-            type: 'authentication',
-            message: error.message,
-            recoverable: true
-          }
-        : {
-            type: 'authentication',
-            message: 'Session refresh failed',
-            recoverable: true
-          }
+      const authError = AuthErrorHandler.processError(error, 'token_refresh')
+      
+      // Handle partial failure - check if we should logout
+      const failureResult = authResilience.handlePartialFailure(authError, 'refresh')
       
       dispatch({ 
         type: 'REFRESH_ERROR', 
         payload: { error: authError } 
       })
-      throw error
+      
+      // If we should logout due to refresh failure, trigger session expiry
+      if (failureResult.shouldLogout) {
+        console.warn('Token refresh failed, triggering logout:', failureResult.technicalMessage)
+        dispatch({ type: 'SESSION_EXPIRED' })
+      }
+      
+      throw authError
     }
   }, [])
   
@@ -814,32 +841,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
-      const user = await authClient.getProfile()
+      // Use resilient profile fetching with graceful degradation
+      const profileResult = await authResilience.getUserProfile(
+        state.user?.id || 0,
+        () => authClient.getProfile()
+      )
       
       dispatch({ 
         type: 'PROFILE_FETCH_SUCCESS', 
-        payload: { user } 
+        payload: { user: profileResult.data } 
       })
+      
+      // Log if we're using degraded mode
+      if (profileResult.degraded) {
+        console.info('Profile loaded from cache/fallback:', profileResult.source)
+      }
     } catch (error) {
-      const authError: AuthError = error instanceof Error 
-        ? {
-            type: 'network',
-            message: error.message,
-            recoverable: true
-          }
-        : {
-            type: 'network',
-            message: 'Failed to fetch profile',
-            recoverable: true
-          }
+      const authError = AuthErrorHandler.processError(error, 'profile')
+      
+      // Handle partial failure gracefully
+      const failureResult = authResilience.handlePartialFailure(authError, 'profile')
       
       dispatch({ 
         type: 'PROFILE_FETCH_ERROR', 
         payload: { error: authError } 
       })
+      
+      // Don't logout for profile fetch failures unless it's an auth error
+      if (!failureResult.shouldLogout) {
+        console.warn('Profile fetch failed, continuing with existing data:', failureResult.technicalMessage)
+      }
+      
       throw error
     }
-  }, [])
+  }, [state.user?.id])
   
   const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
     dispatch({ type: 'PROFILE_FETCH_START' })

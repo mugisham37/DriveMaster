@@ -1,58 +1,136 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import { AuthErrorDisplay } from '@/lib/auth/error-display'
+import { AuthErrorHandler } from '@/lib/auth/error-handler'
+import type { AuthError as AuthErrorType } from '@/types/auth-service'
 
 export function AuthError() {
   const searchParams = useSearchParams()
-  const error = searchParams.get('error')
+  const errorParam = searchParams.get('error')
 
-  if (!error) return null
+  if (!errorParam) return null
 
-  const getErrorMessage = (error: string) => {
-    switch (error) {
+  // Convert legacy error codes to new AuthError format
+  const convertLegacyError = (errorCode: string): AuthErrorType => {
+    switch (errorCode) {
       case 'CredentialsSignin':
-        return 'Invalid email or password. Please check your credentials and try again.'
+        return {
+          type: 'authentication',
+          message: 'Invalid email or password. Please check your credentials and try again.',
+          code: 'INVALID_CREDENTIALS',
+          recoverable: true
+        }
       case 'EmailNotVerified':
-        return 'Please verify your email address before signing in.'
+        return {
+          type: 'authentication',
+          message: 'Please verify your email address before signing in.',
+          code: 'EMAIL_NOT_VERIFIED',
+          recoverable: true
+        }
       case 'AccountNotLinked':
-        return 'This account is already linked to another provider.'
       case 'OAuthAccountNotLinked':
-        return 'This email is already registered with a different sign-in method.'
+        return {
+          type: 'oauth',
+          message: 'This email is already registered with a different sign-in method.',
+          code: 'OAUTH_ERROR',
+          recoverable: true
+        }
       case 'SessionRequired':
-        return 'Please sign in to access this page.'
+        return {
+          type: 'authentication',
+          message: 'Please sign in to access this page.',
+          code: 'SESSION_EXPIRED',
+          recoverable: true
+        }
       case 'Callback':
-        return 'There was a problem with the authentication callback.'
       case 'OAuthCallback':
-        return 'There was a problem with OAuth authentication.'
+        return {
+          type: 'oauth',
+          message: 'There was a problem with the authentication callback.',
+          code: 'OAUTH_ERROR',
+          recoverable: true
+        }
       case 'OAuthCreateAccount':
-        return 'Could not create OAuth account.'
+        return {
+          type: 'oauth',
+          message: 'Could not create OAuth account.',
+          code: 'OAUTH_ERROR',
+          recoverable: true
+        }
       case 'EmailCreateAccount':
-        return 'Could not create account with this email.'
+        return {
+          type: 'validation',
+          message: 'Could not create account with this email.',
+          recoverable: true
+        }
       case 'Configuration':
-        return 'There is a problem with the server configuration.'
+        return {
+          type: 'server',
+          message: 'There is a problem with the server configuration.',
+          code: 'INTERNAL_ERROR',
+          recoverable: false
+        }
       case 'AccessDenied':
-        return 'Access denied. You do not have permission to sign in.'
+        return {
+          type: 'authorization',
+          message: 'Access denied. You do not have permission to sign in.',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          recoverable: false
+        }
       case 'Verification':
-        return 'The verification token has expired or has already been used.'
+        return {
+          type: 'authentication',
+          message: 'The verification token has expired or has already been used.',
+          code: 'TOKEN_EXPIRED',
+          recoverable: true
+        }
+      case 'mentor-required':
+        return {
+          type: 'authorization',
+          message: 'This feature is only available to mentors.',
+          code: 'MENTOR_REQUIRED',
+          recoverable: false
+        }
+      case 'insider-required':
+        return {
+          type: 'authorization',
+          message: 'This feature is only available to insiders.',
+          code: 'INSIDER_REQUIRED',
+          recoverable: false
+        }
       default:
-        return 'An unexpected error occurred during authentication.'
+        return {
+          type: 'server',
+          message: 'An unexpected error occurred during authentication.',
+          recoverable: true
+        }
     }
   }
 
+  const authError = convertLegacyError(errorParam)
+
+  const handleRetry = () => {
+    // Remove error from URL
+    const url = new URL(window.location.href)
+    url.searchParams.delete('error')
+    window.history.replaceState({}, '', url.toString())
+  }
+
+  const handleDismiss = () => {
+    // Remove error from URL
+    const url = new URL(window.location.href)
+    url.searchParams.delete('error')
+    window.history.replaceState({}, '', url.toString())
+  }
+
   return (
-    <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-      <div className="flex">
-        <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-          </svg>
-        </div>
-        <div className="ml-3">
-          <p className="text-sm text-red-700">
-            {getErrorMessage(error)}
-          </p>
-        </div>
-      </div>
-    </div>
+    <AuthErrorDisplay
+      error={authError}
+      context="authentication"
+      onRetry={authError.recoverable ? handleRetry : undefined}
+      onDismiss={handleDismiss}
+      className="mb-4"
+    />
   )
 }
