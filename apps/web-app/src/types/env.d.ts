@@ -91,11 +91,9 @@ declare global {
       NEXT_PUBLIC_MICROSOFT_CLIENT_ID?: string
       NEXT_PUBLIC_MICROSOFT_OAUTH_ENABLED?: string
 
-      // Legacy OAuth Configuration (for NextAuth.js)
+      // Legacy OAuth Configuration (deprecated)
       GITHUB_CLIENT_ID?: string
       GITHUB_CLIENT_SECRET?: string
-      NEXTAUTH_URL?: string
-      NEXTAUTH_SECRET?: string
 
       // Database Configuration
       DATABASE_URL?: string

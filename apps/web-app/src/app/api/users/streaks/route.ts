@@ -9,8 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { userServiceClient } from "@/lib/user-service";
 import type { LearningStreak } from "@/types/user-service";
 
@@ -18,10 +17,11 @@ import type { LearningStreak } from "@/types/user-service";
 // Authentication Middleware
 // ============================================================================
 
-async function authenticateRequest(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
+async function authenticateRequest() {
+  try {
+    const user = await requireAuth();
+    return { userId: user.id.toString(), user };
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
@@ -30,8 +30,6 @@ async function authenticateRequest(request: NextRequest) {
       { status: 401 }
     );
   }
-
-  return { userId: session.user.id.toString(), session };
 }
 
 // ============================================================================

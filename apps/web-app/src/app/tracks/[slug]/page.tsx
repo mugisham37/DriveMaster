@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { TrackPage } from '@/components/track/TrackPage'
 import { getTrackData } from '@/lib/api/track'
 
@@ -29,7 +28,7 @@ export async function generateMetadata({ params }: TrackPageProps): Promise<Meta
 }
 
 export default async function Track({ params, searchParams }: TrackPageProps) {
-  const session = await getServerSession(authOptions)
+  const user = await getCurrentUser()
   const trackData = await getTrackData(params.slug)
   
   if (!trackData) {

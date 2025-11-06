@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/config'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { IntegrationsSettings } from '@/components/settings/IntegrationsSettings'
 
@@ -31,9 +30,9 @@ async function getIntegrationsData() {
 }
 
 export default async function IntegrationsSettingsPage() {
-  const session = await getServerSession(authOptions)
+  const user = await getCurrentUser()
   
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/settings/integrations')
   }
 

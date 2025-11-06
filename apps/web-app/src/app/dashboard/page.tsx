@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { DashboardPage } from '@/components/dashboard/DashboardPage'
 import { getDashboardData } from '@/lib/api/dashboard'
 import { ModalManager } from '@/components/modals/ModalManager'

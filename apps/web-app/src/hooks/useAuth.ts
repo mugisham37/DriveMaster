@@ -37,11 +37,12 @@ export type {
   WithAuthActionsProps
 } from './useAuthHooks'
 
-// Legacy compatibility exports (deprecated - use new hooks above)
-import { useSession, signIn, signOut } from 'next-auth/react'
+// Legacy compatibility - now just re-exports the new auth system
 import { useRouter } from 'next/navigation'
 import { useAuth as useNewAuth } from './useAuthHooks'
-import type { ExercismUser } from '@/lib/auth'
+import type { UserProfile } from '@/types/auth-service'
+
+export type ExercismUser = UserProfile
 
 export interface UseAuthReturn {
   user: ExercismUser | null
@@ -49,8 +50,8 @@ export interface UseAuthReturn {
   isAuthenticated: boolean
   isMentor: boolean
   isInsider: boolean
-  signIn: typeof signIn
-  signOut: typeof signOut
+  signIn: (provider?: string, options?: Record<string, unknown>) => Promise<{ ok: boolean; error: string | null }>
+  signOut: () => Promise<void>
   redirectToSignIn: (callbackUrl?: string) => void
 }
 
@@ -60,72 +61,7 @@ export interface UseAuthReturn {
  */
 export function useLegacyAuth(): UseAuthReturn {
   const router = useRouter()
-  
-  // Always call useSession to avoid conditional hook calls
-  const { data: session, status } = useSession()
-  
-  // Always call useNewAuth to avoid conditional hook calls
   const newAuth = useNewAuth()
-  const hasNewAuth = newAuth.isInitialized
-  
-  // Use new auth context if available and initialized
-  if (hasNewAuth && newAuth && newAuth.isInitialized) {
-    const user: ExercismUser | null = newAuth.user ? {
-      id: newAuth.user.id,
-      handle: newAuth.user.handle,
-      ...(newAuth.user.name && { name: newAuth.user.name }),
-      email: newAuth.user.email,
-      avatarUrl: newAuth.user.avatarUrl,
-      reputation: newAuth.user.reputation,
-      flair: newAuth.user.flair,
-      isMentor: newAuth.user.isMentor,
-      isInsider: newAuth.user.isInsider,
-      preferences: newAuth.user.preferences,
-      tracks: newAuth.user.tracks
-    } : null
-    
-    const redirectToSignIn = (callbackUrl?: string) => {
-      const url = callbackUrl || window.location.pathname
-      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(url)}`)
-    }
-    
-    return {
-      user,
-      isLoading: newAuth.isLoading,
-      isAuthenticated: newAuth.isAuthenticated,
-      isMentor: newAuth.isMentor,
-      isInsider: newAuth.isInsider,
-      signIn,
-      signOut: async () => {
-        await newAuth.logout()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return undefined as any
-      },
-      redirectToSignIn
-    }
-  }
-  
-  // Fallback to NextAuth.js
-  const isLoading = status === 'loading'
-  const isAuthenticated = !!session?.user
-  
-  const user: ExercismUser | null = session?.user ? {
-    id: session.user.id,
-    handle: session.user.handle,
-    ...(session.user.name && { name: session.user.name }),
-    email: session.user.email,
-    avatarUrl: session.user.avatarUrl,
-    reputation: session.user.reputation,
-    flair: session.user.flair,
-    isMentor: session.user.isMentor,
-    isInsider: session.user.isInsider,
-    preferences: {
-      theme: 'system',
-      emailNotifications: true,
-      mentorNotifications: true
-    },
-    tracks: []
-  } : null
   
   const redirectToSignIn = (callbackUrl?: string) => {
     const url = callbackUrl || window.location.pathname
@@ -133,13 +69,17 @@ export function useLegacyAuth(): UseAuthReturn {
   }
   
   return {
-    user,
-    isLoading,
-    isAuthenticated,
-    isMentor: user?.isMentor ?? false,
-    isInsider: user?.isInsider ?? false,
-    signIn,
-    signOut,
+    user: newAuth.user,
+    isLoading: newAuth.isLoading,
+    isAuthenticated: newAuth.isAuthenticated,
+    isMentor: newAuth.isMentor,
+    isInsider: newAuth.isInsider,
+    signIn: async (_provider?: string, options?: Record<string, unknown>) => {
+      // Redirect to sign in page for compatibility
+      redirectToSignIn(options?.callbackUrl)
+      return { ok: true, error: null }
+    },
+    signOut: newAuth.logout,
     redirectToSignIn
   }
 }

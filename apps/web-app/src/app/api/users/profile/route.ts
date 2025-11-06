@@ -9,8 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { userServiceClient } from '@/lib/user-service'
 import { z } from 'zod'
 import type { UserProfile, UserUpdateRequest } from '@/types/user-service'
@@ -31,17 +30,16 @@ const UserUpdateSchema = z.object({
 // Authentication Middleware
 // ============================================================================
 
-async function authenticateRequest(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.id) {
+async function authenticateRequest() {
+  try {
+    const user = await requireAuth()
+    return { userId: user.id.toString(), user }
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: { type: 'authorization', message: 'Authentication required' } },
       { status: 401 }
     )
   }
-  
-  return { userId: session.user.id.toString(), session }
 }
 
 // ============================================================================
@@ -50,7 +48,7 @@ async function authenticateRequest(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request)
+    const authResult = await authenticateRequest()
     if (authResult instanceof NextResponse) return authResult
     
     const { userId } = authResult
@@ -103,7 +101,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request)
+    const authResult = await authenticateRequest()
     if (authResult instanceof NextResponse) return authResult
     
     const { userId } = authResult
@@ -189,7 +187,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request)
+    const authResult = await authenticateRequest()
     if (authResult instanceof NextResponse) return authResult
     
     const { userId } = authResult

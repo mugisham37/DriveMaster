@@ -16,7 +16,7 @@
     "build:proto": "npm run generate:proto"
   },
   "dependencies": {
-    "@auth/core": "^0.34.2",
+
     "@ballerina/highlightjs-ballerina": "^1.0.1",
     "@bugsnag/js": "^7.22.3",
     "@bugsnag/plugin-react": "^7.19.0",
@@ -134,7 +134,6 @@
     "lucide-react": "^0.552.0",
     "marked": "^16.4.1",
     "next": "15.5.6",
-    "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
     "pluralize": "^8.0.0",
     "postcss": "^8.5.6",

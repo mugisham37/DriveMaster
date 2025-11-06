@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { GraphicalIcon } from '@/lib/assets';
 
 interface BootcampLayoutProps {
@@ -17,7 +17,7 @@ export function BootcampLayout({
   title = 'Bootcamp',
   className = '',
 }: BootcampLayoutProps) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const user = session?.user;
 
   // TODO: Get user's bootcamp data from API
