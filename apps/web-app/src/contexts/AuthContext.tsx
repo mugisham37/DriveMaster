@@ -11,12 +11,16 @@
  * - Requirements: 1.1, 1.4, 7.1, 7.2, 7.3
  */
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useMemo } from 'react'
 import { integratedTokenManager } from '@/lib/auth/token-manager'
 import { authClient } from '@/lib/auth/api-client'
 import { AuthErrorHandler } from '@/lib/auth/error-handler'
-import { circuitBreakerManager } from '@/lib/auth/circuit-breaker'
+
 import { authResilience, initializeAuthResilience } from '@/lib/auth/resilience-integration'
+import { 
+  optimizedAuthOps, 
+  useStableAuthCallback 
+} from '@/lib/auth/performance-optimization'
 import type { 
   UserProfile, 
   TokenPair, 
@@ -634,16 +638,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Authentication Actions
   // ============================================================================
   
-  const login = useCallback(async (credentials: LoginCredentials) => {
+  const login = useStableAuthCallback(async (credentials: LoginCredentials) => {
     dispatch({ type: 'LOGIN_START' })
     
     try {
-      const { tokens, user } = await authResilience.executeWithResilience(
-        () => authClient.login(credentials),
-        {
-          operationType: 'login',
-          cacheKey: `login_${credentials.email}`,
-          retryAttempts: 3
+      // Use optimized login with caching and deduplication
+      const { tokens, user } = await optimizedAuthOps.login(
+        credentials,
+        async (creds) => {
+          return await authResilience.executeWithResilience(
+            () => authClient.login(creds),
+            {
+              operationType: 'login',
+              cacheKey: `login_${creds.email}`,
+              retryAttempts: 3
+            }
+          )
         }
       )
       
@@ -672,16 +682,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
   
-  const register = useCallback(async (userData: RegisterData) => {
+  const register = useStableAuthCallback(async (userData: RegisterData) => {
     dispatch({ type: 'REGISTER_START' })
     
     try {
-      const { tokens, user } = await authResilience.executeWithResilience(
-        () => authClient.register(userData),
-        {
-          operationType: 'register',
-          cacheKey: `register_${userData.email}`,
-          retryAttempts: 3
+      // Use optimized register with deduplication
+      const { tokens, user } = await optimizedAuthOps.register(
+        userData,
+        async (data) => {
+          return await authResilience.executeWithResilience(
+            () => authClient.register(data),
+            {
+              operationType: 'register',
+              cacheKey: `register_${data.email}`,
+              retryAttempts: 3
+            }
+          )
         }
       )
       
@@ -703,7 +719,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
   
-  const logout = useCallback(async () => {
+  const logout = useStableAuthCallback(async () => {
     dispatch({ type: 'LOGOUT_START' })
     
     try {
@@ -719,10 +735,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Clear tokens using integrated token manager (broadcasts to other tabs)
       await integratedTokenManager.clearTokens()
       
+      // Clear authentication caches
+      if (state.user?.id) {
+        optimizedAuthOps.invalidateUserCache(state.user.id)
+      }
+      
       dispatch({ type: 'LOGOUT_SUCCESS' })
     } catch (error) {
       // Even if API call fails, clear local tokens for graceful degradation
       await integratedTokenManager.clearTokens()
+      
+      // Clear authentication caches
+      if (state.user?.id) {
+        optimizedAuthOps.invalidateUserCache(state.user.id)
+      }
       
       const authError = AuthErrorHandler.processError(error, 'logout')
       
@@ -739,18 +765,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Still dispatch success to clear local state for graceful degradation
       dispatch({ type: 'LOGOUT_SUCCESS' })
     }
-  }, [])
+  }, [state.user?.id])
   
-  const refreshSession = useCallback(async () => {
+  const refreshSession = useStableAuthCallback(async () => {
     dispatch({ type: 'REFRESH_START' })
     
     try {
-      const accessToken = await authResilience.executeWithResilience(
-        () => integratedTokenManager.getValidAccessToken(),
-        {
-          operationType: 'refresh',
-          cacheKey: 'token_refresh',
-          retryAttempts: 2
+      // Use optimized token refresh with deduplication
+      const accessToken = await optimizedAuthOps.refreshTokens(
+        async () => {
+          return await authResilience.executeWithResilience(
+            () => integratedTokenManager.getValidAccessToken(),
+            {
+              operationType: 'refresh',
+              cacheKey: 'token_refresh',
+              retryAttempts: 2
+            }
+          )
         }
       )
       
@@ -794,7 +825,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // OAuth Actions
   // ============================================================================
   
-  const initiateOAuth = useCallback(async (provider: OAuthProviderType, redirectUrl?: string) => {
+  const initiateOAuth = useStableAuthCallback(async (provider: OAuthProviderType, redirectUrl?: string) => {
     dispatch({ 
       type: 'OAUTH_START', 
       payload: { 
@@ -804,7 +835,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
     
     try {
-      const response = await authClient.initiateOAuth(provider, redirectUrl)
+      // Use optimized OAuth initiation with deduplication
+      const response = await optimizedAuthOps.initiateOAuth(
+        provider,
+        redirectUrl,
+        (prov, redirUrl) => authClient.initiateOAuth(prov, redirUrl)
+      )
       
       if (response && typeof response === 'object' && 'authorizationUrl' in response) {
         // Redirect to OAuth provider
@@ -837,25 +873,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Profile Actions
   // ============================================================================
   
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useStableAuthCallback(async () => {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
-      // Use resilient profile fetching with graceful degradation
-      const profileResult = await authResilience.getUserProfile(
-        state.user?.id || 0,
-        () => authClient.getProfile()
+      // Use optimized profile fetching with caching and deduplication
+      const user = await optimizedAuthOps.getProfile(
+        async () => {
+          const profileResult = await authResilience.getUserProfile(
+            state.user?.id || 0,
+            () => authClient.getProfile()
+          )
+          
+          // Log if we're using degraded mode
+          if (profileResult.degraded) {
+            console.info('Profile loaded from cache/fallback:', profileResult.source)
+          }
+          
+          return profileResult.data
+        },
+        state.user?.id
       )
       
       dispatch({ 
         type: 'PROFILE_FETCH_SUCCESS', 
-        payload: { user: profileResult.data } 
+        payload: { user } 
       })
-      
-      // Log if we're using degraded mode
-      if (profileResult.degraded) {
-        console.info('Profile loaded from cache/fallback:', profileResult.source)
-      }
     } catch (error) {
       const authError = AuthErrorHandler.processError(error, 'profile')
       
@@ -876,11 +919,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [state.user?.id])
   
-  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
+  const updateProfile = useStableAuthCallback(async (updates: Partial<UserProfile>) => {
     dispatch({ type: 'PROFILE_FETCH_START' })
     
     try {
       const user = await authClient.updateProfile(updates)
+      
+      // Invalidate profile cache after update
+      optimizedAuthOps.invalidateUserCache(user.id)
       
       dispatch({ 
         type: 'PROFILE_UPDATE_SUCCESS', 
@@ -911,7 +957,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Utility Actions
   // ============================================================================
   
-  const clearError = useCallback((errorType?: keyof Pick<AuthState, 'error' | 'loginError' | 'registerError' | 'profileError' | 'oauthError'>) => {
+  const clearError = useStableAuthCallback((errorType?: keyof Pick<AuthState, 'error' | 'loginError' | 'registerError' | 'profileError' | 'oauthError'>) => {
     if (errorType) {
       dispatch({ type: 'CLEAR_ERROR', payload: { errorType } })
     } else {
@@ -919,11 +965,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
   
-  const clearAllErrors = useCallback(() => {
+  const clearAllErrors = useStableAuthCallback(() => {
     dispatch({ type: 'CLEAR_ALL_ERRORS' })
   }, [])
   
-  const updateActivity = useCallback(() => {
+  const updateActivity = useStableAuthCallback(() => {
     const tokenInfo = integratedTokenManager.getTokenInfo()
     dispatch({ 
       type: 'SESSION_UPDATE', 
@@ -934,7 +980,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
   }, [])
   
-  const checkAuthStatus = useCallback(async () => {
+  const checkAuthStatus = useStableAuthCallback(async () => {
     if (!state.isAuthenticated) return
     
     try {
@@ -952,10 +998,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [state.isAuthenticated, refreshSession])
   
   // ============================================================================
-  // Context Value
+  // Context Value with Performance Optimization
   // ============================================================================
   
-  const contextValue: AuthContextValue = {
+  const contextValue: AuthContextValue = useMemo(() => ({
     // State
     state,
     
@@ -967,7 +1013,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isMentor: state.user?.isMentor ?? false,
     isInsider: state.user?.isInsider ?? false,
     
-    // Actions
+    // Actions (already optimized with useStableAuthCallback)
     login,
     register,
     logout,
@@ -979,7 +1025,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     clearAllErrors,
     updateActivity,
     checkAuthStatus
-  }
+  }), [
+    state,
+    login,
+    register,
+    logout,
+    refreshSession,
+    initiateOAuth,
+    fetchProfile,
+    updateProfile,
+    clearError,
+    clearAllErrors,
+    updateActivity,
+    checkAuthStatus
+  ])
   
   return (
     <AuthContext.Provider value={contextValue}>

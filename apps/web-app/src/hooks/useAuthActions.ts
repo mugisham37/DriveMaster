@@ -11,10 +11,13 @@
  * - Requirements: 1.1, 1.2, 1.3, 5.1, 5.2
  */
 
-import React, { useCallback } from 'react'
+import React, { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { authClient, oauthClient } from '@/lib/auth/api-client'
+import { 
+  useStableAuthCallback
+} from '@/lib/auth/performance-optimization'
 import type { 
   LoginCredentials, 
   RegisterData, 
@@ -164,7 +167,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // Login Actions
   // ============================================================================
   
-  const login = useCallback(async (credentials: LoginCredentials, options: LoginOptions = {}) => {
+  const login = useStableAuthCallback(async (credentials: LoginCredentials, options: LoginOptions = {}) => {
     try {
       await auth.login(credentials)
       
@@ -178,7 +181,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth, router])
   
-  const validateAndLogin = useCallback(async (credentials: LoginCredentials, options: LoginOptions = {}) => {
+  const validateAndLogin = useStableAuthCallback(async (credentials: LoginCredentials, options: LoginOptions = {}) => {
     // Skip validation if explicitly requested
     if (!options.skipValidation) {
       const validation = validateLoginCredentials(credentials)
@@ -203,7 +206,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // Registration Actions
   // ============================================================================
   
-  const register = useCallback(async (userData: RegisterData, options: RegisterOptions = {}) => {
+  const register = useStableAuthCallback(async (userData: RegisterData, options: RegisterOptions = {}) => {
     try {
       await auth.register(userData)
       
@@ -217,7 +220,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth, router])
   
-  const validateAndRegister = useCallback(async (userData: RegisterData, options: RegisterOptions = {}) => {
+  const validateAndRegister = useStableAuthCallback(async (userData: RegisterData, options: RegisterOptions = {}) => {
     // Skip validation if explicitly requested
     if (!options.skipValidation) {
       const validation = validateRegistrationData(userData)
@@ -242,7 +245,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // Logout Actions
   // ============================================================================
   
-  const logout = useCallback(async (options: LogoutOptions = {}) => {
+  const logout = useStableAuthCallback(async (options: LogoutOptions = {}) => {
     try {
       await auth.logout()
       
@@ -258,7 +261,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth, router])
   
-  const logoutAllSessions = useCallback(async () => {
+  const logoutAllSessions = useStableAuthCallback(async () => {
     try {
       // Get all sessions and invalidate them
       const sessionsResponse = await authClient.getSessions()
@@ -288,7 +291,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // Error Handling
   // ============================================================================
   
-  const handleAuthError = useCallback((error: unknown): AuthError => {
+  const handleAuthError = useStableAuthCallback((error: unknown): AuthError => {
     if (error && typeof error === 'object' && 'type' in error) {
       return error as AuthError
     }
@@ -344,7 +347,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [])
   
-  const isRecoverableError = useCallback((error: AuthError): boolean => {
+  const isRecoverableError = useStableAuthCallback((error: AuthError): boolean => {
     return error.recoverable
   }, [])
   
@@ -352,7 +355,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // OAuth Actions
   // ============================================================================
   
-  const initiateOAuth = useCallback(async (provider: OAuthProviderType, options: OAuthOptions = {}) => {
+  const initiateOAuth = useStableAuthCallback(async (provider: OAuthProviderType, options: OAuthOptions = {}) => {
     try {
       await auth.initiateOAuth(provider, options.redirectUrl)
     } catch (error) {
@@ -360,7 +363,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth])
   
-  const handleOAuthCallback = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
+  const handleOAuthCallback = useStableAuthCallback(async (provider: OAuthProviderType, code: string, state: string) => {
     try {
       const response = await oauthClient.handleCallback(provider, code, state)
       
@@ -384,7 +387,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth, router, handleAuthError])
   
-  const linkOAuthProvider = useCallback(async (provider: OAuthProviderType, code: string, state: string) => {
+  const linkOAuthProvider = useStableAuthCallback(async (provider: OAuthProviderType, code: string, state: string) => {
     try {
       await oauthClient.linkProvider(provider, code, state)
       
@@ -395,7 +398,7 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth, handleAuthError])
   
-  const unlinkOAuthProvider = useCallback(async (provider: OAuthProviderType) => {
+  const unlinkOAuthProvider = useStableAuthCallback(async (provider: OAuthProviderType) => {
     try {
       await oauthClient.unlinkProvider(provider)
       
@@ -410,7 +413,7 @@ export function useAuthActions(): UseAuthActionsReturn {
   // Utility Actions
   // ============================================================================
   
-  const refreshSession = useCallback(async () => {
+  const refreshSession = useStableAuthCallback(async () => {
     try {
       await auth.refreshSession()
     } catch (error) {
@@ -418,19 +421,19 @@ export function useAuthActions(): UseAuthActionsReturn {
     }
   }, [auth])
   
-  const validateCredentials = useCallback((credentials: LoginCredentials): ValidationResult => {
+  const validateCredentials = useStableAuthCallback((credentials: LoginCredentials): ValidationResult => {
     return validateLoginCredentials(credentials)
   }, [])
   
-  const validateRegistrationDataCallback = useCallback((userData: RegisterData): ValidationResult => {
+  const validateRegistrationDataCallback = useStableAuthCallback((userData: RegisterData): ValidationResult => {
     return validateRegistrationData(userData)
   }, [])
   
   // ============================================================================
-  // Return Hook Interface
+  // Return Hook Interface (Memoized for Performance)
   // ============================================================================
   
-  return {
+  return useMemo(() => ({
     // Login actions
     login,
     validateAndLogin,
@@ -457,7 +460,23 @@ export function useAuthActions(): UseAuthActionsReturn {
     // Error handling
     handleAuthError,
     isRecoverableError
-  }
+  }), [
+    login,
+    validateAndLogin,
+    register,
+    validateAndRegister,
+    logout,
+    logoutAllSessions,
+    initiateOAuth,
+    handleOAuthCallback,
+    linkOAuthProvider,
+    unlinkOAuthProvider,
+    refreshSession,
+    validateCredentials,
+    validateRegistrationDataCallback,
+    handleAuthError,
+    isRecoverableError
+  ])
 }
 
 // ============================================================================

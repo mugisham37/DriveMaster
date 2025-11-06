@@ -8,13 +8,18 @@
  * - useRequireAuth hook with automatic redirect handling
  * - useRequireMentor and useRequireInsider hooks
  * - useAuthActions hook for authentication operations
- * - Requirements: 4.1, 4.2, 4.3, 4.4
+ * - Performance optimizations for React re-renders
+ * - Requirements: 4.1, 4.2, 4.3, 4.4, 8.1, 8.2, 8.3, 8.4, 8.5
  */
 
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useMemo } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useAuth as useAuthContext } from '@/contexts/AuthContext'
 import { useAuthActions as useAuthActionsHook } from '@/hooks/useAuthActions'
+import { 
+  useStableAuthCallback, 
+  withAuthPerformanceOptimization 
+} from '@/lib/auth/performance-optimization'
 import type { AuthContextValue } from '@/contexts/AuthContext'
 import type { UseAuthActionsReturn } from '@/hooks/useAuthActions'
 
@@ -25,6 +30,7 @@ import type { UseAuthActionsReturn } from '@/hooks/useAuthActions'
 /**
  * Hook for general authentication state access
  * Provides access to authentication state and basic user information
+ * Optimized to prevent unnecessary re-renders
  * 
  * @returns AuthContextValue - Complete authentication context
  */
@@ -37,6 +43,9 @@ export function useAuth(): AuthContextValue {
   
   return context
 }
+
+// Performance-optimized version of useAuth
+export const useOptimizedAuth = withAuthPerformanceOptimization(useAuth, 'useAuth')
 
 // ============================================================================
 // Authentication Requirement Hook
@@ -61,6 +70,7 @@ export interface UseRequireAuthReturn extends AuthContextValue {
 /**
  * Hook with automatic redirect handling for authentication requirement
  * Redirects to sign-in page if user is not authenticated
+ * Optimized to prevent unnecessary re-renders and redirect loops
  * 
  * @param options - Configuration options for redirect behavior
  * @returns Extended auth context with redirect state
@@ -76,10 +86,23 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Determine if we should redirect
-  const shouldRedirect = auth.isInitialized && !auth.isAuthenticated
-  const isRedirecting = shouldRedirect
-  const shouldRender = auth.isInitialized && auth.isAuthenticated && !isRedirecting
+  // Memoize redirect state calculations to prevent unnecessary re-renders
+  const redirectState = useMemo(() => {
+    const shouldRedirect = auth.isInitialized && !auth.isAuthenticated
+    const isRedirecting = shouldRedirect
+    const shouldRender = auth.isInitialized && auth.isAuthenticated && !isRedirecting
+    
+    return { shouldRedirect, isRedirecting, shouldRender }
+  }, [auth.isInitialized, auth.isAuthenticated])
+
+  // Stable redirect callback to prevent effect re-runs
+  const performRedirect = useStableAuthCallback(() => {
+    const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
+    const callbackUrl = preserveCallback ? encodeURIComponent(currentUrl) : ''
+    const finalUrl = callbackUrl ? `${redirectTo}?callbackUrl=${callbackUrl}` : redirectTo
+    
+    router.push(finalUrl)
+  }, [redirectTo, preserveCallback, pathname, searchParams, router])
 
   useEffect(() => {
     // Don't redirect if still initializing
@@ -89,26 +112,19 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
     if (auth.isAuthenticated) return
 
     // Perform redirect
-    const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-    const callbackUrl = preserveCallback ? encodeURIComponent(currentUrl) : ''
-    const finalUrl = callbackUrl ? `${redirectTo}?callbackUrl=${callbackUrl}` : redirectTo
-    
-    router.push(finalUrl)
+    performRedirect()
   }, [
     auth.isInitialized,
     auth.isAuthenticated,
-    redirectTo,
-    preserveCallback,
-    pathname,
-    searchParams,
-    router
+    performRedirect
   ])
 
-  return {
+  // Memoize return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     ...auth,
-    isRedirecting,
-    shouldRender
-  }
+    isRedirecting: redirectState.isRedirecting,
+    shouldRender: redirectState.shouldRender
+  }), [auth, redirectState.isRedirecting, redirectState.shouldRender])
 }
 
 // ============================================================================
@@ -128,6 +144,7 @@ export interface UseRequireMentorReturn extends UseRequireAuthReturn {
 /**
  * Hook that requires mentor privileges with automatic redirect handling
  * First ensures authentication, then checks mentor status
+ * Optimized to prevent unnecessary re-renders and redirect loops
  * 
  * @param options - Configuration options for redirect behavior
  * @returns Extended auth context with mentor-specific redirect state
@@ -143,10 +160,19 @@ export function useRequireMentor(options: UseRequireMentorOptions = {}): UseRequ
   const authResult = useRequireAuth({ redirectTo, preserveCallback })
   const router = useRouter()
 
-  // Check mentor status after authentication
-  const shouldMentorRedirect = authResult.isAuthenticated && !authResult.isMentor
-  const isMentorRedirecting = shouldMentorRedirect
-  const shouldRender = authResult.shouldRender && authResult.isMentor
+  // Memoize mentor redirect state calculations
+  const mentorRedirectState = useMemo(() => {
+    const shouldMentorRedirect = authResult.isAuthenticated && !authResult.isMentor
+    const isMentorRedirecting = shouldMentorRedirect
+    const shouldRender = authResult.shouldRender && authResult.isMentor
+    
+    return { shouldMentorRedirect, isMentorRedirecting, shouldRender }
+  }, [authResult.isAuthenticated, authResult.isMentor, authResult.shouldRender])
+
+  // Stable mentor redirect callback
+  const performMentorRedirect = useStableAuthCallback(() => {
+    router.push(mentorRedirectTo)
+  }, [mentorRedirectTo, router])
 
   useEffect(() => {
     // Don't check mentor status if still initializing or not authenticated
@@ -157,22 +183,22 @@ export function useRequireMentor(options: UseRequireMentorOptions = {}): UseRequ
 
     // Redirect if not a mentor
     if (!authResult.isMentor) {
-      router.push(mentorRedirectTo)
+      performMentorRedirect()
     }
   }, [
     authResult.isInitialized,
     authResult.isAuthenticated,
     authResult.isMentor,
     authResult.isRedirecting,
-    mentorRedirectTo,
-    router
+    performMentorRedirect
   ])
 
-  return {
+  // Memoize return value
+  return useMemo(() => ({
     ...authResult,
-    isMentorRedirecting,
-    shouldRender
-  }
+    isMentorRedirecting: mentorRedirectState.isMentorRedirecting,
+    shouldRender: mentorRedirectState.shouldRender
+  }), [authResult, mentorRedirectState.isMentorRedirecting, mentorRedirectState.shouldRender])
 }
 
 // ============================================================================
@@ -192,6 +218,7 @@ export interface UseRequireInsiderReturn extends UseRequireAuthReturn {
 /**
  * Hook that requires insider privileges with automatic redirect handling
  * First ensures authentication, then checks insider status
+ * Optimized to prevent unnecessary re-renders and redirect loops
  * 
  * @param options - Configuration options for redirect behavior
  * @returns Extended auth context with insider-specific redirect state
@@ -207,10 +234,19 @@ export function useRequireInsider(options: UseRequireInsiderOptions = {}): UseRe
   const authResult = useRequireAuth({ redirectTo, preserveCallback })
   const router = useRouter()
 
-  // Check insider status after authentication
-  const shouldInsiderRedirect = authResult.isAuthenticated && !authResult.isInsider
-  const isInsiderRedirecting = shouldInsiderRedirect
-  const shouldRender = authResult.shouldRender && authResult.isInsider
+  // Memoize insider redirect state calculations
+  const insiderRedirectState = useMemo(() => {
+    const shouldInsiderRedirect = authResult.isAuthenticated && !authResult.isInsider
+    const isInsiderRedirecting = shouldInsiderRedirect
+    const shouldRender = authResult.shouldRender && authResult.isInsider
+    
+    return { shouldInsiderRedirect, isInsiderRedirecting, shouldRender }
+  }, [authResult.isAuthenticated, authResult.isInsider, authResult.shouldRender])
+
+  // Stable insider redirect callback
+  const performInsiderRedirect = useStableAuthCallback(() => {
+    router.push(insiderRedirectTo)
+  }, [insiderRedirectTo, router])
 
   useEffect(() => {
     // Don't check insider status if still initializing or not authenticated
@@ -221,22 +257,22 @@ export function useRequireInsider(options: UseRequireInsiderOptions = {}): UseRe
 
     // Redirect if not an insider
     if (!authResult.isInsider) {
-      router.push(insiderRedirectTo)
+      performInsiderRedirect()
     }
   }, [
     authResult.isInitialized,
     authResult.isAuthenticated,
     authResult.isInsider,
     authResult.isRedirecting,
-    insiderRedirectTo,
-    router
+    performInsiderRedirect
   ])
 
-  return {
+  // Memoize return value
+  return useMemo(() => ({
     ...authResult,
-    isInsiderRedirecting,
-    shouldRender
-  }
+    isInsiderRedirecting: insiderRedirectState.isInsiderRedirecting,
+    shouldRender: insiderRedirectState.shouldRender
+  }), [authResult, insiderRedirectState.isInsiderRedirecting, insiderRedirectState.shouldRender])
 }
 
 // ============================================================================
@@ -260,11 +296,27 @@ export function useAuthActions(): UseAuthActionsReturn {
 /**
  * Hook for checking authentication status without redirects
  * Useful for components that need to know auth state but handle redirects themselves
+ * Optimized to prevent unnecessary re-renders
  */
 export function useAuthStatus() {
   const auth = useAuth()
 
-  return {
+  // Memoize role validation helper to prevent recreation on every render
+  const hasRole = useStableAuthCallback((role: 'mentor' | 'insider' | 'user') => {
+    switch (role) {
+      case 'mentor':
+        return auth.isAuthenticated && auth.isMentor
+      case 'insider':
+        return auth.isAuthenticated && auth.isInsider
+      case 'user':
+        return auth.isAuthenticated
+      default:
+        return false
+    }
+  }, [auth.isAuthenticated, auth.isMentor, auth.isInsider])
+
+  // Memoize the entire return object to prevent unnecessary re-renders
+  return useMemo(() => ({
     // Basic state
     isInitialized: auth.isInitialized,
     isAuthenticated: auth.isAuthenticated,
@@ -288,19 +340,17 @@ export function useAuthStatus() {
     canAccessDashboard: auth.isAuthenticated,
     
     // Role validation helper
-    hasRole: (role: 'mentor' | 'insider' | 'user') => {
-      switch (role) {
-        case 'mentor':
-          return auth.isAuthenticated && auth.isMentor
-        case 'insider':
-          return auth.isAuthenticated && auth.isInsider
-        case 'user':
-          return auth.isAuthenticated
-        default:
-          return false
-      }
-    }
-  }
+    hasRole
+  }), [
+    auth.isInitialized,
+    auth.isAuthenticated,
+    auth.isLoading,
+    auth.user,
+    auth.isMentor,
+    auth.isInsider,
+    auth.state.error,
+    hasRole
+  ])
 }
 
 /**
