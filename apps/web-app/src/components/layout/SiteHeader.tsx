@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigationDropdown } from "@/hooks/useNavigationDropdown";
+import { UserMenu } from "./UserMenu";
 import {
   LearnDropdown,
   DiscoverDropdown,
@@ -12,7 +13,7 @@ import {
 } from "./navigation";
 
 export function SiteHeader() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isLoading, isInitialized, user } = useAuth();
   const [isClient, setIsClient] = useState(false);
 
   // Navigation dropdown hooks
@@ -25,8 +26,8 @@ export function SiteHeader() {
     setIsClient(true);
   }, []);
 
-  const isSignedIn = status === "authenticated" && !!session?.user;
-  const isLoading = status === "loading" || !isClient;
+  const isSignedIn = isAuthenticated && !!user;
+  const showLoading = isLoading || !isClient || !isInitialized;
 
   return (
     <header
@@ -124,10 +125,10 @@ export function SiteHeader() {
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-[12px]">
-            {isLoading ? (
+            {showLoading ? (
               <div className="w-20 h-8 bg-gray-200 animate-pulse rounded" />
             ) : isSignedIn ? (
-              <SignedInSection user={session?.user} />
+              <SignedInSection user={user} />
             ) : (
               <SignedOutSection />
             )}
@@ -175,11 +176,7 @@ function SignedInSection({
       >
         Dashboard
       </Link>
-      <div className="w-8 h-8 bg-[#7C3AED] rounded-full flex items-center justify-center">
-        <span className="text-white font-bold text-sm">
-          {user?.handle?.charAt(0).toUpperCase() || "U"}
-        </span>
-      </div>
+      <UserMenu />
     </div>
   );
 }

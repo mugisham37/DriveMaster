@@ -2,12 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { Avatar } from '@/components/common/Avatar';
-import { Icon } from '@/lib/assets';
+import { 
+  ChevronDown, 
+  User, 
+  Settings, 
+  Map, 
+  Users, 
+  Shield, 
+  GitPullRequest, 
+  LogOut 
+} from 'lucide-react';
 
 export function UserMenu() {
-  const { data: session } = useSession();
+  const { user, isAuthenticated, isLoading, isMentor, isInsider, logout, state } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -24,9 +33,15 @@ export function UserMenu() {
     };
   }, []);
 
-  if (!session?.user) return null;
+  // Show loading state during authentication initialization
+  if (isLoading) {
+    return (
+      <div className="w-10 h-10 bg-gray-200 animate-pulse rounded-full" />
+    );
+  }
 
-  const user = session.user;
+  // Don't render if not authenticated or no user data
+  if (!isAuthenticated || !user) return null;
 
   return (
     <div className="user-menu" ref={menuRef}>
@@ -44,7 +59,7 @@ export function UserMenu() {
           }} 
           size="small"
         />
-        <Icon icon="chevron-down" alt="" />
+        <ChevronDown className="w-4 h-4" />
       </button>
 
       {isOpen && (
@@ -76,7 +91,7 @@ export function UserMenu() {
                   className="menu-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon icon="profile" alt="" />
+                  <User className="w-4 h-4" />
                   <span>Public Profile</span>
                 </Link>
               </li>
@@ -86,7 +101,7 @@ export function UserMenu() {
                   className="menu-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon icon="settings" alt="" />
+                  <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </Link>
               </li>
@@ -96,19 +111,31 @@ export function UserMenu() {
                   className="menu-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon icon="journey" alt="" />
+                  <Map className="w-4 h-4" />
                   <span>Your Journey</span>
                 </Link>
               </li>
-              {user.isMentor && (
+              {isMentor && (
                 <li>
                   <Link 
                     href="/mentoring"
                     className="menu-link"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Icon icon="mentoring" alt="" />
+                    <Users className="w-4 h-4" />
                     <span>Mentoring</span>
+                  </Link>
+                </li>
+              )}
+              {isInsider && (
+                <li>
+                  <Link 
+                    href="/insiders"
+                    className="menu-link"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Insiders</span>
                   </Link>
                 </li>
               )}
@@ -118,7 +145,7 @@ export function UserMenu() {
                   className="menu-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon icon="contributing" alt="" />
+                  <GitPullRequest className="w-4 h-4" />
                   <span>Contributing</span>
                 </Link>
               </li>
@@ -130,14 +157,26 @@ export function UserMenu() {
           <div className="menu-actions">
             <button
               className="sign-out-btn"
-              onClick={() => {
+              onClick={async () => {
                 setIsOpen(false);
-                signOut({ callbackUrl: '/' });
+                try {
+                  await logout();
+                  // Redirect is handled by AuthContext
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                  // Still close menu even if logout fails
+                }
               }}
+              disabled={state.isLogoutLoading}
             >
-              <Icon icon="sign-out" alt="" />
-              <span>Sign Out</span>
+              <LogOut className="w-4 h-4" />
+              <span>{state.isLogoutLoading ? 'Signing Out...' : 'Sign Out'}</span>
             </button>
+            {state.error && (
+              <div className="text-red-500 text-sm mt-2 px-3">
+                {state.error.message}
+              </div>
+            )}
           </div>
         </div>
       )}

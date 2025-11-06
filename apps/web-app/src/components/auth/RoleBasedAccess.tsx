@@ -4,266 +4,72 @@
  * Role-Based Access Control Components
  * 
  * Implements:
- * - Mentor privilege checking with dashboard redirect for non-mentors
- * - Insider privilege checking with appropriate access control
- * - Permission-based component rendering
- * - Role-based navigation menu filtering
- * - Requirements: 4.4, 9.2
+ * - Conditional rendering based on user roles
+ * - Permission-based component visibility
+ * - Role validation utilities
+ * - Requirements: 3.2, 3.3
  */
 
-import React, { ReactNode } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import React from 'react'
+import { useAuthStatus } from '@/hooks/useAuthHooks'
 
 // ============================================================================
-// Types
+// Role-Based Conditional Rendering
 // ============================================================================
 
-export interface RoleBasedAccessProps {
-  children: ReactNode
-  requireMentor?: boolean
-  requireInsider?: boolean
-  requireAuthentication?: boolean
-  fallback?: ReactNode
-  showFallback?: boolean
-}
-
-export interface ConditionalRenderProps {
-  children: ReactNode
-  condition: boolean
-  fallback?: ReactNode
-}
-
-export interface NavigationItemProps {
-  children: ReactNode
+export interface RoleGuardProps {
+  children: React.ReactNode
+  /** Require authentication */
   requireAuth?: boolean
+  /** Require mentor role */
   requireMentor?: boolean
+  /** Require insider role */
   requireInsider?: boolean
-  hideWhenUnavailable?: boolean
-}
-
-// ============================================================================
-// Core Role-Based Access Component
-// ============================================================================
-
-export function RoleBasedAccess({
-  children,
-  requireMentor = false,
-  requireInsider = false,
-  requireAuthentication = false,
-  fallback = null,
-  showFallback = true
-}: RoleBasedAccessProps) {
-  const auth = useAuth()
-
-  // Don't render anything during initialization
-  if (!auth.isInitialized) {
-    return null
-  }
-
-  // Check authentication requirement
-  if (requireAuthentication && !auth.isAuthenticated) {
-    return showFallback ? <>{fallback}</> : null
-  }
-
-  // Check mentor requirement
-  if (requireMentor && (!auth.isAuthenticated || !auth.isMentor)) {
-    return showFallback ? <>{fallback}</> : null
-  }
-
-  // Check insider requirement
-  if (requireInsider && (!auth.isAuthenticated || !auth.isInsider)) {
-    return showFallback ? <>{fallback}</> : null
-  }
-
-  return <>{children}</>
-}
-
-// ============================================================================
-// Convenience Components for Specific Roles
-// ============================================================================
-
-/**
- * Only renders content for authenticated users
- */
-export function AuthenticatedContent({ 
-  children, 
-  fallback = null 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode 
-}) {
-  return (
-    <RoleBasedAccess requireAuthentication={true} fallback={fallback}>
-      {children}
-    </RoleBasedAccess>
-  )
+  /** Fallback component when access is denied */
+  fallback?: React.ReactNode
+  /** Show loading during auth check */
+  showLoading?: boolean
 }
 
 /**
- * Only renders content for unauthenticated users
+ * Component that conditionally renders children based on user roles
+ * Does not redirect - only controls visibility
  */
-export function UnauthenticatedContent({ 
-  children, 
-  fallback = null 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode 
-}) {
-  const auth = useAuth()
-
-  if (!auth.isInitialized) {
-    return null
-  }
-
-  if (auth.isAuthenticated) {
-    return <>{fallback}</>
-  }
-
-  return <>{children}</>
-}
-
-/**
- * Only renders content for mentors
- */
-export function MentorContent({ 
-  children, 
-  fallback = null,
-  showFallback = true 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode
-  showFallback?: boolean 
-}) {
-  return (
-    <RoleBasedAccess 
-      requireMentor={true} 
-      fallback={fallback}
-      showFallback={showFallback}
-    >
-      {children}
-    </RoleBasedAccess>
-  )
-}
-
-/**
- * Only renders content for insiders
- */
-export function InsiderContent({ 
-  children, 
-  fallback = null,
-  showFallback = true 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode
-  showFallback?: boolean 
-}) {
-  return (
-    <RoleBasedAccess 
-      requireInsider={true} 
-      fallback={fallback}
-      showFallback={showFallback}
-    >
-      {children}
-    </RoleBasedAccess>
-  )
-}
-
-/**
- * Only renders content for non-mentors (regular users)
- */
-export function NonMentorContent({ 
-  children, 
-  fallback = null 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode 
-}) {
-  const auth = useAuth()
-
-  if (!auth.isInitialized) {
-    return null
-  }
-
-  if (auth.isAuthenticated && auth.isMentor) {
-    return <>{fallback}</>
-  }
-
-  return <>{children}</>
-}
-
-/**
- * Only renders content for non-insiders (regular users)
- */
-export function NonInsiderContent({ 
-  children, 
-  fallback = null 
-}: { 
-  children: ReactNode
-  fallback?: ReactNode 
-}) {
-  const auth = useAuth()
-
-  if (!auth.isInitialized) {
-    return null
-  }
-
-  if (auth.isAuthenticated && auth.isInsider) {
-    return <>{fallback}</>
-  }
-
-  return <>{children}</>
-}
-
-// ============================================================================
-// Navigation-Specific Components
-// ============================================================================
-
-/**
- * Navigation item that respects role-based access control
- * Useful for filtering navigation menus based on user roles
- */
-export function NavigationItem({
+export function RoleGuard({
   children,
   requireAuth = false,
   requireMentor = false,
   requireInsider = false,
-  hideWhenUnavailable = true
-}: NavigationItemProps) {
-  const auth = useAuth()
+  fallback = null,
+  showLoading = false
+}: RoleGuardProps) {
+  const authStatus = useAuthStatus()
 
-  // Don't render during initialization
-  if (!auth.isInitialized) {
-    return null
-  }
-
-  // Check access requirements
-  const hasAccess = checkNavigationAccess()
-
-  if (!hasAccess && hideWhenUnavailable) {
-    return null
-  }
-
-  // If access is denied but we don't hide, render as disabled
-  if (!hasAccess) {
+  // Show loading if requested and auth is still initializing
+  if (showLoading && !authStatus.isReady) {
     return (
-      <div className="opacity-50 cursor-not-allowed" title="Not available">
-        {children}
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
       </div>
     )
   }
 
-  return <>{children}</>
+  // Check access requirements
+  const hasAccess = checkAccess()
 
-  function checkNavigationAccess(): boolean {
-    if (requireAuth && !auth.isAuthenticated) {
+  return hasAccess ? <>{children}</> : <>{fallback}</>
+
+  function checkAccess(): boolean {
+    if (requireAuth && !authStatus.isAuthenticated) {
       return false
     }
 
-    if (requireMentor && (!auth.isAuthenticated || !auth.isMentor)) {
+    if (requireMentor && !authStatus.canAccessMentoring) {
       return false
     }
 
-    if (requireInsider && (!auth.isAuthenticated || !auth.isInsider)) {
+    if (requireInsider && !authStatus.canAccessInsiderFeatures) {
       return false
     }
 
@@ -271,201 +77,282 @@ export function NavigationItem({
   }
 }
 
+// ============================================================================
+// Specific Role Components
+// ============================================================================
+
+export interface AuthenticatedOnlyProps {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+  showLoading?: boolean
+}
+
 /**
- * Conditional render component for complex access logic
+ * Component that only renders for authenticated users
  */
-export function ConditionalRender({
+export function AuthenticatedOnly({ children, fallback = null, showLoading = false }: AuthenticatedOnlyProps) {
+  return (
+    <RoleGuard requireAuth showLoading={showLoading} fallback={fallback}>
+      {children}
+    </RoleGuard>
+  )
+}
+
+export interface MentorOnlyProps {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+  showLoading?: boolean
+}
+
+/**
+ * Component that only renders for mentors
+ */
+export function MentorOnly({ children, fallback = null, showLoading = false }: MentorOnlyProps) {
+  return (
+    <RoleGuard requireMentor showLoading={showLoading} fallback={fallback}>
+      {children}
+    </RoleGuard>
+  )
+}
+
+export interface InsiderOnlyProps {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+  showLoading?: boolean
+}
+
+/**
+ * Component that only renders for insiders
+ */
+export function InsiderOnly({ children, fallback = null, showLoading = false }: InsiderOnlyProps) {
+  return (
+    <RoleGuard requireInsider showLoading={showLoading} fallback={fallback}>
+      {children}
+    </RoleGuard>
+  )
+}
+
+// ============================================================================
+// Permission-Based Components
+// ============================================================================
+
+export interface PermissionGuardProps {
+  children: React.ReactNode
+  /** Required permissions */
+  permissions: Array<'mentoring' | 'insider-features' | 'dashboard'>
+  /** Whether all permissions are required (AND) or any (OR) */
+  requireAll?: boolean
+  /** Fallback component */
+  fallback?: React.ReactNode
+  /** Show loading during auth check */
+  showLoading?: boolean
+}
+
+/**
+ * Component that renders based on specific permissions
+ */
+export function PermissionGuard({
   children,
-  condition,
-  fallback = null
-}: ConditionalRenderProps) {
-  return condition ? <>{children}</> : <>{fallback}</>
-}
+  permissions,
+  requireAll = true,
+  fallback = null,
+  showLoading = false
+}: PermissionGuardProps) {
+  const authStatus = useAuthStatus()
 
-// ============================================================================
-// Permission-Based Component Rendering
-// ============================================================================
-
-/**
- * Higher-order component for permission-based rendering
- */
-export function withRoleBasedAccess<P extends object>(
-  Component: React.ComponentType<P>,
-  accessConfig: {
-    requireAuth?: boolean
-    requireMentor?: boolean
-    requireInsider?: boolean
-    fallback?: React.ComponentType<P>
-  }
-) {
-  const WrappedComponent: React.FC<P> = (props) => {
-    const auth = useAuth()
-
-    if (!auth.isInitialized) {
-      return null
-    }
-
-    const hasAccess = checkAccess()
-
-    if (!hasAccess) {
-      if (accessConfig.fallback) {
-        const FallbackComponent = accessConfig.fallback
-        return <FallbackComponent {...props} />
-      }
-      return null
-    }
-
-    return <Component {...props} />
-
-    function checkAccess(): boolean {
-      if (accessConfig.requireAuth && !auth.isAuthenticated) {
-        return false
-      }
-
-      if (accessConfig.requireMentor && (!auth.isAuthenticated || !auth.isMentor)) {
-        return false
-      }
-
-      if (accessConfig.requireInsider && (!auth.isAuthenticated || !auth.isInsider)) {
-        return false
-      }
-
-      return true
-    }
+  // Show loading if requested and auth is still initializing
+  if (showLoading && !authStatus.isReady) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    )
   }
 
-  WrappedComponent.displayName = `withRoleBasedAccess(${Component.displayName || Component.name})`
+  const hasPermission = checkPermissions()
 
-  return WrappedComponent
-}
+  return hasPermission ? <>{children}</> : <>{fallback}</>
 
-// ============================================================================
-// Utility Functions for Role Checking
-// ============================================================================
-
-/**
- * Hook for checking user permissions
- */
-export function usePermissions() {
-  const auth = useAuth()
-
-  return {
-    isAuthenticated: auth.isAuthenticated,
-    isMentor: auth.isMentor,
-    isInsider: auth.isInsider,
-    isInitialized: auth.isInitialized,
-    
-    // Permission checking functions
-    canAccessMentoring: () => auth.isAuthenticated && auth.isMentor,
-    canAccessInsiderFeatures: () => auth.isAuthenticated && auth.isInsider,
-    canAccessDashboard: () => auth.isAuthenticated,
-    canAccessPublicContent: () => true,
-    
-    // Role checking functions
-    hasRole: (role: 'mentor' | 'insider' | 'user') => {
-      switch (role) {
-        case 'mentor':
-          return auth.isAuthenticated && auth.isMentor
-        case 'insider':
-          return auth.isAuthenticated && auth.isInsider
-        case 'user':
-          return auth.isAuthenticated
+  function checkPermissions(): boolean {
+    const permissionChecks = permissions.map(permission => {
+      switch (permission) {
+        case 'mentoring':
+          return authStatus.canAccessMentoring
+        case 'insider-features':
+          return authStatus.canAccessInsiderFeatures
+        case 'dashboard':
+          return authStatus.canAccessDashboard
         default:
           return false
       }
-    },
-    
-    // Multiple role checking
-    hasAnyRole: (roles: Array<'mentor' | 'insider' | 'user'>) => {
-      return roles.some(role => {
-        switch (role) {
-          case 'mentor':
-            return auth.isAuthenticated && auth.isMentor
-          case 'insider':
-            return auth.isAuthenticated && auth.isInsider
-          case 'user':
-            return auth.isAuthenticated
-          default:
-            return false
-        }
-      })
-    },
-    
-    hasAllRoles: (roles: Array<'mentor' | 'insider' | 'user'>) => {
-      return roles.every(role => {
-        switch (role) {
-          case 'mentor':
-            return auth.isAuthenticated && auth.isMentor
-          case 'insider':
-            return auth.isAuthenticated && auth.isInsider
-          case 'user':
-            return auth.isAuthenticated
-          default:
-            return false
-        }
-      })
-    }
+    })
+
+    return requireAll 
+      ? permissionChecks.every(Boolean)
+      : permissionChecks.some(Boolean)
   }
 }
 
 // ============================================================================
-// Navigation Menu Filtering Utilities
+// Conditional Authentication Components
 // ============================================================================
 
-export interface NavigationMenuItem {
-  id: string
-  label: string
-  href: string
-  icon?: React.ComponentType<{ className?: string }>
-  requireAuth?: boolean
-  requireMentor?: boolean
-  requireInsider?: boolean
-  children?: NavigationMenuItem[]
+export interface ConditionalAuthProps {
+  children: React.ReactNode
+  /** Condition that determines if auth is required */
+  condition: boolean
+  /** Fallback when condition is true but user is not authenticated */
+  authFallback?: React.ReactNode
+  /** Fallback when condition is false */
+  noAuthFallback?: React.ReactNode
 }
 
 /**
- * Filter navigation menu items based on user permissions
+ * Component that conditionally requires authentication based on a condition
  */
-export function filterNavigationItems(
-  items: NavigationMenuItem[],
-  permissions: ReturnType<typeof usePermissions>
-): NavigationMenuItem[] {
-  return items.filter(item => {
-    // Check access requirements
-    if (item.requireAuth && !permissions.isAuthenticated) {
-      return false
+export function ConditionalAuth({
+  children,
+  condition,
+  authFallback = null,
+  noAuthFallback = null
+}: ConditionalAuthProps) {
+  const authStatus = useAuthStatus()
+
+  if (!condition) {
+    return noAuthFallback ? <>{noAuthFallback}</> : <>{children}</>
+  }
+
+  if (!authStatus.isAuthenticated) {
+    return <>{authFallback}</>
+  }
+
+  return <>{children}</>
+}
+
+// ============================================================================
+// Role Information Components
+// ============================================================================
+
+export interface RoleDisplayProps {
+  /** Show user role badges */
+  showBadges?: boolean
+  /** Custom class names */
+  className?: string
+}
+
+/**
+ * Component that displays user role information
+ */
+export function RoleDisplay({ showBadges = true, className = '' }: RoleDisplayProps) {
+  const authStatus = useAuthStatus()
+
+  if (!authStatus.isAuthenticated || !authStatus.user) {
+    return null
+  }
+
+  const roles = []
+  if (authStatus.isMentor) roles.push('Mentor')
+  if (authStatus.isInsider) roles.push('Insider')
+
+  if (!showBadges || roles.length === 0) {
+    return null
+  }
+
+  return (
+    <div className={`flex gap-2 ${className}`}>
+      {roles.map(role => (
+        <span
+          key={role}
+          className={`px-2 py-1 text-xs font-medium rounded-full ${
+            role === 'Mentor' 
+              ? 'bg-blue-100 text-blue-800' 
+              : 'bg-purple-100 text-purple-800'
+          }`}
+        >
+          {role}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
+// Access Control Utilities
+// ============================================================================
+
+export interface AccessControlProps {
+  children: React.ReactNode
+  /** Access control configuration */
+  access: {
+    /** Public access (no auth required) */
+    public?: boolean
+    /** Authenticated users only */
+    authenticated?: boolean
+    /** Mentor access only */
+    mentor?: boolean
+    /** Insider access only */
+    insider?: boolean
+    /** Custom permission check */
+    custom?: (authStatus: ReturnType<typeof useAuthStatus>) => boolean
+  }
+  /** Fallback component */
+  fallback?: React.ReactNode
+  /** Show loading during auth check */
+  showLoading?: boolean
+}
+
+/**
+ * Flexible access control component with multiple access patterns
+ */
+export function AccessControl({
+  children,
+  access,
+  fallback = null,
+  showLoading = false
+}: AccessControlProps) {
+  const authStatus = useAuthStatus()
+
+  // Show loading if requested and auth is still initializing
+  if (showLoading && !authStatus.isReady) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    )
+  }
+
+  const hasAccess = checkAccess()
+
+  return hasAccess ? <>{children}</> : <>{fallback}</>
+
+  function checkAccess(): boolean {
+    // Public access - always allow
+    if (access.public) {
+      return true
     }
 
-    if (item.requireMentor && !permissions.canAccessMentoring()) {
-      return false
+    // Custom access check
+    if (access.custom) {
+      return access.custom(authStatus)
     }
 
-    if (item.requireInsider && !permissions.canAccessInsiderFeatures()) {
-      return false
+    // Specific role checks
+    if (access.mentor) {
+      return authStatus.canAccessMentoring
     }
 
-    // Recursively filter children
-    if (item.children) {
-      const filteredChildren = filterNavigationItems(item.children, permissions)
-      return {
-        ...item,
-        children: filteredChildren
-      }
+    if (access.insider) {
+      return authStatus.canAccessInsiderFeatures
     }
 
+    // Basic authentication check
+    if (access.authenticated) {
+      return authStatus.isAuthenticated
+    }
+
+    // Default to public access if no restrictions specified
     return true
-  })
-}
-
-/**
- * Hook for filtered navigation items
- */
-export function useFilteredNavigation(items: NavigationMenuItem[]) {
-  const permissions = usePermissions()
-  
-  if (!permissions.isInitialized) {
-    return []
   }
-  
-  return filterNavigationItems(items, permissions)
 }

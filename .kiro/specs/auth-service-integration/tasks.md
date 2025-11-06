@@ -13,8 +13,8 @@ This implementation plan provides a systematic approach to replacing NextAuth.js
   - Verify authentication state initialization works correctly without errors
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Layout Component Authentication Integration
-  - [ ] 2.1 Update UserMenu component to use auth service integration
+- [x] 2. Layout Component Authentication Integration
+  - [x] 2.1 Update UserMenu component to use auth service integration
     - Replace NextAuth.js useSession hook with useAuth hook from authentication hooks
     - Replace NextAuth.js signOut function with logout method from AuthContext
     - Update user profile display to use user object from AuthContext state
@@ -23,29 +23,29 @@ This implementation plan provides a systematic approach to replacing NextAuth.js
     - Use isMentor and isInsider flags for role-based menu item display
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
 
-  - [ ] 2.2 Update SiteHeader component to use auth service integration
+  - [x] 2.2 Update SiteHeader component to use auth service integration
     - Replace NextAuth.js useSession with useAuth hook for authentication status
     - Implement conditional rendering based on isAuthenticated and isLoading states
     - Add proper loading UI during authentication initialization
     - Handle authentication state changes for login/logout button display
     - _Requirements: 2.1, 2.4_
 
-- [ ] 3. Route Protection System Integration
-  - [ ] 3.1 Rewrite ProtectedRoute component to use authentication hooks
+- [x] 3. Route Protection System Integration
+  - [x] 3.1 Rewrite ProtectedRoute component to use authentication hooks
     - Replace NextAuth.js session checking with useRequireAuth hook
     - Implement loading state handling during authentication checks
     - Add automatic redirect logic with return URL preservation
     - Handle authentication errors with proper error display
     - _Requirements: 3.1, 3.4, 3.5_
 
-  - [ ] 3.2 Implement role-based route protection
+  - [x] 3.2 Implement role-based route protection
     - Add support for requireMentor prop using useRequireMentor hook
     - Add support for requireInsider prop using useRequireInsider hook
     - Implement proper redirect logic for insufficient role permissions
     - Handle role validation errors with appropriate error messages
     - _Requirements: 3.2, 3.3_
 
-  - [ ] 3.3 Replace NextAuth.js middleware with custom authentication middleware
+  - [x] 3.3 Replace NextAuth.js middleware with custom authentication middleware
     - Remove NextAuth.js withAuth middleware from middleware.ts
     - Implement custom middleware using token manager validation utilities
     - Add token extraction and validation logic for protected routes
