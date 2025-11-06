@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AdminDashboard } from '@/components/admin/AdminDashboard'
 
@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminPage() {
-  const session = await getServerAuthSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/admin')
   }
 
   // Check if user has admin privileges (using isInsider as proxy for admin)
-  if (!session.user.isInsider) {
+  if (!user.isInsider) {
     redirect('/dashboard')
   }
 

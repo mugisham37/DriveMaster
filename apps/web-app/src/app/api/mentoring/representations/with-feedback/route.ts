@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireMentor } from '@/lib/auth'
 import type { RailsMentoringRepresentationResponse } from '@/types/api'
 
 /**
@@ -9,22 +9,9 @@ import type { RailsMentoringRepresentationResponse } from '@/types/api'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireMentor()
     
-    // Representations require authentication and mentor status
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    if (!session.user.isMentor) {
-      return NextResponse.json(
-        { error: 'Mentor access required' },
-        { status: 403 }
-      )
-    }
+    // User is guaranteed to be authenticated and have mentor privileges
     
     const { searchParams } = new URL(request.url)
     const criteria = searchParams.get('criteria') || ''
@@ -47,7 +34,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.user.id}`
+          'Authorization': `Bearer ${user.id}`
         }
       })
       

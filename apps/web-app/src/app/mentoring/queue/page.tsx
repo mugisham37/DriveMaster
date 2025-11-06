@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Queue from '@/components/mentoring/Queue'
 
@@ -21,14 +21,14 @@ interface MentoringQueuePageProps {
 export default async function MentoringQueuePage({
   searchParams
 }: MentoringQueuePageProps) {
-  const session = await getServerAuthSession()
+  const user = await getCurrentUser()
 
   // Require authentication and mentor status
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/mentoring/queue')
   }
 
-  if (!session.user.isMentor) {
+  if (!user.isMentor) {
     redirect('/dashboard')
   }
 

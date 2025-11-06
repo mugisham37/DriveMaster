@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import type { ExtendedNextRequest } from '@/types/api'
 
 /**
@@ -40,7 +40,7 @@ async function proxyRequest(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    const session = await getServerAuthSession()
+    const user = await getCurrentUser()
     const path = params.path.join('/')
     const { searchParams } = new URL(request.url)
     
@@ -64,8 +64,8 @@ async function proxyRequest(
     })
     
     // Add authentication if user is logged in
-    if (session?.user) {
-      headers.set('Authorization', `Bearer ${session.user.id}`)
+    if (user) {
+      headers.set('Authorization', `Bearer ${user.id}`)
     }
     
     // Add Rails-specific headers

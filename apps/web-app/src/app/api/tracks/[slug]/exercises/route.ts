@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import type { RailsExerciseResponse } from '@/types/api'
 
 /**
@@ -18,7 +18,7 @@ export async function GET(
     const status = searchParams.get('status') || ''
     const difficulty = searchParams.get('difficulty') || ''
     
-    const session = await getServerAuthSession()
+    const user = await getCurrentUser()
     
     // Connect to Rails API to fetch exercises data
     const railsApiUrl = process.env.RAILS_API_URL || 'http://localhost:3000'
@@ -34,7 +34,7 @@ export async function GET(
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          ...(session?.user && { 'Authorization': `Bearer ${session.user.id}` })
+          ...(user && { 'Authorization': `Bearer ${user.id}` })
         }
       })
       

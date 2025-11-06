@@ -53,22 +53,22 @@ This implementation plan provides a systematic approach to replacing NextAuth.js
     - Configure middleware matcher to protect appropriate routes while excluding public routes
     - _Requirements: 3.1, 3.4_
 
-- [ ] 4. Server-Side Authentication Integration
-  - [ ] 4.1 Update API route handlers to use auth service utilities
+- [x] 4. Server-Side Authentication Integration
+  - [x] 4.1 Update API route handlers to use auth service utilities
     - Replace NextAuth.js getServerSession with requireAuth function for basic authentication
     - Update route handlers to use getCurrentUser for fetching authenticated user data
     - Implement proper error handling with appropriate HTTP status codes (401, 403)
     - Add authentication validation at the beginning of protected route handlers
     - _Requirements: 4.1, 4.4_
 
-  - [ ] 4.2 Implement role-based API route protection
+  - [x] 4.2 Implement role-based API route protection
     - Update mentor-only API routes to use requireMentor function
     - Update insider-only API routes to use requireInsider function
     - Implement proper authorization error handling with 403 status codes
     - Add role validation error messages for debugging
     - _Requirements: 4.2, 4.3_
 
-  - [ ] 4.3 Update server components to use auth service integration
+  - [x] 4.3 Update server components to use auth service integration
     - Replace NextAuth.js getServerSession with getCurrentUser in server components
     - Implement conditional rendering based on authentication status
     - Add proper error handling for authentication failures in server components

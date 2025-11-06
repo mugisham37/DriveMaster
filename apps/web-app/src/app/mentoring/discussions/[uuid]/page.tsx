@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import Session from '@/components/mentoring/Session'
 
@@ -17,14 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function MentoringDiscussionPage({
   params
 }: MentoringDiscussionPageProps) {
-  const session = await getServerAuthSession()
+  const user = await getCurrentUser()
 
   // Require authentication and mentor status
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/mentoring/discussions/' + params.uuid)
   }
 
-  if (!session.user.isMentor) {
+  if (!user.isMentor) {
     redirect('/dashboard')
   }
 
@@ -36,7 +36,7 @@ export default async function MentoringDiscussionPage({
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.user.id}`
+        'Authorization': `Bearer ${user.id}`
       }
     })
 
@@ -51,7 +51,7 @@ export default async function MentoringDiscussionPage({
 
     // Transform the data to match the Session component props
     const sessionProps = {
-      userHandle: session.user.handle,
+      userHandle: user.handle,
       request: discussionData.request,
       discussion: discussionData.discussion,
       track: discussionData.track,
@@ -93,7 +93,7 @@ export default async function MentoringDiscussionPage({
     
     // Fallback to mock data for development
     const mockSessionProps = {
-      userHandle: session.user.handle,
+      userHandle: user.handle,
       request: {
         uuid: params.uuid,
         status: 'pending' as const,

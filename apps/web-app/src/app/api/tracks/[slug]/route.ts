@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 
 /**
  * Track detail API route matching Rails tracks#show controller
@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     const trackSlug = params.slug
-    const session = await getServerAuthSession()
+    const user = await getCurrentUser()
     
     // Connect to Rails API to fetch track data
     const railsApiUrl = process.env.RAILS_API_URL || 'http://localhost:3000'
@@ -23,7 +23,7 @@ export async function GET(
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          ...(session?.user && { 'Authorization': `Bearer ${session.user.id}` })
+          ...(user && { 'Authorization': `Bearer ${user.id}` })
         }
       })
       

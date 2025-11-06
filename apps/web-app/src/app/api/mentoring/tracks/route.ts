@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireMentor } from '@/lib/auth'
 import type { RailsMentoringTrackResponse } from '@/types/api'
 
 /**
@@ -9,22 +9,9 @@ import type { RailsMentoringTrackResponse } from '@/types/api'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireMentor()
     
-    // Mentoring tracks require authentication and mentor status
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    if (!session.user.isMentor) {
-      return NextResponse.json(
-        { error: 'Mentor access required' },
-        { status: 403 }
-      )
-    }
+    // User is guaranteed to be authenticated and have mentor privileges
     
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || ''
@@ -41,7 +28,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.user.id}`
+          'Authorization': `Bearer ${user.id}`
         }
       })
       
@@ -81,6 +68,23 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Mentoring tracks fetch error:', error)
+    
+    // Handle authentication and authorization errors with appropriate status codes
+    if (error instanceof Error) {
+      if (error.message === 'Authentication required') {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+      if (error.message === 'Mentor privileges required') {
+        return NextResponse.json(
+          { error: 'Mentor access required' },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

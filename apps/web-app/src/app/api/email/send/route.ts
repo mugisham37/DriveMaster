@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireInsider } from '@/lib/auth'
 import { mailer, emailQueue } from '@/lib/email/mailer'
-import { withErrorHandling, withAuth } from '@/lib/api/middleware'
+import { withErrorHandling, type AuthenticatedRequest } from '@/lib/api/middleware'
 
-async function sendEmailHandler(request: NextRequest) {
-  const session = await getServerAuthSession()
-  
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    )
-  }
+async function sendEmailHandler(request: AuthenticatedRequest) {
+  // User is guaranteed to be authenticated by withAuth middleware
+  const user = request.user!
 
   try {
     const { template, to, context, scheduled } = await request.json()
@@ -26,9 +20,9 @@ async function sendEmailHandler(request: NextRequest) {
     // Add user context if not provided
     if (!context.user) {
       context.user = {
-        handle: session.user.handle,
-        name: session.user.name,
-        email: session.user.email
+        handle: user.handle,
+        name: user.name,
+        email: user.email
       }
     }
 
@@ -70,15 +64,9 @@ async function sendEmailHandler(request: NextRequest) {
 }
 
 async function getEmailQueueStatus(_: NextRequest) {
-  const session = await getServerAuthSession()
+  const user = await requireInsider()
   
-  // Only allow admins to check queue status
-  if (!session?.user || !session.user.isInsider) {
-    return NextResponse.json(
-      { error: 'Admin access required' },
-      { status: 403 }
-    )
-  }
+  // User is guaranteed to be authenticated and have insider privileges
 
   const status = emailQueue.getQueueStatus()
   
@@ -88,5 +76,5 @@ async function getEmailQueueStatus(_: NextRequest) {
   })
 }
 
-export const POST = withErrorHandling(withAuth(sendEmailHandler))
+export const POST = withErrorHandling(sendEmailHandler)
 export const GET = withErrorHandling(getEmailQueueStatus)

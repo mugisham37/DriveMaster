@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import type { 
   DashboardResponse, 
   RailsDashboardResponse,
@@ -18,7 +18,7 @@ import type {
 
 export async function GET() {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     
     // Dashboard requires authentication
     if (!session?.user) {
@@ -37,7 +37,7 @@ export async function GET() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.user.id}`
+          'Authorization': `Bearer ${user.id}`
         }
       })
       
@@ -198,6 +198,15 @@ export async function GET() {
     
   } catch (error) {
     console.error('Dashboard fetch error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

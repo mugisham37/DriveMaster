@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { NotificationsList } from '@/components/notifications/NotificationsList'
 
@@ -19,9 +19,9 @@ interface NotificationsPageProps {
 export default async function NotificationsPage({
   searchParams
 }: NotificationsPageProps) {
-  const session = await getServerAuthSession()
+  const user = await getCurrentUser()
 
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/notifications')
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 
 /**
  * User API route that fetches user data with Rails-compatible format
@@ -10,19 +10,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     const userId = params.id
     
-    // Check if user is authenticated
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-    
     // Users can only access their own data or mentors can access any user data
-    if (session.user.id.toString() !== userId && !session.user.isMentor) {
+    if (user.id.toString() !== userId && !user.isMentor) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -87,17 +79,17 @@ export async function GET(
       console.error('Rails API connection error:', fetchError)
       
       // Fallback for development/testing
-      if (userId === session.user.id.toString()) {
+      if (userId === user.id.toString()) {
         return NextResponse.json({
-          id: session.user.id,
-          handle: session.user.handle,
-          name: session.user.name,
-          email: session.user.email,
-          avatarUrl: session.user.avatarUrl,
-          reputation: session.user.reputation,
-          flair: session.user.flair,
-          isMentor: session.user.isMentor,
-          isInsider: session.user.isInsider,
+          id: user.id,
+          handle: user.handle,
+          name: user.name,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          reputation: user.reputation,
+          flair: user.flair,
+          isMentor: user.isMentor,
+          isInsider: user.isInsider,
           preferences: {
             theme: 'system',
             emailNotifications: true,
@@ -122,6 +114,15 @@ export async function GET(
     
   } catch (error) {
     console.error('User fetch error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -134,19 +135,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     const userId = params.id
     
-    // Check if user is authenticated
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-    
     // Users can only update their own data
-    if (session.user.id.toString() !== userId) {
+    if (user.id.toString() !== userId) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -212,6 +205,15 @@ export async function PATCH(
     
   } catch (error) {
     console.error('User update error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

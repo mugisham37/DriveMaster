@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 
 interface RailsIterationResponse {
   uuid: string
@@ -33,14 +33,9 @@ const RAILS_API_URL = process.env.RAILS_API_URL || 'http://localhost:3000'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // User is guaranteed to be authenticated by requireAuth
     
     const requestData = await request.json()
     const { solutionUuid, files } = requestData
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${session.user.id}`
+        'Authorization': `Bearer ${user.id}`
       },
       body: JSON.stringify({
         solution_uuid: solutionUuid,
@@ -108,6 +103,15 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Iteration submission error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -117,14 +121,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // User is guaranteed to be authenticated by requireAuth
     
     const { searchParams } = new URL(request.url)
     const solutionUuid = searchParams.get('solution_uuid')
@@ -144,7 +143,7 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${session.user.id}`
+        'Authorization': `Bearer ${user.id}`
       }
     })
     
@@ -181,6 +180,15 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Iterations fetch error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

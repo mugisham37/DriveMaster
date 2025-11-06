@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerAuthSession } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import type { RailsTestResponse } from '@/types/api'
 
 /**
@@ -14,14 +14,9 @@ export async function GET(
   { params }: { params: { uuid: string } }
 ) {
   try {
-    const session = await getServerAuthSession()
+    const user = await requireAuth()
     
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // User is guaranteed to be authenticated by requireAuth
     
     const submissionUuid = params.uuid
     
@@ -32,7 +27,7 @@ export async function GET(
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${session.user.id}`
+        'Authorization': `Bearer ${user.id}`
       }
     })
     
@@ -77,6 +72,15 @@ export async function GET(
     
   } catch (error) {
     console.error('Test run fetch error:', error)
+    
+    // Handle authentication errors with appropriate status codes
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

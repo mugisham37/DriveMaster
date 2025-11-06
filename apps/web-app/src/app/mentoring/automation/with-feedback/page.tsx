@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { getServerAuthSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import WithFeedback from '@/components/mentoring/representations/WithFeedback'
 
@@ -20,14 +20,14 @@ interface WithFeedbackPageProps {
 export default async function WithFeedbackPage({
   searchParams
 }: WithFeedbackPageProps) {
-  const session = await getServerAuthSession()
+  const user = await getCurrentUser()
 
   // Require authentication and mentor status
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/mentoring/automation/with-feedback')
   }
 
-  if (!session.user.isMentor) {
+  if (!user.isMentor) {
     redirect('/dashboard')
   }
 

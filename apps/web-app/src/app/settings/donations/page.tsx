@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getServerAuthSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { DonationsSettingsPage } from '@/components/settings/DonationsSettingsPage';
 
@@ -52,18 +52,18 @@ async function getDonationsData(_userId: number) {
 }
 
 export default async function DonationsSettingsPageRoute() {
-  const session = await getServerAuthSession();
+  const user = await getCurrentUser();
   
-  if (!session?.user) {
+  if (!user) {
     redirect('/auth/signin?callbackUrl=/settings/donations');
   }
 
-  const donationsData = await getDonationsData(session.user.id);
+  const donationsData = await getDonationsData(user.id);
 
   return (
     <DonationsSettingsPage
       user={{
-        ...session.user,
+        ...user,
         preferences: { theme: 'system', emailNotifications: true, mentorNotifications: true },
         tracks: []
       }}
