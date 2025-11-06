@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
-import { SessionProvider } from "@/components/providers/SessionProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { FlashMessages } from "@/components/common";
-import { getServerAuthSession } from "@/lib/auth";
-import { ComponentInitializer } from "@/lib/component-initializer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -61,27 +59,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerAuthSession();
-  
   return (
     <html lang="en">
       <body
         className={`${inter.variable} ${poppins.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <SessionProvider session={session as Record<string, unknown> | null}>
+        <AuthProvider>
           <I18nProvider>
-            <ComponentInitializer />
             <PerformanceMonitor />
             <FlashMessages />
             {children}
           </I18nProvider>
-        </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   );
