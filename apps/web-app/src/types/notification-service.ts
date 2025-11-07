@@ -288,6 +288,13 @@ export type NotificationEventType =
   | 'notification.deleted'
   | 'preferences.updated'
   | 'connection.status'
+  | 'subscribe'
+  | 'unsubscribe'
+  | 'ping'
+  | 'pong'
+  | 'error'
+  | 'subscription.confirmed'
+  | 'subscription.error'
 
 export interface NotificationEvent {
   type: NotificationEventType
@@ -374,11 +381,11 @@ export type NotificationErrorType =
 export interface NotificationError {
   type: NotificationErrorType
   message: string
-  code?: string
-  details?: Record<string, unknown>
+  code?: string | undefined
+  details?: Record<string, unknown> | undefined
   recoverable: boolean
-  retryAfter?: number
-  correlationId?: string
+  retryAfter?: number | undefined
+  correlationId?: string | undefined
   timestamp: Date
 }
 
@@ -465,8 +472,8 @@ export interface CircuitBreakerMetrics {
   state: CircuitBreakerState
   failureCount: number
   successCount: number
-  lastFailureTime?: Date
-  nextRetryTime?: Date
+  lastFailureTime?: Date | undefined
+  nextRetryTime?: Date | undefined
 }
 
 // ============================================================================

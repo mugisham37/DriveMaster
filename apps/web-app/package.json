@@ -16,7 +16,6 @@
     "build:proto": "npm run generate:proto"
   },
   "dependencies": {
-
     "@ballerina/highlightjs-ballerina": "^1.0.1",
     "@bugsnag/js": "^7.22.3",
     "@bugsnag/plugin-react": "^7.19.0",
@@ -175,6 +174,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/humps": "^2.0.6",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
