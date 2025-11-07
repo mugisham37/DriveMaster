@@ -14,9 +14,10 @@ import type {
   CollaborationEvent,
   UserPresence,
   CollaborationSession,
-  WebSocketConnectionState
+  WebSocketConnectionState,
+  WebSocketMetrics
 } from '@/types/websocket'
-import type { ContentItem } from '@/types'
+import type { ContentItem } from '@/types/entities'
 
 // ============================================================================
 // Real-time Content Updates Hook
@@ -55,9 +56,8 @@ export function useRealTimeContent(options: UseRealTimeContentOptions): UseRealT
     enabled = true,
     includePresence = true,
     includeCollaboration = true,
-    onContentChanged: _onContentChanged,
     onPresenceUpdated,
-    onCollaborationEvent: _onCollaborationEvent
+    // onContentChanged and onCollaborationEvent reserved for future implementation
   } = options
 
   const [isConnected, setIsConnected] = useState(false)
@@ -206,7 +206,7 @@ export interface UseWebSocketConnectionReturn {
 export function useWebSocketConnection(): UseWebSocketConnectionReturn {
   const [isConnected, setIsConnected] = useState(false)
   const [connectionState, setConnectionState] = useState<WebSocketConnectionState>('disconnected')
-  const [connectionStats, setConnectionStats] = useState<Record<string, unknown> | null>(null)
+  const [connectionStats, setConnectionStats] = useState<WebSocketMetrics | null>(null)
 
   const webSocketManager = useRef(getWebSocketManager())
 
@@ -219,7 +219,7 @@ export function useWebSocketConnection(): UseWebSocketConnectionReturn {
       
       // Update stats when connection changes
       const stats = manager.getConnectionStats()
-      setConnectionStats(stats)
+      setConnectionStats(stats as unknown as WebSocketMetrics)
     }
 
     manager.on('connection_status_changed', handleConnectionStatus)
@@ -227,7 +227,7 @@ export function useWebSocketConnection(): UseWebSocketConnectionReturn {
     // Set initial state
     setIsConnected(manager.isConnected())
     const initialStats = manager.getConnectionStats()
-    setConnectionStats(initialStats)
+    setConnectionStats(initialStats as unknown as WebSocketMetrics)
 
     return () => {
       manager.off('connection_status_changed')
@@ -512,8 +512,7 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
   const {
     itemId,
     enabled = true,
-    enableOptimisticUpdates: _enableOptimisticUpdates = true,
-    conflictResolutionStrategy: _conflictResolutionStrategy = 'merge'
+    // enableOptimisticUpdates and conflictResolutionStrategy reserved for future implementation
   } = options
 
   const [content, setContent] = useState<ContentItem | null>(null)
@@ -542,7 +541,7 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
     return () => {
       manager.off('conflict_resolved')
     }
-  }, [enabled, itemId])
+  }, [enabled, itemId, sync])
 
   const sync = useCallback(async () => {
     if (!enabled || !itemId) return
@@ -559,11 +558,12 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
     }
   }, [enabled, itemId])
 
-  const resolveConflicts = useCallback(async (_strategy: 'local_wins' | 'remote_wins' | 'merge') => {
+  const resolveConflicts = useCallback(async (strategy: 'local_wins' | 'remote_wins' | 'merge') => {
     if (!enabled || !itemId || !hasConflicts) return
 
     // This would integrate with the conflict resolution system
-    // For now, just sync the content
+    // For now, just sync the content regardless of strategy
+    console.log('Resolving conflicts with strategy:', strategy)
     await sync()
     setHasConflicts(false)
   }, [enabled, itemId, hasConflicts, sync])

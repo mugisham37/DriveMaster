@@ -138,7 +138,7 @@ export function useMediaAsset(id: string | null) {
   const { data, error, isLoading, mutate: mutateFn } = useSWR(
     id ? contentCacheKeys.mediaAsset(id) : null,
     () => id ? contentServiceClient.getMediaAsset(id) : null,
-    contentSWRConfigs.media
+    contentSWRConfigs.mediaAsset
   )
 
   const refresh = useCallback(() => {
@@ -159,10 +159,10 @@ export function useMediaAsset(id: string | null) {
  */
 export function useMediaSignedUrl(id: string | null, options?: SignedUrlOptions) {
   const { data, error, isLoading, mutate: mutateFn } = useSWR(
-    id ? contentCacheKeys.mediaSignedUrl(id, options) : null,
+    id ? contentCacheKeys.mediaSignedUrl(id, options as Record<string, unknown>) : null,
     () => id ? contentServiceClient.getMediaSignedUrl(id, options) : null,
     {
-      ...contentSWRConfigs.media,
+      ...contentSWRConfigs.mediaAsset,
       refreshInterval: 0, // Don't auto-refresh signed URLs
       revalidateOnFocus: false,
       revalidateOnReconnect: false
@@ -243,6 +243,7 @@ export function useBatchMediaUpload() {
     total: 0,
     completed: 0,
     failed: 0,
+    current: undefined,
     progress: 0
   })
   const [error, setError] = useState<Error | null>(null)
@@ -260,6 +261,7 @@ export function useBatchMediaUpload() {
       total: files.length,
       completed: 0,
       failed: 0,
+      current: undefined,
       progress: 0
     })
 
@@ -366,7 +368,8 @@ export function useMediaValidation() {
         optimizedSize,
         compressionRatio
       }
-    } catch (_error) {
+    } catch (error) {
+      console.error('File validation error:', error)
       return {
         isValid: false,
         errors: ['Failed to validate file'],

@@ -267,12 +267,12 @@ export function useAuthActions(): UseAuthActionsReturn {
       const sessionsResponse = await authClient.getSessions()
       
       if (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse) {
-        const sessions = sessionsResponse.sessions
+        const sessions = sessionsResponse.sessions as Array<{ id: string; isCurrent: boolean }>
         
         // Invalidate all sessions except current
         const invalidationPromises = sessions
-          .filter((session: { isCurrent: boolean }) => !session.isCurrent)
-          .map((session: { id: string }) => authClient.invalidateSession(session.id))
+          .filter((session) => !session.isCurrent)
+          .map((session) => authClient.invalidateSession(session.id))
         
         await Promise.allSettled(invalidationPromises)
       }

@@ -6,7 +6,8 @@
  * Requirements: 7.1
  */
 
-import type { CircuitBreakerConfig, CircuitBreakerError } from '@/types'
+import type { CircuitBreakerConfig } from '@/types/config'
+import type { CircuitBreakerError } from '@/types/errors'
 
 // ============================================================================
 // Circuit Breaker Types
@@ -127,7 +128,7 @@ export class CircuitBreaker {
 
       case 'half-open':
         // Allow limited calls in half-open state
-        return this.halfOpenCallCount < this.config.halfOpenMaxCalls
+        return this.halfOpenCallCount < (this.config.halfOpenMaxCalls ?? 3)
 
       default:
         return false
@@ -147,7 +148,7 @@ export class CircuitBreaker {
       this.halfOpenCallCount++
       
       // If we've had enough successful calls in half-open, close the circuit
-      if (this.halfOpenCallCount >= this.config.halfOpenMaxCalls) {
+      if (this.halfOpenCallCount >= (this.config.halfOpenMaxCalls ?? 3)) {
         this.transitionToClosed()
       }
     } else if (this.state === 'closed') {
@@ -196,7 +197,7 @@ export class CircuitBreaker {
    */
   private transitionToOpen(): void {
     this.state = 'open'
-    this.nextRetryTime = new Date(Date.now() + this.config.recoveryTimeout)
+    this.nextRetryTime = new Date(Date.now() + (this.config.recoveryTimeout ?? 30000))
     this.recordStateChange()
     
     console.log(`[CircuitBreaker] Transitioned to OPEN state. Next retry at: ${this.nextRetryTime.toISOString()}`)
@@ -278,7 +279,7 @@ export class CircuitBreaker {
       : 0
 
     // Calculate requests per second over the monitoring period
-    const monitoringPeriodMs = this.config.monitoringPeriod
+    const monitoringPeriodMs = this.config.monitoringPeriod ?? 60000
     const requestsPerSecond = monitoringPeriodMs > 0 ? (stats.totalRequests / monitoringPeriodMs) * 1000 : 0
 
     return {
@@ -410,6 +411,8 @@ export class CircuitBreaker {
 export function createCircuitBreaker(config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
   const defaultConfig: CircuitBreakerConfig = {
     failureThreshold: 5,
+    timeout: 10000, // 10 seconds
+    successThreshold: 2,
     recoveryTimeout: 30000, // 30 seconds
     monitoringPeriod: 60000, // 1 minute
     halfOpenMaxCalls: 3,

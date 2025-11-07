@@ -15,8 +15,9 @@ import type {
   BulkExportResultDto,
   BulkOperation, 
   BulkOperationStatus,
-  ContentItem
+  BulkOperationType
 } from '@/types'
+import type { ContentItem } from '@/types/entities'
 import type { ProgressUpdate } from '@/utils/job-poller'
 
 // ============================================================================
@@ -392,7 +393,7 @@ export function useBulkOperationsList() {
   })
 
   const loadOperations = useCallback(async (options?: {
-    type?: 'import' | 'export'
+    type?: BulkOperationType
     status?: BulkOperationStatus
     page?: number
     limit?: number

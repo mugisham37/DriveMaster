@@ -15,11 +15,8 @@ import type {
   SearchResult,
   SearchSuggestion,
   Recommendation,
-  RecommendationType,
   WorkflowTransition,
-  ReviewDecision,
   BulkOperation,
-  BulkOperationType,
   BulkOperationStatus
 } from './entities'
 
@@ -260,29 +257,29 @@ export interface PresenceUpdateDto {
 // Response DTOs
 // ============================================================================
 
-export interface ContentItemResponse extends ApiResponse<ContentItem> {}
+export type ContentItemResponse = ApiResponse<ContentItem>
 
-export interface ContentItemsResponse extends ApiResponse<PaginatedResult<ContentItem>> {}
+export type ContentItemsResponse = ApiResponse<PaginatedResult<ContentItem>>
 
-export interface MediaAssetResponse extends ApiResponse<MediaAsset> {}
+export type MediaAssetResponse = ApiResponse<MediaAsset>
 
-export interface MediaAssetsResponse extends ApiResponse<MediaAsset[]> {}
+export type MediaAssetsResponse = ApiResponse<MediaAsset[]>
 
-export interface SearchResponse extends ApiResponse<{
+export type SearchResponse = ApiResponse<{
   results: SearchResult[]
   total: number
   facets?: Record<string, Array<{ value: string; count: number }>>
   suggestions?: SearchSuggestion[]
   queryTime: number
-}> {}
+}>
 
-export interface SuggestionsResponse extends ApiResponse<SearchSuggestion[]> {}
+export type SuggestionsResponse = ApiResponse<SearchSuggestion[]>
 
-export interface RecommendationsResponse extends ApiResponse<Recommendation[]> {}
+export type RecommendationsResponse = ApiResponse<Recommendation[]>
 
-export interface WorkflowHistoryResponse extends ApiResponse<WorkflowTransition[]> {}
+export type WorkflowHistoryResponse = ApiResponse<WorkflowTransition[]>
 
-export interface BulkOperationResponse extends ApiResponse<BulkOperation> {}
+export type BulkOperationResponse = ApiResponse<BulkOperation>
 
 export type UploadProgressResponse = ApiResponse<{
   uploadId: string

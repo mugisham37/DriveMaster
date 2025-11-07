@@ -8,8 +8,8 @@
 import { useState, useCallback, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
 import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
+import type { ContentItem } from '@/types/entities'
 import type {
-  ContentItem,
   SubmitForReviewDto,
   ReviewItemDto,
   PublishItemDto,
@@ -478,9 +478,10 @@ export function useWorkflowValidation() {
       }
 
       // Check for SEO metadata
-      if (!item.metadata?.description) {
-        warnings.push('Consider adding a description for better SEO')
-      }
+      // Note: ContentMetadata doesn't have description field
+      // if (!item.metadata?.description) {
+      //   warnings.push('Consider adding a description for better SEO')
+      // }
 
       if (!item.tags || item.tags.length === 0) {
         warnings.push('Consider adding tags for better discoverability')

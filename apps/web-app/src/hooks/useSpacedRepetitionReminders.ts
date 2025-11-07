@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
-import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
+// import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
 import type { 
   SpacedRepetitionRequest,
   ScheduledNotification,
@@ -106,7 +106,8 @@ export function useSpacedRepetitionReminders(
 ): UseSpacedRepetitionRemindersResult {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { showToast } = useNotificationToast()
+  // const { showToast } = useNotificationToast() // TODO: Implement useNotificationToast hook
+  const showToast = (message: unknown) => console.log('Toast:', message) // Temporary placeholder
   
   const config = { ...DEFAULT_OPTIONS, ...options }
   

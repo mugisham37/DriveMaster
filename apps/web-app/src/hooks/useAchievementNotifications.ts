@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { notificationApiClient } from '@/lib/notification-service'
 import { useAuth } from './useAuth'
-import { useNotificationToast } from '@/components/notifications/NotificationToastSystem'
+// import useNotificationToast from '@/components/notifications/NotificationToastSystem'
 import { requireStringUserId } from '@/utils/user-id-helpers'
 import type { 
   AchievementNotificationRequest,
@@ -81,7 +81,8 @@ export function useAchievementNotifications(
 ): UseAchievementNotificationsResult {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { showToast } = useNotificationToast()
+  // const { showToast } = useNotificationToast() // TODO: Implement useNotificationToast hook
+  const showToast = (message: unknown) => console.log('Toast:', message) // Temporary placeholder
   
   const config = { ...DEFAULT_OPTIONS, ...options }
   
@@ -156,9 +157,8 @@ export function useAchievementNotifications(
           },
           createdAt: new Date(),
           updatedAt: new Date()
-        }, {
-          duration: 5000
         })
+        // Toast duration option would be passed here when the actual hook is implemented
       }
     }
   })

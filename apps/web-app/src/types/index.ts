@@ -1310,8 +1310,7 @@ export type {
   SystemPerformanceMetrics,
   RealtimeMetricsSnapshot,
   
-  // Content analytics
-  ContentItem,
+  // Content analytics (ContentItem exported separately below)
   ContentGap,
   Alert,
   AlertSeverity,
@@ -1435,18 +1434,18 @@ export type { ContentItem } from "./entities";
 // Export analytics ContentItem with explicit alias
 export type { ContentItem as AnalyticsContentItem } from "./analytics-service";
 
-// Content Service Error types
+// Content Service Error types - with Content prefix to avoid conflicts
 export type {
   ContentServiceErrorType,
   BaseContentServiceError,
-  NetworkError,
-  AuthenticationError,
-  AuthorizationError,
-  ValidationError,
+  NetworkError as ContentNetworkError,
+  AuthenticationError as ContentAuthenticationError,
+  AuthorizationError as ContentAuthorizationError,
+  ValidationError as ContentValidationError,
   NotFoundError,
   ConflictError,
-  ServerError,
-  TimeoutError,
+  ServerError as ContentServerError,
+  TimeoutError as ContentTimeoutError,
   RateLimitError,
   ServiceUnavailableError,
   ContentServiceError,
@@ -1454,9 +1453,9 @@ export type {
   ErrorResponse,
   BulkOperationItemError,
   BulkOperationErrors,
-  CircuitBreakerError,
+  CircuitBreakerError as ContentCircuitBreakerError,
   UploadError,
   SearchError,
 } from "./errors";
 
-export { isCircuitBreakerError } from "./errors";
+export { isCircuitBreakerError as isContentCircuitBreakerError } from "./errors";

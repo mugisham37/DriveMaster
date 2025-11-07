@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast'
 import { 
   getNotificationWebSocketClient
 } from '@/lib/notification-service'
-import { useAuth } from './useAuth'
+import { useAuth } from '../../hooks/useAuth'
 import type {
   RealtimeNotification,
   Notification,

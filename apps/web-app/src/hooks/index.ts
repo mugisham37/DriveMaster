@@ -95,12 +95,12 @@ export type {
 export {
   useRealtimeNotifications,
   useNotificationConnection
-} from './useRealtimeNotifications'
+} from '../components/notifications/useRealtimeNotifications'
 export type {
   UseRealtimeNotificationsOptions,
   UseRealtimeNotificationsResult,
   UseNotificationConnectionResult
-} from './useRealtimeNotifications'
+} from '../components/notifications/useRealtimeNotifications'
 
 export {
   useNotificationPreferences,

@@ -76,7 +76,8 @@ export function useLegacyAuth(): UseAuthReturn {
     isInsider: newAuth.isInsider,
     signIn: async (_provider?: string, options?: Record<string, unknown>) => {
       // Redirect to sign in page for compatibility
-      redirectToSignIn(options?.callbackUrl)
+      const callbackUrl = typeof options?.callbackUrl === 'string' ? options.callbackUrl : undefined
+      redirectToSignIn(callbackUrl)
       return { ok: true, error: null }
     },
     signOut: newAuth.logout,

@@ -346,8 +346,8 @@ export function useAuthStatus(): UseAuthStatusReturn {
       case 'user':
         return auth.isAuthenticated
       default:
-        // TypeScript will catch this at compile time, but runtime safety
-        const _exhaustiveCheck: never = role
+        // TypeScript exhaustive check - this should never be reached
+        role satisfies never
         return false
     }
   }, [auth.isAuthenticated, auth.isMentor, auth.isInsider])

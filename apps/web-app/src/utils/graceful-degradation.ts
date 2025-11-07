@@ -147,10 +147,10 @@ export class GracefulDegradationManager {
 
     switch (fallbackType) {
       case 'cache':
-        return this.getCachedData<T>(key) || this.createErrorFallback<T>(error)
+        return this.getCachedData<T>(key) || this.createErrorFallback<T>()
 
       case 'localStorage':
-        return this.getLocalStorageData<T>(key) || this.createErrorFallback<T>(error)
+        return this.getLocalStorageData<T>(key) || this.createErrorFallback<T>()
 
       case 'placeholder':
         return this.createPlaceholderData<T>(key)
@@ -162,7 +162,7 @@ export class GracefulDegradationManager {
 
       case 'error':
       default:
-        return this.createErrorFallback<T>(error)
+        return this.createErrorFallback<T>()
     }
   }
 
@@ -246,7 +246,7 @@ export class GracefulDegradationManager {
   /**
    * Creates error fallback data
    */
-  private createErrorFallback<T>(error: ContentServiceError): CachedData<T> {
+  private createErrorFallback<T>(): CachedData<T> {
     return {
       data: null as T,
       timestamp: new Date(),

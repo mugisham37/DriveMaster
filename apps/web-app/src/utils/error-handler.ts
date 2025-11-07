@@ -8,8 +8,6 @@
 import type { 
   ContentServiceError, 
   ContentServiceErrorType,
-  NetworkError,
-  AuthenticationError,
   NotFoundError,
   RateLimitError,
   ServiceUnavailableError
@@ -64,10 +62,10 @@ export class ErrorHandler {
   static handleApiError(error: unknown, context?: Record<string, unknown>): ErrorReport {
     const contentError = this.normalizeError(error)
     const classification = this.classifyError(contentError)
-    const recoveryStrategy = this.determineRecoveryStrategy(contentError, classification)
-    const userMessage = this.generateUserMessage(contentError, classification)
+    const recoveryStrategy = this.determineRecoveryStrategy(contentError)
+    const userMessage = this.generateUserMessage(contentError)
     const technicalMessage = this.generateTechnicalMessage(contentError)
-    const actionItems = this.generateActionItems(contentError, classification)
+    const actionItems = this.generateActionItems(contentError)
 
     // Track error for patterns and escalation
     this.trackError(contentError)
@@ -103,7 +101,7 @@ export class ErrorHandler {
 
     // Axios error
     if (error && typeof error === 'object' && 'isAxiosError' in error) {
-      return this.transformAxiosError(error as unknown)
+      return this.transformAxiosError(error as Record<string, unknown>)
     }
 
     // Standard Error
@@ -257,7 +255,7 @@ export class ErrorHandler {
   /**
    * Determines appropriate recovery strategy
    */
-  private static determineRecoveryStrategy(error: ContentServiceError, _classification: ErrorClassification): RecoveryStrategy {
+  private static determineRecoveryStrategy(error: ContentServiceError): RecoveryStrategy {
     const errorKey = `${error.type}_${error.code}`
     const attemptCount = this.recoveryAttempts.get(errorKey) || 0
 
@@ -339,7 +337,7 @@ export class ErrorHandler {
   /**
    * Generates user-friendly error messages
    */
-  private static generateUserMessage(error: ContentServiceError, _classification: ErrorClassification): string {
+  private static generateUserMessage(error: ContentServiceError): string {
     const baseMessages: Record<ContentServiceErrorType, string> = {
       network: 'Connection problem. Please check your internet connection and try again.',
       authentication: 'Your session has expired. Please sign in again.',
@@ -401,7 +399,7 @@ export class ErrorHandler {
   /**
    * Generates actionable items for error resolution
    */
-  private static generateActionItems(error: ContentServiceError, _classification: ErrorClassification): string[] {
+  private static generateActionItems(error: ContentServiceError): string[] {
     const actions: string[] = []
 
     switch (error.type) {
@@ -594,82 +592,7 @@ export class ErrorHandler {
   // ============================================================================
   // Helper Methods
   // ============================================================================
-
-  private static classifyHttpError(statusCode: number): ContentServiceErrorType {
-    if (statusCode >= 400 && statusCode < 500) {
-      if (statusCode === 401) return 'authentication'
-      if (statusCode === 403) return 'authorization'
-      if (statusCode === 404) return 'not_found'
-      if (statusCode === 408) return 'timeout'
-      if (statusCode === 409) return 'conflict'
-      if (statusCode === 422) return 'validation'
-      if (statusCode === 429) return 'rate_limit'
-      return 'validation'
-    }
-
-    if (statusCode >= 500) {
-      if (statusCode === 503) return 'service_unavailable'
-      return 'server'
-    }
-
-    return 'network'
-  }
-
-  private static isRecoverableHttpError(statusCode: number): boolean {
-    const nonRecoverableClientErrors = [400, 401, 403, 404, 410, 422]
-    return !nonRecoverableClientErrors.includes(statusCode)
-  }
-
-  private static getNetworkErrorMessage(code?: string): string {
-    const messages: Record<string, string> = {
-      'ECONNABORTED': 'Request timeout. Please check your connection and try again.',
-      'ENOTFOUND': 'Unable to connect to content service. Please try again later.',
-      'ECONNREFUSED': 'Connection refused. The service may be temporarily unavailable.',
-      'ECONNRESET': 'Connection was reset. Please try again.',
-      'ETIMEDOUT': 'Request timed out. Please try again.'
-    }
-
-    return messages[code || ''] || 'Network error occurred. Please check your connection.'
-  }
-
-  private static getNetworkErrorCause(code?: string): NetworkError['cause'] {
-    const causes: Record<string, NetworkError['cause']> = {
-      'ECONNABORTED': 'connection_failed',
-      'ENOTFOUND': 'dns_resolution',
-      'ECONNREFUSED': 'connection_failed',
-      'ECONNRESET': 'connection_failed',
-      'ETIMEDOUT': 'connection_failed'
-    }
-
-    return causes[code || ''] || 'connection_failed'
-  }
-
-  private static getHttpErrorMessage(statusCode: number, fallbackMessage?: string): string {
-    const messages: Record<number, string> = {
-      400: 'Invalid request. Please check your input and try again.',
-      401: 'Authentication required. Please sign in and try again.',
-      403: 'You do not have permission to perform this action.',
-      404: 'The requested resource was not found.',
-      408: 'Request timeout. Please try again.',
-      409: 'Conflict occurred. The resource may have been modified.',
-      422: 'Invalid data provided. Please check your input.',
-      429: 'Too many requests. Please wait a moment and try again.',
-      500: 'Internal server error. Please try again later.',
-      502: 'Service temporarily unavailable. Please try again later.',
-      503: 'Service temporarily unavailable. Please try again later.',
-      504: 'Request timeout. Please try again later.'
-    }
-
-    return messages[statusCode] || fallbackMessage || 'An error occurred. Please try again.'
-  }
-
-  private static getAuthErrorCause(responseData?: Record<string, unknown>): AuthenticationError['cause'] {
-    if (!responseData) return 'invalid_token'
-    
-    const message = responseData.message as string
-    if (message?.includes('expired')) return 'expired_token'
-    if (message?.includes('invalid')) return 'invalid_token'
-    if (message?.includes('missing')) return 'missing_token'
-    return 'invalid_token'
-  }
+  // Note: Additional helper methods for error classification can be added here as needed
 }
+
+ 

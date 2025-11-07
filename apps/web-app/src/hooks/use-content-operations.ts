@@ -8,12 +8,13 @@
 import { useState, useCallback, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
 import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
+import type { ContentItem } from '@/types/entities'
 import type {
-  ContentItem,
   QueryItemsDto,
   CreateItemDto,
   UpdateItemDto,
   SearchRequestDto,
+  RecommendationType
 } from '@/types'
 
 // ============================================================================
@@ -144,16 +145,6 @@ export function useUpdateContentItem() {
     setError(null)
 
     try {
-      // Optimistic update
-      await mutate(
-        contentCacheKeys.contentItem(id),
-        async (current: ContentItem | undefined) => {
-          if (!current) return current
-          return { ...current, ...data, updatedAt: new Date() }
-        },
-        false
-      )
-
       const result = await contentServiceClient.updateContentItem(id, data)
       
       // Update cache with server response
