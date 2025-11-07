@@ -272,6 +272,8 @@ export interface EngagementMetricsParams {
   timeRange?: TimeRange
   /** Specific user ID to filter metrics (optional) */
   userId?: string
+  /** Class IDs to filter metrics (optional) */
+  classIds?: string[]
   /** Additional filters for engagement data */
   filters?: EngagementFilters
   /** Pagination parameters */
@@ -287,6 +289,8 @@ export interface EngagementMetricsParams {
 export interface ProgressMetricsParams {
   /** Specific user ID to filter progress metrics (optional) */
   userId?: string
+  /** Class IDs to filter metrics (optional) */
+  classIds?: string[]
   /** Time range for progress calculation */
   timeRange?: TimeRange
   /** Specific skill ID to filter progress (optional) */
@@ -306,6 +310,8 @@ export interface ProgressMetricsParams {
 export interface ContentMetricsParams {
   /** Specific content ID to filter metrics (optional) */
   contentId?: string
+  /** Class IDs to filter metrics (optional) */
+  classIds?: string[]
   /** Content-specific filters */
   filters?: ContentFilters
   /** Time range for content metrics calculation */
@@ -344,6 +350,8 @@ export interface ReportFilters {
   timeRange?: TimeRange
   categories?: string[]
   includeDetails?: boolean
+  userId?: string
+  classIds?: string[]
 }
 
 // ============================================================================
@@ -736,7 +744,7 @@ export interface WebSocketConfig {
   /** Message timeout in milliseconds */
   messageTimeout?: number
   /** Whether to use exponential backoff for reconnection */
-  useExponentialBackoff: boolean
+  useExponentialBackoff?: boolean
   /** Authentication token for WebSocket connection */
   authToken?: string
 }

@@ -470,6 +470,23 @@ export interface CircuitBreakerMetrics {
 }
 
 // ============================================================================
+// Authentication Types
+// ============================================================================
+
+export interface JWTPayload {
+  sub?: string
+  user_id?: string
+  exp?: number
+  iat?: number
+  scopes?: string[]
+  scope?: string
+  role?: string
+  roles?: string[]
+  is_admin?: boolean
+  [key: string]: unknown
+}
+
+// ============================================================================
 // Utility Types
 // ============================================================================
 
