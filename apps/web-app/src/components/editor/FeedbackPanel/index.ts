@@ -1,1 +1,0 @@
-export { FeedbackPanel } from './FeedbackPanel'

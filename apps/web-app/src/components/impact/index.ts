@@ -1,8 +1,0 @@
-export { default as ImpactChart } from './Chart'
-export { default as ImpactMap } from './map'
-export { default as ImpactStat } from './stat'
-export { default as ImpactTestimonial } from './ImpactTestimonial'
-export { ImpactPage } from './ImpactPage'
-export { ImpactTestimonialsList } from './ImpactTestimonialsList'
-export { TopLearningCountries } from './TopLearningCountries'
-export type { ChartData } from './Chart'

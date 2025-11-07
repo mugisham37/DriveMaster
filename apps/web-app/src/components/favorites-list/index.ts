@@ -1,1 +1,0 @@
-export { default as FavoritesList, type FavoritesListProps } from './FavoritesList'
