@@ -4,7 +4,6 @@ import "./globals.css";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
-import { FlashMessages } from "@/components/common";
 
 const inter = Inter({
   variable: "--font-inter",
