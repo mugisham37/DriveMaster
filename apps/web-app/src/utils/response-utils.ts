@@ -6,17 +6,19 @@
  */
 
 export class ResponseUtils {
-  static parseApiResponse<T>(response: unknown): T {
+  static parseApiResponse<T>(_response: unknown): T {
     // Implementation will be added later
-    return response as T
+    return _response as T
   }
 
-  static extractErrorMessage(response: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static extractErrorMessage(_response: unknown): string {
     // Implementation will be added later
     return 'An error occurred'
   }
 
-  static isSuccessResponse(response: unknown): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static isSuccessResponse(_response: unknown): boolean {
     // Implementation will be added later
     return true
   }

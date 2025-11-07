@@ -6,17 +6,20 @@
  */
 
 export class ValidationUtils {
-  static validateContentItem(data: unknown): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static validateContentItem(_data: unknown): string[] {
     // Implementation will be added later
     return []
   }
 
-  static validateMediaUpload(file: File): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static validateMediaUpload(_file: File): string[] {
     // Implementation will be added later
     return []
   }
 
-  static validateSearchQuery(query: string): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static validateSearchQuery(_query: string): string[] {
     // Implementation will be added later
     return []
   }

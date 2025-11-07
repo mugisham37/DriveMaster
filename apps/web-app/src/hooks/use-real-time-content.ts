@@ -522,6 +522,21 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
 
   const webSocketManager = useRef(getWebSocketManager())
 
+  const sync = useCallback(async () => {
+    if (!enabled || !itemId) return
+
+    setIsLoading(true)
+    try {
+      const updatedContent = await contentServiceClient.getContentItem(itemId)
+      setContent(updatedContent)
+      setLastSync(new Date())
+    } catch (error) {
+      console.error('Failed to sync content:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [enabled, itemId])
+
   // Handle content changes from WebSocket
   useEffect(() => {
     if (!enabled || !itemId) return
@@ -542,21 +557,6 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
       manager.off('conflict_resolved')
     }
   }, [enabled, itemId, sync])
-
-  const sync = useCallback(async () => {
-    if (!enabled || !itemId) return
-
-    setIsLoading(true)
-    try {
-      const updatedContent = await contentServiceClient.getContentItem(itemId)
-      setContent(updatedContent)
-      setLastSync(new Date())
-    } catch (error) {
-      console.error('Failed to sync content:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [enabled, itemId])
 
   const resolveConflicts = useCallback(async (strategy: 'local_wins' | 'remote_wins' | 'merge') => {
     if (!enabled || !itemId || !hasConflicts) return
