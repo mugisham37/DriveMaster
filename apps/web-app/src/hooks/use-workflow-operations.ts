@@ -5,10 +5,9 @@
  * Requirements: 5.1, 5.2, 5.3
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
-import { contentServiceClient } from '../client'
-import { contentCacheKeys, contentSWRConfigs } from '../cache'
+import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
 import type {
   ContentItem,
   WorkflowTransition,
@@ -18,7 +17,7 @@ import type {
   BulkWorkflowDto,
   BulkOperation,
   WorkflowStatus
-} from '../types'
+} from '@/types'
 
 // ============================================================================
 // Workflow State Management
@@ -284,7 +283,7 @@ export function useBulkWorkflowOperation() {
       const result = await contentServiceClient.bulkWorkflowOperation(data)
       
       // Invalidate all affected content items
-      data.itemIds.forEach(id => {
+      data.itemIds.forEach((id: string) => {
         mutate(contentCacheKeys.contentItem(id))
         mutate(contentCacheKeys.workflowHistory(id))
       })

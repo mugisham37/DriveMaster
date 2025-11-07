@@ -169,16 +169,21 @@ export function useRealtimeNotifications(
           borderRadius: '0.5rem',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
           maxWidth: '400px'
-        },
-        onDismiss: () => {
-          activeToastsRef.current.delete(toastId)
-          // Process next toast in queue
-          setTimeout(processToastQueue, 100)
         }
       }
     )
 
     activeToastsRef.current.add(toastId)
+
+    // Handle toast dismissal
+    const checkDismissed = setInterval(() => {
+      const toastElement = document.querySelector(`[data-toast-id="${toastId}"]`)
+      if (!toastElement) {
+        activeToastsRef.current.delete(toastId)
+        clearInterval(checkDismissed)
+        setTimeout(processToastQueue, 100)
+      }
+    }, 100)
 
     // Process next toast after a short delay
     setTimeout(processToastQueue, 500)
@@ -243,8 +248,10 @@ export function useRealtimeNotifications(
   }, [])
 
   const handleConnectionStateChange = useCallback((newState: NotificationWebSocketState) => {
-    setConnectionState(newState)
-    setIsConnected(newState === 'connected')
+    const validStates: NotificationWebSocketState[] = ['disconnected', 'connecting', 'connected', 'reconnecting', 'error']
+    const stateToSet = validStates.includes(newState) ? newState : 'error'
+    setConnectionState(stateToSet)
+    setIsConnected(stateToSet === 'connected')
     
     // Update connection stats
     const stats = wsClientRef.current.getConnectionStats()
@@ -336,13 +343,16 @@ export function useRealtimeNotifications(
       return
     }
 
+    let currentSubId: string | null = null
+
     // Connect and subscribe
     const setupConnection = async () => {
       try {
         await connect()
         
         // Subscribe to user notifications with filters
-        const subId = wsClientRef.current.subscribeToUserNotifications(user.id, filters)
+        const subId = wsClientRef.current.subscribeToUserNotifications(String(user.id), filters)
+        currentSubId = subId
         setSubscriptionId(subId)
       } catch (error) {
         console.error('Failed to setup real-time notifications:', error)
@@ -352,11 +362,11 @@ export function useRealtimeNotifications(
     setupConnection()
 
     return () => {
-      if (subscriptionId) {
-        wsClientRef.current.unsubscribe(subscriptionId)
+      if (currentSubId) {
+        wsClientRef.current.unsubscribe(currentSubId)
       }
     }
-  }, [user?.id, enabled, connect, disconnect, JSON.stringify(filters)])
+  }, [user?.id, enabled, connect, disconnect, filters])
 
   // Cleanup on unmount
   useEffect(() => {

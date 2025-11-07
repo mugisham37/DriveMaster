@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import type { MentorRequest } from '@/components/types'
+
+interface MentorRequest {
+  endpoint: string
+}
 
 interface MentorTrack {
   slug: string

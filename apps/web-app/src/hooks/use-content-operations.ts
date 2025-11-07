@@ -7,8 +7,7 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
-import { contentServiceClient } from '../client'
-import { contentCacheKeys, contentSWRConfigs } from '../cache'
+import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
 import type {
   ContentItem,
   QueryItemsDto,
@@ -20,7 +19,7 @@ import type {
   SearchSuggestion,
   Recommendation,
   RecommendationType
-} from '../types'
+} from '@/types'
 
 // ============================================================================
 // Content CRUD Hooks
@@ -151,7 +150,7 @@ export function useUpdateContentItem() {
 
     try {
       // Optimistic update
-      const currentData = await mutate(
+      await mutate(
         contentCacheKeys.contentItem(id),
         async (current: ContentItem | undefined) => {
           if (!current) return current
@@ -373,7 +372,7 @@ export function useContentWithRealTime(id: string | null, options?: {
 export function useContentFilters(initialParams?: QueryItemsDto) {
   const [params, setParams] = useState<QueryItemsDto>(initialParams || {})
   
-  const updateFilter = useCallback((key: keyof QueryItemsDto, value: any) => {
+  const updateFilter = useCallback((key: keyof QueryItemsDto, value: unknown) => {
     setParams(prev => ({ ...prev, [key]: value }))
   }, [])
 

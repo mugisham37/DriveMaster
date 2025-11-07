@@ -8,17 +8,15 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { contentServiceClient } from '../client'
-import { getWebSocketManager } from '../websocket'
+import { contentServiceClient, getWebSocketManager } from '@/lib/content-service'
 import type {
   ContentChangeNotification,
-  PresenceUpdate,
   CollaborationEvent,
   UserPresence,
   CollaborationSession,
   WebSocketConnectionState
-} from '../../../types/websocket'
-import type { ContentItem } from '../../../types/entities'
+} from '@/types/websocket'
+import type { ContentItem } from '@/types'
 
 // ============================================================================
 // Real-time Content Updates Hook
@@ -57,9 +55,9 @@ export function useRealTimeContent(options: UseRealTimeContentOptions): UseRealT
     enabled = true,
     includePresence = true,
     includeCollaboration = true,
-    onContentChanged,
+    onContentChanged: _onContentChanged,
     onPresenceUpdated,
-    onCollaborationEvent
+    onCollaborationEvent: _onCollaborationEvent
   } = options
 
   const [isConnected, setIsConnected] = useState(false)
@@ -208,7 +206,7 @@ export interface UseWebSocketConnectionReturn {
 export function useWebSocketConnection(): UseWebSocketConnectionReturn {
   const [isConnected, setIsConnected] = useState(false)
   const [connectionState, setConnectionState] = useState<WebSocketConnectionState>('disconnected')
-  const [connectionStats, setConnectionStats] = useState<any>(null)
+  const [connectionStats, setConnectionStats] = useState<Record<string, unknown> | null>(null)
 
   const webSocketManager = useRef(getWebSocketManager())
 
@@ -295,7 +293,7 @@ export function usePresenceTracking(options: UsePresenceTrackingOptions): UsePre
 
   const webSocketManager = useRef(getWebSocketManager())
   const lastActivity = useRef(Date.now())
-  const presenceTimer = useRef<NodeJS.Timeout>()
+  const presenceTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // Track user activity
   useEffect(() => {
@@ -514,8 +512,8 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
   const {
     itemId,
     enabled = true,
-    enableOptimisticUpdates = true,
-    conflictResolutionStrategy = 'merge'
+    enableOptimisticUpdates: _enableOptimisticUpdates = true,
+    conflictResolutionStrategy: _conflictResolutionStrategy = 'merge'
   } = options
 
   const [content, setContent] = useState<ContentItem | null>(null)
@@ -531,7 +529,7 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
 
     const manager = webSocketManager.current
 
-    const handleConflictResolved = (resolution: any) => {
+    const handleConflictResolved = (resolution: { itemId: string }) => {
       if (resolution.itemId === itemId) {
         setHasConflicts(false)
         // Refresh content after conflict resolution
@@ -561,7 +559,7 @@ export function useContentSync(options: UseContentSyncOptions): UseContentSyncRe
     }
   }, [enabled, itemId])
 
-  const resolveConflicts = useCallback(async (strategy: 'local_wins' | 'remote_wins' | 'merge') => {
+  const resolveConflicts = useCallback(async (_strategy: 'local_wins' | 'remote_wins' | 'merge') => {
     if (!enabled || !itemId || !hasConflicts) return
 
     // This would integrate with the conflict resolution system

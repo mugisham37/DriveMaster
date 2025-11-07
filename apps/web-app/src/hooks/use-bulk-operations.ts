@@ -6,20 +6,18 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { contentServiceClient } from '../client'
-import { createJobPoller, createProgressTracker } from '../utils/job-poller'
+import { contentServiceClient } from '@/lib/content-service'
+import { createJobPoller, createProgressTracker } from '@/utils/job-poller'
 import type { 
   BulkImportRequestDto, 
   BulkImportResultDto, 
   BulkExportRequestDto, 
-  BulkExportResultDto 
-} from '../../../types/dtos'
-import type { 
+  BulkExportResultDto,
   BulkOperation, 
   BulkOperationStatus,
   ContentItem
-} from '../../../types/entities'
-import type { ProgressUpdate } from '../utils/job-poller'
+} from '@/types'
+import type { ProgressUpdate } from '@/utils/job-poller'
 
 // ============================================================================
 // Hook Types

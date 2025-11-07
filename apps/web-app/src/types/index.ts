@@ -1399,3 +1399,7 @@ export type {
 
 // Environment types
 export * from "./env";
+
+// Content Service types - DTOs and Entities
+export * from "./dtos";
+export * from "./entities";

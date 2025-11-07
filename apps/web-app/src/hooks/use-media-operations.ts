@@ -5,15 +5,14 @@
  * Requirements: 3.1, 3.2
  */
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
-import { contentServiceClient } from '../client'
-import { contentCacheKeys, contentSWRConfigs } from '../cache'
+import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
 import type {
   MediaAsset,
   UploadMediaDto,
   SignedUrlOptions
-} from '../types'
+} from '@/types'
 
 // ============================================================================
 // Media Upload Hook
@@ -230,7 +229,7 @@ export interface BatchUploadProgress {
   total: number
   completed: number
   failed: number
-  current?: string
+  current: string | undefined
   progress: number
 }
 
@@ -269,6 +268,7 @@ export function useBatchMediaUpload() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
+        if (!file) continue
         
         setProgress(prev => ({
           ...prev,
@@ -329,8 +329,8 @@ export interface MediaValidationResult {
   isValid: boolean
   errors: string[]
   warnings: string[]
-  optimizedSize?: number
-  compressionRatio?: number
+  optimizedSize: number | undefined
+  compressionRatio: number | undefined
 }
 
 /**
@@ -350,8 +350,8 @@ export function useMediaValidation() {
       const validation = validate(file)
       
       // If it's an image, calculate potential optimization
-      let optimizedSize: number | undefined
-      let compressionRatio: number | undefined
+      let optimizedSize: number | undefined = undefined
+      let compressionRatio: number | undefined = undefined
       
       if (file.type.startsWith('image/') && file.type !== 'image/svg+xml') {
         // Estimate compression (this would be more accurate with actual optimization)
@@ -366,11 +366,13 @@ export function useMediaValidation() {
         optimizedSize,
         compressionRatio
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         errors: ['Failed to validate file'],
-        warnings: []
+        warnings: [],
+        optimizedSize: undefined,
+        compressionRatio: undefined
       }
     } finally {
       setIsValidating(false)
@@ -425,8 +427,8 @@ export function useMediaGallery(itemId: string | null, initialFilters?: MediaGal
     // Apply sorting
     if (filters.sortBy) {
       filtered.sort((a, b) => {
-        let aValue: any
-        let bValue: any
+        let aValue: string | number
+        let bValue: string | number
 
         switch (filters.sortBy) {
           case 'name':
@@ -454,7 +456,7 @@ export function useMediaGallery(itemId: string | null, initialFilters?: MediaGal
     return filtered
   }, [assets, filters])
 
-  const updateFilter = useCallback((key: keyof MediaGalleryFilters, value: any) => {
+  const updateFilter = useCallback((key: keyof MediaGalleryFilters, value: unknown) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }, [])
 
