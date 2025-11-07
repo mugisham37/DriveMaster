@@ -950,7 +950,14 @@
     "Embla",
     "cmdk",
     "vaul",
-    "nums"
+    "nums",
+    "dtos",
+    "Cooldown",
+    "cooldown",
+    "ttfb",
+    "exceljs",
+    "spreadsheetml",
+    "unrouted"
   ],
   "ignorePaths": [
     "node_modules/**",

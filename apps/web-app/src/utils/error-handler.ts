@@ -10,15 +10,10 @@ import type {
   ContentServiceErrorType,
   NetworkError,
   AuthenticationError,
-  AuthorizationError,
-  ValidationError,
   NotFoundError,
-  ConflictError,
-  ServerError,
-  TimeoutError,
   RateLimitError,
   ServiceUnavailableError
-} from '../../../types/errors'
+} from '@/types'
 
 // ============================================================================
 // Error Classification
@@ -135,10 +130,10 @@ export class ErrorHandler {
   /**
    * Transforms Axios errors to ContentServiceError
    */
-  private static transformAxiosError(axiosError: Record<string, unknown>): ContentServiceError {
+  private static transformAxiosError(_axiosError: Record<string, unknown>): ContentServiceError {
     // Simple fallback transformation
-    const message = (axiosError.message as string) || 'Request failed'
-    const code = (axiosError.code as string) || 'REQUEST_ERROR'
+    const message = (_axiosError.message as string) || 'Request failed'
+    const code = (_axiosError.code as string) || 'REQUEST_ERROR'
     
     return {
       type: 'network',
@@ -366,7 +361,7 @@ export class ErrorHandler {
     }
 
     if (error.type === 'not_found' && 'resource' in error) {
-      const resourceName = (error as NotFoundError).resource.replace('_', ' ')
+      const resourceName = ((error as NotFoundError).resource || 'resource').replace('_', ' ')
       message = `The requested ${resourceName} could not be found.`
     }
 
@@ -432,7 +427,7 @@ export class ErrorHandler {
           actions.push(`Check the ${error.field} field`)
         }
         if ('constraints' in error && error.constraints) {
-          actions.push(...error.constraints.map(c => `Ensure ${c}`))
+          actions.push(...(error.constraints as string[]).map((c: string) => `Ensure ${c}`))
         }
         actions.push('Review all required fields')
         break

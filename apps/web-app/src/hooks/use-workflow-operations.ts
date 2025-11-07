@@ -10,7 +10,6 @@ import useSWR, { mutate } from 'swr'
 import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
 import type {
   ContentItem,
-  WorkflowTransition,
   SubmitForReviewDto,
   ReviewItemDto,
   PublishItemDto,

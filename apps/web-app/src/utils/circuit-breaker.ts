@@ -6,8 +6,7 @@
  * Requirements: 7.1
  */
 
-import type { CircuitBreakerConfig } from '../../../types/config'
-import type { CircuitBreakerError } from '../../../types/errors'
+import type { CircuitBreakerConfig, CircuitBreakerError } from '@/types'
 
 // ============================================================================
 // Circuit Breaker Types

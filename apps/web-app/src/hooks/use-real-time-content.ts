@@ -193,7 +193,7 @@ export function useRealTimeContent(options: UseRealTimeContentOptions): UseRealT
 export interface UseWebSocketConnectionReturn {
   isConnected: boolean
   connectionState: WebSocketConnectionState
-  connectionStats: any
+  connectionStats: unknown
   connect: () => Promise<void>
   disconnect: () => void
   reconnect: () => Promise<void>

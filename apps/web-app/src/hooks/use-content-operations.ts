@@ -13,12 +13,7 @@ import type {
   QueryItemsDto,
   CreateItemDto,
   UpdateItemDto,
-  PaginatedResult,
   SearchRequestDto,
-  SearchResult,
-  SearchSuggestion,
-  Recommendation,
-  RecommendationType
 } from '@/types'
 
 // ============================================================================
@@ -312,10 +307,15 @@ export function useContentWithRealTime(id: string | null, options?: {
   const subscriptions = useMemo(() => {
     if (!id || !options?.enableRealTime) return []
     
-    return contentServiceClient.subscribeToContentUpdates(id, {
-      includePresence: options.enablePresence,
-      includeCollaboration: options.enableCollaboration
-    })
+    const subscriptionOptions: { includePresence?: boolean; includeCollaboration?: boolean } = {}
+    if (options.enablePresence !== undefined) {
+      subscriptionOptions.includePresence = options.enablePresence
+    }
+    if (options.enableCollaboration !== undefined) {
+      subscriptionOptions.includeCollaboration = options.enableCollaboration
+    }
+    
+    return contentServiceClient.subscribeToContentUpdates(id, subscriptionOptions)
   }, [id, options?.enableRealTime, options?.enablePresence, options?.enableCollaboration])
 
   // Get active users if presence is enabled

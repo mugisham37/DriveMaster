@@ -6,7 +6,7 @@
  * Requirements: 7.4
  */
 
-import type { ContentServiceError } from '../../../types/errors'
+import type { ContentServiceError } from '@/types'
 
 // ============================================================================
 // Degradation Types
@@ -312,7 +312,7 @@ export class GracefulDegradationManager {
     data: unknown
   ): void {
     const action: OfflineAction = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       type,
       resource,
       data,
@@ -363,10 +363,10 @@ export class GracefulDegradationManager {
   /**
    * Executes a queued offline action
    */
-  private async executeOfflineAction(action: OfflineAction): Promise<void> {
+  private async executeOfflineAction(_action: OfflineAction): Promise<void> {
     // This would integrate with the actual ContentServiceClient
     // For now, we'll simulate the execution
-    console.log(`[GracefulDegradation] Executing offline action: ${action.type} ${action.resource}`)
+    console.log(`[GracefulDegradation] Executing offline action: ${_action.type} ${_action.resource}`)
     
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 100))

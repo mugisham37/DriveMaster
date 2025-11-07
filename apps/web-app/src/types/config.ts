@@ -43,10 +43,12 @@ export interface CacheConfig {
 
 export interface CircuitBreakerConfig {
   failureThreshold: number
-  recoveryTimeout: number
-  monitoringPeriod: number
-  halfOpenMaxCalls: number
-  enableMetrics: boolean
+  timeout: number
+  successThreshold?: number
+  recoveryTimeout?: number
+  monitoringPeriod?: number
+  halfOpenMaxCalls?: number
+  enableMetrics?: boolean
 }
 
 // ============================================================================

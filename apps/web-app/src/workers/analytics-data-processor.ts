@@ -540,7 +540,10 @@ function groupData(data: DataRecord[], config: GroupConfig): DataRecord[] {
   const grouped = data.reduce((groups: GroupedData, item) => {
     const key = String(item[field] || 'undefined')
     if (!groups[key]) groups[key] = []
-    groups[key].push(item)
+    const groupArray = groups[key]
+    if (groupArray) {
+      groupArray.push(item)
+    }
     return groups
   }, {})
 
@@ -608,7 +611,10 @@ function aggregateByTime(data: DataRecord[], timeField: string, granularity: str
     if (!groups[key]) {
       groups[key] = []
     }
-    groups[key]!.push(item)
+    const groupArray = groups[key]
+    if (groupArray) {
+      groupArray.push(item)
+    }
     return groups
   }, {})
 

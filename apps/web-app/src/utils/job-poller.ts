@@ -5,7 +5,7 @@
  * Requirements: 8.4, 8.5
  */
 
-import type { BulkOperation, BulkOperationStatus } from '../types'
+import type { BulkOperation, BulkOperationStatus } from '@/types'
 
 // ============================================================================
 // Polling Types

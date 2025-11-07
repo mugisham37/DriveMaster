@@ -370,13 +370,16 @@ export function useRealtimeNotifications(
 
   // Cleanup on unmount
   useEffect(() => {
+    const activeToasts = activeToastsRef.current
+    const toastQueue = toastQueueRef.current
+    
     return () => {
       // Clear active toasts
-      activeToastsRef.current.forEach(toastId => {
+      activeToasts.forEach(toastId => {
         toast.dismiss(toastId)
       })
-      activeToastsRef.current.clear()
-      toastQueueRef.current = []
+      activeToasts.clear()
+      toastQueue.length = 0
       
       // Disconnect WebSocket
       disconnect()

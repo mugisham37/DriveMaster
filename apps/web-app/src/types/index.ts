@@ -1402,4 +1402,61 @@ export * from "./env";
 
 // Content Service types - DTOs and Entities
 export * from "./dtos";
-export * from "./entities";
+
+// Export entities with aliases to avoid conflicts
+export type {
+  ContentType,
+  WorkflowStatus,
+  ContentMetadata,
+  ContentData,
+  MediaType,
+  MediaMetadata,
+  MediaAsset,
+  SearchHighlight,
+  SearchFacet,
+  SearchResult,
+  SearchSuggestion,
+  Recommendation,
+  RecommendationType,
+  WorkflowTransition,
+  ReviewDecision,
+  BulkOperationType,
+  BulkOperationStatus,
+  BulkOperation,
+  BulkOperationError,
+  ContentChangeType,
+  ContentChangeEvent,
+  PresenceInfo,
+} from "./entities";
+
+// Export ContentItem from entities as the default for content management operations
+export type { ContentItem } from "./entities";
+
+// Export analytics ContentItem with explicit alias
+export type { ContentItem as AnalyticsContentItem } from "./analytics-service";
+
+// Content Service Error types
+export type {
+  ContentServiceErrorType,
+  BaseContentServiceError,
+  NetworkError,
+  AuthenticationError,
+  AuthorizationError,
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ServerError,
+  TimeoutError,
+  RateLimitError,
+  ServiceUnavailableError,
+  ContentServiceError,
+  ErrorContext,
+  ErrorResponse,
+  BulkOperationItemError,
+  BulkOperationErrors,
+  CircuitBreakerError,
+  UploadError,
+  SearchError,
+} from "./errors";
+
+export { isCircuitBreakerError } from "./errors";

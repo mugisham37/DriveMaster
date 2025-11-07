@@ -5,7 +5,7 @@
  * Requirements: 8.1, 8.2
  */
 
-import type { ContentItem, ContentType, WorkflowStatus } from '../types'
+import type { ContentItem, ContentType, WorkflowStatus } from '@/types'
 
 // ============================================================================
 // CSV Parsing Types
@@ -489,7 +489,7 @@ export class CsvParser {
    */
   transformToContentItems(parsedData: Record<string, unknown>[]): Partial<ContentItem>[] {
     return parsedData.map(row => {
-      const contentItem: Partial<ContentItem> = {
+      const contentItem: Partial<ContentItem> & { slug?: string } = {
         title: row.title as string,
         slug: row.slug as string || this.generateSlug(row.title as string),
         type: (row.type as ContentType) || 'lesson',

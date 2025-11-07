@@ -175,6 +175,17 @@ export interface CircuitBreakerError extends BaseContentServiceError {
   nextRetryTime: Date
 }
 
+export function isCircuitBreakerError(error: unknown): error is CircuitBreakerError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    error.type === 'service_unavailable' &&
+    'cause' in error &&
+    error.cause === 'circuit_breaker_open'
+  )
+}
+
 // ============================================================================
 // Upload Errors
 // ============================================================================

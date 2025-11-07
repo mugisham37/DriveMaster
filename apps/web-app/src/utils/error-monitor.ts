@@ -6,7 +6,7 @@
  * Requirements: 7.1, 7.2
  */
 
-import type { ContentServiceError, ContentServiceErrorType } from '../../../types/errors'
+import type { ContentServiceError, ContentServiceErrorType } from '@/types'
 
 export interface ErrorMetrics {
   totalErrors: number
@@ -481,15 +481,15 @@ export class ErrorMonitor {
   }
 
   private generateErrorId(): string {
-    return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `err_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 
   private generateAlertRuleId(): string {
-    return `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `rule_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 
   private generateAlertId(): string {
-    return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `alert_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 
   private classifyErrorSeverity(error: ContentServiceError): ErrorSeverity {

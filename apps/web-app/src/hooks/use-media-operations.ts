@@ -115,7 +115,7 @@ export function useMediaAssets(itemId: string | null) {
   const { data, error, isLoading, mutate: mutateFn } = useSWR(
     itemId ? contentCacheKeys.mediaAssets(itemId) : null,
     () => itemId ? contentServiceClient.getMediaAssets(itemId) : null,
-    contentSWRConfigs.media
+    contentSWRConfigs.mediaList
   )
 
   const refresh = useCallback(() => {
