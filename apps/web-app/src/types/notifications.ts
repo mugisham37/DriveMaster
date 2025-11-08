@@ -16,7 +16,7 @@ export interface Notification {
 }
 
 export interface NotificationsChannelData {
-  type: 'notifications.changed' | 'notifications.deleted';
+  type: "notifications.changed" | "notifications.deleted";
 }
 
 export interface NotificationsDropdownProps {
@@ -39,23 +39,23 @@ export interface DropdownAttributes {
   buttonAttributes: {
     id: string;
     onClick: () => void;
-    'aria-expanded': boolean;
-    'aria-haspopup': 'menu';
+    "aria-expanded": boolean;
+    "aria-haspopup": "menu";
   };
   panelAttributes: {
     id: string;
-    role: 'menu';
-    'aria-labelledby': string;
+    role: "menu";
+    "aria-labelledby": string;
   };
   listAttributes: {
     id: string;
-    role: 'menu';
-    'aria-labelledby': string;
+    role: "menu";
+    "aria-labelledby": string;
     hidden: boolean;
   };
   itemAttributes: (index: number) => {
-    role: 'menuitem';
-    'aria-selected': boolean;
+    role: "menuitem";
+    "aria-selected": boolean;
     onClick: () => void;
   };
   isOpen: boolean;

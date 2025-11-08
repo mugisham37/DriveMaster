@@ -1,51 +1,56 @@
 /**
  * Content Editor Component
- * 
+ *
  * Rich text editor for content creation and editing with real-time collaboration
  * Requirements: 1.1, 1.2, 1.3
  */
 
-'use client'
+"use client";
 
-import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { 
-  useCreateContentItem, 
-  useUpdateContentItem, 
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import {
+  useCreateContentItem,
+  useUpdateContentItem,
   useContentWithRealTime,
-  useWorkflowValidation 
-} from '../../hooks/use-content-operations'
-import { useWorkflowPermissions } from '../../hooks/use-workflow-operations'
-import { ContentSyncIndicator, PresenceIndicator } from '../index'
-import type { ContentItem, CreateItemDto, UpdateItemDto, ContentType } from '../../types'
+  useWorkflowValidation,
+} from "../../hooks/use-content-operations";
+import { useWorkflowPermissions } from "../../hooks/use-workflow-operations";
+import { ContentSyncIndicator, PresenceIndicator } from "../index";
+import type {
+  ContentItem,
+  CreateItemDto,
+  UpdateItemDto,
+  ContentType,
+} from "../../types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface ContentEditorProps {
-  itemId?: string
-  initialContent?: Partial<ContentItem>
-  mode?: 'create' | 'edit'
-  enableRealTime?: boolean
-  enableCollaboration?: boolean
-  onSave?: (item: ContentItem) => void
-  onCancel?: () => void
-  className?: string
+  itemId?: string;
+  initialContent?: Partial<ContentItem>;
+  mode?: "create" | "edit";
+  enableRealTime?: boolean;
+  enableCollaboration?: boolean;
+  onSave?: (item: ContentItem) => void;
+  onCancel?: () => void;
+  className?: string;
 }
 
 export interface ContentFormData {
-  title: string
+  title: string;
   content: {
-    body: string
-    summary?: string
-  }
-  type: ContentType
-  tags: string[]
+    body: string;
+    summary?: string;
+  };
+  type: ContentType;
+  tags: string[];
   metadata: {
-    description?: string
-    difficulty?: 'beginner' | 'intermediate' | 'advanced'
-    estimatedDuration?: number
-  }
+    description?: string;
+    difficulty?: "beginner" | "intermediate" | "advanced";
+    estimatedDuration?: number;
+  };
 }
 
 // ============================================================================
@@ -55,213 +60,222 @@ export interface ContentFormData {
 export function ContentEditor({
   itemId,
   initialContent,
-  mode = itemId ? 'edit' : 'create',
+  mode = itemId ? "edit" : "create",
   enableRealTime = true,
   enableCollaboration = true,
   onSave,
   onCancel,
-  className = ''
+  className = "",
 }: ContentEditorProps) {
   // Hooks
-  const { createItem, isCreating, error: createError } = useCreateContentItem()
-  const { updateItem, isUpdating, error: updateError } = useUpdateContentItem()
-  const { validateForReview, isValidating } = useWorkflowValidation()
-  
+  const { createItem, isCreating, error: createError } = useCreateContentItem();
+  const { updateItem, isUpdating, error: updateError } = useUpdateContentItem();
+  const { validateForReview, isValidating } = useWorkflowValidation();
+
   // Real-time content if editing existing item
-  const { 
-    item: realTimeItem, 
+  const {
+    item: realTimeItem,
     isLoading: isLoadingItem,
     activeUsers,
     updatePresence,
-    sendCursorPosition
+    sendCursorPosition,
   } = useContentWithRealTime(itemId || null, {
-    enableRealTime: enableRealTime && mode === 'edit',
-    enablePresence: enableCollaboration && mode === 'edit',
-    enableCollaboration: enableCollaboration && mode === 'edit'
-  })
+    enableRealTime: enableRealTime && mode === "edit",
+    enablePresence: enableCollaboration && mode === "edit",
+    enableCollaboration: enableCollaboration && mode === "edit",
+  });
 
   // Get workflow permissions
-  const permissions = useWorkflowPermissions(realTimeItem)
+  const permissions = useWorkflowPermissions(realTimeItem);
 
   // Form state
   const [formData, setFormData] = useState<ContentFormData>(() => {
-    const item = realTimeItem || initialContent
+    const item = realTimeItem || initialContent;
     return {
-      title: item?.title || '',
+      title: item?.title || "",
       content: {
-        body: item?.content?.body || '',
-        summary: item?.content?.summary || ''
+        body: item?.content?.body || "",
+        summary: item?.content?.summary || "",
       },
-      type: item?.type || 'lesson',
+      type: item?.type || "lesson",
       tags: item?.tags || [],
       metadata: {
-        description: item?.metadata?.description || '',
-        difficulty: item?.metadata?.difficulty || 'beginner',
-        estimatedDuration: item?.metadata?.estimatedDuration || 30
-      }
-    }
-  })
+        description: item?.metadata?.description || "",
+        difficulty: item?.metadata?.difficulty || "beginner",
+        estimatedDuration: item?.metadata?.estimatedDuration || 30,
+      },
+    };
+  });
 
-  const [isDirty, setIsDirty] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [newTag, setNewTag] = useState('')
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   // Refs
-  const contentTextareaRef = useRef<HTMLTextAreaElement>(null)
-  const lastCursorPosition = useRef({ line: 0, column: 0 })
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastCursorPosition = useRef({ line: 0, column: 0 });
 
   // Update form data when real-time item changes
   useEffect(() => {
-    if (realTimeItem && mode === 'edit') {
+    if (realTimeItem && mode === "edit") {
       setFormData({
-        title: realTimeItem.title || '',
+        title: realTimeItem.title || "",
         content: {
-          body: realTimeItem.content?.body || '',
-          summary: realTimeItem.content?.summary || ''
+          body: realTimeItem.content?.body || "",
+          summary: realTimeItem.content?.summary || "",
         },
-        type: realTimeItem.type || 'lesson',
+        type: realTimeItem.type || "lesson",
         tags: realTimeItem.tags || [],
         metadata: {
-          description: realTimeItem.metadata?.description || '',
-          difficulty: realTimeItem.metadata?.difficulty || 'beginner',
-          estimatedDuration: realTimeItem.metadata?.estimatedDuration || 30
-        }
-      })
+          description: realTimeItem.metadata?.description || "",
+          difficulty: realTimeItem.metadata?.difficulty || "beginner",
+          estimatedDuration: realTimeItem.metadata?.estimatedDuration || 30,
+        },
+      });
     }
-  }, [realTimeItem, mode])
+  }, [realTimeItem, mode]);
 
   // Update presence when user is active
   useEffect(() => {
     if (enableCollaboration && itemId) {
-      updatePresence('active')
-      
-      const interval = setInterval(() => {
-        updatePresence('active')
-      }, 30000) // Update every 30 seconds
+      updatePresence("active");
 
-      return () => clearInterval(interval)
+      const interval = setInterval(() => {
+        updatePresence("active");
+      }, 30000); // Update every 30 seconds
+
+      return () => clearInterval(interval);
     }
-  }, [enableCollaboration, itemId, updatePresence])
+  }, [enableCollaboration, itemId, updatePresence]);
 
   // Handle cursor position changes for collaboration
   const handleCursorChange = useCallback(() => {
-    if (!enableCollaboration || !itemId || !contentTextareaRef.current) return
+    if (!enableCollaboration || !itemId || !contentTextareaRef.current) return;
 
-    const textarea = contentTextareaRef.current
-    const cursorPos = textarea.selectionStart
-    const textBeforeCursor = textarea.value.substring(0, cursorPos)
-    const lines = textBeforeCursor.split('\n')
-    const line = lines.length
-    const column = lines[lines.length - 1].length
+    const textarea = contentTextareaRef.current;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = textarea.value.substring(0, cursorPos);
+    const lines = textBeforeCursor.split("\n");
+    const line = lines.length;
+    const column = lines[lines.length - 1].length;
 
-    if (line !== lastCursorPosition.current.line || column !== lastCursorPosition.current.column) {
-      lastCursorPosition.current = { line, column }
-      sendCursorPosition({ line, column })
+    if (
+      line !== lastCursorPosition.current.line ||
+      column !== lastCursorPosition.current.column
+    ) {
+      lastCursorPosition.current = { line, column };
+      sendCursorPosition({ line, column });
     }
-  }, [enableCollaboration, itemId, sendCursorPosition])
+  }, [enableCollaboration, itemId, sendCursorPosition]);
 
   // Form handlers
   const updateFormField = useCallback((field: string, value: any) => {
-    setFormData(prev => {
-      const keys = field.split('.')
-      const newData = { ...prev }
-      let current: any = newData
-      
+    setFormData((prev) => {
+      const keys = field.split(".");
+      const newData = { ...prev };
+      let current: any = newData;
+
       for (let i = 0; i < keys.length - 1; i++) {
-        current[keys[i]] = { ...current[keys[i]] }
-        current = current[keys[i]]
+        current[keys[i]] = { ...current[keys[i]] };
+        current = current[keys[i]];
       }
-      
-      current[keys[keys.length - 1]] = value
-      return newData
-    })
-    setIsDirty(true)
-  }, [])
+
+      current[keys[keys.length - 1]] = value;
+      return newData;
+    });
+    setIsDirty(true);
+  }, []);
 
   const addTag = useCallback(() => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      updateFormField('tags', [...formData.tags, newTag.trim()])
-      setNewTag('')
+      updateFormField("tags", [...formData.tags, newTag.trim()]);
+      setNewTag("");
     }
-  }, [newTag, formData.tags, updateFormField])
+  }, [newTag, formData.tags, updateFormField]);
 
-  const removeTag = useCallback((tagToRemove: string) => {
-    updateFormField('tags', formData.tags.filter(tag => tag !== tagToRemove))
-  }, [formData.tags, updateFormField])
+  const removeTag = useCallback(
+    (tagToRemove: string) => {
+      updateFormField(
+        "tags",
+        formData.tags.filter((tag) => tag !== tagToRemove),
+      );
+    },
+    [formData.tags, updateFormField],
+  );
 
   // Validation
   const validateForm = useCallback(async (): Promise<boolean> => {
-    const errors: string[] = []
+    const errors: string[] = [];
 
     if (!formData.title.trim()) {
-      errors.push('Title is required')
+      errors.push("Title is required");
     }
 
     if (!formData.content.body.trim()) {
-      errors.push('Content body is required')
+      errors.push("Content body is required");
     }
 
     if (formData.content.body.length < 10) {
-      errors.push('Content body must be at least 10 characters')
+      errors.push("Content body must be at least 10 characters");
     }
 
-    setValidationErrors(errors)
-    return errors.length === 0
-  }, [formData])
+    setValidationErrors(errors);
+    return errors.length === 0;
+  }, [formData]);
 
   // Save handler
   const handleSave = useCallback(async () => {
-    if (!(await validateForm())) return
+    if (!(await validateForm())) return;
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      let result: ContentItem | null = null
+      let result: ContentItem | null = null;
 
-      if (mode === 'create') {
+      if (mode === "create") {
         const createData: CreateItemDto = {
           title: formData.title,
           content: formData.content,
           type: formData.type,
           tags: formData.tags,
-          metadata: formData.metadata
-        }
-        result = await createItem(createData)
+          metadata: formData.metadata,
+        };
+        result = await createItem(createData);
       } else if (itemId) {
         const updateData: UpdateItemDto = {
           title: formData.title,
           content: formData.content,
           tags: formData.tags,
-          metadata: formData.metadata
-        }
-        result = await updateItem(itemId, updateData)
+          metadata: formData.metadata,
+        };
+        result = await updateItem(itemId, updateData);
       }
 
       if (result) {
-        setIsDirty(false)
-        onSave?.(result)
+        setIsDirty(false);
+        onSave?.(result);
       }
     } catch (error) {
-      console.error('Failed to save content:', error)
+      console.error("Failed to save content:", error);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }, [mode, formData, validateForm, createItem, updateItem, itemId, onSave])
+  }, [mode, formData, validateForm, createItem, updateItem, itemId, onSave]);
 
   // Auto-save for edit mode
   useEffect(() => {
-    if (mode === 'edit' && isDirty && itemId) {
+    if (mode === "edit" && isDirty && itemId) {
       const autoSaveTimer = setTimeout(() => {
-        handleSave()
-      }, 2000) // Auto-save after 2 seconds of inactivity
+        handleSave();
+      }, 2000); // Auto-save after 2 seconds of inactivity
 
-      return () => clearTimeout(autoSaveTimer)
+      return () => clearTimeout(autoSaveTimer);
     }
-  }, [mode, isDirty, itemId, handleSave])
+  }, [mode, isDirty, itemId, handleSave]);
 
-  const isLoading = isLoadingItem || isCreating || isUpdating || isSaving
-  const error = createError || updateError
-  const canEdit = mode === 'create' || permissions.canEdit
+  const isLoading = isLoadingItem || isCreating || isUpdating || isSaving;
+  const error = createError || updateError;
+  const canEdit = mode === "create" || permissions.canEdit;
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border ${className}`}>
@@ -269,10 +283,10 @@ export function ContentEditor({
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            {mode === 'create' ? 'Create Content' : 'Edit Content'}
+            {mode === "create" ? "Create Content" : "Edit Content"}
           </h2>
-          
-          {mode === 'edit' && enableRealTime && itemId && (
+
+          {mode === "edit" && enableRealTime && itemId && (
             <ContentSyncIndicator
               itemId={itemId}
               enabled={enableRealTime}
@@ -282,7 +296,7 @@ export function ContentEditor({
         </div>
 
         <div className="flex items-center space-x-2">
-          {mode === 'edit' && enableCollaboration && itemId && (
+          {mode === "edit" && enableCollaboration && itemId && (
             <PresenceIndicator
               itemId={itemId}
               enabled={enableCollaboration}
@@ -303,14 +317,17 @@ export function ContentEditor({
       <div className="p-6 space-y-6">
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Title *
           </label>
           <input
             id="title"
             type="text"
             value={formData.title}
-            onChange={(e) => updateFormField('title', e.target.value)}
+            onChange={(e) => updateFormField("title", e.target.value)}
             disabled={!canEdit || isLoading}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             placeholder="Enter content title..."
@@ -319,13 +336,18 @@ export function ContentEditor({
 
         {/* Content Type */}
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="type"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Content Type
           </label>
           <select
             id="type"
             value={formData.type}
-            onChange={(e) => updateFormField('type', e.target.value as ContentType)}
+            onChange={(e) =>
+              updateFormField("type", e.target.value as ContentType)
+            }
             disabled={!canEdit || isLoading}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
           >
@@ -339,14 +361,17 @@ export function ContentEditor({
 
         {/* Content Body */}
         <div>
-          <label htmlFor="content-body" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="content-body"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Content *
           </label>
           <textarea
             id="content-body"
             ref={contentTextareaRef}
             value={formData.content.body}
-            onChange={(e) => updateFormField('content.body', e.target.value)}
+            onChange={(e) => updateFormField("content.body", e.target.value)}
             onSelect={handleCursorChange}
             onKeyUp={handleCursorChange}
             onClick={handleCursorChange}
@@ -359,13 +384,16 @@ export function ContentEditor({
 
         {/* Summary */}
         <div>
-          <label htmlFor="summary" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="summary"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Summary
           </label>
           <textarea
             id="summary"
-            value={formData.content.summary || ''}
-            onChange={(e) => updateFormField('content.summary', e.target.value)}
+            value={formData.content.summary || ""}
+            onChange={(e) => updateFormField("content.summary", e.target.value)}
             disabled={!canEdit || isLoading}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
@@ -402,7 +430,9 @@ export function ContentEditor({
                 type="text"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addTag())
+                }
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Add a tag..."
               />
@@ -420,14 +450,19 @@ export function ContentEditor({
         {/* Metadata */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Description
             </label>
             <input
               id="description"
               type="text"
-              value={formData.metadata.description || ''}
-              onChange={(e) => updateFormField('metadata.description', e.target.value)}
+              value={formData.metadata.description || ""}
+              onChange={(e) =>
+                updateFormField("metadata.description", e.target.value)
+              }
               disabled={!canEdit || isLoading}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               placeholder="SEO description..."
@@ -435,13 +470,18 @@ export function ContentEditor({
           </div>
 
           <div>
-            <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="difficulty"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Difficulty
             </label>
             <select
               id="difficulty"
               value={formData.metadata.difficulty}
-              onChange={(e) => updateFormField('metadata.difficulty', e.target.value)}
+              onChange={(e) =>
+                updateFormField("metadata.difficulty", e.target.value)
+              }
               disabled={!canEdit || isLoading}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             >
@@ -452,7 +492,10 @@ export function ContentEditor({
           </div>
 
           <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="duration"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Duration (minutes)
             </label>
             <input
@@ -460,8 +503,13 @@ export function ContentEditor({
               type="number"
               min="1"
               max="480"
-              value={formData.metadata.estimatedDuration || ''}
-              onChange={(e) => updateFormField('metadata.estimatedDuration', parseInt(e.target.value) || 30)}
+              value={formData.metadata.estimatedDuration || ""}
+              onChange={(e) =>
+                updateFormField(
+                  "metadata.estimatedDuration",
+                  parseInt(e.target.value) || 30,
+                )
+              }
               disabled={!canEdit || isLoading}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             />
@@ -471,7 +519,9 @@ export function ContentEditor({
         {/* Validation Errors */}
         {validationErrors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h4>
+            <h4 className="text-sm font-medium text-red-800 mb-2">
+              Please fix the following errors:
+            </h4>
             <ul className="text-sm text-red-700 space-y-1">
               {validationErrors.map((error, index) => (
                 <li key={index}>• {error}</li>
@@ -493,12 +543,13 @@ export function ContentEditor({
       {/* Footer */}
       <div className="flex items-center justify-between p-4 border-t bg-gray-50">
         <div className="text-sm text-gray-500">
-          {mode === 'edit' && realTimeItem && (
+          {mode === "edit" && realTimeItem && (
             <>
               Last updated: {new Date(realTimeItem.updatedAt).toLocaleString()}
               {activeUsers.length > 0 && (
                 <span className="ml-4">
-                  {activeUsers.length} user{activeUsers.length > 1 ? 's' : ''} active
+                  {activeUsers.length} user{activeUsers.length > 1 ? "s" : ""}{" "}
+                  active
                 </span>
               )}
             </>
@@ -515,22 +566,37 @@ export function ContentEditor({
               Cancel
             </button>
           )}
-          
+
           <button
             onClick={handleSave}
             disabled={!canEdit || isLoading || !isDirty}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             {isLoading && (
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
             )}
-            <span>{mode === 'create' ? 'Create' : 'Save'}</span>
+            <span>{mode === "create" ? "Create" : "Save"}</span>
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

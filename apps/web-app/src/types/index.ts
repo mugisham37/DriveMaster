@@ -1,5 +1,5 @@
 // Flair type definition
-export type Flair = 'insider' | 'lifetime_insider' | 'founder' | 'staff'
+export type Flair = "insider" | "lifetime_insider" | "founder" | "staff";
 
 export type Size = "small" | "large";
 
@@ -103,8 +103,10 @@ export type User = {
   links?: UserLinks;
 };
 
-export type Exercise =
-  | ExerciseCore & { isUnlocked: boolean; links: { self: string } };
+export type Exercise = ExerciseCore & {
+  isUnlocked: boolean;
+  links: { self: string };
+};
 
 export type Student = {
   id: number;
@@ -715,7 +717,7 @@ export class TrackContribution {
   get totalReputation(): number {
     return this.categories.reduce(
       (sum, category) => sum + category.reputation,
-      0
+      0,
     );
   }
 
@@ -747,7 +749,7 @@ export class BadgeList {
           new BadgeRarityValue(a.rarity).value <
           new BadgeRarityValue(b.rarity).value
             ? -1
-            : 1
+            : 1,
         )
         .reverse(),
     });
@@ -1014,111 +1016,115 @@ export interface ProgressDataPoint {
 }
 // API Response Types
 export interface DashboardData {
-  tracks: Track[]
-  numTracks: number
-  trackIconUrls: string[]
+  tracks: Track[];
+  numTracks: number;
+  trackIconUrls: string[];
   recentActivity: Array<{
-    type: string
-    track: Track
-    exercise?: Exercise
-    createdAt: string
-  }>
-  featuredBadges: Badge[]
-  reputation: number
+    type: string;
+    track: Track;
+    exercise?: Exercise;
+    createdAt: string;
+  }>;
+  featuredBadges: Badge[];
+  reputation: number;
 }
 
 export interface APIResponse<T = unknown> {
-  data?: T
-  tracks?: Track[]
-  numTracks?: number
-  trackIconUrls?: string[]
-  exercises?: Exercise[]
-  numExercises?: number
-  discussions?: MentorDiscussion[]
-  requests?: MentorSessionRequest[]
-  results?: T[]
+  data?: T;
+  tracks?: Track[];
+  numTracks?: number;
+  trackIconUrls?: string[];
+  exercises?: Exercise[];
+  numExercises?: number;
+  discussions?: MentorDiscussion[];
+  requests?: MentorSessionRequest[];
+  results?: T[];
   meta?: {
-    currentPage: number
-    totalPages: number
-    totalCount: number
-    unscopedTotal?: number
-  }
-  error?: string
-  message?: string
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    unscopedTotal?: number;
+  };
+  error?: string;
+  message?: string;
 }
 
 // Specific response types for better type safety
 export interface TracksResponse extends APIResponse {
-  tracks: Track[]
-  numTracks: number
-  trackIconUrls: string[]
+  tracks: Track[];
+  numTracks: number;
+  trackIconUrls: string[];
 }
 
 export interface TrackExercisesResponse extends APIResponse {
-  exercises: Exercise[]
-  numExercises: number
+  exercises: Exercise[];
+  numExercises: number;
 }
 
 export interface MentoringDiscussionsResponse extends APIResponse {
-  discussions: MentorDiscussion[]
+  discussions: MentorDiscussion[];
   meta: {
-    currentPage: number
-    totalPages: number
-    totalCount: number
-    unscopedTotal?: number
-  }
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    unscopedTotal?: number;
+  };
 }
 
 export interface MentoringRequestsResponse extends APIResponse {
-  requests: MentorSessionRequest[]
+  requests: MentorSessionRequest[];
   meta: {
-    currentPage: number
-    totalPages: number
-    totalCount: number
-    unscopedTotal?: number
-  }
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    unscopedTotal?: number;
+  };
 }
 
 export interface MentoringTestimonialsResponse extends APIResponse {
-  results: Testimonial[]
+  results: Testimonial[];
   meta: {
-    currentPage: number
-    totalPages: number
-    totalCount: number
-    unscopedTotal?: number
-  }
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    unscopedTotal?: number;
+  };
 }
 
 export interface MentoringRepresentationsResponse extends APIResponse {
-  results: Representation[]
+  results: Representation[];
   meta: {
-    currentPage: number
-    totalPages: number
-    totalCount: number
-    unscopedTotal?: number
-  }
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    unscopedTotal?: number;
+  };
 }
 
-export interface MentoringTracksResponse extends Omit<APIResponse, 'tracks'> {
-  tracks: MentoredTrack[]
+export interface MentoringTracksResponse extends Omit<APIResponse, "tracks"> {
+  tracks: MentoredTrack[];
 }
 
 export interface CacheKey extends Array<unknown> {
-  0: string
-  [index: number]: unknown
+  0: string;
+  [index: number]: unknown;
 }
 
 export interface MutateFunction {
-  (key?: CacheKey | ((key: CacheKey) => boolean), data?: unknown, shouldRevalidate?: boolean): Promise<unknown>
+  (
+    key?: CacheKey | ((key: CacheKey) => boolean),
+    data?: unknown,
+    shouldRevalidate?: boolean,
+  ): Promise<unknown>;
 }
 
 // Window interface extensions
 export interface WindowConfetti {
   (options?: {
-    particleCount?: number
-    spread?: number
-    origin?: { y: number }
-  }): void
+    particleCount?: number;
+    spread?: number;
+    origin?: { y: number };
+  }): void;
 }
 
 // Migrated Ruby Helper Types
@@ -1134,11 +1140,11 @@ export type {
   RegisterData,
   TokenPair,
   RefreshTokenRequest,
-  
+
   // User profile (Auth Service version - aliased)
   UserProfile as AuthUserProfile,
   UserPreferences as AuthUserPreferences,
-  
+
   // OAuth types
   OAuthProviderType,
   OAuthProvider,
@@ -1149,15 +1155,15 @@ export type {
   OAuthLinkRequest,
   OAuthUnlinkRequest,
   LinkedProvider,
-  
+
   // Profile and track types
   ProfileUpdateRequest,
-  
+
   // Session types
   Session,
   SessionListResponse,
   SessionInvalidationRequest,
-  
+
   // Error types
   AuthErrorType,
   AuthError,
@@ -1167,7 +1173,7 @@ export type {
   AuthorizationError as AuthAuthorizationError,
   OAuthError,
   ServerError,
-  
+
   // Response types (Auth Service - aliased)
   ApiResponse as AuthApiResponse,
   LoginResponse,
@@ -1176,16 +1182,16 @@ export type {
   ProfileResponse,
   ProvidersResponse,
   HealthResponse as AuthHealthResponse,
-  
+
   // Service endpoints
   AuthServiceEndpoints,
   ExtractRequest,
   ExtractResponse,
-  
+
   // Service configuration
   AuthServiceConfig,
   CircuitBreakerState as AuthCircuitBreakerState,
-  
+
   // Sync types
   AuthSyncMessage,
   LoginSyncPayload,
@@ -1215,7 +1221,7 @@ export type {
   PrivacyPreferences,
   LearningPreferences,
   AccessibilityPreferences,
-  
+
   // Progress tracking
   ProgressSummary,
   SkillMastery,
@@ -1224,7 +1230,7 @@ export type {
   Milestone,
   WeeklyProgressPoint,
   TopicProgressPoint,
-  
+
   // Activity tracking
   ActivityType,
   ActivityRecord,
@@ -1234,10 +1240,10 @@ export type {
   ActivityRecommendation,
   RecommendationAction,
   TopicActivitySummary,
-  
+
   // Behavior analysis (User Service version)
   BehaviorPattern,
-  
+
   // GDPR and compliance
   GDPRExportResponse,
   GDPRDeleteResponse,
@@ -1252,15 +1258,15 @@ export type {
   RetentionPolicy,
   UserRightsStatus,
   ComplianceStatus,
-  
+
   // Time management (User Service version)
   DateRange,
   TimeRange,
-  
+
   // Error types (User Service)
   UserServiceErrorType,
   UserServiceError,
-  
+
   // Service health and configuration (User Service - aliased)
   CircuitBreakerState as UserCircuitBreakerState,
   ServiceHealthStatus as UserServiceHealthStatus,
@@ -1268,7 +1274,7 @@ export type {
   UserServiceConfig,
   ProtocolType,
   ServiceDiscoveryConfig as UserServiceDiscoveryConfig,
-  
+
   // Response types (User Service - aliased where needed)
   ApiResponse as UserApiResponse,
   UserProfileResponse,
@@ -1298,23 +1304,23 @@ export {
 export type {
   // Configuration
   AnalyticsServiceConfig,
-  
+
   // Core analytics (Analytics Service versions - aliased where needed)
   ServiceDiscoveryConfig as AnalyticsServiceDiscoveryConfig,
   ServiceHealthStatus as AnalyticsServiceHealthStatus,
-  
+
   // Engagement metrics
   UserEngagementMetrics,
   LearningProgressMetrics,
   ContentPerformanceMetrics,
   SystemPerformanceMetrics,
   RealtimeMetricsSnapshot,
-  
+
   // Content analytics (ContentItem exported separately below)
   ContentGap,
   Alert,
   AlertSeverity,
-  
+
   // Behavior insights
   BehaviorInsights,
   BehaviorPattern as AnalyticsBehaviorPattern,
@@ -1322,7 +1328,7 @@ export type {
   ContentGapAnalysis,
   EffectivenessReport,
   TrendData,
-  
+
   // Query parameters
   EngagementMetricsParams,
   ProgressMetricsParams,
@@ -1330,17 +1336,17 @@ export type {
   SystemMetricsParams,
   HistoricalQuery,
   ReportFilters,
-  
+
   // Time-based types (Analytics Service - aliased)
   TimeRange as AnalyticsTimeRange,
   EngagementFilters,
   ContentFilters,
   TimeSeriesData,
-  
+
   // Pagination and sorting
   PaginationParams,
   SortingParams,
-  
+
   // WebSocket and real-time
   MetricsUpdate,
   AlertMessage,
@@ -1350,44 +1356,44 @@ export type {
   ErrorMessage,
   HeartbeatMessage,
   ConnectionStatusMessage,
-  
+
   // Advanced analytics
   HourlyEngagement,
   CohortRetention,
   UserSegment,
   UserJourney,
-  
+
   // Error handling
   AnalyticsServiceErrorType,
   AnalyticsServiceError,
   ValidationErrorDetail,
-  
+
   // Response types (Analytics Service - aliased)
   ApiResponse as AnalyticsApiResponse,
-  
+
   // Client configuration
   AnalyticsClientConfig,
   CircuitBreakerConfig,
   RequestQueueConfig,
-  
+
   // React hooks types
   UseAnalyticsResult,
   UseEngagementMetricsResult,
   UseRealtimeMetricsResult,
-  
+
   // WebSocket configuration
   ConnectionStatus,
   WebSocketConfig,
   WebSocketConnectionState,
   SubscriptionHandler,
   MessageRouterConfig,
-  
+
   // Permissions and authorization
   UserRole,
   AnalyticsFeature,
   AnalyticsDataType,
   AnalyticsPermissions,
-  
+
   // Service interfaces
   AnalyticsServiceClient,
   CompleteAnalyticsWebSocketManager,

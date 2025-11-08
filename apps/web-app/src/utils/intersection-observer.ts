@@ -4,13 +4,13 @@
  */
 
 export interface IntersectionObserverOptions {
-  root?: Element | null
-  rootMargin?: string
-  threshold?: number | number[]
+  root?: Element | null;
+  rootMargin?: string;
+  threshold?: number | number[];
 }
 
 export interface IntersectionObserverCallback {
-  (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void
+  (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void;
 }
 
 /**
@@ -18,11 +18,11 @@ export interface IntersectionObserverCallback {
  */
 export function isIntersectionObserverSupported(): boolean {
   return (
-    typeof window !== 'undefined' &&
-    'IntersectionObserver' in window &&
-    'IntersectionObserverEntry' in window &&
-    'intersectionRatio' in (window.IntersectionObserverEntry?.prototype || {})
-  )
+    typeof window !== "undefined" &&
+    "IntersectionObserver" in window &&
+    "IntersectionObserverEntry" in window &&
+    "intersectionRatio" in (window.IntersectionObserverEntry?.prototype || {})
+  );
 }
 
 /**
@@ -30,14 +30,14 @@ export function isIntersectionObserverSupported(): boolean {
  */
 export function createIntersectionObserver(
   callback: IntersectionObserverCallback,
-  options?: IntersectionObserverOptions
+  options?: IntersectionObserverOptions,
 ): IntersectionObserver | null {
   if (!isIntersectionObserverSupported()) {
-    console.warn('IntersectionObserver is not supported in this browser')
-    return null
+    console.warn("IntersectionObserver is not supported in this browser");
+    return null;
   }
 
-  return new IntersectionObserver(callback, options)
+  return new IntersectionObserver(callback, options);
 }
 
 /**
@@ -46,10 +46,10 @@ export function createIntersectionObserver(
 export function observeElement(
   element: Element,
   callback: IntersectionObserverCallback,
-  options?: IntersectionObserverOptions
+  options?: IntersectionObserverOptions,
 ): (() => void) | null {
-  const observer = createIntersectionObserver(callback, options)
-  
+  const observer = createIntersectionObserver(callback, options);
+
   if (!observer) {
     // Fallback: immediately trigger callback
     callback(
@@ -60,18 +60,18 @@ export function observeElement(
           intersectionRatio: 1,
         } as IntersectionObserverEntry,
       ],
-      {} as IntersectionObserver
-    )
-    return null
+      {} as IntersectionObserver,
+    );
+    return null;
   }
 
-  observer.observe(element)
+  observer.observe(element);
 
   // Return cleanup function
   return () => {
-    observer.unobserve(element)
-    observer.disconnect()
-  }
+    observer.unobserve(element);
+    observer.disconnect();
+  };
 }
 
 /**
@@ -81,6 +81,6 @@ const intersectionObserverUtils = {
   isIntersectionObserverSupported,
   createIntersectionObserver,
   observeElement,
-}
+};
 
-export default intersectionObserverUtils
+export default intersectionObserverUtils;

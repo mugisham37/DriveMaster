@@ -7,71 +7,71 @@
 // Core Notification Types
 // ============================================================================
 
-export type NotificationType = 
-  | 'achievement'
-  | 'spaced_repetition'
-  | 'streak_reminder'
-  | 'mock_test_reminder'
-  | 'system'
-  | 'mentoring'
-  | 'course_update'
-  | 'community'
-  | 'marketing'
+export type NotificationType =
+  | "achievement"
+  | "spaced_repetition"
+  | "streak_reminder"
+  | "mock_test_reminder"
+  | "system"
+  | "mentoring"
+  | "course_update"
+  | "community"
+  | "marketing";
 
-export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type NotificationPriority = "low" | "normal" | "high" | "urgent";
 
-export type DeliveryChannel = 'push' | 'email' | 'in_app' | 'sms'
+export type DeliveryChannel = "push" | "email" | "in_app" | "sms";
 
 export interface NotificationStatus {
-  isRead: boolean
-  isDelivered: boolean
-  deliveredAt?: Date
-  readAt?: Date
-  clickedAt?: Date
-  dismissedAt?: Date
+  isRead: boolean;
+  isDelivered: boolean;
+  deliveredAt?: Date;
+  readAt?: Date;
+  clickedAt?: Date;
+  dismissedAt?: Date;
 }
 
 export interface Notification {
-  id: string
-  userId: string
-  type: NotificationType
-  title: string
-  body: string
-  data?: Record<string, unknown>
-  status: NotificationStatus
-  priority: NotificationPriority
-  channels: DeliveryChannel[]
-  templateId?: string
-  templateData?: Record<string, unknown>
-  scheduledFor?: Date
-  expiresAt?: Date
-  actionUrl?: string
-  imageUrl?: string
-  iconUrl?: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  status: NotificationStatus;
+  priority: NotificationPriority;
+  channels: DeliveryChannel[];
+  templateId?: string;
+  templateData?: Record<string, unknown>;
+  scheduledFor?: Date;
+  expiresAt?: Date;
+  actionUrl?: string;
+  imageUrl?: string;
+  iconUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface NotificationList {
-  results: Notification[]
+  results: Notification[];
   meta: {
-    total: number
-    unreadCount: number
-    hasMore: boolean
-    nextCursor?: string
-  }
+    total: number;
+    unreadCount: number;
+    hasMore: boolean;
+    nextCursor?: string;
+  };
 }
 
 export interface NotificationQueryParams {
-  userId?: string | undefined
-  type?: NotificationType | NotificationType[]
-  status?: 'read' | 'unread' | 'all'
-  priority?: NotificationPriority | NotificationPriority[]
-  limit?: number
-  cursor?: string | undefined
-  startDate?: Date
-  endDate?: Date
-  channels?: DeliveryChannel[]
+  userId?: string | undefined;
+  type?: NotificationType | NotificationType[];
+  status?: "read" | "unread" | "all";
+  priority?: NotificationPriority | NotificationPriority[];
+  limit?: number;
+  cursor?: string | undefined;
+  startDate?: Date;
+  endDate?: Date;
+  channels?: DeliveryChannel[];
 }
 
 // ============================================================================
@@ -79,47 +79,47 @@ export interface NotificationQueryParams {
 // ============================================================================
 
 export interface DeviceToken {
-  id: string
-  userId: string
-  token: string
-  platform: 'ios' | 'android' | 'web'
-  isActive: boolean
-  lastUsedAt: Date
-  metadata?: DeviceMetadata
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  userId: string;
+  token: string;
+  platform: "ios" | "android" | "web";
+  isActive: boolean;
+  lastUsedAt: Date;
+  metadata?: DeviceMetadata;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface DeviceMetadata {
-  userAgent?: string
-  appVersion?: string
-  osVersion?: string
-  deviceModel?: string
-  browserName?: string
-  browserVersion?: string
-  timezone?: string
-  language?: string
+  userAgent?: string;
+  appVersion?: string;
+  osVersion?: string;
+  deviceModel?: string;
+  browserName?: string;
+  browserVersion?: string;
+  timezone?: string;
+  language?: string;
 }
 
 export interface DeviceTokenRequest {
-  userId: string
-  token: string
-  platform: 'ios' | 'android' | 'web'
-  metadata?: DeviceMetadata
+  userId: string;
+  token: string;
+  platform: "ios" | "android" | "web";
+  metadata?: DeviceMetadata;
 }
 
 export interface DeviceTokenResponse {
-  id: string
-  success: boolean
-  message?: string
+  id: string;
+  success: boolean;
+  message?: string;
 }
 
 export interface DeviceTokenStats {
-  total: number
-  active: number
-  byPlatform: Record<string, number>
-  lastRegistered?: Date
-  oldestToken?: Date
+  total: number;
+  active: number;
+  byPlatform: Record<string, number>;
+  lastRegistered?: Date;
+  oldestToken?: Date;
 }
 
 // ============================================================================
@@ -127,33 +127,33 @@ export interface DeviceTokenStats {
 // ============================================================================
 
 export interface NotificationTemplate {
-  id: string
-  name: string
-  type: NotificationType
-  titleTemplate: string
-  bodyTemplate: string
-  defaultData?: Record<string, unknown>
-  requiredVariables?: string[]
-  supportedChannels: DeliveryChannel[]
-  isActive: boolean
-  version: number
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  name: string;
+  type: NotificationType;
+  titleTemplate: string;
+  bodyTemplate: string;
+  defaultData?: Record<string, unknown>;
+  requiredVariables?: string[];
+  supportedChannels: DeliveryChannel[];
+  isActive: boolean;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface RenderedNotification {
-  title: string
-  body: string
-  data?: Record<string, unknown>
-  actionUrl?: string
-  imageUrl?: string
-  iconUrl?: string
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  actionUrl?: string;
+  imageUrl?: string;
+  iconUrl?: string;
 }
 
 export interface TemplateRenderRequest {
-  templateId: string
-  data: Record<string, unknown>
-  userId?: string
+  templateId: string;
+  data: Record<string, unknown>;
+  userId?: string;
 }
 
 // ============================================================================
@@ -161,36 +161,36 @@ export interface TemplateRenderRequest {
 // ============================================================================
 
 export interface ScheduledNotification {
-  id: string
-  userId: string
-  templateId?: string
-  notification: Omit<Notification, 'id' | 'createdAt' | 'updatedAt' | 'status'>
-  scheduledFor: Date
-  timezone?: string
-  isRecurring: boolean
-  recurringPattern?: RecurringPattern
-  status: 'pending' | 'sent' | 'cancelled' | 'failed'
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  userId: string;
+  templateId?: string;
+  notification: Omit<Notification, "id" | "createdAt" | "updatedAt" | "status">;
+  scheduledFor: Date;
+  timezone?: string;
+  isRecurring: boolean;
+  recurringPattern?: RecurringPattern;
+  status: "pending" | "sent" | "cancelled" | "failed";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface RecurringPattern {
-  type: 'daily' | 'weekly' | 'monthly' | 'custom'
-  interval: number
-  daysOfWeek?: number[] // 0-6, Sunday = 0
-  dayOfMonth?: number
-  endDate?: Date
-  maxOccurrences?: number
+  type: "daily" | "weekly" | "monthly" | "custom";
+  interval: number;
+  daysOfWeek?: number[]; // 0-6, Sunday = 0
+  dayOfMonth?: number;
+  endDate?: Date;
+  maxOccurrences?: number;
 }
 
 export interface ScheduleNotificationRequest {
-  userId: string
-  templateId?: string
-  notification?: Partial<Notification>
-  scheduledFor: Date
-  timezone?: string
-  isRecurring?: boolean
-  recurringPattern?: RecurringPattern
+  userId: string;
+  templateId?: string;
+  notification?: Partial<Notification>;
+  scheduledFor: Date;
+  timezone?: string;
+  isRecurring?: boolean;
+  recurringPattern?: RecurringPattern;
 }
 
 // ============================================================================
@@ -198,46 +198,46 @@ export interface ScheduleNotificationRequest {
 // ============================================================================
 
 export interface DeliveryResult {
-  success: boolean
-  channel: DeliveryChannel
-  timestamp: Date
-  error?: string
-  metadata?: Record<string, unknown>
+  success: boolean;
+  channel: DeliveryChannel;
+  timestamp: Date;
+  error?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NotificationAnalytics {
-  notificationId: string
-  userId: string
-  type: NotificationType
-  deliveryResults: DeliveryResult[]
-  openedAt?: Date
-  clickedAt?: Date
-  dismissedAt?: Date
-  engagementScore: number
-  metadata?: Record<string, unknown>
+  notificationId: string;
+  userId: string;
+  type: NotificationType;
+  deliveryResults: DeliveryResult[];
+  openedAt?: Date;
+  clickedAt?: Date;
+  dismissedAt?: Date;
+  engagementScore: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AnalyticsQueryParams {
-  userId?: string
-  notificationId?: string
-  type?: NotificationType | NotificationType[]
-  startDate: Date
-  endDate: Date
-  groupBy?: 'day' | 'week' | 'month' | 'type' | 'channel'
-  metrics?: AnalyticsMetric[]
+  userId?: string;
+  notificationId?: string;
+  type?: NotificationType | NotificationType[];
+  startDate: Date;
+  endDate: Date;
+  groupBy?: "day" | "week" | "month" | "type" | "channel";
+  metrics?: AnalyticsMetric[];
 }
 
-export type AnalyticsMetric = 
-  | 'delivery_rate'
-  | 'open_rate'
-  | 'click_rate'
-  | 'engagement_score'
-  | 'conversion_rate'
+export type AnalyticsMetric =
+  | "delivery_rate"
+  | "open_rate"
+  | "click_rate"
+  | "engagement_score"
+  | "conversion_rate";
 
 export interface AnalyticsData {
-  period: string
-  metrics: Record<AnalyticsMetric, number>
-  breakdown?: Record<string, Record<AnalyticsMetric, number>>
+  period: string;
+  metrics: Record<AnalyticsMetric, number>;
+  breakdown?: Record<string, Record<AnalyticsMetric, number>>;
 }
 
 // ============================================================================
@@ -245,163 +245,163 @@ export interface AnalyticsData {
 // ============================================================================
 
 export interface NotificationPreferences {
-  userId: string
-  enabledTypes: NotificationType[]
-  quietHours?: QuietHours
-  frequency: Record<NotificationType, FrequencySettings>
-  channels: Record<NotificationType, DeliveryChannel[]>
-  globalSettings: GlobalNotificationSettings
-  updatedAt: Date
+  userId: string;
+  enabledTypes: NotificationType[];
+  quietHours?: QuietHours;
+  frequency: Record<NotificationType, FrequencySettings>;
+  channels: Record<NotificationType, DeliveryChannel[]>;
+  globalSettings: GlobalNotificationSettings;
+  updatedAt: Date;
 }
 
 export interface QuietHours {
-  enabled: boolean
-  start: string // HH:mm format
-  end: string   // HH:mm format
-  timezone: string
-  daysOfWeek?: number[] // 0-6, Sunday = 0
+  enabled: boolean;
+  start: string; // HH:mm format
+  end: string; // HH:mm format
+  timezone: string;
+  daysOfWeek?: number[]; // 0-6, Sunday = 0
 }
 
 export interface FrequencySettings {
-  type: 'immediate' | 'batched' | 'daily' | 'weekly' | 'disabled'
-  batchInterval?: number // minutes for batched
-  dailyTime?: string // HH:mm for daily
-  weeklyDay?: number // 0-6 for weekly
-  weeklyTime?: string // HH:mm for weekly
+  type: "immediate" | "batched" | "daily" | "weekly" | "disabled";
+  batchInterval?: number; // minutes for batched
+  dailyTime?: string; // HH:mm for daily
+  weeklyDay?: number; // 0-6 for weekly
+  weeklyTime?: string; // HH:mm for weekly
 }
 
 export interface GlobalNotificationSettings {
-  enabled: boolean
-  maxPerDay?: number
-  maxPerHour?: number
-  respectQuietHours: boolean
-  allowCriticalOverride: boolean
+  enabled: boolean;
+  maxPerDay?: number;
+  maxPerHour?: number;
+  respectQuietHours: boolean;
+  allowCriticalOverride: boolean;
 }
 
 // ============================================================================
 // Real-Time Communication
 // ============================================================================
 
-export type NotificationEventType = 
-  | 'notification.received'
-  | 'notification.updated'
-  | 'notification.deleted'
-  | 'preferences.updated'
-  | 'connection.status'
-  | 'subscribe'
-  | 'unsubscribe'
-  | 'ping'
-  | 'pong'
-  | 'error'
-  | 'subscription.confirmed'
-  | 'subscription.error'
+export type NotificationEventType =
+  | "notification.received"
+  | "notification.updated"
+  | "notification.deleted"
+  | "preferences.updated"
+  | "connection.status"
+  | "subscribe"
+  | "unsubscribe"
+  | "ping"
+  | "pong"
+  | "error"
+  | "subscription.confirmed"
+  | "subscription.error";
 
 export interface NotificationEvent {
-  type: NotificationEventType
-  data: unknown
-  timestamp: Date
-  correlationId?: string
+  type: NotificationEventType;
+  data: unknown;
+  timestamp: Date;
+  correlationId?: string;
 }
 
 export interface RealtimeNotification extends Notification {
-  isRealtime: boolean
-  showToast?: boolean
-  playSound?: boolean
-  vibrate?: boolean
+  isRealtime: boolean;
+  showToast?: boolean;
+  playSound?: boolean;
+  vibrate?: boolean;
 }
 
 export interface WebSocketMessage {
-  event: NotificationEventType
-  data: unknown
-  timestamp: string
-  correlationId?: string
+  event: NotificationEventType;
+  data: unknown;
+  timestamp: string;
+  correlationId?: string;
 }
 
-export type EventHandler = (data: unknown) => void
+export type EventHandler = (data: unknown) => void;
 
 // ============================================================================
 // Learning-Specific Notifications
 // ============================================================================
 
 export interface AchievementNotificationRequest {
-  userId: string
-  achievementName: string
-  achievementDescription: string
-  achievementIcon?: string
-  points?: number
-  badgeUrl?: string
-  shareUrl?: string
+  userId: string;
+  achievementName: string;
+  achievementDescription: string;
+  achievementIcon?: string;
+  points?: number;
+  badgeUrl?: string;
+  shareUrl?: string;
 }
 
 export interface SpacedRepetitionRequest {
-  userId: string
-  topicName: string
-  itemCount: number
-  dueDate: Date
-  difficulty: 'easy' | 'medium' | 'hard'
-  lastReviewDate?: Date
-  nextReviewDate?: Date
+  userId: string;
+  topicName: string;
+  itemCount: number;
+  dueDate: Date;
+  difficulty: "easy" | "medium" | "hard";
+  lastReviewDate?: Date;
+  nextReviewDate?: Date;
 }
 
 export interface StreakReminderRequest {
-  userId: string
-  streakCount: number
-  streakType: 'daily' | 'weekly' | 'monthly'
-  reminderTime: Date
-  motivationalMessage?: string
-  streakGoal?: number
+  userId: string;
+  streakCount: number;
+  streakType: "daily" | "weekly" | "monthly";
+  reminderTime: Date;
+  motivationalMessage?: string;
+  streakGoal?: number;
 }
 
 export interface MockTestReminderRequest {
-  userId: string
-  testType: string
-  testName: string
-  passRate: number
-  reminderTime: Date
-  preparationTips?: string[]
-  estimatedDuration?: number
-  difficultyLevel?: 'beginner' | 'intermediate' | 'advanced'
+  userId: string;
+  testType: string;
+  testName: string;
+  passRate: number;
+  reminderTime: Date;
+  preparationTips?: string[];
+  estimatedDuration?: number;
+  difficultyLevel?: "beginner" | "intermediate" | "advanced";
 }
 
 // ============================================================================
 // Error Handling
 // ============================================================================
 
-export type NotificationErrorType = 
-  | 'network'
-  | 'authentication'
-  | 'validation'
-  | 'service'
-  | 'permission'
-  | 'quota'
-  | 'template'
-  | 'device'
-  | 'websocket'
+export type NotificationErrorType =
+  | "network"
+  | "authentication"
+  | "validation"
+  | "service"
+  | "permission"
+  | "quota"
+  | "template"
+  | "device"
+  | "websocket";
 
 export interface NotificationError {
-  type: NotificationErrorType
-  message: string
-  code?: string | undefined
-  details?: Record<string, unknown> | undefined
-  recoverable: boolean
-  retryAfter?: number | undefined
-  correlationId?: string | undefined
-  timestamp: Date
+  type: NotificationErrorType;
+  message: string;
+  code?: string | undefined;
+  details?: Record<string, unknown> | undefined;
+  recoverable: boolean;
+  retryAfter?: number | undefined;
+  correlationId?: string | undefined;
+  timestamp: Date;
 }
 
 export interface ErrorContext {
-  operation: string
-  userId?: string
-  notificationId?: string
-  retryCount: number
-  correlationId?: string
+  operation: string;
+  userId?: string;
+  notificationId?: string;
+  retryCount: number;
+  correlationId?: string;
 }
 
 export interface ErrorHandlingResult {
-  shouldRetry: boolean
-  retryDelay?: number
-  fallbackAction?: string
-  userMessage?: string
+  shouldRetry: boolean;
+  retryDelay?: number;
+  fallbackAction?: string;
+  userMessage?: string;
 }
 
 // ============================================================================
@@ -409,24 +409,24 @@ export interface ErrorHandlingResult {
 // ============================================================================
 
 export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: NotificationError
+  success: boolean;
+  data?: T;
+  error?: NotificationError;
   meta?: {
-    timestamp: string
-    correlationId?: string
-    version?: string
-  }
+    timestamp: string;
+    correlationId?: string;
+    version?: string;
+  };
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: {
-    total: number
-    page: number
-    limit: number
-    hasMore: boolean
-    nextCursor?: string
-  }
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+    nextCursor?: string;
+  };
 }
 
 // ============================================================================
@@ -434,46 +434,51 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 // ============================================================================
 
 export interface NotificationServiceClientConfig {
-  baseUrl: string
-  wsUrl?: string
-  timeout: number
-  retryAttempts: number
-  retryDelay: number
-  enableCircuitBreaker: boolean
-  circuitBreakerThreshold: number
-  circuitBreakerTimeout: number
-  enableCaching: boolean
-  cacheTTL: number
-  enableAnalytics: boolean
-  vapidPublicKey?: string
+  baseUrl: string;
+  wsUrl?: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  enableCircuitBreaker: boolean;
+  circuitBreakerThreshold: number;
+  circuitBreakerTimeout: number;
+  enableCaching: boolean;
+  cacheTTL: number;
+  enableAnalytics: boolean;
+  vapidPublicKey?: string;
 }
 
 export interface CacheEntry<T = unknown> {
-  data: T
-  timestamp: number
-  ttl: number
+  data: T;
+  timestamp: number;
+  ttl: number;
 }
 
-export type CacheType = 'notifications' | 'preferences' | 'templates' | 'deviceTokens' | 'analytics'
+export type CacheType =
+  | "notifications"
+  | "preferences"
+  | "templates"
+  | "deviceTokens"
+  | "analytics";
 
 // ============================================================================
 // Circuit Breaker Types
 // ============================================================================
 
-export type CircuitBreakerState = 'closed' | 'open' | 'half-open'
+export type CircuitBreakerState = "closed" | "open" | "half-open";
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number
-  recoveryTimeout: number
-  monitoringPeriod: number
+  failureThreshold: number;
+  recoveryTimeout: number;
+  monitoringPeriod: number;
 }
 
 export interface CircuitBreakerMetrics {
-  state: CircuitBreakerState
-  failureCount: number
-  successCount: number
-  lastFailureTime?: Date | undefined
-  nextRetryTime?: Date | undefined
+  state: CircuitBreakerState;
+  failureCount: number;
+  successCount: number;
+  lastFailureTime?: Date | undefined;
+  nextRetryTime?: Date | undefined;
 }
 
 // ============================================================================
@@ -481,16 +486,16 @@ export interface CircuitBreakerMetrics {
 // ============================================================================
 
 export interface JWTPayload {
-  sub?: string
-  user_id?: string
-  exp?: number
-  iat?: number
-  scopes?: string[]
-  scope?: string
-  role?: string
-  roles?: string[]
-  is_admin?: boolean
-  [key: string]: unknown
+  sub?: string;
+  user_id?: string;
+  exp?: number;
+  iat?: number;
+  scopes?: string[];
+  scope?: string;
+  role?: string;
+  roles?: string[];
+  is_admin?: boolean;
+  [key: string]: unknown;
 }
 
 // ============================================================================
@@ -498,9 +503,10 @@ export interface JWTPayload {
 // ============================================================================
 
 export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
-}
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
 
-export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
-export type OptionalFields<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type OptionalFields<T, K extends keyof T> = Omit<T, K> &
+  Partial<Pick<T, K>>;

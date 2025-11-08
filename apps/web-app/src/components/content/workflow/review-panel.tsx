@@ -1,33 +1,36 @@
 /**
  * Review Panel Component
- * 
+ *
  * Interface for content review with approval/rejection functionality
  * Requirements: 5.1, 5.2
  */
 
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { useReviewContent, useWorkflowPermissions } from '../../hooks/use-workflow-operations'
-import type { ContentItem, ReviewItemDto } from '../../types'
+import React, { useState } from "react";
+import {
+  useReviewContent,
+  useWorkflowPermissions,
+} from "../../hooks/use-workflow-operations";
+import type { ContentItem, ReviewItemDto } from "../../types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface ReviewPanelProps {
-  item: ContentItem
-  onReviewComplete?: (item: ContentItem) => void
-  onCancel?: () => void
-  className?: string
+  item: ContentItem;
+  onReviewComplete?: (item: ContentItem) => void;
+  onCancel?: () => void;
+  className?: string;
 }
 
 export interface ReviewFormData {
-  action: 'approve' | 'reject'
-  comment: string
-  feedback: string
-  priority: 'low' | 'medium' | 'high'
-  tags: string[]
+  action: "approve" | "reject";
+  comment: string;
+  feedback: string;
+  priority: "low" | "medium" | "high";
+  tags: string[];
 }
 
 // ============================================================================
@@ -35,43 +38,46 @@ export interface ReviewFormData {
 // ============================================================================
 
 interface ReviewFormProps {
-  onSubmit: (data: ReviewFormData) => void
-  onCancel: () => void
-  isSubmitting: boolean
+  onSubmit: (data: ReviewFormData) => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
 }
 
 function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
   const [formData, setFormData] = useState<ReviewFormData>({
-    action: 'approve',
-    comment: '',
-    feedback: '',
-    priority: 'medium',
-    tags: []
-  })
+    action: "approve",
+    comment: "",
+    feedback: "",
+    priority: "medium",
+    tags: [],
+  });
 
-  const [newTag, setNewTag] = useState('')
+  const [newTag, setNewTag] = useState("");
 
   const updateFormField = (field: keyof ReviewFormData, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      updateFormField('tags', [...formData.tags, newTag.trim()])
-      setNewTag('')
+      updateFormField("tags", [...formData.tags, newTag.trim()]);
+      setNewTag("");
     }
-  }
+  };
 
   const removeTag = (tagToRemove: string) => {
-    updateFormField('tags', formData.tags.filter(tag => tag !== tagToRemove))
-  }
+    updateFormField(
+      "tags",
+      formData.tags.filter((tag) => tag !== tagToRemove),
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
+    e.preventDefault();
+    onSubmit(formData);
+  };
 
-  const isApproval = formData.action === 'approve'
+  const isApproval = formData.action === "approve";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -86,8 +92,8 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
               type="radio"
               name="action"
               value="approve"
-              checked={formData.action === 'approve'}
-              onChange={(e) => updateFormField('action', e.target.value)}
+              checked={formData.action === "approve"}
+              onChange={(e) => updateFormField("action", e.target.value)}
               className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
             />
             <span className="ml-2 text-sm text-gray-700 flex items-center">
@@ -100,8 +106,8 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
               type="radio"
               name="action"
               value="reject"
-              checked={formData.action === 'reject'}
-              onChange={(e) => updateFormField('action', e.target.value)}
+              checked={formData.action === "reject"}
+              onChange={(e) => updateFormField("action", e.target.value)}
               className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
             />
             <span className="ml-2 text-sm text-gray-700 flex items-center">
@@ -114,30 +120,40 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
 
       {/* Comment */}
       <div>
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="comment"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Review Comment *
         </label>
         <textarea
           id="comment"
           value={formData.comment}
-          onChange={(e) => updateFormField('comment', e.target.value)}
+          onChange={(e) => updateFormField("comment", e.target.value)}
           required
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder={isApproval ? "Explain why this content is approved..." : "Explain what needs to be changed..."}
+          placeholder={
+            isApproval
+              ? "Explain why this content is approved..."
+              : "Explain what needs to be changed..."
+          }
         />
       </div>
 
       {/* Detailed Feedback (for rejections) */}
       {!isApproval && (
         <div>
-          <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="feedback"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Detailed Feedback
           </label>
           <textarea
             id="feedback"
             value={formData.feedback}
-            onChange={(e) => updateFormField('feedback', e.target.value)}
+            onChange={(e) => updateFormField("feedback", e.target.value)}
             rows={5}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Provide specific feedback on what needs to be improved..."
@@ -148,13 +164,16 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
       {/* Priority (for rejections) */}
       {!isApproval && (
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="priority"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Priority Level
           </label>
           <select
             id="priority"
             value={formData.priority}
-            onChange={(e) => updateFormField('priority', e.target.value)}
+            onChange={(e) => updateFormField("priority", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="low">Low - Minor improvements needed</option>
@@ -191,7 +210,9 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
             type="text"
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+            onKeyPress={(e) =>
+              e.key === "Enter" && (e.preventDefault(), addTag())
+            }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Add review tag..."
           />
@@ -205,7 +226,8 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          Common tags: grammar, content-quality, formatting, accuracy, completeness
+          Common tags: grammar, content-quality, formatting, accuracy,
+          completeness
         </p>
       </div>
 
@@ -224,21 +246,36 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
           disabled={isSubmitting || !formData.comment.trim()}
           className={`px-6 py-2 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 ${
             isApproval
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-red-600 hover:bg-red-700'
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-red-600 hover:bg-red-700"
           }`}
         >
           {isSubmitting && (
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            <svg
+              className="animate-spin h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
           )}
-          <span>{isApproval ? '✅ Approve Content' : '❌ Reject Content'}</span>
+          <span>{isApproval ? "✅ Approve Content" : "❌ Reject Content"}</span>
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 // ============================================================================
@@ -246,38 +283,38 @@ function ReviewForm({ onSubmit, onCancel, isSubmitting }: ReviewFormProps) {
 // ============================================================================
 
 interface ContentSummaryProps {
-  item: ContentItem
+  item: ContentItem;
 }
 
 function ContentSummary({ item }: ContentSummaryProps) {
   // Basic validation without external hook
   const validation = React.useMemo(() => {
-    const errors: string[] = []
-    const warnings: string[] = []
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     if (!item.title?.trim()) {
-      errors.push('Title is required')
+      errors.push("Title is required");
     }
 
     if (!item.content?.body?.trim()) {
-      errors.push('Content body is required')
+      errors.push("Content body is required");
     }
 
     if (item.content?.body && item.content.body.length < 50) {
-      warnings.push('Content is quite short, consider adding more detail')
+      warnings.push("Content is quite short, consider adding more detail");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
-    }
-  }, [item])
+      warnings,
+    };
+  }, [item]);
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 space-y-4">
       <h4 className="text-sm font-medium text-gray-900">Content Summary</h4>
-      
+
       {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
@@ -290,11 +327,15 @@ function ContentSummary({ item }: ContentSummaryProps) {
         </div>
         <div>
           <span className="text-gray-500">Author:</span>
-          <span className="ml-2 font-medium">{item.createdBy || 'Unknown'}</span>
+          <span className="ml-2 font-medium">
+            {item.createdBy || "Unknown"}
+          </span>
         </div>
         <div>
           <span className="text-gray-500">Submitted:</span>
-          <span className="ml-2 font-medium">{new Date(item.updatedAt).toLocaleDateString()}</span>
+          <span className="ml-2 font-medium">
+            {new Date(item.updatedAt).toLocaleDateString()}
+          </span>
         </div>
       </div>
 
@@ -313,7 +354,11 @@ function ContentSummary({ item }: ContentSummaryProps) {
         <div className="text-sm">
           <span className="text-gray-500">Word Count:</span>
           <span className="ml-2 font-medium">
-            {item.content.body.split(/\s+/).filter(word => word.length > 0).length} words
+            {
+              item.content.body.split(/\s+/).filter((word) => word.length > 0)
+                .length
+            }{" "}
+            words
           </span>
         </div>
       )}
@@ -338,7 +383,9 @@ function ContentSummary({ item }: ContentSummaryProps) {
       {/* Validation Results */}
       {validation && (
         <div>
-          <h5 className="text-sm font-medium text-gray-900 mb-2">Content Validation</h5>
+          <h5 className="text-sm font-medium text-gray-900 mb-2">
+            Content Validation
+          </h5>
           {validation.isValid ? (
             <div className="flex items-center text-sm text-green-600">
               <span className="mr-1">✅</span>
@@ -347,18 +394,24 @@ function ContentSummary({ item }: ContentSummaryProps) {
           ) : (
             <div className="space-y-1">
               {validation.errors.map((error: string, index: number) => (
-                <div key={index} className="flex items-center text-sm text-red-600">
+                <div
+                  key={index}
+                  className="flex items-center text-sm text-red-600"
+                >
                   <span className="mr-1">❌</span>
                   {error}
                 </div>
               ))}
             </div>
           )}
-          
+
           {validation.warnings.length > 0 && (
             <div className="mt-2 space-y-1">
               {validation.warnings.map((warning: string, index: number) => (
-                <div key={index} className="flex items-center text-sm text-yellow-600">
+                <div
+                  key={index}
+                  className="flex items-center text-sm text-yellow-600"
+                >
                   <span className="mr-1">⚠️</span>
                   {warning}
                 </div>
@@ -368,7 +421,7 @@ function ContentSummary({ item }: ContentSummaryProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -379,33 +432,43 @@ export function ReviewPanel({
   item,
   onReviewComplete,
   onCancel,
-  className = ''
+  className = "",
 }: ReviewPanelProps) {
-  const { reviewContent, isReviewing, error } = useReviewContent()
-  const permissions = useWorkflowPermissions(item)
+  const { reviewContent, isReviewing, error } = useReviewContent();
+  const permissions = useWorkflowPermissions(item);
 
   const handleReviewSubmit = async (formData: ReviewFormData) => {
     const reviewData: ReviewItemDto = {
       decision: formData.action,
       comments: formData.comment,
       feedback: [formData.feedback],
-      reviewerNotes: `Priority: ${formData.priority}, Tags: ${formData.tags.join(', ')}`
-    }
+      reviewerNotes: `Priority: ${formData.priority}, Tags: ${formData.tags.join(", ")}`,
+    };
 
-    const result = await reviewContent(item.id, reviewData)
+    const result = await reviewContent(item.id, reviewData);
     if (result) {
-      onReviewComplete?.(result)
+      onReviewComplete?.(result);
     }
-  }
+  };
 
   // Check permissions
   if (!permissions.canReview) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-6 ${className}`}>
+      <div
+        className={`bg-yellow-50 border border-yellow-200 rounded-lg p-6 ${className}`}
+      >
         <div className="flex items-center">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            <svg
+              className="h-5 w-5 text-yellow-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -413,12 +476,13 @@ export function ReviewPanel({
               Review Not Available
             </h3>
             <p className="mt-1 text-sm text-yellow-700">
-              You don&apos;t have permission to review this content, or it&apos;s not in a reviewable state.
+              You don&apos;t have permission to review this content, or
+              it&apos;s not in a reviewable state.
             </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -444,23 +508,31 @@ export function ReviewPanel({
 
         {/* Review Form */}
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Review Decision</h3>
-          
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Review Decision
+          </h3>
+
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">
                     Review Failed
                   </h3>
-                  <p className="mt-1 text-sm text-red-700">
-                    {error.message}
-                  </p>
+                  <p className="mt-1 text-sm text-red-700">{error.message}</p>
                 </div>
               </div>
             </div>
@@ -474,5 +546,5 @@ export function ReviewPanel({
         </div>
       </div>
     </div>
-  )
+  );
 }

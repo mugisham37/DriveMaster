@@ -1,6 +1,6 @@
 /**
  * Analytics Service Type Definitions
- * 
+ *
  * Core types for analytics-dashboard service integration including
  * configuration, data models, and API interfaces.
  */
@@ -10,33 +10,33 @@
 // ============================================================================
 
 export interface AnalyticsServiceConfig {
-  baseUrl: string
-  wsUrl: string
-  timeout: number
-  retryAttempts: number
-  retryDelay: number
-  circuitBreakerThreshold: number
-  circuitBreakerTimeout: number
-  healthCheckInterval: number
-  enableRealtime: boolean
-  enableCaching: boolean
-  enableRequestLogging: boolean
-  enableMetrics: boolean
+  baseUrl: string;
+  wsUrl: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  circuitBreakerThreshold: number;
+  circuitBreakerTimeout: number;
+  healthCheckInterval: number;
+  enableRealtime: boolean;
+  enableCaching: boolean;
+  enableRequestLogging: boolean;
+  enableMetrics: boolean;
 }
 
 export interface ServiceDiscoveryConfig {
-  enabled: boolean
-  refreshInterval: number
+  enabled: boolean;
+  refreshInterval: number;
   fallbackUrls: {
-    http: string
-    ws: string
-  }
+    http: string;
+    ws: string;
+  };
 }
 
 export interface ServiceHealthStatus {
-  status: 'healthy' | 'unhealthy' | 'degraded'
-  timestamp: string
-  details?: Record<string, unknown>
+  status: "healthy" | "unhealthy" | "degraded";
+  timestamp: string;
+  details?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -49,25 +49,25 @@ export interface ServiceHealthStatus {
  */
 export interface UserEngagementMetrics {
   /** ISO timestamp when metrics were calculated */
-  timestamp: string
+  timestamp: string;
   /** Number of unique active users in the last hour */
-  activeUsers1h: number
+  activeUsers1h: number;
   /** Number of unique active users in the last 24 hours */
-  activeUsers24h: number
+  activeUsers24h: number;
   /** Number of new user registrations in the last 24 hours */
-  newUsers24h: number
+  newUsers24h: number;
   /** Number of new sessions started in the last hour */
-  sessionsStarted1h: number
+  sessionsStarted1h: number;
   /** Average session duration in minutes across all active sessions */
-  avgSessionDurationMinutes: number
+  avgSessionDurationMinutes: number;
   /** Percentage of single-page sessions (users who left without interaction) */
-  bounceRate: number
+  bounceRate: number;
   /** Day 1 retention rate - percentage of users who returned after 1 day */
-  retentionRateD1: number
+  retentionRateD1: number;
   /** Day 7 retention rate - percentage of users who returned after 7 days */
-  retentionRateD7: number
+  retentionRateD7: number;
   /** Day 30 retention rate - percentage of users who returned after 30 days */
-  retentionRateD30: number
+  retentionRateD30: number;
 }
 
 /**
@@ -76,23 +76,23 @@ export interface UserEngagementMetrics {
  */
 export interface LearningProgressMetrics {
   /** ISO timestamp when metrics were calculated */
-  timestamp: string
+  timestamp: string;
   /** Total number of content completions in the last 24 hours */
-  totalCompletions24h: number
+  totalCompletions24h: number;
   /** Average accuracy percentage across all completed exercises */
-  avgAccuracy: number
+  avgAccuracy: number;
   /** Average response time in milliseconds for exercise completion */
-  avgResponseTimeMs: number
+  avgResponseTimeMs: number;
   /** Number of mastery achievements earned in the last 24 hours */
-  masteryAchievements24h: number
+  masteryAchievements24h: number;
   /** Number of users currently struggling (below threshold performance) */
-  strugglingUsers: number
+  strugglingUsers: number;
   /** Number of users performing above excellence threshold */
-  topPerformers: number
+  topPerformers: number;
   /** Overall content completion rate as a percentage */
-  contentCompletionRate: number
+  contentCompletionRate: number;
   /** Rate of skill progression across all active learners */
-  skillProgressRate: number
+  skillProgressRate: number;
 }
 
 /**
@@ -101,23 +101,23 @@ export interface LearningProgressMetrics {
  */
 export interface ContentPerformanceMetrics {
   /** ISO timestamp when metrics were calculated */
-  timestamp: string
+  timestamp: string;
   /** Total number of content items in the system */
-  totalItems: number
+  totalItems: number;
   /** Average difficulty rating across all content items (0-1 scale) */
-  avgDifficulty: number
+  avgDifficulty: number;
   /** Average accuracy percentage for content completion */
-  avgAccuracy: number
+  avgAccuracy: number;
   /** Average response time in milliseconds for content interaction */
-  avgResponseTimeMs: number
+  avgResponseTimeMs: number;
   /** Number of content items flagged for review due to poor performance */
-  itemsNeedingReview: number
+  itemsNeedingReview: number;
   /** List of content items with highest performance metrics */
-  topPerformingItems: ContentItem[]
+  topPerformingItems: ContentItem[];
   /** List of content items with concerning performance metrics */
-  strugglingItems: ContentItem[]
+  strugglingItems: ContentItem[];
   /** Identified gaps in content coverage or effectiveness */
-  contentGaps: ContentGap[]
+  contentGaps: ContentGap[];
 }
 
 /**
@@ -126,31 +126,31 @@ export interface ContentPerformanceMetrics {
  */
 export interface SystemPerformanceMetrics {
   /** ISO timestamp when metrics were calculated */
-  timestamp: string
+  timestamp: string;
   /** Average API response time in milliseconds across all endpoints */
-  apiResponseTimeMs: number
+  apiResponseTimeMs: number;
   /** Error rate as a percentage of total requests */
-  errorRate: number
+  errorRate: number;
   /** Number of currently active connections to the system */
-  activeConnections: number
+  activeConnections: number;
   /** Memory usage as a percentage of total available memory */
-  memoryUsagePercent: number
+  memoryUsagePercent: number;
   /** CPU usage as a percentage of total available CPU */
-  cpuUsagePercent: number
+  cpuUsagePercent: number;
   /** Disk usage as a percentage of total available disk space */
-  diskUsagePercent: number
+  diskUsagePercent: number;
   /** Cache hit rate as a percentage of total cache requests */
-  cacheHitRate: number
+  cacheHitRate: number;
   /** Current depth of processing queues */
-  queueDepth: number
+  queueDepth: number;
 }
 
 export interface RealtimeMetricsSnapshot {
-  timestamp: string
-  engagement?: UserEngagementMetrics
-  progress?: LearningProgressMetrics
-  content?: ContentPerformanceMetrics
-  system?: SystemPerformanceMetrics
+  timestamp: string;
+  engagement?: UserEngagementMetrics;
+  progress?: LearningProgressMetrics;
+  content?: ContentPerformanceMetrics;
+  system?: SystemPerformanceMetrics;
 }
 
 // ============================================================================
@@ -163,19 +163,19 @@ export interface RealtimeMetricsSnapshot {
  */
 export interface ContentItem {
   /** Unique identifier for the content item */
-  id: string
+  id: string;
   /** Human-readable title of the content item */
-  title: string
+  title: string;
   /** Type of content (exercise, lesson, quiz, etc.) */
-  type: string
+  type: string;
   /** Difficulty level of the content */
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: "easy" | "medium" | "hard";
   /** Average accuracy percentage for this content item */
-  accuracy: number
+  accuracy: number;
   /** Average response time in milliseconds for this content item */
-  responseTimeMs: number
+  responseTimeMs: number;
   /** Total number of times this content has been completed */
-  completionCount: number
+  completionCount: number;
 }
 
 /**
@@ -184,79 +184,87 @@ export interface ContentItem {
  */
 export interface ContentGap {
   /** Unique identifier for the content gap */
-  id: string
+  id: string;
   /** Topic area where the gap exists */
-  topic: string
+  topic: string;
   /** Skill level affected by this gap */
-  skillLevel: string
+  skillLevel: string;
   /** Type of gap identified in the learning path */
-  gapType: 'knowledge' | 'practice' | 'mastery'
+  gapType: "knowledge" | "practice" | "mastery";
   /** Severity level of the gap's impact on learning outcomes */
-  severity: 'low' | 'medium' | 'high'
+  severity: "low" | "medium" | "high";
   /** Number of users affected by this content gap */
-  affectedUsers: number
+  affectedUsers: number;
   /** Recommended actions to address this gap */
-  recommendedActions: string[]
+  recommendedActions: string[];
 }
 
 export interface Alert {
-  id: string
-  type: 'system_performance' | 'data_quality' | 'user_behavior' | 'content_performance'
-  severity: 'info' | 'warning' | 'error' | 'critical'
-  title: string
-  message: string
-  details: Record<string, unknown>
-  timestamp: string
-  resolved: boolean
-  resolvedBy?: string
-  resolvedAt?: string
+  id: string;
+  type:
+    | "system_performance"
+    | "data_quality"
+    | "user_behavior"
+    | "content_performance";
+  severity: "info" | "warning" | "error" | "critical";
+  title: string;
+  message: string;
+  details: Record<string, unknown>;
+  timestamp: string;
+  resolved: boolean;
+  resolvedBy?: string;
+  resolvedAt?: string;
 }
 
-export type AlertSeverity = 'info' | 'warning' | 'error' | 'critical'
+export type AlertSeverity = "info" | "warning" | "error" | "critical";
 
 export interface BehaviorInsights {
-  userId?: string
-  timestamp: string
-  patterns: BehaviorPattern[]
-  recommendations: string[]
-  riskFactors: RiskFactor[]
+  userId?: string;
+  timestamp: string;
+  patterns: BehaviorPattern[];
+  recommendations: string[];
+  riskFactors: RiskFactor[];
 }
 
 export interface BehaviorPattern {
-  id: string
-  type: 'learning_style' | 'engagement_pattern' | 'difficulty_preference' | 'time_pattern'
-  description: string
-  confidence: number
-  evidence: Record<string, unknown>
+  id: string;
+  type:
+    | "learning_style"
+    | "engagement_pattern"
+    | "difficulty_preference"
+    | "time_pattern";
+  description: string;
+  confidence: number;
+  evidence: Record<string, unknown>;
 }
 
 export interface RiskFactor {
-  type: 'dropout_risk' | 'disengagement' | 'difficulty_mismatch'
-  severity: 'low' | 'medium' | 'high'
-  description: string
-  mitigationSuggestions: string[]
+  type: "dropout_risk" | "disengagement" | "difficulty_mismatch";
+  severity: "low" | "medium" | "high";
+  description: string;
+  mitigationSuggestions: string[];
 }
 
 export interface ContentGapAnalysis {
-  timestamp: string
-  gaps: ContentGap[]
-  priorityAreas: string[]
-  recommendations: string[]
+  timestamp: string;
+  gaps: ContentGap[];
+  priorityAreas: string[];
+  recommendations: string[];
 }
 
 export interface EffectivenessReport {
-  timestamp: string
-  overallEffectiveness: number
-  categoryBreakdown: Record<string, number>
-  trends: TrendData[]
-  recommendations: string[]
+  timestamp: string;
+  overallEffectiveness: number;
+  categoryBreakdown: Record<string, number>;
+  trends: TrendData[];
+  recommendations: string[];
 }
 
 export interface TrendData {
-  period: string
-  value: number
-  change: number
-  changePercent: number
+  period: string;
+  value: number;
+  change: number;
+  changePercent: number;
 }
 
 // ============================================================================
@@ -269,17 +277,17 @@ export interface TrendData {
  */
 export interface EngagementMetricsParams {
   /** Time range for metrics calculation */
-  timeRange?: TimeRange
+  timeRange?: TimeRange;
   /** Specific user ID to filter metrics (optional) */
-  userId?: string
+  userId?: string;
   /** Class IDs to filter metrics (optional) */
-  classIds?: string[]
+  classIds?: string[];
   /** Additional filters for engagement data */
-  filters?: EngagementFilters
+  filters?: EngagementFilters;
   /** Pagination parameters */
-  pagination?: PaginationParams
+  pagination?: PaginationParams;
   /** Sorting parameters */
-  sorting?: SortingParams
+  sorting?: SortingParams;
 }
 
 /**
@@ -288,19 +296,19 @@ export interface EngagementMetricsParams {
  */
 export interface ProgressMetricsParams {
   /** Specific user ID to filter progress metrics (optional) */
-  userId?: string
+  userId?: string;
   /** Class IDs to filter metrics (optional) */
-  classIds?: string[]
+  classIds?: string[];
   /** Time range for progress calculation */
-  timeRange?: TimeRange
+  timeRange?: TimeRange;
   /** Specific skill ID to filter progress (optional) */
-  skillId?: string
+  skillId?: string;
   /** Specific content ID to filter progress (optional) */
-  contentId?: string
+  contentId?: string;
   /** Pagination parameters */
-  pagination?: PaginationParams
+  pagination?: PaginationParams;
   /** Sorting parameters */
-  sorting?: SortingParams
+  sorting?: SortingParams;
 }
 
 /**
@@ -309,17 +317,17 @@ export interface ProgressMetricsParams {
  */
 export interface ContentMetricsParams {
   /** Specific content ID to filter metrics (optional) */
-  contentId?: string
+  contentId?: string;
   /** Class IDs to filter metrics (optional) */
-  classIds?: string[]
+  classIds?: string[];
   /** Content-specific filters */
-  filters?: ContentFilters
+  filters?: ContentFilters;
   /** Time range for content metrics calculation */
-  timeRange?: TimeRange
+  timeRange?: TimeRange;
   /** Pagination parameters */
-  pagination?: PaginationParams
+  pagination?: PaginationParams;
   /** Sorting parameters */
-  sorting?: SortingParams
+  sorting?: SortingParams;
 }
 
 /**
@@ -328,30 +336,30 @@ export interface ContentMetricsParams {
  */
 export interface SystemMetricsParams {
   /** Time range for system metrics calculation */
-  timeRange?: TimeRange
+  timeRange?: TimeRange;
   /** Whether to include detailed system metrics */
-  includeDetails?: boolean
+  includeDetails?: boolean;
   /** Specific system components to include */
-  components?: string[]
+  components?: string[];
   /** Pagination parameters */
-  pagination?: PaginationParams
+  pagination?: PaginationParams;
   /** Sorting parameters */
-  sorting?: SortingParams
+  sorting?: SortingParams;
 }
 
 export interface HistoricalQuery {
-  metrics: string[]
-  timeRange: TimeRange
-  granularity: 'hour' | 'day' | 'week' | 'month'
-  filters?: Record<string, unknown>
+  metrics: string[];
+  timeRange: TimeRange;
+  granularity: "hour" | "day" | "week" | "month";
+  filters?: Record<string, unknown>;
 }
 
 export interface ReportFilters {
-  timeRange?: TimeRange
-  categories?: string[]
-  includeDetails?: boolean
-  userId?: string
-  classIds?: string[]
+  timeRange?: TimeRange;
+  categories?: string[];
+  includeDetails?: boolean;
+  userId?: string;
+  classIds?: string[];
 }
 
 // ============================================================================
@@ -359,27 +367,27 @@ export interface ReportFilters {
 // ============================================================================
 
 export interface TimeRange {
-  start: Date
-  end: Date
-  granularity?: 'hour' | 'day' | 'week' | 'month'
+  start: Date;
+  end: Date;
+  granularity?: "hour" | "day" | "week" | "month";
 }
 
 export interface EngagementFilters {
-  userSegment?: string
-  platform?: 'web' | 'mobile'
-  region?: string
+  userSegment?: string;
+  platform?: "web" | "mobile";
+  region?: string;
 }
 
 export interface ContentFilters {
-  difficulty?: 'easy' | 'medium' | 'hard'
-  topic?: string
-  contentType?: string
+  difficulty?: "easy" | "medium" | "hard";
+  topic?: string;
+  contentType?: string;
 }
 
 export interface TimeSeriesData {
-  timestamp: string
-  metrics: Record<string, number>
-  metadata?: Record<string, unknown>
+  timestamp: string;
+  metrics: Record<string, number>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -387,13 +395,13 @@ export interface TimeSeriesData {
  */
 export interface PaginationParams {
   /** Page number (1-based) */
-  page?: number
+  page?: number;
   /** Number of items per page */
-  limit?: number
+  limit?: number;
   /** Offset for cursor-based pagination */
-  offset?: number
+  offset?: number;
   /** Cursor for cursor-based pagination */
-  cursor?: string
+  cursor?: string;
 }
 
 /**
@@ -401,13 +409,13 @@ export interface PaginationParams {
  */
 export interface SortingParams {
   /** Field to sort by */
-  sortBy?: string
+  sortBy?: string;
   /** Sort direction */
-  sortOrder?: 'asc' | 'desc'
+  sortOrder?: "asc" | "desc";
   /** Secondary sort field */
-  secondarySortBy?: string
+  secondarySortBy?: string;
   /** Secondary sort direction */
-  secondarySortOrder?: 'asc' | 'desc'
+  secondarySortOrder?: "asc" | "desc";
 }
 
 // ============================================================================
@@ -420,21 +428,21 @@ export interface SortingParams {
  */
 export interface MetricsUpdate {
   /** ISO timestamp when the update was generated */
-  timestamp: string
+  timestamp: string;
   /** Message type identifier */
-  type: 'metrics_update'
+  type: "metrics_update";
   /** Updated engagement metrics (optional) */
-  engagement?: UserEngagementMetrics
+  engagement?: UserEngagementMetrics;
   /** Updated learning progress metrics (optional) */
-  progress?: LearningProgressMetrics
+  progress?: LearningProgressMetrics;
   /** Updated content performance metrics (optional) */
-  content?: ContentPerformanceMetrics
+  content?: ContentPerformanceMetrics;
   /** Updated system performance metrics (optional) */
-  system?: SystemPerformanceMetrics
+  system?: SystemPerformanceMetrics;
   /** Correlation ID for tracking message flow */
-  correlationId?: string
+  correlationId?: string;
   /** Source of the metrics update */
-  source?: string
+  source?: string;
 }
 
 /**
@@ -443,15 +451,15 @@ export interface MetricsUpdate {
  */
 export interface AlertMessage {
   /** ISO timestamp when the alert was generated */
-  timestamp: string
+  timestamp: string;
   /** Message type identifier */
-  type: 'alert'
+  type: "alert";
   /** List of alerts in this message */
-  alerts: Alert[]
+  alerts: Alert[];
   /** Correlation ID for tracking message flow */
-  correlationId?: string
+  correlationId?: string;
   /** Priority level of the alert batch */
-  priority?: 'low' | 'medium' | 'high' | 'critical'
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 /**
@@ -460,15 +468,33 @@ export interface AlertMessage {
  */
 export interface WebSocketMessage {
   /** ISO timestamp when the message was created */
-  timestamp: string
+  timestamp: string;
   /** Type of WebSocket message */
-  type: 'metrics_update' | 'alert' | 'subscription_ack' | 'error' | 'heartbeat' | 'connection_status' | 'ping' | 'pong' | 'metrics' | 'system' | 'message'
+  type:
+    | "metrics_update"
+    | "alert"
+    | "subscription_ack"
+    | "error"
+    | "heartbeat"
+    | "connection_status"
+    | "ping"
+    | "pong"
+    | "metrics"
+    | "system"
+    | "message";
   /** Message payload data */
-  data?: MetricsUpdate | AlertMessage | SubscriptionAckMessage | ErrorMessage | HeartbeatMessage | ConnectionStatusMessage | unknown
+  data?:
+    | MetricsUpdate
+    | AlertMessage
+    | SubscriptionAckMessage
+    | ErrorMessage
+    | HeartbeatMessage
+    | ConnectionStatusMessage
+    | unknown;
   /** Correlation ID for request/response tracking */
-  correlationId?: string
+  correlationId?: string;
   /** Message sequence number for ordering */
-  sequenceNumber?: number
+  sequenceNumber?: number;
 }
 
 /**
@@ -477,17 +503,17 @@ export interface WebSocketMessage {
  */
 export interface SubscriptionMessage {
   /** Subscription action type */
-  type: 'subscribe' | 'unsubscribe'
+  type: "subscribe" | "unsubscribe";
   /** Type of metrics to subscribe to */
-  messageType: string
+  messageType: string;
   /** Specific user ID for user-scoped subscriptions (optional) */
-  userId?: string
+  userId?: string;
   /** Additional subscription filters */
-  filters?: Record<string, unknown>
+  filters?: Record<string, unknown>;
   /** Correlation ID for tracking subscription requests */
-  correlationId?: string
+  correlationId?: string;
   /** ISO timestamp when the message was created */
-  timestamp: string
+  timestamp: string;
 }
 
 /**
@@ -495,15 +521,15 @@ export interface SubscriptionMessage {
  */
 export interface SubscriptionAckMessage {
   /** Subscription action that was acknowledged */
-  action: 'subscribe' | 'unsubscribe'
+  action: "subscribe" | "unsubscribe";
   /** Metrics type that was subscribed/unsubscribed */
-  metricsType: string
+  metricsType: string;
   /** Whether the subscription was successful */
-  success: boolean
+  success: boolean;
   /** Error message if subscription failed */
-  error?: string
+  error?: string;
   /** Subscription ID for future reference */
-  subscriptionId?: string
+  subscriptionId?: string;
 }
 
 /**
@@ -511,13 +537,13 @@ export interface SubscriptionAckMessage {
  */
 export interface ErrorMessage {
   /** Error code */
-  code: string
+  code: string;
   /** Human-readable error message */
-  message: string
+  message: string;
   /** Additional error details */
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>;
   /** Whether the error is recoverable */
-  recoverable: boolean
+  recoverable: boolean;
 }
 
 /**
@@ -525,11 +551,11 @@ export interface ErrorMessage {
  */
 export interface HeartbeatMessage {
   /** Server timestamp */
-  serverTime: string
+  serverTime: string;
   /** Connection uptime in seconds */
-  uptime: number
+  uptime: number;
   /** Active subscription count */
-  activeSubscriptions: number
+  activeSubscriptions: number;
 }
 
 /**
@@ -537,13 +563,13 @@ export interface HeartbeatMessage {
  */
 export interface ConnectionStatusMessage {
   /** Current connection status */
-  status: 'connected' | 'disconnected' | 'reconnecting' | 'error'
+  status: "connected" | "disconnected" | "reconnecting" | "error";
   /** Status message */
-  message?: string
+  message?: string;
   /** Connection quality indicator */
-  quality?: 'excellent' | 'good' | 'fair' | 'poor'
+  quality?: "excellent" | "good" | "fair" | "poor";
   /** Latency in milliseconds */
-  latency?: number
+  latency?: number;
 }
 
 // ============================================================================
@@ -551,62 +577,62 @@ export interface ConnectionStatusMessage {
 // ============================================================================
 
 export interface HourlyEngagement {
-  userId: string
-  date: string
+  userId: string;
+  date: string;
   hourlyData: Array<{
-    hour: number
-    sessionsStarted: number
-    timeSpentMinutes: number
-    actionsPerformed: number
-  }>
+    hour: number;
+    sessionsStarted: number;
+    timeSpentMinutes: number;
+    actionsPerformed: number;
+  }>;
 }
 
 export interface CohortRetention {
-  cohortId: string
-  cohortDate: string
+  cohortId: string;
+  cohortDate: string;
   retentionData: Array<{
-    period: number
-    retainedUsers: number
-    totalUsers: number
-    retentionRate: number
-  }>
+    period: number;
+    retainedUsers: number;
+    totalUsers: number;
+    retentionRate: number;
+  }>;
 }
 
 export interface UserSegment {
-  id: string
-  name: string
-  description: string
-  criteria: Record<string, unknown>
-  userCount: number
-  characteristics: Record<string, unknown>
+  id: string;
+  name: string;
+  description: string;
+  criteria: Record<string, unknown>;
+  userCount: number;
+  characteristics: Record<string, unknown>;
 }
 
 export interface UserJourney {
-  userId: string
+  userId: string;
   journeySteps: Array<{
-    timestamp: string
-    action: string
-    context: Record<string, unknown>
-    outcome?: string
-  }>
+    timestamp: string;
+    action: string;
+    context: Record<string, unknown>;
+    outcome?: string;
+  }>;
   milestones: Array<{
-    name: string
-    achievedAt: string
-    significance: 'low' | 'medium' | 'high'
-  }>
+    name: string;
+    achievedAt: string;
+    significance: "low" | "medium" | "high";
+  }>;
 }
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type AnalyticsServiceErrorType = 
-  | 'network'
-  | 'authentication'
-  | 'authorization'
-  | 'validation'
-  | 'service'
-  | 'timeout'
+export type AnalyticsServiceErrorType =
+  | "network"
+  | "authentication"
+  | "authorization"
+  | "validation"
+  | "service"
+  | "timeout";
 
 /**
  * Standardized error response from analytics service.
@@ -614,21 +640,21 @@ export type AnalyticsServiceErrorType =
  */
 export interface AnalyticsServiceError {
   /** Type of error that occurred */
-  type: AnalyticsServiceErrorType
+  type: AnalyticsServiceErrorType;
   /** Human-readable error message */
-  message: string
+  message: string;
   /** Specific error code for programmatic handling */
-  code?: string
+  code?: string;
   /** Additional error details and context */
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>;
   /** Correlation ID for request tracing */
-  correlationId?: string
+  correlationId?: string;
   /** Whether this error can be recovered from with retry */
-  recoverable: boolean
+  recoverable: boolean;
   /** Seconds to wait before retrying (if recoverable) */
-  retryAfter?: number
+  retryAfter?: number;
   /** When the error occurred */
-  timestamp?: Date
+  timestamp?: Date;
 }
 
 /**
@@ -636,13 +662,13 @@ export interface AnalyticsServiceError {
  */
 export interface ValidationErrorDetail {
   /** Field that failed validation */
-  field: string
+  field: string;
   /** Validation error message */
-  message: string
+  message: string;
   /** Invalid value that was provided */
-  value?: unknown
+  value?: unknown;
   /** Expected value type or format */
-  expected?: string
+  expected?: string;
 }
 
 // ============================================================================
@@ -650,18 +676,18 @@ export interface ValidationErrorDetail {
 // ============================================================================
 
 export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
+  success: boolean;
+  data?: T;
   error?: {
-    message: string
-    code?: string
-    details?: Record<string, unknown>
-  }
+    message: string;
+    code?: string;
+    details?: Record<string, unknown>;
+  };
   metadata?: {
-    timestamp: string
-    correlationId?: string
-    requestId?: string
-  }
+    timestamp: string;
+    correlationId?: string;
+    requestId?: string;
+  };
 }
 
 // ============================================================================
@@ -669,28 +695,28 @@ export interface ApiResponse<T = unknown> {
 // ============================================================================
 
 export interface AnalyticsClientConfig {
-  baseUrl: string
-  wsUrl: string
-  timeout: number
-  retryAttempts: number
-  retryDelay: number
-  enableRealtime: boolean
-  enableCaching: boolean
-  enableRequestLogging: boolean
-  circuitBreaker: CircuitBreakerConfig
-  requestQueue: RequestQueueConfig
+  baseUrl: string;
+  wsUrl: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  enableRealtime: boolean;
+  enableCaching: boolean;
+  enableRequestLogging: boolean;
+  circuitBreaker: CircuitBreakerConfig;
+  requestQueue: RequestQueueConfig;
 }
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number
-  timeout: number
-  successThreshold: number
+  failureThreshold: number;
+  timeout: number;
+  successThreshold: number;
 }
 
 export interface RequestQueueConfig {
-  maxConcurrent: number
-  maxQueue: number
-  timeout: number
+  maxConcurrent: number;
+  maxQueue: number;
+  timeout: number;
 }
 
 // ============================================================================
@@ -698,55 +724,61 @@ export interface RequestQueueConfig {
 // ============================================================================
 
 export interface UseAnalyticsResult {
-  invalidateAnalytics: (queryKey?: unknown[]) => void
-  updateAnalyticsCache: (data: unknown, queryKey: unknown[]) => void
-  isConnected: boolean
-  connectionStatus: ConnectionStatus
+  invalidateAnalytics: (queryKey?: unknown[]) => void;
+  updateAnalyticsCache: (data: unknown, queryKey: unknown[]) => void;
+  isConnected: boolean;
+  connectionStatus: ConnectionStatus;
 }
 
 export interface UseEngagementMetricsResult {
-  engagementMetrics?: UserEngagementMetrics
-  isLoading: boolean
-  error?: AnalyticsServiceError
-  refetch: () => void
+  engagementMetrics?: UserEngagementMetrics;
+  isLoading: boolean;
+  error?: AnalyticsServiceError;
+  refetch: () => void;
 }
 
 export interface UseRealtimeMetricsResult {
-  isConnected: boolean
-  connectionStatus: ConnectionStatus
-  lastUpdate?: string
+  isConnected: boolean;
+  connectionStatus: ConnectionStatus;
+  lastUpdate?: string;
 }
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'disconnecting' | 'error'
+export type ConnectionStatus =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnecting"
+  | "error";
 
 /**
  * WebSocket connection configuration.
  */
 export interface WebSocketConfig {
   /** WebSocket server URL */
-  url: string
+  url: string;
   /** WebSocket protocols */
-  protocols?: string[]
+  protocols?: string[];
   /** Maximum reconnection attempts */
-  maxReconnectAttempts: number
+  maxReconnectAttempts: number;
   /** Reconnection delay in milliseconds */
-  reconnectDelay: number
+  reconnectDelay: number;
   /** Heartbeat interval in milliseconds */
-  heartbeatInterval: number
+  heartbeatInterval: number;
   /** Connection timeout in milliseconds */
-  connectionTimeout: number
+  connectionTimeout: number;
   /** Enable request logging */
-  enableLogging?: boolean
+  enableLogging?: boolean;
   /** Enable metrics collection */
-  enableMetrics?: boolean
+  enableMetrics?: boolean;
   /** Maximum message queue size */
-  maxMessageQueue?: number
+  maxMessageQueue?: number;
   /** Message timeout in milliseconds */
-  messageTimeout?: number
+  messageTimeout?: number;
   /** Whether to use exponential backoff for reconnection */
-  useExponentialBackoff?: boolean
+  useExponentialBackoff?: boolean;
   /** Authentication token for WebSocket connection */
-  authToken?: string
+  authToken?: string;
 }
 
 /**
@@ -754,83 +786,83 @@ export interface WebSocketConfig {
  */
 export interface WebSocketConnectionState {
   /** Current connection status */
-  status: ConnectionStatus
+  status: ConnectionStatus;
   /** Connection attempt count */
-  attemptCount: number
+  attemptCount: number;
   /** Last connection error */
-  lastError?: Error
+  lastError?: Error;
   /** Connection established timestamp */
-  connectedAt?: Date
+  connectedAt?: Date;
   /** Last heartbeat timestamp */
-  lastHeartbeat?: Date
+  lastHeartbeat?: Date;
   /** Active subscriptions */
-  subscriptions: Map<string, SubscriptionHandler>
+  subscriptions: Map<string, SubscriptionHandler>;
   /** Message queue for offline messages */
-  messageQueue: WebSocketMessage[]
+  messageQueue: WebSocketMessage[];
 }
 
 /**
  * Subscription handler function type.
  */
-export type SubscriptionHandler = (message: WebSocketMessage) => void
+export type SubscriptionHandler = (message: WebSocketMessage) => void;
 
 /**
  * WebSocket message routing configuration.
  */
 export interface MessageRouterConfig {
   /** Default handler for unrouted messages */
-  defaultHandler?: SubscriptionHandler
+  defaultHandler?: SubscriptionHandler;
   /** Error handler for message processing errors */
-  errorHandler?: (error: Error, message: WebSocketMessage) => void
+  errorHandler?: (error: Error, message: WebSocketMessage) => void;
   /** Whether to validate message schemas */
-  validateMessages: boolean
+  validateMessages: boolean;
   /** Maximum message queue size */
-  maxQueueSize: number
+  maxQueueSize: number;
 }
 
 // ============================================================================
 // Permission Types
 // ============================================================================
 
-export type UserRole = 'admin' | 'mentor' | 'learner'
+export type UserRole = "admin" | "mentor" | "learner";
 
-export type AnalyticsFeature = 
-  | 'engagement-dashboard'
-  | 'progress-tracking'
-  | 'content-analytics'
-  | 'system-monitoring'
-  | 'alert-management'
-  | 'behavior-insights'
-  | 'effectiveness-reports'
-  | 'user-analytics'
-  | 'system-metrics'
-  | 'data-export'
-  | 'realtime-updates'
+export type AnalyticsFeature =
+  | "engagement-dashboard"
+  | "progress-tracking"
+  | "content-analytics"
+  | "system-monitoring"
+  | "alert-management"
+  | "behavior-insights"
+  | "effectiveness-reports"
+  | "user-analytics"
+  | "system-metrics"
+  | "data-export"
+  | "realtime-updates";
 
-export type AnalyticsDataType = 
-  | 'engagement'
-  | 'progress'
-  | 'content'
-  | 'system'
-  | 'alerts'
-  | 'insights'
-  | 'reports'
-  | 'user-analytics'
-  | 'system-metrics'
+export type AnalyticsDataType =
+  | "engagement"
+  | "progress"
+  | "content"
+  | "system"
+  | "alerts"
+  | "insights"
+  | "reports"
+  | "user-analytics"
+  | "system-metrics";
 
 export interface AnalyticsPermissions {
-  viewEngagement: boolean
-  viewProgress: boolean
-  viewContent: boolean
-  viewSystem: boolean
-  viewAlerts: boolean
-  viewInsights: boolean
-  viewReports: boolean
-  viewUserAnalytics: boolean
-  viewSystemMetrics: boolean
-  manageAlerts: boolean
-  exportData: boolean
-  viewRealtime: boolean
+  viewEngagement: boolean;
+  viewProgress: boolean;
+  viewContent: boolean;
+  viewSystem: boolean;
+  viewAlerts: boolean;
+  viewInsights: boolean;
+  viewReports: boolean;
+  viewUserAnalytics: boolean;
+  viewSystemMetrics: boolean;
+  manageAlerts: boolean;
+  exportData: boolean;
+  viewRealtime: boolean;
 }
 
 // ============================================================================
@@ -838,30 +870,49 @@ export interface AnalyticsPermissions {
 // ============================================================================
 
 export interface AnalyticsServiceClient {
-  getEngagementMetrics: (params?: EngagementMetricsParams) => Promise<UserEngagementMetrics>
-  getProgressMetrics: (params?: ProgressMetricsParams) => Promise<LearningProgressMetrics>
-  getContentMetrics: (params?: ContentMetricsParams) => Promise<ContentPerformanceMetrics>
-  getSystemMetrics: (params?: SystemMetricsParams) => Promise<SystemPerformanceMetrics>
-  getRealtimeSnapshot: () => Promise<RealtimeMetricsSnapshot>
-  queryHistoricalMetrics: (query: HistoricalQuery) => Promise<TimeSeriesData[]>
-  getBehaviorInsights: (userId?: string) => Promise<BehaviorInsights>
-  getContentGaps: () => Promise<ContentGapAnalysis>
-  getEffectivenessReport: (filters?: ReportFilters) => Promise<EffectivenessReport>
-  getAlerts: (severity?: AlertSeverity) => Promise<Alert[]>
-  getSystemStatus: () => Promise<ServiceHealthStatus>
-  getHourlyEngagement: (userId: string, date?: Date) => Promise<HourlyEngagement>
-  getCohortRetention: (cohortId: string) => Promise<CohortRetention>
-  getUserSegments: () => Promise<UserSegment[]>
-  getUserJourney: (userId: string) => Promise<UserJourney>
-  getHealthStatus: () => Promise<ServiceHealthStatus>
-  testConnectivity: () => Promise<{ success: boolean; latency: number }>
+  getEngagementMetrics: (
+    params?: EngagementMetricsParams,
+  ) => Promise<UserEngagementMetrics>;
+  getProgressMetrics: (
+    params?: ProgressMetricsParams,
+  ) => Promise<LearningProgressMetrics>;
+  getContentMetrics: (
+    params?: ContentMetricsParams,
+  ) => Promise<ContentPerformanceMetrics>;
+  getSystemMetrics: (
+    params?: SystemMetricsParams,
+  ) => Promise<SystemPerformanceMetrics>;
+  getRealtimeSnapshot: () => Promise<RealtimeMetricsSnapshot>;
+  queryHistoricalMetrics: (query: HistoricalQuery) => Promise<TimeSeriesData[]>;
+  getBehaviorInsights: (userId?: string) => Promise<BehaviorInsights>;
+  getContentGaps: () => Promise<ContentGapAnalysis>;
+  getEffectivenessReport: (
+    filters?: ReportFilters,
+  ) => Promise<EffectivenessReport>;
+  getAlerts: (severity?: AlertSeverity) => Promise<Alert[]>;
+  getSystemStatus: () => Promise<ServiceHealthStatus>;
+  getHourlyEngagement: (
+    userId: string,
+    date?: Date,
+  ) => Promise<HourlyEngagement>;
+  getCohortRetention: (cohortId: string) => Promise<CohortRetention>;
+  getUserSegments: () => Promise<UserSegment[]>;
+  getUserJourney: (userId: string) => Promise<UserJourney>;
+  getHealthStatus: () => Promise<ServiceHealthStatus>;
+  testConnectivity: () => Promise<{ success: boolean; latency: number }>;
 }
 
 export interface CompleteAnalyticsWebSocketManager {
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  addEventListener: (event: string, handler: (data: WebSocketMessage) => void) => void
-  removeEventListener: (event: string, handler: (data: WebSocketMessage) => void) => void
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  addEventListener: (
+    event: string,
+    handler: (data: WebSocketMessage) => void,
+  ) => void;
+  removeEventListener: (
+    event: string,
+    handler: (data: WebSocketMessage) => void,
+  ) => void;
 }
 
 // ============================================================================
@@ -870,48 +921,48 @@ export interface CompleteAnalyticsWebSocketManager {
 
 export interface AnalyticsContextValue {
   // Core clients
-  client: AnalyticsServiceClient
-  webSocketManager: CompleteAnalyticsWebSocketManager
-  
+  client: AnalyticsServiceClient;
+  webSocketManager: CompleteAnalyticsWebSocketManager;
+
   // Connection state
-  isConnected: boolean
-  connectionStatus: ConnectionStatus
-  lastConnectionAttempt: Date | null
-  
+  isConnected: boolean;
+  connectionStatus: ConnectionStatus;
+  lastConnectionAttempt: Date | null;
+
   // Configuration
-  config: AnalyticsServiceConfig
-  permissions: AnalyticsPermissions
-  
+  config: AnalyticsServiceConfig;
+  permissions: AnalyticsPermissions;
+
   // Service health
-  serviceHealth: ServiceHealthStatus | null
-  isServiceAvailable: boolean
-  
+  serviceHealth: ServiceHealthStatus | null;
+  isServiceAvailable: boolean;
+
   // Operations
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  reconnect: () => Promise<void>
-  refreshPermissions: () => Promise<void>
-  checkServiceHealth: () => Promise<void>
-  
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  reconnect: () => Promise<void>;
+  refreshPermissions: () => Promise<void>;
+  checkServiceHealth: () => Promise<void>;
+
   // State management
-  isInitialized: boolean
-  isInitializing: boolean
-  initializationError: Error | null
+  isInitialized: boolean;
+  isInitializing: boolean;
+  initializationError: Error | null;
 }
 
 // User Context Types
 export interface UserContext {
-  userId: string
-  role: UserRole
-  classIds?: string[]
-  permissions: AnalyticsPermissions
-  organizationId?: string
-  teamIds?: string[]
+  userId: string;
+  role: UserRole;
+  classIds?: string[];
+  permissions: AnalyticsPermissions;
+  organizationId?: string;
+  teamIds?: string[];
 }
 
 export interface FilteredRequest<T = unknown> {
-  originalParams: T
-  filteredParams: T
-  appliedFilters: string[]
-  restrictions: string[]
+  originalParams: T;
+  filteredParams: T;
+  appliedFilters: string[];
+  restrictions: string[];
 }

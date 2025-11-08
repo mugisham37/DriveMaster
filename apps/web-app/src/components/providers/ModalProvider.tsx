@@ -30,7 +30,7 @@ export function ModalProvider({
   const userJoinedDaysAgo = user?.createdAt
     ? Math.floor(
         (Date.now() - new Date(user.createdAt).getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       )
     : 0;
 

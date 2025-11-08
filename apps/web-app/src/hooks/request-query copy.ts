@@ -4,40 +4,40 @@ import {
   type UseQueryResult,
   type UseQueryOptions,
   keepPreviousData,
-} from '@tanstack/react-query'
-import { camelizeKeys, decamelizeKeys } from 'humps'
-import { sendRequest } from '../utils/send-request'
-import { stringify } from 'qs'
+} from "@tanstack/react-query";
+import { camelizeKeys, decamelizeKeys } from "humps";
+import { sendRequest } from "../utils/send-request";
+import { stringify } from "qs";
 
 export type Request<Query = Record<string, unknown>> = {
-  endpoint: string | undefined
-  query?: Query
-  options: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>
-}
+  endpoint: string | undefined;
+  query?: Query;
+  options: Omit<UseQueryOptions, "queryKey" | "queryFn">;
+};
 
 function handleFetch(request: Request) {
   const delimiter =
-    request.endpoint && request.endpoint.includes('?') ? '&' : '?'
+    request.endpoint && request.endpoint.includes("?") ? "&" : "?";
   const params = request.query
     ? `${delimiter}${stringify(decamelizeKeys(request.query), {
-        arrayFormat: 'brackets',
+        arrayFormat: "brackets",
       })}`
-    : ''
+    : "";
 
   return () => {
     const result = sendRequest({
       endpoint: `${request.endpoint}${params}`,
-      body: '',
-      method: 'GET',
-    })
+      body: "",
+      method: "GET",
+    });
 
-    return result.fetch
-  }
+    return result.fetch;
+  };
 }
 
 export function usePaginatedRequestQuery<TResult = unknown, TError = unknown>(
   key: QueryKey,
-  request: Request
+  request: Request,
 ): UseQueryResult<TResult, TError> {
   return useQuery<TResult, TError>({
     queryKey: key,
@@ -46,12 +46,12 @@ export function usePaginatedRequestQuery<TResult = unknown, TError = unknown>(
     refetchOnMount: false,
     placeholderData: keepPreviousData,
     ...camelizeKeys(request.options),
-  })
+  });
 }
 
 export function useRequestQuery<TResult = unknown, TError = unknown>(
   key: QueryKey,
-  request: Request
+  request: Request,
 ): UseQueryResult<TResult, TError> {
   return useQuery<TResult, TError>({
     queryKey: key,
@@ -59,5 +59,5 @@ export function useRequestQuery<TResult = unknown, TError = unknown>(
     refetchOnWindowFocus: false,
     staleTime: 1000 * 30,
     ...camelizeKeys(request.options),
-  })
+  });
 }

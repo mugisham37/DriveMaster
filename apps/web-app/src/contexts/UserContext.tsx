@@ -434,7 +434,7 @@ export interface UserContextValue {
   // Validation
   validateProfile: (profile: Partial<UserProfile>) => Record<string, string>;
   validatePreferences: (
-    preferences: Partial<PreferencesData>
+    preferences: Partial<PreferencesData>,
   ) => Record<string, string>;
 
   // Utility functions
@@ -452,16 +452,16 @@ export interface UserContextValue {
   generateDisplayName: () => string;
   linkAccount: (
     provider: string,
-    credentials: Record<string, unknown>
+    credentials: Record<string, unknown>,
   ) => Promise<void>;
 
   // Error handling and recovery
   getErrorMessage: (error: UserServiceError) => string;
   getRecoveryActions: (
-    error: UserServiceError
+    error: UserServiceError,
   ) => Array<{ label: string; action: () => void }>;
   retryFailedOperation: (
-    operationType: "profile" | "preferences"
+    operationType: "profile" | "preferences",
   ) => Promise<void>;
 }
 
@@ -472,7 +472,7 @@ const UserContext = createContext<UserContextValue | null>(null);
 // ============================================================================
 
 function validateUserProfile(
-  profile: Partial<UserProfile>
+  profile: Partial<UserProfile>,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
 
@@ -508,7 +508,7 @@ function validateUserProfile(
 }
 
 function validateUserPreferences(
-  preferences: Partial<PreferencesData>
+  preferences: Partial<PreferencesData>,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
 
@@ -527,7 +527,7 @@ function validateUserPreferences(
   if (preferences.learning?.difficulty !== undefined) {
     if (
       !["beginner", "intermediate", "advanced"].includes(
-        preferences.learning.difficulty
+        preferences.learning.difficulty,
       )
     ) {
       errors["learning.difficulty"] =
@@ -544,7 +544,7 @@ function validateUserPreferences(
   if (preferences.privacy?.profileVisibility !== undefined) {
     if (
       !["public", "private", "friends"].includes(
-        preferences.privacy.profileVisibility
+        preferences.privacy.profileVisibility,
       )
     ) {
       errors["privacy.profileVisibility"] =
@@ -580,7 +580,7 @@ export function UserProvider({ children }: UserProviderProps) {
     queryFn: () => userServiceClient.getUser(userId!),
     enabled: !!userId && isAuthenticated,
     ...createUserServiceQueryOptions<UserProfile, UserServiceError>(
-      CACHE_TIMES.USER_PROFILE
+      CACHE_TIMES.USER_PROFILE,
     ),
   });
 
@@ -590,7 +590,7 @@ export function UserProvider({ children }: UserProviderProps) {
     queryFn: () => userServiceClient.getUserPreferences(userId!),
     enabled: !!userId && isAuthenticated,
     ...createUserServiceQueryOptions<UserPreferences, UserServiceError>(
-      CACHE_TIMES.USER_PREFERENCES
+      CACHE_TIMES.USER_PREFERENCES,
     ),
   });
 
@@ -623,7 +623,7 @@ export function UserProvider({ children }: UserProviderProps) {
           await optimisticUpdateManager.optimisticUserProfileUpdate(
             userId!,
             (oldProfile) =>
-              oldProfile ? { ...oldProfile, ...updates } : optimisticProfile
+              oldProfile ? { ...oldProfile, ...updates } : optimisticProfile,
           );
         return context;
       }
@@ -645,7 +645,7 @@ export function UserProvider({ children }: UserProviderProps) {
         const optimisticUpdateManager = getOptimisticUpdateManager();
         optimisticUpdateManager.rollback(
           context.queryKey,
-          context.previousData
+          context.previousData,
         );
         dispatch({ type: "PROFILE_ROLLBACK_OPTIMISTIC" });
       }
@@ -690,7 +690,7 @@ export function UserProvider({ children }: UserProviderProps) {
                       ...preferences,
                     },
                   }
-                : optimisticPreferences
+                : optimisticPreferences,
           );
         return context;
       }
@@ -715,7 +715,7 @@ export function UserProvider({ children }: UserProviderProps) {
         const optimisticUpdateManager = getOptimisticUpdateManager();
         optimisticUpdateManager.rollback(
           context.queryKey,
-          context.previousData
+          context.previousData,
         );
         dispatch({ type: "PREFERENCES_ROLLBACK_OPTIMISTIC" });
       }
@@ -821,7 +821,7 @@ export function UserProvider({ children }: UserProviderProps) {
       });
       await profileUpdateMutation.mutateAsync(updates);
     },
-    [profileUpdateMutation]
+    [profileUpdateMutation],
   );
 
   const refreshProfile = useCallback(async () => {
@@ -854,7 +854,7 @@ export function UserProvider({ children }: UserProviderProps) {
       });
       await preferencesUpdateMutation.mutateAsync(preferences);
     },
-    [preferencesUpdateMutation]
+    [preferencesUpdateMutation],
   );
 
   const resetPreferences = useCallback(async () => {
@@ -906,7 +906,7 @@ export function UserProvider({ children }: UserProviderProps) {
     (preferences: Partial<PreferencesData>) => {
       return validateUserPreferences(preferences);
     },
-    []
+    [],
   );
 
   const clearError = useCallback((errorType?: "profile" | "preferences") => {
@@ -983,7 +983,7 @@ export function UserProvider({ children }: UserProviderProps) {
         throw error;
       }
     },
-    [userId]
+    [userId],
   );
 
   const checkProfileCompleteness = useCallback(() => {
@@ -1028,7 +1028,8 @@ export function UserProvider({ children }: UserProviderProps) {
           .replace(/[._-]/g, " ")
           .split(" ")
           .map(
-            (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            (part) =>
+              part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
           )
           .join(" ");
 
@@ -1057,7 +1058,7 @@ export function UserProvider({ children }: UserProviderProps) {
         // Parameters are intentionally unused as this is a placeholder implementation
         // For now, we'll throw an error indicating this needs auth-service integration
         throw new Error(
-          "Account linking requires auth-service integration - not implemented in user-service"
+          "Account linking requires auth-service integration - not implemented in user-service",
         );
       } catch (error) {
         const userServiceError: UserServiceError =
@@ -1080,7 +1081,7 @@ export function UserProvider({ children }: UserProviderProps) {
         throw error;
       }
     },
-    [userId]
+    [userId],
   );
 
   // ============================================================================
@@ -1100,7 +1101,7 @@ export function UserProvider({ children }: UserProviderProps) {
         // Error is already handled by the fetch functions
       }
     },
-    [fetchProfile, fetchPreferences]
+    [fetchProfile, fetchPreferences],
   );
 
   const recoverFromError = useCallback(
@@ -1184,7 +1185,7 @@ export function UserProvider({ children }: UserProviderProps) {
       state.preferencesError,
       retryFailedOperation,
       clearAllErrors,
-    ]
+    ],
   );
 
   // Auto-recovery effect
@@ -1298,7 +1299,7 @@ export function UserProvider({ children }: UserProviderProps) {
       state.preferencesError,
       retryFailedOperation,
       clearAllErrors,
-    ]
+    ],
   );
 
   // ============================================================================

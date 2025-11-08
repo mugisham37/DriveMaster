@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 /**
  * Privacy Alerts Component - Privacy Notifications and Incident Management
- * 
+ *
  * Implements:
  * - Privacy alert display and management
  * - Incident reporting and handling
@@ -11,17 +11,17 @@
  * - Requirements: 5.4, 8.4, 8.5
  */
 
-import React, { useState, useEffect } from 'react'
-import { useGDPR } from '@/contexts/GDPRContext'
-import type { PrivacyAlert, PrivacyIncident } from '@/contexts/GDPRContext'
+import React, { useState, useEffect } from "react";
+import { useGDPR } from "@/contexts/GDPRContext";
+import type { PrivacyAlert, PrivacyIncident } from "@/contexts/GDPRContext";
 
 // ============================================================================
 // Component Props
 // ============================================================================
 
 export interface PrivacyAlertsProps {
-  alerts: PrivacyAlert[]
-  className?: string
+  alerts: PrivacyAlert[];
+  className?: string;
 }
 
 // ============================================================================
@@ -30,86 +30,85 @@ export interface PrivacyAlertsProps {
 
 const ALERT_CONFIG = {
   consent_expiry: {
-    title: 'Consent Expiry',
-    icon: '⏰',
-    defaultMessage: 'Some of your consent preferences are expiring soon',
+    title: "Consent Expiry",
+    icon: "⏰",
+    defaultMessage: "Some of your consent preferences are expiring soon",
   },
   data_breach: {
-    title: 'Data Breach Notification',
-    icon: '🚨',
-    defaultMessage: 'We have detected a potential data security incident',
+    title: "Data Breach Notification",
+    icon: "🚨",
+    defaultMessage: "We have detected a potential data security incident",
   },
   policy_update: {
-    title: 'Privacy Policy Update',
-    icon: '📋',
-    defaultMessage: 'Our privacy policy has been updated',
+    title: "Privacy Policy Update",
+    icon: "📋",
+    defaultMessage: "Our privacy policy has been updated",
   },
   rights_request: {
-    title: 'Rights Request Update',
-    icon: '⚖️',
-    defaultMessage: 'There is an update on your privacy rights request',
+    title: "Rights Request Update",
+    icon: "⚖️",
+    defaultMessage: "There is an update on your privacy rights request",
   },
-} as const
+} as const;
 
 const SEVERITY_CONFIG = {
   low: {
-    color: 'blue',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    textColor: 'text-blue-800',
-    icon: 'ℹ️',
+    color: "blue",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    textColor: "text-blue-800",
+    icon: "ℹ️",
   },
   medium: {
-    color: 'yellow',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    textColor: 'text-yellow-800',
-    icon: '⚠️',
+    color: "yellow",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
+    textColor: "text-yellow-800",
+    icon: "⚠️",
   },
   high: {
-    color: 'orange',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    textColor: 'text-orange-800',
-    icon: '🔶',
+    color: "orange",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
+    textColor: "text-orange-800",
+    icon: "🔶",
   },
   critical: {
-    color: 'red',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    textColor: 'text-red-800',
-    icon: '🚨',
+    color: "red",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
+    textColor: "text-red-800",
+    icon: "🚨",
   },
-} as const
+} as const;
 
 // ============================================================================
 // Main Component
 // ============================================================================
 
-export function PrivacyAlerts({
-  alerts,
-  className = '',
-}: PrivacyAlertsProps) {
+export function PrivacyAlerts({ alerts, className = "" }: PrivacyAlertsProps) {
   const {
     acknowledgePrivacyAlert,
     reportPrivacyIncident,
     isUpdating,
     error,
     clearError,
-  } = useGDPR()
+  } = useGDPR();
 
-  const [showIncidentForm, setShowIncidentForm] = useState(false)
+  const [showIncidentForm, setShowIncidentForm] = useState(false);
   const [incidentData, setIncidentData] = useState<Partial<PrivacyIncident>>({
-    type: 'policy_violation',
-    severity: 'medium',
-    description: '',
+    type: "policy_violation",
+    severity: "medium",
+    description: "",
     affectedData: [],
     discoveredAt: new Date(),
-    reportedBy: 'user',
+    reportedBy: "user",
     details: {},
-  })
-  const [filterSeverity, setFilterSeverity] = useState<PrivacyAlert['severity'] | 'all'>('all')
-  const [sortBy, setSortBy] = useState<'date' | 'severity'>('date')
+  });
+  const [filterSeverity, setFilterSeverity] = useState<
+    PrivacyAlert["severity"] | "all"
+  >("all");
+  const [sortBy, setSortBy] = useState<"date" | "severity">("date");
 
   // ============================================================================
   // Event Handlers
@@ -117,76 +116,80 @@ export function PrivacyAlerts({
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      await acknowledgePrivacyAlert(alertId)
+      await acknowledgePrivacyAlert(alertId);
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error)
+      console.error("Failed to acknowledge alert:", error);
     }
-  }
+  };
 
   const handleReportIncident = async () => {
-    if (!incidentData.description?.trim()) return
+    if (!incidentData.description?.trim()) return;
 
     try {
-      await reportPrivacyIncident(incidentData as PrivacyIncident)
-      
+      await reportPrivacyIncident(incidentData as PrivacyIncident);
+
       // Reset form
       setIncidentData({
-        type: 'policy_violation',
-        severity: 'medium',
-        description: '',
+        type: "policy_violation",
+        severity: "medium",
+        description: "",
         affectedData: [],
         discoveredAt: new Date(),
-        reportedBy: 'user',
+        reportedBy: "user",
         details: {},
-      })
-      setShowIncidentForm(false)
-      
+      });
+      setShowIncidentForm(false);
     } catch (error) {
-      console.error('Failed to report incident:', error)
+      console.error("Failed to report incident:", error);
     }
-  }
+  };
 
-  const handleIncidentDataChange = (field: keyof PrivacyIncident, value: any) => {
-    setIncidentData(prev => ({ ...prev, [field]: value }))
-  }
+  const handleIncidentDataChange = (
+    field: keyof PrivacyIncident,
+    value: any,
+  ) => {
+    setIncidentData((prev) => ({ ...prev, [field]: value }));
+  };
 
   // ============================================================================
   // Computed Values
   // ============================================================================
 
-  const filteredAlerts = alerts.filter(alert => {
-    if (filterSeverity === 'all') return true
-    return alert.severity === filterSeverity
-  })
+  const filteredAlerts = alerts.filter((alert) => {
+    if (filterSeverity === "all") return true;
+    return alert.severity === filterSeverity;
+  });
 
   const sortedAlerts = [...filteredAlerts].sort((a, b) => {
-    if (sortBy === 'severity') {
-      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
-      return severityOrder[b.severity] - severityOrder[a.severity]
+    if (sortBy === "severity") {
+      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+      return severityOrder[b.severity] - severityOrder[a.severity];
     }
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
-  const unacknowledgedAlerts = alerts.filter(alert => !alert.acknowledged)
-  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical' && !alert.acknowledged)
-  const expiredAlerts = alerts.filter(alert => 
-    alert.expiresAt && new Date() > new Date(alert.expiresAt)
-  )
+  const unacknowledgedAlerts = alerts.filter((alert) => !alert.acknowledged);
+  const criticalAlerts = alerts.filter(
+    (alert) => alert.severity === "critical" && !alert.acknowledged,
+  );
+  const expiredAlerts = alerts.filter(
+    (alert) => alert.expiresAt && new Date() > new Date(alert.expiresAt),
+  );
 
   // ============================================================================
   // Render Helpers
   // ============================================================================
 
   const renderAlert = (alert: PrivacyAlert) => {
-    const severityConfig = SEVERITY_CONFIG[alert.severity]
-    const alertConfig = ALERT_CONFIG[alert.type]
-    const isExpired = alert.expiresAt && new Date() > new Date(alert.expiresAt)
+    const severityConfig = SEVERITY_CONFIG[alert.severity];
+    const alertConfig = ALERT_CONFIG[alert.type];
+    const isExpired = alert.expiresAt && new Date() > new Date(alert.expiresAt);
 
     return (
       <div
         key={alert.id}
         className={`${severityConfig.bgColor} ${severityConfig.borderColor} border rounded-lg p-6 ${
-          alert.acknowledged ? 'opacity-75' : ''
+          alert.acknowledged ? "opacity-75" : ""
         }`}
       >
         <div className="flex items-start">
@@ -199,7 +202,9 @@ export function PrivacyAlerts({
                 <h3 className={`font-semibold ${severityConfig.textColor}`}>
                   {alert.title}
                 </h3>
-                <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${severityConfig.color}-100 text-${severityConfig.color}-800`}>
+                <span
+                  className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${severityConfig.color}-100 text-${severityConfig.color}-800`}
+                >
                   {alert.severity}
                 </span>
                 {alert.actionRequired && (
@@ -208,7 +213,7 @@ export function PrivacyAlerts({
                   </span>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 {alert.actionUrl && (
                   <a
@@ -229,21 +234,24 @@ export function PrivacyAlerts({
                 )}
               </div>
             </div>
-            
+
             <p className={`${severityConfig.textColor} mb-3`}>
               {alert.message}
             </p>
-            
+
             <div className="flex items-center justify-between text-sm">
               <div className={`${severityConfig.textColor} opacity-75`}>
-                <span>Created: {new Date(alert.createdAt).toLocaleString()}</span>
+                <span>
+                  Created: {new Date(alert.createdAt).toLocaleString()}
+                </span>
                 {alert.expiresAt && (
                   <span className="ml-4">
-                    {isExpired ? 'Expired:' : 'Expires:'} {new Date(alert.expiresAt).toLocaleString()}
+                    {isExpired ? "Expired:" : "Expires:"}{" "}
+                    {new Date(alert.expiresAt).toLocaleString()}
                   </span>
                 )}
               </div>
-              
+
               {alert.acknowledged && (
                 <span className="text-green-600 text-sm font-medium">
                   ✓ Acknowledged
@@ -259,8 +267,8 @@ export function PrivacyAlerts({
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const renderIncidentForm = () => (
     <div className="bg-white border-2 border-red-200 rounded-lg p-6">
@@ -284,7 +292,7 @@ export function PrivacyAlerts({
             </label>
             <select
               value={incidentData.type}
-              onChange={(e) => handleIncidentDataChange('type', e.target.value)}
+              onChange={(e) => handleIncidentDataChange("type", e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option value="data_breach">Data Breach</option>
@@ -293,14 +301,16 @@ export function PrivacyAlerts({
               <option value="policy_violation">Policy Violation</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Severity
             </label>
             <select
               value={incidentData.severity}
-              onChange={(e) => handleIncidentDataChange('severity', e.target.value)}
+              onChange={(e) =>
+                handleIncidentDataChange("severity", e.target.value)
+              }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             >
               <option value="low">Low</option>
@@ -317,7 +327,9 @@ export function PrivacyAlerts({
           </label>
           <textarea
             value={incidentData.description}
-            onChange={(e) => handleIncidentDataChange('description', e.target.value)}
+            onChange={(e) =>
+              handleIncidentDataChange("description", e.target.value)
+            }
             rows={4}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             placeholder="Describe the privacy incident in detail..."
@@ -330,8 +342,16 @@ export function PrivacyAlerts({
           </label>
           <input
             type="text"
-            value={incidentData.affectedData?.join(', ')}
-            onChange={(e) => handleIncidentDataChange('affectedData', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+            value={incidentData.affectedData?.join(", ")}
+            onChange={(e) =>
+              handleIncidentDataChange(
+                "affectedData",
+                e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              )
+            }
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
             placeholder="e.g., email addresses, profile data, activity logs"
           />
@@ -350,11 +370,11 @@ export function PrivacyAlerts({
           disabled={!incidentData.description?.trim() || isUpdating}
           className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
-          {isUpdating ? 'Reporting...' : 'Report Incident'}
+          {isUpdating ? "Reporting..." : "Report Incident"}
         </button>
       </div>
     </div>
-  )
+  );
 
   const renderAlertStats = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -367,7 +387,9 @@ export function PrivacyAlerts({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">Total Alerts</p>
-            <p className="text-lg font-semibold text-blue-600">{alerts.length}</p>
+            <p className="text-lg font-semibold text-blue-600">
+              {alerts.length}
+            </p>
           </div>
         </div>
       </div>
@@ -381,7 +403,9 @@ export function PrivacyAlerts({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">Unacknowledged</p>
-            <p className="text-lg font-semibold text-yellow-600">{unacknowledgedAlerts.length}</p>
+            <p className="text-lg font-semibold text-yellow-600">
+              {unacknowledgedAlerts.length}
+            </p>
           </div>
         </div>
       </div>
@@ -395,7 +419,9 @@ export function PrivacyAlerts({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">Critical</p>
-            <p className="text-lg font-semibold text-red-600">{criticalAlerts.length}</p>
+            <p className="text-lg font-semibold text-red-600">
+              {criticalAlerts.length}
+            </p>
           </div>
         </div>
       </div>
@@ -409,12 +435,14 @@ export function PrivacyAlerts({
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">Expired</p>
-            <p className="text-lg font-semibold text-gray-600">{expiredAlerts.length}</p>
+            <p className="text-lg font-semibold text-gray-600">
+              {expiredAlerts.length}
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 
   // ============================================================================
   // Render
@@ -430,7 +458,7 @@ export function PrivacyAlerts({
             Important privacy notifications and security updates
           </p>
         </div>
-        
+
         <button
           onClick={() => setShowIncidentForm(true)}
           className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
@@ -471,7 +499,9 @@ export function PrivacyAlerts({
         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
           <div className="flex items-center space-x-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mr-2">Filter by severity:</label>
+              <label className="text-sm font-medium text-gray-700 mr-2">
+                Filter by severity:
+              </label>
               <select
                 value={filterSeverity}
                 onChange={(e) => setFilterSeverity(e.target.value as any)}
@@ -484,9 +514,11 @@ export function PrivacyAlerts({
                 <option value="low">Low</option>
               </select>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-700 mr-2">Sort by:</label>
+              <label className="text-sm font-medium text-gray-700 mr-2">
+                Sort by:
+              </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
@@ -497,7 +529,7 @@ export function PrivacyAlerts({
               </select>
             </div>
           </div>
-          
+
           <div className="text-sm text-gray-600">
             Showing {sortedAlerts.length} of {alerts.length} alerts
           </div>
@@ -511,13 +543,14 @@ export function PrivacyAlerts({
             <div className="text-center py-12">
               <span className="text-6xl mb-4 block">🔔</span>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {filterSeverity === 'all' ? 'No Privacy Alerts' : `No ${filterSeverity} alerts`}
+                {filterSeverity === "all"
+                  ? "No Privacy Alerts"
+                  : `No ${filterSeverity} alerts`}
               </h3>
               <p className="text-gray-600">
-                {filterSeverity === 'all' 
-                  ? 'You have no privacy alerts at this time.'
-                  : `You have no ${filterSeverity} severity alerts.`
-                }
+                {filterSeverity === "all"
+                  ? "You have no privacy alerts at this time."
+                  : `You have no ${filterSeverity} severity alerts.`}
               </p>
             </div>
           ) : (
@@ -545,7 +578,7 @@ export function PrivacyAlerts({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default PrivacyAlerts
+export default PrivacyAlerts;

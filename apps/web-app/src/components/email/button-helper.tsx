@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 /**
  * Email button helper utility
@@ -6,14 +6,14 @@ import React from 'react'
  */
 
 export interface EmailButtonOptions {
-  text: string
-  href: string
-  backgroundColor?: string
-  textColor?: string
-  borderColor?: string
-  fontSize?: string
-  padding?: string
-  borderRadius?: string
+  text: string;
+  href: string;
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  fontSize?: string;
+  padding?: string;
+  borderRadius?: string;
 }
 
 /**
@@ -21,18 +21,18 @@ export interface EmailButtonOptions {
  * Equivalent to Ruby's email_button_to helper
  */
 export function emailButtonTo(
-  text: string, 
-  href: string, 
-  options: Partial<EmailButtonOptions> = {}
+  text: string,
+  href: string,
+  options: Partial<EmailButtonOptions> = {},
 ): string {
   const {
-    backgroundColor = '#604FCD',
-    textColor = '#ffffff',
-    borderColor = '#130B43',
-    fontSize = '20px',
-    padding = '15px 25px',
-    borderRadius = '5px'
-  } = options
+    backgroundColor = "#604FCD",
+    textColor = "#ffffff",
+    borderColor = "#130B43",
+    fontSize = "20px",
+    padding = "15px 25px",
+    borderRadius = "5px",
+  } = options;
 
   return `
     <table border="0" cellspacing="0" cellpadding="0">
@@ -44,7 +44,7 @@ export function emailButtonTo(
         </td>
       </tr>
     </table>
-  `.trim()
+  `.trim();
 }
 
 /**
@@ -52,18 +52,18 @@ export function emailButtonTo(
  */
 export interface EmailButtonProps extends EmailButtonOptions {
   // Additional props for React component
-  className?: string
+  className?: string;
 }
 
-export function EmailButton({ 
-  text, 
-  href, 
-  backgroundColor = '#604FCD',
-  textColor = '#ffffff',
-  borderColor = '#130B43',
-  fontSize = '20px',
-  padding = '15px 25px',
-  borderRadius = '5px'
+export function EmailButton({
+  text,
+  href,
+  backgroundColor = "#604FCD",
+  textColor = "#ffffff",
+  borderColor = "#130B43",
+  fontSize = "20px",
+  padding = "15px 25px",
+  borderRadius = "5px",
 }: EmailButtonProps) {
   // For email compatibility, we return the HTML string wrapped in a div
   const buttonHtml = emailButtonTo(text, href, {
@@ -72,10 +72,8 @@ export function EmailButton({
     borderColor,
     fontSize,
     padding,
-    borderRadius
-  })
+    borderRadius,
+  });
 
-  return (
-    <div dangerouslySetInnerHTML={{ __html: buttonHtml }} />
-  )
+  return <div dangerouslySetInnerHTML={{ __html: buttonHtml }} />;
 }

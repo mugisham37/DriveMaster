@@ -1,70 +1,69 @@
 /**
  * React hooks for intelligent cache management
- * 
+ *
  * This module provides hooks to interact with the intelligent cache manager,
  * including navigation tracking, cache warming, and strategy management.
  */
 
-import { useCallback, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/router'
-import { 
-  getIntelligentCacheManager, 
+import { useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/router";
+import {
+  getIntelligentCacheManager,
   initializeIntelligentCacheManager,
   type CacheStrategy,
-  type CacheStrategyConfig 
-} from '@/lib/cache/cache-strategies'
+  type CacheStrategyConfig,
+} from "@/lib/cache/cache-strategies";
 
 // ============================================================================
 // Main Intelligent Cache Hook
 // ============================================================================
 
 export function useIntelligentCache() {
-  const queryClient = useQueryClient()
-  
+  const queryClient = useQueryClient();
+
   // Initialize cache manager if not already done
   const getCacheManager = useCallback(() => {
     try {
-      return getIntelligentCacheManager()
+      return getIntelligentCacheManager();
     } catch {
-      return initializeIntelligentCacheManager(queryClient)
+      return initializeIntelligentCacheManager(queryClient);
     }
-  }, [queryClient])
+  }, [queryClient]);
 
-  const cacheManager = getCacheManager()
+  const cacheManager = getCacheManager();
 
   return {
     // Cache strategy management
-    setStrategy: (dataType: string, config: CacheStrategyConfig) => 
+    setStrategy: (dataType: string, config: CacheStrategyConfig) =>
       cacheManager.setStrategyConfig(dataType, config),
-    
-    getStrategy: (dataType: string) => 
-      cacheManager.getStrategyConfig(dataType),
+
+    getStrategy: (dataType: string) => cacheManager.getStrategyConfig(dataType),
 
     // Cache invalidation
     invalidateByTag: (tagName: string, refetchActive = true) =>
       cacheManager.invalidateByTag(tagName, { refetchActive }),
-    
+
     invalidateByPattern: (pattern: RegExp, refetchActive = true) =>
       cacheManager.invalidateByPattern(pattern, { refetchActive }),
-    
+
     invalidateUser: (userId: string, refetchActive = true) =>
       cacheManager.invalidateUserCaches(userId, { refetchActive }),
 
     // Navigation and prefetching
     recordNavigation: (from: string, to: string) =>
       cacheManager.recordNavigation(from, to),
-    
+
     warmCache: (userId: string, context?: string) =>
       cacheManager.warmCacheIntelligently(userId, context),
 
     // Cache statistics
     getStats: () => cacheManager.getCacheStats(),
-    
+
     // Cleanup
     cleanupOldPatterns: (maxAge?: number) =>
-      cacheManager.cleanupOldPatterns(maxAge)
-  }
+      cacheManager.cleanupOldPatterns(maxAge),
+  };
 }
 
 // ============================================================================
@@ -72,23 +71,23 @@ export function useIntelligentCache() {
 // ============================================================================
 
 export function useNavigationTracking() {
-  const router = useRouter()
-  const { recordNavigation } = useIntelligentCache()
+  const router = useRouter();
+  const { recordNavigation } = useIntelligentCache();
 
   useEffect(() => {
-    let previousRoute = router.asPath
+    let previousRoute = router.asPath;
 
     const handleRouteChange = (url: string) => {
-      recordNavigation(previousRoute, url)
-      previousRoute = url
-    }
+      recordNavigation(previousRoute, url);
+      previousRoute = url;
+    };
 
-    router.events.on('routeChangeComplete', handleRouteChange)
+    router.events.on("routeChangeComplete", handleRouteChange);
 
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange)
-    }
-  }, [router, recordNavigation])
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router, recordNavigation]);
 }
 
 // ============================================================================
@@ -96,36 +95,36 @@ export function useNavigationTracking() {
 // ============================================================================
 
 export function useCacheWarming(userId?: string) {
-  const { warmCache } = useIntelligentCache()
-  const router = useRouter()
+  const { warmCache } = useIntelligentCache();
+  const router = useRouter();
 
   // Warm cache when user ID becomes available
   useEffect(() => {
     if (userId) {
-      const context = getContextFromRoute(router.pathname)
-      warmCache(userId, context)
+      const context = getContextFromRoute(router.pathname);
+      warmCache(userId, context);
     }
-  }, [userId, warmCache, router.pathname])
+  }, [userId, warmCache, router.pathname]);
 
   // Warm cache on route changes
   useEffect(() => {
-    if (!userId) return
+    if (!userId) return;
 
     const handleRouteChange = (url: string) => {
-      const context = getContextFromRoute(url)
-      warmCache(userId, context)
-    }
+      const context = getContextFromRoute(url);
+      warmCache(userId, context);
+    };
 
-    router.events.on('routeChangeComplete', handleRouteChange)
+    router.events.on("routeChangeComplete", handleRouteChange);
 
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange)
-    }
-  }, [userId, warmCache, router])
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [userId, warmCache, router]);
 
   return {
-    warmCache: (context?: string) => userId && warmCache(userId, context)
-  }
+    warmCache: (context?: string) => userId && warmCache(userId, context),
+  };
 }
 
 // ============================================================================
@@ -133,30 +132,33 @@ export function useCacheWarming(userId?: string) {
 // ============================================================================
 
 export function useCacheStrategy(dataType: string) {
-  const { setStrategy, getStrategy } = useIntelligentCache()
+  const { setStrategy, getStrategy } = useIntelligentCache();
 
-  const updateStrategy = useCallback((strategy: CacheStrategy, options?: Partial<CacheStrategyConfig>) => {
-    const currentConfig = getStrategy(dataType)
-    const newConfig: CacheStrategyConfig = {
-      ...currentConfig,
-      strategy,
-      ...options
-    }
-    setStrategy(dataType, newConfig)
-  }, [dataType, setStrategy, getStrategy])
+  const updateStrategy = useCallback(
+    (strategy: CacheStrategy, options?: Partial<CacheStrategyConfig>) => {
+      const currentConfig = getStrategy(dataType);
+      const newConfig: CacheStrategyConfig = {
+        ...currentConfig,
+        strategy,
+        ...options,
+      };
+      setStrategy(dataType, newConfig);
+    },
+    [dataType, setStrategy, getStrategy],
+  );
 
   return {
     currentStrategy: getStrategy(dataType),
     updateStrategy,
-    setCacheFirst: (options?: Partial<CacheStrategyConfig>) => 
-      updateStrategy('cache-first', options),
-    setNetworkFirst: (options?: Partial<CacheStrategyConfig>) => 
-      updateStrategy('network-first', options),
-    setStaleWhileRevalidate: (options?: Partial<CacheStrategyConfig>) => 
-      updateStrategy('stale-while-revalidate', options),
-    setNetworkOnly: (options?: Partial<CacheStrategyConfig>) => 
-      updateStrategy('network-only', options)
-  }
+    setCacheFirst: (options?: Partial<CacheStrategyConfig>) =>
+      updateStrategy("cache-first", options),
+    setNetworkFirst: (options?: Partial<CacheStrategyConfig>) =>
+      updateStrategy("network-first", options),
+    setStaleWhileRevalidate: (options?: Partial<CacheStrategyConfig>) =>
+      updateStrategy("stale-while-revalidate", options),
+    setNetworkOnly: (options?: Partial<CacheStrategyConfig>) =>
+      updateStrategy("network-only", options),
+  };
 }
 
 // ============================================================================
@@ -164,26 +166,27 @@ export function useCacheStrategy(dataType: string) {
 // ============================================================================
 
 export function useCacheInvalidation() {
-  const { invalidateByTag, invalidateByPattern, invalidateUser } = useIntelligentCache()
+  const { invalidateByTag, invalidateByPattern, invalidateUser } =
+    useIntelligentCache();
 
   return {
     // Tag-based invalidation
     invalidateUserData: (userId: string) => invalidateUser(userId),
-    invalidateProfileData: () => invalidateByTag('profile'),
-    invalidateProgressData: () => invalidateByTag('progress'),
-    invalidateActivityData: () => invalidateByTag('activity'),
-    invalidateGdprData: () => invalidateByTag('gdpr'),
-    
+    invalidateProfileData: () => invalidateByTag("profile"),
+    invalidateProgressData: () => invalidateByTag("progress"),
+    invalidateActivityData: () => invalidateByTag("activity"),
+    invalidateGdprData: () => invalidateByTag("gdpr"),
+
     // Pattern-based invalidation
-    invalidateUserPattern: (userId: string) => 
+    invalidateUserPattern: (userId: string) =>
       invalidateByPattern(new RegExp(`"${userId}"`)),
-    invalidateTopicPattern: (topic: string) => 
+    invalidateTopicPattern: (topic: string) =>
       invalidateByPattern(new RegExp(`"${topic}"`)),
-    
+
     // Custom invalidation
     invalidateByTag,
-    invalidateByPattern
-  }
+    invalidateByPattern,
+  };
 }
 
 // ============================================================================
@@ -191,15 +194,15 @@ export function useCacheInvalidation() {
 // ============================================================================
 
 export function useCacheStats() {
-  const { getStats, cleanupOldPatterns } = useIntelligentCache()
+  const { getStats, cleanupOldPatterns } = useIntelligentCache();
 
-  const stats = getStats()
+  const stats = getStats();
 
   return {
     ...stats,
     cleanup: cleanupOldPatterns,
-    healthScore: calculateCacheHealthScore(stats)
-  }
+    healthScore: calculateCacheHealthScore(stats),
+  };
 }
 
 // ============================================================================
@@ -207,42 +210,47 @@ export function useCacheStats() {
 // ============================================================================
 
 export function useCachePerformance() {
-  const queryClient = useQueryClient()
-  const { getStats } = useIntelligentCache()
+  const queryClient = useQueryClient();
+  const { getStats } = useIntelligentCache();
 
   const measureCachePerformance = useCallback(() => {
-    const stats = getStats()
-    const queries = queryClient.getQueryCache().getAll()
-    
-    const userServiceQueries = queries.filter(query => 
-      query.queryKey[0] === 'user-service'
-    )
+    const stats = getStats();
+    const queries = queryClient.getQueryCache().getAll();
 
-    const hitRate = userServiceQueries.length > 0 
-      ? (userServiceQueries.length - stats.errorQueries) / userServiceQueries.length 
-      : 0
+    const userServiceQueries = queries.filter(
+      (query) => query.queryKey[0] === "user-service",
+    );
 
-    const avgResponseTime = userServiceQueries.reduce((acc, query) => {
-      const state = query.state
-      if (state.dataUpdatedAt && state.dataUpdatedAt > 0) {
-        // Simple approximation of response time
-        return acc + 100 // placeholder value
-      }
-      return acc
-    }, 0) / userServiceQueries.length
+    const hitRate =
+      userServiceQueries.length > 0
+        ? (userServiceQueries.length - stats.errorQueries) /
+          userServiceQueries.length
+        : 0;
+
+    const avgResponseTime =
+      userServiceQueries.reduce((acc, query) => {
+        const state = query.state;
+        if (state.dataUpdatedAt && state.dataUpdatedAt > 0) {
+          // Simple approximation of response time
+          return acc + 100; // placeholder value
+        }
+        return acc;
+      }, 0) / userServiceQueries.length;
 
     return {
       hitRate: Math.round(hitRate * 100),
       avgResponseTime: Math.round(avgResponseTime),
-      cacheEfficiency: Math.round((1 - stats.staleQueries / stats.totalQueries) * 100),
-      errorRate: Math.round((stats.errorQueries / stats.totalQueries) * 100)
-    }
-  }, [queryClient, getStats])
+      cacheEfficiency: Math.round(
+        (1 - stats.staleQueries / stats.totalQueries) * 100,
+      ),
+      errorRate: Math.round((stats.errorQueries / stats.totalQueries) * 100),
+    };
+  }, [queryClient, getStats]);
 
   return {
     measurePerformance: measureCachePerformance,
-    getRealtimeStats: getStats
-  }
+    getRealtimeStats: getStats,
+  };
 }
 
 // ============================================================================
@@ -250,28 +258,36 @@ export function useCachePerformance() {
 // ============================================================================
 
 function getContextFromRoute(pathname: string): string {
-  if (pathname.startsWith('/dashboard')) return 'dashboard'
-  if (pathname.startsWith('/profile')) return 'profile'
-  if (pathname.startsWith('/progress')) return 'progress'
-  if (pathname.startsWith('/activity')) return 'activity'
-  if (pathname.startsWith('/settings')) return 'settings'
-  if (pathname.startsWith('/privacy')) return 'privacy'
-  return 'general'
+  if (pathname.startsWith("/dashboard")) return "dashboard";
+  if (pathname.startsWith("/profile")) return "profile";
+  if (pathname.startsWith("/progress")) return "progress";
+  if (pathname.startsWith("/activity")) return "activity";
+  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/privacy")) return "privacy";
+  return "general";
 }
 
-function calculateCacheHealthScore(stats: { totalQueries: number; staleQueries: number; errorQueries: number; activeQueries: number }): number {
-  const { totalQueries, staleQueries, errorQueries, activeQueries } = stats
-  
-  if (totalQueries === 0) return 100
-  
-  const staleRate = staleQueries / totalQueries
-  const errorRate = errorQueries / totalQueries
-  const activeRate = activeQueries / totalQueries
-  
+function calculateCacheHealthScore(stats: {
+  totalQueries: number;
+  staleQueries: number;
+  errorQueries: number;
+  activeQueries: number;
+}): number {
+  const { totalQueries, staleQueries, errorQueries, activeQueries } = stats;
+
+  if (totalQueries === 0) return 100;
+
+  const staleRate = staleQueries / totalQueries;
+  const errorRate = errorQueries / totalQueries;
+  const activeRate = activeQueries / totalQueries;
+
   // Health score based on low stale rate, low error rate, and reasonable active rate
-  const healthScore = Math.max(0, 100 - (staleRate * 30) - (errorRate * 50) + (activeRate * 10))
-  
-  return Math.round(Math.min(100, healthScore))
+  const healthScore = Math.max(
+    0,
+    100 - staleRate * 30 - errorRate * 50 + activeRate * 10,
+  );
+
+  return Math.round(Math.min(100, healthScore));
 }
 
 // ============================================================================
@@ -279,58 +295,59 @@ function calculateCacheHealthScore(stats: { totalQueries: number; staleQueries: 
 // ============================================================================
 
 export function useCacheDebug() {
-  const queryClient = useQueryClient()
-  const { getStats } = useIntelligentCache()
+  const queryClient = useQueryClient();
+  const { getStats } = useIntelligentCache();
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     return {
       logCacheState: () => {},
       logQueryDetails: () => {},
-      exportCacheData: () => null
-    }
+      exportCacheData: () => null,
+    };
   }
 
   return {
     logCacheState: () => {
-      const stats = getStats()
-      console.group('🗄️ Cache State')
-      console.table(stats)
-      console.groupEnd()
+      const stats = getStats();
+      console.group("🗄️ Cache State");
+      console.table(stats);
+      console.groupEnd();
     },
 
     logQueryDetails: (queryKey?: string) => {
-      const queries = queryClient.getQueryCache().getAll()
-      const userServiceQueries = queries.filter(query => 
-        query.queryKey[0] === 'user-service' &&
-        (!queryKey || JSON.stringify(query.queryKey).includes(queryKey))
-      )
+      const queries = queryClient.getQueryCache().getAll();
+      const userServiceQueries = queries.filter(
+        (query) =>
+          query.queryKey[0] === "user-service" &&
+          (!queryKey || JSON.stringify(query.queryKey).includes(queryKey)),
+      );
 
-      console.group('🔍 Query Details')
-      userServiceQueries.forEach(query => {
+      console.group("🔍 Query Details");
+      userServiceQueries.forEach((query) => {
         console.log({
           key: query.queryKey,
           status: query.state.status,
           dataUpdatedAt: new Date(query.state.dataUpdatedAt || 0),
           isStale: query.isStale(),
-          observers: query.getObserversCount()
-        })
-      })
-      console.groupEnd()
+          observers: query.getObserversCount(),
+        });
+      });
+      console.groupEnd();
     },
 
     exportCacheData: () => {
-      const queries = queryClient.getQueryCache().getAll()
-      const userServiceQueries = queries.filter(query => 
-        query.queryKey[0] === 'user-service'
-      )
+      const queries = queryClient.getQueryCache().getAll();
+      const userServiceQueries = queries.filter(
+        (query) => query.queryKey[0] === "user-service",
+      );
 
-      return userServiceQueries.map(query => ({
+      return userServiceQueries.map((query) => ({
         queryKey: query.queryKey,
         data: query.state.data,
         status: query.state.status,
         dataUpdatedAt: query.state.dataUpdatedAt,
-        error: query.state.error
-      }))
-    }
-  }
+        error: query.state.error,
+      }));
+    },
+  };
 }

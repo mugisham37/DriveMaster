@@ -3,11 +3,11 @@
 // using unknown would make things very hard to read
 export function debounce<F extends (...args: any[]) => any>(
   func: F,
-  delay: number
+  delay: number,
 ): (...args: Parameters<F>) => void {
-  let inDebounce: ReturnType<typeof setTimeout> | null = null
+  let inDebounce: ReturnType<typeof setTimeout> | null = null;
   return (...args: Parameters<F>): void => {
-    clearTimeout(inDebounce as ReturnType<typeof setTimeout>)
-    inDebounce = setTimeout(() => func(...args), delay)
-  }
+    clearTimeout(inDebounce as ReturnType<typeof setTimeout>);
+    inDebounce = setTimeout(() => func(...args), delay);
+  };
 }

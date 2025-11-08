@@ -18,8 +18,8 @@ import type {
   ServiceHealthStatus,
   ServiceInfo,
   UserServiceError,
-  DateRange
-} from '../../../types/user-service';
+  DateRange,
+} from "../../../types/user-service";
 
 // ============================================================================
 // HTTP Request/Response Types
@@ -142,41 +142,45 @@ export type GetLearningStreakResponse = HttpResponse<{
 
 export interface GetMilestonesRequest {
   userId: string;
-  type?: 'mastery' | 'streak' | 'time' | 'attempts';
+  type?: "mastery" | "streak" | "time" | "attempts";
   achieved?: boolean;
 }
 
-export type GetMilestonesResponse = HttpResponse<Array<{
-  id: string;
-  type: 'mastery' | 'streak' | 'time' | 'attempts';
-  title: string;
-  description: string;
-  value: number;
-  target: number;
-  achieved: boolean;
-  achievedAt?: Date;
-  progress: number;
-}>>;
+export type GetMilestonesResponse = HttpResponse<
+  Array<{
+    id: string;
+    type: "mastery" | "streak" | "time" | "attempts";
+    title: string;
+    description: string;
+    value: number;
+    target: number;
+    achieved: boolean;
+    achievedAt?: Date;
+    progress: number;
+  }>
+>;
 
 export interface GetWeeklyProgressRequest {
   userId: string;
   weeks: number;
 }
 
-export type GetWeeklyProgressResponse = HttpResponse<Array<{
-  week: string;
-  mastery: number;
-  studyTime: number;
-  attempts: number;
-  accuracy: number;
-}>>;
+export type GetWeeklyProgressResponse = HttpResponse<
+  Array<{
+    week: string;
+    mastery: number;
+    studyTime: number;
+    attempts: number;
+    accuracy: number;
+  }>
+>;
 
 // ============================================================================
 // Activity Monitoring Endpoints
 // ============================================================================
 
 export interface RecordActivityRequest {
-  activity: Omit<ActivityRecord, 'timestamp'> & {
+  activity: Omit<ActivityRecord, "timestamp"> & {
     timestamp?: Date | string;
   };
 }
@@ -184,17 +188,21 @@ export interface RecordActivityRequest {
 export type RecordActivityResponse = HttpResponse<{ activityId: string }>;
 
 export interface RecordActivitiesBatchRequest {
-  activities: Array<Omit<ActivityRecord, 'timestamp'> & {
-    timestamp?: Date | string;
-  }>;
+  activities: Array<
+    Omit<ActivityRecord, "timestamp"> & {
+      timestamp?: Date | string;
+    }
+  >;
 }
 
-export type RecordActivitiesBatchResponse = HttpResponse<{ activityIds: string[] }>;
+export type RecordActivitiesBatchResponse = HttpResponse<{
+  activityIds: string[];
+}>;
 
 export interface GetActivitySummaryRequest {
   userId: string;
   dateRange: DateRange;
-  groupBy?: 'day' | 'week' | 'month';
+  groupBy?: "day" | "week" | "month";
 }
 
 export type GetActivitySummaryResponse = HttpResponse<ActivitySummary>;
@@ -208,7 +216,7 @@ export type GetEngagementMetricsResponse = HttpResponse<EngagementMetrics>;
 
 export interface GenerateInsightsRequest {
   userId: string;
-  categories?: Array<'engagement' | 'performance' | 'behavior'>;
+  categories?: Array<"engagement" | "performance" | "behavior">;
   limit?: number;
 }
 
@@ -216,11 +224,13 @@ export type GenerateInsightsResponse = HttpResponse<ActivityInsight[]>;
 
 export interface GenerateRecommendationsRequest {
   userId: string;
-  categories?: Array<'study_schedule' | 'content' | 'strategy'>;
+  categories?: Array<"study_schedule" | "content" | "strategy">;
   limit?: number;
 }
 
-export type GenerateRecommendationsResponse = HttpResponse<ActivityRecommendation[]>;
+export type GenerateRecommendationsResponse = HttpResponse<
+  ActivityRecommendation[]
+>;
 
 export interface ApplyRecommendationRequest {
   userId: string;
@@ -236,7 +246,7 @@ export type ApplyRecommendationResponse = HttpResponse<{ success: boolean }>;
 
 export interface ExportUserDataRequest {
   userId: string;
-  format?: 'json' | 'csv' | 'xml';
+  format?: "json" | "csv" | "xml";
   categories?: string[];
 }
 
@@ -330,7 +340,7 @@ export interface HttpClientConfig {
 }
 
 export interface RequestConfig {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   url: string;
   headers?: Record<string, string>;
   params?: Record<string, string | number | boolean>;
@@ -345,45 +355,46 @@ export interface RequestConfig {
 
 export const HTTP_ENDPOINTS = {
   // User Profile
-  GET_USER_PROFILE: '/api/users/{userId}/profile',
-  UPDATE_USER_PROFILE: '/api/users/{userId}/profile',
-  GET_USER_PREFERENCES: '/api/users/{userId}/preferences',
-  UPDATE_USER_PREFERENCES: '/api/users/{userId}/preferences',
-  DEACTIVATE_USER: '/api/users/{userId}/deactivate',
+  GET_USER_PROFILE: "/api/users/{userId}/profile",
+  UPDATE_USER_PROFILE: "/api/users/{userId}/profile",
+  GET_USER_PREFERENCES: "/api/users/{userId}/preferences",
+  UPDATE_USER_PREFERENCES: "/api/users/{userId}/preferences",
+  DEACTIVATE_USER: "/api/users/{userId}/deactivate",
 
   // Progress Tracking
-  GET_PROGRESS_SUMMARY: '/api/users/{userId}/progress',
-  GET_SKILL_MASTERY: '/api/users/{userId}/mastery',
-  UPDATE_SKILL_MASTERY: '/api/users/{userId}/mastery/{topic}',
-  GET_LEARNING_STREAK: '/api/users/{userId}/streak',
-  GET_MILESTONES: '/api/users/{userId}/milestones',
-  GET_WEEKLY_PROGRESS: '/api/users/{userId}/progress/weekly',
+  GET_PROGRESS_SUMMARY: "/api/users/{userId}/progress",
+  GET_SKILL_MASTERY: "/api/users/{userId}/mastery",
+  UPDATE_SKILL_MASTERY: "/api/users/{userId}/mastery/{topic}",
+  GET_LEARNING_STREAK: "/api/users/{userId}/streak",
+  GET_MILESTONES: "/api/users/{userId}/milestones",
+  GET_WEEKLY_PROGRESS: "/api/users/{userId}/progress/weekly",
 
   // Activity Monitoring
-  RECORD_ACTIVITY: '/api/users/{userId}/activities',
-  RECORD_ACTIVITIES_BATCH: '/api/users/{userId}/activities/batch',
-  GET_ACTIVITY_SUMMARY: '/api/users/{userId}/activities/summary',
-  GET_ENGAGEMENT_METRICS: '/api/users/{userId}/engagement',
-  GENERATE_INSIGHTS: '/api/users/{userId}/insights',
-  GENERATE_RECOMMENDATIONS: '/api/users/{userId}/recommendations',
-  APPLY_RECOMMENDATION: '/api/users/{userId}/recommendations/{recommendationId}/apply',
+  RECORD_ACTIVITY: "/api/users/{userId}/activities",
+  RECORD_ACTIVITIES_BATCH: "/api/users/{userId}/activities/batch",
+  GET_ACTIVITY_SUMMARY: "/api/users/{userId}/activities/summary",
+  GET_ENGAGEMENT_METRICS: "/api/users/{userId}/engagement",
+  GENERATE_INSIGHTS: "/api/users/{userId}/insights",
+  GENERATE_RECOMMENDATIONS: "/api/users/{userId}/recommendations",
+  APPLY_RECOMMENDATION:
+    "/api/users/{userId}/recommendations/{recommendationId}/apply",
 
   // GDPR Compliance
-  EXPORT_USER_DATA: '/api/users/{userId}/gdpr/export',
-  GET_EXPORT_STATUS: '/api/users/{userId}/gdpr/export/{requestId}',
-  DOWNLOAD_EXPORT: '/api/users/{userId}/gdpr/export/{requestId}/download',
-  DELETE_USER_DATA: '/api/users/{userId}/gdpr/delete',
-  GET_DELETION_STATUS: '/api/users/{userId}/gdpr/delete/{requestId}',
-  UPDATE_CONSENT: '/api/users/{userId}/gdpr/consent',
-  GET_CONSENT_HISTORY: '/api/users/{userId}/gdpr/consent/history',
-  GENERATE_PRIVACY_REPORT: '/api/users/{userId}/gdpr/report',
+  EXPORT_USER_DATA: "/api/users/{userId}/gdpr/export",
+  GET_EXPORT_STATUS: "/api/users/{userId}/gdpr/export/{requestId}",
+  DOWNLOAD_EXPORT: "/api/users/{userId}/gdpr/export/{requestId}/download",
+  DELETE_USER_DATA: "/api/users/{userId}/gdpr/delete",
+  GET_DELETION_STATUS: "/api/users/{userId}/gdpr/delete/{requestId}",
+  UPDATE_CONSENT: "/api/users/{userId}/gdpr/consent",
+  GET_CONSENT_HISTORY: "/api/users/{userId}/gdpr/consent/history",
+  GENERATE_PRIVACY_REPORT: "/api/users/{userId}/gdpr/report",
 
   // Health and Service Info
-  HEALTH_CHECK: '/api/health',
-  SERVICE_INFO: '/api/info'
+  HEALTH_CHECK: "/api/health",
+  SERVICE_INFO: "/api/info",
 } as const;
 
-export type HttpEndpoint = typeof HTTP_ENDPOINTS[keyof typeof HTTP_ENDPOINTS];
+export type HttpEndpoint = (typeof HTTP_ENDPOINTS)[keyof typeof HTTP_ENDPOINTS];
 
 // ============================================================================
 // Utility Types
@@ -413,28 +424,31 @@ export interface QueryParams {
 }
 
 // Helper function to build URLs with path parameters
-export const buildUrl = (endpoint: string, pathParams: PathParams = {}): string => {
+export const buildUrl = (
+  endpoint: string,
+  pathParams: PathParams = {},
+): string => {
   let url = endpoint;
-  
+
   Object.entries(pathParams).forEach(([key, value]) => {
     if (value !== undefined) {
       url = url.replace(`{${key}}`, encodeURIComponent(value.toString()));
     }
   });
-  
+
   return url;
 };
 
 // Helper function to build query string
 export const buildQueryString = (params: QueryParams = {}): string => {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       searchParams.append(key, value.toString());
     }
   });
-  
+
   const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : '';
+  return queryString ? `?${queryString}` : "";
 };

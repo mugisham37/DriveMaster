@@ -1,21 +1,25 @@
 /**
  * Content Operations Hooks
- * 
+ *
  * React hooks for content operations with SWR integration
  * Requirements: 1.1, 1.2, 4.1
  */
 
-import { useState, useCallback, useMemo } from 'react'
-import useSWR, { mutate } from 'swr'
-import { contentServiceClient, contentCacheKeys, contentSWRConfigs } from '@/lib/content-service'
-import type { ContentItem } from '@/types/entities'
+import { useState, useCallback, useMemo } from "react";
+import useSWR, { mutate } from "swr";
+import {
+  contentServiceClient,
+  contentCacheKeys,
+  contentSWRConfigs,
+} from "@/lib/content-service";
+import type { ContentItem } from "@/types/entities";
 import type {
   QueryItemsDto,
   CreateItemDto,
   UpdateItemDto,
   SearchRequestDto,
-  RecommendationType
-} from '@/types'
+  RecommendationType,
+} from "@/types";
 
 // ============================================================================
 // Content CRUD Hooks
@@ -26,19 +30,24 @@ import type {
  * Requirements: 1.1, 1.2
  */
 export function useContentItems(params?: QueryItemsDto) {
-  const { data, error, isLoading, mutate: mutateFn } = useSWR(
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateFn,
+  } = useSWR(
     contentCacheKeys.contentItems(params),
     () => contentServiceClient.getContentItems(params),
-    contentSWRConfigs.contentList
-  )
+    contentSWRConfigs.contentList,
+  );
 
   const refresh = useCallback(() => {
-    mutateFn()
-  }, [mutateFn])
+    mutateFn();
+  }, [mutateFn]);
 
   const invalidate = useCallback(() => {
-    mutate((key) => Array.isArray(key) && key[0] === 'content-items')
-  }, [])
+    mutate((key) => Array.isArray(key) && key[0] === "content-items");
+  }, []);
 
   return {
     items: data?.items || [],
@@ -48,8 +57,8 @@ export function useContentItems(params?: QueryItemsDto) {
     isLoading,
     error,
     refresh,
-    invalidate
-  }
+    invalidate,
+  };
 }
 
 /**
@@ -57,22 +66,27 @@ export function useContentItems(params?: QueryItemsDto) {
  * Requirements: 1.1, 1.2
  */
 export function useContentItem(id: string | null) {
-  const { data, error, isLoading, mutate: mutateFn } = useSWR(
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateFn,
+  } = useSWR(
     id ? contentCacheKeys.contentItem(id) : null,
-    () => id ? contentServiceClient.getContentItem(id) : null,
-    contentSWRConfigs.contentItem
-  )
+    () => (id ? contentServiceClient.getContentItem(id) : null),
+    contentSWRConfigs.contentItem,
+  );
 
   const refresh = useCallback(() => {
-    if (id) mutateFn()
-  }, [id, mutateFn])
+    if (id) mutateFn();
+  }, [id, mutateFn]);
 
   return {
     item: data,
     isLoading,
     error,
-    refresh
-  }
+    refresh,
+  };
 }
 
 /**
@@ -80,22 +94,27 @@ export function useContentItem(id: string | null) {
  * Requirements: 1.1, 1.2
  */
 export function useContentItemBySlug(slug: string | null) {
-  const { data, error, isLoading, mutate: mutateFn } = useSWR(
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateFn,
+  } = useSWR(
     slug ? contentCacheKeys.contentItemBySlug(slug) : null,
-    () => slug ? contentServiceClient.getContentItemBySlug(slug) : null,
-    contentSWRConfigs.contentItem
-  )
+    () => (slug ? contentServiceClient.getContentItemBySlug(slug) : null),
+    contentSWRConfigs.contentItem,
+  );
 
   const refresh = useCallback(() => {
-    if (slug) mutateFn()
-  }, [slug, mutateFn])
+    if (slug) mutateFn();
+  }, [slug, mutateFn]);
 
   return {
     item: data,
     isLoading,
     error,
-    refresh
-  }
+    refresh,
+  };
 }
 
 /**
@@ -103,33 +122,36 @@ export function useContentItemBySlug(slug: string | null) {
  * Requirements: 1.1
  */
 export function useCreateContentItem() {
-  const [isCreating, setIsCreating] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const createItem = useCallback(async (data: CreateItemDto): Promise<ContentItem | null> => {
-    setIsCreating(true)
-    setError(null)
+  const createItem = useCallback(
+    async (data: CreateItemDto): Promise<ContentItem | null> => {
+      setIsCreating(true);
+      setError(null);
 
-    try {
-      const result = await contentServiceClient.createContentItem(data)
-      
-      // Invalidate content lists to show new item
-      mutate((key) => Array.isArray(key) && key[0] === 'content-items')
-      
-      return result
-    } catch (err) {
-      setError(err as Error)
-      return null
-    } finally {
-      setIsCreating(false)
-    }
-  }, [])
+      try {
+        const result = await contentServiceClient.createContentItem(data);
+
+        // Invalidate content lists to show new item
+        mutate((key) => Array.isArray(key) && key[0] === "content-items");
+
+        return result;
+      } catch (err) {
+        setError(err as Error);
+        return null;
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [],
+  );
 
   return {
     createItem,
     isCreating,
-    error
-  }
+    error,
+  };
 }
 
 /**
@@ -137,38 +159,41 @@ export function useCreateContentItem() {
  * Requirements: 1.1
  */
 export function useUpdateContentItem() {
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const updateItem = useCallback(async (id: string, data: UpdateItemDto): Promise<ContentItem | null> => {
-    setIsUpdating(true)
-    setError(null)
+  const updateItem = useCallback(
+    async (id: string, data: UpdateItemDto): Promise<ContentItem | null> => {
+      setIsUpdating(true);
+      setError(null);
 
-    try {
-      const result = await contentServiceClient.updateContentItem(id, data)
-      
-      // Update cache with server response
-      mutate(contentCacheKeys.contentItem(id), result)
-      
-      // Invalidate content lists
-      mutate((key) => Array.isArray(key) && key[0] === 'content-items')
-      
-      return result
-    } catch (err) {
-      // Revert optimistic update on error
-      mutate(contentCacheKeys.contentItem(id))
-      setError(err as Error)
-      return null
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [])
+      try {
+        const result = await contentServiceClient.updateContentItem(id, data);
+
+        // Update cache with server response
+        mutate(contentCacheKeys.contentItem(id), result);
+
+        // Invalidate content lists
+        mutate((key) => Array.isArray(key) && key[0] === "content-items");
+
+        return result;
+      } catch (err) {
+        // Revert optimistic update on error
+        mutate(contentCacheKeys.contentItem(id));
+        setError(err as Error);
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [],
+  );
 
   return {
     updateItem,
     isUpdating,
-    error
-  }
+    error,
+  };
 }
 
 /**
@@ -176,36 +201,42 @@ export function useUpdateContentItem() {
  * Requirements: 1.1
  */
 export function useDeleteContentItem() {
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const deleteItem = useCallback(async (id: string, options?: { permanent?: boolean; reason?: string }): Promise<boolean> => {
-    setIsDeleting(true)
-    setError(null)
+  const deleteItem = useCallback(
+    async (
+      id: string,
+      options?: { permanent?: boolean; reason?: string },
+    ): Promise<boolean> => {
+      setIsDeleting(true);
+      setError(null);
 
-    try {
-      await contentServiceClient.deleteContentItem(id, options)
-      
-      // Remove from cache
-      mutate(contentCacheKeys.contentItem(id), undefined)
-      
-      // Invalidate content lists
-      mutate((key) => Array.isArray(key) && key[0] === 'content-items')
-      
-      return true
-    } catch (err) {
-      setError(err as Error)
-      return false
-    } finally {
-      setIsDeleting(false)
-    }
-  }, [])
+      try {
+        await contentServiceClient.deleteContentItem(id, options);
+
+        // Remove from cache
+        mutate(contentCacheKeys.contentItem(id), undefined);
+
+        // Invalidate content lists
+        mutate((key) => Array.isArray(key) && key[0] === "content-items");
+
+        return true;
+      } catch (err) {
+        setError(err as Error);
+        return false;
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [],
+  );
 
   return {
     deleteItem,
     isDeleting,
-    error
-  }
+    error,
+  };
 }
 
 // ============================================================================
@@ -217,66 +248,88 @@ export function useDeleteContentItem() {
  * Requirements: 4.1
  */
 export function useContentSearch(request: SearchRequestDto | null) {
-  const { data, error, isLoading, mutate: mutateFn } = useSWR(
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateFn,
+  } = useSWR(
     request ? contentCacheKeys.searchContent(request) : null,
-    () => request ? contentServiceClient.searchContent(request) : null,
-    contentSWRConfigs.search
-  )
+    () => (request ? contentServiceClient.searchContent(request) : null),
+    contentSWRConfigs.search,
+  );
 
   const refresh = useCallback(() => {
-    if (request) mutateFn()
-  }, [request, mutateFn])
+    if (request) mutateFn();
+  }, [request, mutateFn]);
 
   return {
     results: data || [],
     isLoading,
     error,
-    refresh
-  }
+    refresh,
+  };
 }
 
 /**
  * Hook for search suggestions with debouncing
  * Requirements: 4.1
  */
-export function useSearchSuggestions(query: string, options?: { limit?: number; types?: string[] }) {
+export function useSearchSuggestions(
+  query: string,
+  options?: { limit?: number; types?: string[] },
+) {
   const { data, error, isLoading } = useSWR(
-    query && query.length >= 2 ? contentCacheKeys.searchSuggestions(query, options) : null,
-    () => query && query.length >= 2 ? contentServiceClient.getSearchSuggestions(query, options) : null,
+    query && query.length >= 2
+      ? contentCacheKeys.searchSuggestions(query, options)
+      : null,
+    () =>
+      query && query.length >= 2
+        ? contentServiceClient.getSearchSuggestions(query, options)
+        : null,
     {
       ...contentSWRConfigs.search,
       dedupingInterval: 500, // Shorter deduping for suggestions
-    }
-  )
+    },
+  );
 
   return {
     suggestions: data || [],
     isLoading,
-    error
-  }
+    error,
+  };
 }
 
 /**
  * Hook for content recommendations
  * Requirements: 4.1
  */
-export function useRecommendations(userId: string, type: RecommendationType, options?: { limit?: number }) {
-  const { data, error, isLoading, mutate: mutateFn } = useSWR(
+export function useRecommendations(
+  userId: string,
+  type: RecommendationType,
+  options?: { limit?: number },
+) {
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateFn,
+  } = useSWR(
     contentCacheKeys.recommendations(userId, type, options),
     () => contentServiceClient.getRecommendations(userId, type, options),
-    contentSWRConfigs.recommendations
-  )
+    contentSWRConfigs.recommendations,
+  );
 
   const refresh = useCallback(() => {
-    mutateFn()
-  }, [mutateFn])
+    mutateFn();
+  }, [mutateFn]);
 
   return {
     recommendations: data || [],
     isLoading,
     error,
-    refresh
-  }
+    refresh,
+  };
 }
 
 // ============================================================================
@@ -287,60 +340,83 @@ export function useRecommendations(userId: string, type: RecommendationType, opt
  * Hook for content with real-time updates and collaboration
  * Requirements: 1.1, 9.2
  */
-export function useContentWithRealTime(id: string | null, options?: {
-  enableRealTime?: boolean
-  enablePresence?: boolean
-  enableCollaboration?: boolean
-}) {
-  const { item, isLoading, error, refresh } = useContentItem(id)
-  
+export function useContentWithRealTime(
+  id: string | null,
+  options?: {
+    enableRealTime?: boolean;
+    enablePresence?: boolean;
+    enableCollaboration?: boolean;
+  },
+) {
+  const { item, isLoading, error, refresh } = useContentItem(id);
+
   // Subscribe to real-time updates if enabled
   const subscriptions = useMemo(() => {
-    if (!id || !options?.enableRealTime) return []
-    
-    const subscriptionOptions: { includePresence?: boolean; includeCollaboration?: boolean } = {}
+    if (!id || !options?.enableRealTime) return [];
+
+    const subscriptionOptions: {
+      includePresence?: boolean;
+      includeCollaboration?: boolean;
+    } = {};
     if (options.enablePresence !== undefined) {
-      subscriptionOptions.includePresence = options.enablePresence
+      subscriptionOptions.includePresence = options.enablePresence;
     }
     if (options.enableCollaboration !== undefined) {
-      subscriptionOptions.includeCollaboration = options.enableCollaboration
+      subscriptionOptions.includeCollaboration = options.enableCollaboration;
     }
-    
-    return contentServiceClient.subscribeToContentUpdates(id, subscriptionOptions)
-  }, [id, options?.enableRealTime, options?.enablePresence, options?.enableCollaboration])
+
+    return contentServiceClient.subscribeToContentUpdates(
+      id,
+      subscriptionOptions,
+    );
+  }, [
+    id,
+    options?.enableRealTime,
+    options?.enablePresence,
+    options?.enableCollaboration,
+  ]);
 
   // Get active users if presence is enabled
   const activeUsers = useMemo(() => {
-    if (!id || !options?.enablePresence) return []
-    return contentServiceClient.getActiveUsers(id)
-  }, [id, options?.enablePresence])
+    if (!id || !options?.enablePresence) return [];
+    return contentServiceClient.getActiveUsers(id);
+  }, [id, options?.enablePresence]);
 
   // Get collaboration session if collaboration is enabled
   const collaborationSession = useMemo(() => {
-    if (!id || !options?.enableCollaboration) return undefined
-    return contentServiceClient.getCollaborationSession(id)
-  }, [id, options?.enableCollaboration])
+    if (!id || !options?.enableCollaboration) return undefined;
+    return contentServiceClient.getCollaborationSession(id);
+  }, [id, options?.enableCollaboration]);
 
   // Update presence
-  const updatePresence = useCallback((status: 'active' | 'idle' | 'away') => {
-    if (id && options?.enablePresence) {
-      contentServiceClient.updateUserPresence(id, status)
-    }
-  }, [id, options?.enablePresence])
+  const updatePresence = useCallback(
+    (status: "active" | "idle" | "away") => {
+      if (id && options?.enablePresence) {
+        contentServiceClient.updateUserPresence(id, status);
+      }
+    },
+    [id, options?.enablePresence],
+  );
 
   // Send cursor position
-  const sendCursorPosition = useCallback((position: { line: number; column: number }) => {
-    if (id && options?.enableCollaboration) {
-      contentServiceClient.sendCursorPosition(id, position)
-    }
-  }, [id, options?.enableCollaboration])
+  const sendCursorPosition = useCallback(
+    (position: { line: number; column: number }) => {
+      if (id && options?.enableCollaboration) {
+        contentServiceClient.sendCursorPosition(id, position);
+      }
+    },
+    [id, options?.enableCollaboration],
+  );
 
   // Send text selection
-  const sendTextSelection = useCallback((selection: { start: number; end: number; text: string }) => {
-    if (id && options?.enableCollaboration) {
-      contentServiceClient.sendTextSelection(id, selection)
-    }
-  }, [id, options?.enableCollaboration])
+  const sendTextSelection = useCallback(
+    (selection: { start: number; end: number; text: string }) => {
+      if (id && options?.enableCollaboration) {
+        contentServiceClient.sendTextSelection(id, selection);
+      }
+    },
+    [id, options?.enableCollaboration],
+  );
 
   return {
     item,
@@ -352,8 +428,8 @@ export function useContentWithRealTime(id: string | null, options?: {
     updatePresence,
     sendCursorPosition,
     sendTextSelection,
-    subscriptions
-  }
+    subscriptions,
+  };
 }
 
 /**
@@ -361,35 +437,38 @@ export function useContentWithRealTime(id: string | null, options?: {
  * Requirements: 1.2
  */
 export function useContentFilters(initialParams?: QueryItemsDto) {
-  const [params, setParams] = useState<QueryItemsDto>(initialParams || {})
-  
-  const updateFilter = useCallback((key: keyof QueryItemsDto, value: unknown) => {
-    setParams(prev => ({ ...prev, [key]: value }))
-  }, [])
+  const [params, setParams] = useState<QueryItemsDto>(initialParams || {});
+
+  const updateFilter = useCallback(
+    (key: keyof QueryItemsDto, value: unknown) => {
+      setParams((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const updateFilters = useCallback((newParams: Partial<QueryItemsDto>) => {
-    setParams(prev => ({ ...prev, ...newParams }))
-  }, [])
+    setParams((prev) => ({ ...prev, ...newParams }));
+  }, []);
 
   const resetFilters = useCallback(() => {
-    setParams(initialParams || {})
-  }, [initialParams])
+    setParams(initialParams || {});
+  }, [initialParams]);
 
   const clearFilter = useCallback((key: keyof QueryItemsDto) => {
-    setParams(prev => {
-      const newParams = { ...prev }
-      delete newParams[key]
-      return newParams
-    })
-  }, [])
+    setParams((prev) => {
+      const newParams = { ...prev };
+      delete newParams[key];
+      return newParams;
+    });
+  }, []);
 
   return {
     params,
     updateFilter,
     updateFilters,
     resetFilters,
-    clearFilter
-  }
+    clearFilter,
+  };
 }
 
 /**
@@ -397,30 +476,30 @@ export function useContentFilters(initialParams?: QueryItemsDto) {
  * Requirements: 1.2
  */
 export function useContentPagination(initialPage = 1, initialLimit = 20) {
-  const [page, setPage] = useState(initialPage)
-  const [limit, setLimit] = useState(initialLimit)
+  const [page, setPage] = useState(initialPage);
+  const [limit, setLimit] = useState(initialLimit);
 
   const nextPage = useCallback(() => {
-    setPage(prev => prev + 1)
-  }, [])
+    setPage((prev) => prev + 1);
+  }, []);
 
   const prevPage = useCallback(() => {
-    setPage(prev => Math.max(1, prev - 1))
-  }, [])
+    setPage((prev) => Math.max(1, prev - 1));
+  }, []);
 
   const goToPage = useCallback((newPage: number) => {
-    setPage(Math.max(1, newPage))
-  }, [])
+    setPage(Math.max(1, newPage));
+  }, []);
 
   const changeLimit = useCallback((newLimit: number) => {
-    setLimit(newLimit)
-    setPage(1) // Reset to first page when changing limit
-  }, [])
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when changing limit
+  }, []);
 
   const reset = useCallback(() => {
-    setPage(initialPage)
-    setLimit(initialLimit)
-  }, [initialPage, initialLimit])
+    setPage(initialPage);
+    setLimit(initialLimit);
+  }, [initialPage, initialLimit]);
 
   return {
     page,
@@ -429,8 +508,8 @@ export function useContentPagination(initialPage = 1, initialLimit = 20) {
     prevPage,
     goToPage,
     changeLimit,
-    reset
-  }
+    reset,
+  };
 }
 
 /**
@@ -442,29 +521,29 @@ export function useContentPrefetch() {
     mutate(
       contentCacheKeys.contentItem(id),
       contentServiceClient.getContentItem(id),
-      false
-    )
-  }, [])
+      false,
+    );
+  }, []);
 
   const prefetchItems = useCallback(async (params?: QueryItemsDto) => {
     mutate(
       contentCacheKeys.contentItems(params),
       contentServiceClient.getContentItems(params),
-      false
-    )
-  }, [])
+      false,
+    );
+  }, []);
 
   const prefetchSearch = useCallback(async (request: SearchRequestDto) => {
     mutate(
       contentCacheKeys.searchContent(request),
       contentServiceClient.searchContent(request),
-      false
-    )
-  }, [])
+      false,
+    );
+  }, []);
 
   return {
     prefetchItem,
     prefetchItems,
-    prefetchSearch
-  }
+    prefetchSearch,
+  };
 }

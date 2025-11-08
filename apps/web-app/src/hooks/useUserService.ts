@@ -55,14 +55,14 @@ import type {
 
 export function useUserProfile(
   userId: string,
-  options?: Partial<UseQueryOptions<UserProfile, UserServiceError>>
+  options?: Partial<UseQueryOptions<UserProfile, UserServiceError>>,
 ): UseQueryResult<UserProfile, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.userProfile(userId),
     queryFn: () => userServiceClient.getUser(userId),
     ...createUserServiceQueryOptions<UserProfile>(
       CACHE_TIMES.USER_PROFILE,
-      GC_TIMES.MEDIUM
+      GC_TIMES.MEDIUM,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -71,14 +71,14 @@ export function useUserProfile(
 
 export function useUserPreferences(
   userId: string,
-  options?: Partial<UseQueryOptions<UserPreferences, UserServiceError>>
+  options?: Partial<UseQueryOptions<UserPreferences, UserServiceError>>,
 ): UseQueryResult<UserPreferences, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.userPreferences(userId),
     queryFn: () => userServiceClient.getUserPreferences(userId),
     ...createUserServiceQueryOptions<UserPreferences>(
       CACHE_TIMES.USER_PREFERENCES,
-      GC_TIMES.MEDIUM
+      GC_TIMES.MEDIUM,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -90,13 +90,21 @@ export function useUpdateUserProfile(
     UserProfile,
     UserServiceError,
     { userId: string; updates: UserUpdateRequest },
-    { previousData: UserProfile | undefined; queryKey: readonly ["user-service", "users", string, "profile"]; userId: string }
-  >
+    {
+      previousData: UserProfile | undefined;
+      queryKey: readonly ["user-service", "users", string, "profile"];
+      userId: string;
+    }
+  >,
 ): UseMutationResult<
   UserProfile,
   UserServiceError,
   { userId: string; updates: UserUpdateRequest },
-  { previousData: UserProfile | undefined; queryKey: readonly ["user-service", "users", string, "profile"]; userId: string }
+  {
+    previousData: UserProfile | undefined;
+    queryKey: readonly ["user-service", "users", string, "profile"];
+    userId: string;
+  }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -128,7 +136,7 @@ export function useUpdateUserProfile(
             broadcastOptimisticUpdate(queryKey, updatedProfile, userId);
 
             return updatedProfile;
-          }
+          },
         );
 
       return { previousData, queryKey, userId };
@@ -160,13 +168,19 @@ export function useUpdateUserPreferences(
     UserPreferences,
     UserServiceError,
     { userId: string; preferences: Partial<PreferencesData> },
-    { previousData: UserPreferences | undefined; queryKey: readonly ["user-service", "users", string, "preferences"] }
-  >
+    {
+      previousData: UserPreferences | undefined;
+      queryKey: readonly ["user-service", "users", string, "preferences"];
+    }
+  >,
 ): UseMutationResult<
   UserPreferences,
   UserServiceError,
   { userId: string; preferences: Partial<PreferencesData> },
-  { previousData: UserPreferences | undefined; queryKey: readonly ["user-service", "users", string, "preferences"] }
+  {
+    previousData: UserPreferences | undefined;
+    queryKey: readonly ["user-service", "users", string, "preferences"];
+  }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -191,7 +205,7 @@ export function useUpdateUserPreferences(
               },
               updatedAt: new Date(),
             };
-          }
+          },
         );
 
       return { previousData, queryKey };
@@ -215,14 +229,14 @@ export function useUpdateUserPreferences(
 
 export function useProgressSummary(
   userId: string,
-  options?: Partial<UseQueryOptions<ProgressSummary, UserServiceError>>
+  options?: Partial<UseQueryOptions<ProgressSummary, UserServiceError>>,
 ): UseQueryResult<ProgressSummary, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.progressSummary(userId),
     queryFn: () => userServiceClient.getProgressSummary(userId),
     ...createUserServiceQueryOptions<ProgressSummary>(
       CACHE_TIMES.PROGRESS_SUMMARY,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -232,14 +246,14 @@ export function useProgressSummary(
 export function useSkillMastery(
   userId: string,
   topic?: string,
-  options?: Partial<UseQueryOptions<SkillMastery[], UserServiceError>>
+  options?: Partial<UseQueryOptions<SkillMastery[], UserServiceError>>,
 ): UseQueryResult<SkillMastery[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.skillMastery(userId, topic),
     queryFn: () => userServiceClient.getSkillMastery(userId, topic),
     ...createUserServiceQueryOptions<SkillMastery[]>(
       CACHE_TIMES.SKILL_MASTERY,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -248,14 +262,14 @@ export function useSkillMastery(
 
 export function useLearningStreak(
   userId: string,
-  options?: Partial<UseQueryOptions<LearningStreak, UserServiceError>>
+  options?: Partial<UseQueryOptions<LearningStreak, UserServiceError>>,
 ): UseQueryResult<LearningStreak, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.learningStreak(userId),
     queryFn: () => userServiceClient.getLearningStreak(userId),
     ...createUserServiceQueryOptions<LearningStreak>(
       CACHE_TIMES.LEARNING_STREAK,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -264,14 +278,14 @@ export function useLearningStreak(
 
 export function useMilestones(
   userId: string,
-  options?: Partial<UseQueryOptions<Milestone[], UserServiceError>>
+  options?: Partial<UseQueryOptions<Milestone[], UserServiceError>>,
 ): UseQueryResult<Milestone[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.milestones(userId),
     queryFn: () => userServiceClient.getMilestones(userId),
     ...createUserServiceQueryOptions<Milestone[]>(
       CACHE_TIMES.MILESTONES,
-      GC_TIMES.MEDIUM
+      GC_TIMES.MEDIUM,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -281,14 +295,14 @@ export function useMilestones(
 export function useWeeklyProgress(
   userId: string,
   weeks: number,
-  options?: Partial<UseQueryOptions<WeeklyProgressPoint[], UserServiceError>>
+  options?: Partial<UseQueryOptions<WeeklyProgressPoint[], UserServiceError>>,
 ): UseQueryResult<WeeklyProgressPoint[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.weeklyProgress(userId, weeks),
     queryFn: () => userServiceClient.getWeeklyProgress(userId, weeks),
     ...createUserServiceQueryOptions<WeeklyProgressPoint[]>(
       CACHE_TIMES.PROGRESS_SUMMARY,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && weeks > 0 && options?.enabled !== false,
@@ -300,13 +314,23 @@ export function useUpdateSkillMastery(
     SkillMastery,
     UserServiceError,
     { userId: string; topic: string; attempts: AttemptRecord[] },
-    { previousData: SkillMastery | undefined; queryKey: readonly ["user-service", "progress", string, "mastery", string] | readonly ["user-service", "progress", string, "mastery"] }
-  >
+    {
+      previousData: SkillMastery | undefined;
+      queryKey:
+        | readonly ["user-service", "progress", string, "mastery", string]
+        | readonly ["user-service", "progress", string, "mastery"];
+    }
+  >,
 ): UseMutationResult<
   SkillMastery,
   UserServiceError,
   { userId: string; topic: string; attempts: AttemptRecord[] },
-  { previousData: SkillMastery | undefined; queryKey: readonly ["user-service", "progress", string, "mastery", string] | readonly ["user-service", "progress", string, "mastery"] }
+  {
+    previousData: SkillMastery | undefined;
+    queryKey:
+      | readonly ["user-service", "progress", string, "mastery", string]
+      | readonly ["user-service", "progress", string, "mastery"];
+  }
 > {
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
@@ -336,7 +360,7 @@ export function useUpdateSkillMastery(
               practiceCount: oldMastery.practiceCount + attempts.length,
               updatedAt: new Date(),
             };
-          }
+          },
         );
 
       return { previousData, queryKey };
@@ -364,7 +388,7 @@ export function useUpdateSkillMastery(
 export function useActivitySummary(
   userId: string,
   dateRange: DateRange,
-  options?: Partial<UseQueryOptions<ActivitySummary, UserServiceError>>
+  options?: Partial<UseQueryOptions<ActivitySummary, UserServiceError>>,
 ): UseQueryResult<ActivitySummary, UserServiceError> {
   const dateRangeKey = `${dateRange.start.toISOString()}-${dateRange.end.toISOString()}`;
 
@@ -373,7 +397,7 @@ export function useActivitySummary(
     queryFn: () => userServiceClient.getActivitySummary(userId, dateRange),
     ...createUserServiceQueryOptions<ActivitySummary>(
       CACHE_TIMES.ACTIVITY_SUMMARY,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled:
@@ -387,19 +411,19 @@ export function useActivitySummary(
 export function useEngagementMetrics(
   userId: string,
   days: number,
-  options?: Partial<UseQueryOptions<EngagementMetrics, UserServiceError>>
+  options?: Partial<UseQueryOptions<EngagementMetrics, UserServiceError>>,
 ): UseQueryResult<EngagementMetrics, UserServiceError> {
   const dateRange: DateRange = {
     start: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
-    end: new Date()
-  }
-  
+    end: new Date(),
+  };
+
   return useQuery({
     queryKey: queryKeys.engagementMetrics(userId, days),
     queryFn: () => userServiceClient.getEngagementMetrics(userId, dateRange),
     ...createUserServiceQueryOptions<EngagementMetrics>(
       CACHE_TIMES.ENGAGEMENT_METRICS,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && days > 0 && options?.enabled !== false,
@@ -408,14 +432,14 @@ export function useEngagementMetrics(
 
 export function useActivityInsights(
   userId: string,
-  options?: Partial<UseQueryOptions<ActivityInsight[], UserServiceError>>
+  options?: Partial<UseQueryOptions<ActivityInsight[], UserServiceError>>,
 ): UseQueryResult<ActivityInsight[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.activityInsights(userId),
     queryFn: () => userServiceClient.getActivityInsights(userId),
     ...createUserServiceQueryOptions<ActivityInsight[]>(
       CACHE_TIMES.ACTIVITY_INSIGHTS,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -424,14 +448,16 @@ export function useActivityInsights(
 
 export function useActivityRecommendations(
   userId: string,
-  options?: Partial<UseQueryOptions<ActivityRecommendation[], UserServiceError>>
+  options?: Partial<
+    UseQueryOptions<ActivityRecommendation[], UserServiceError>
+  >,
 ): UseQueryResult<ActivityRecommendation[], UserServiceError> {
   return useQuery({
     queryKey: queryKeys.activityRecommendations(userId),
     queryFn: () => userServiceClient.getActivityRecommendations(userId),
     ...createUserServiceQueryOptions<ActivityRecommendation[]>(
       CACHE_TIMES.ACTIVITY_RECOMMENDATIONS,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -439,7 +465,7 @@ export function useActivityRecommendations(
 }
 
 export function useRecordActivity(
-  options?: UseMutationOptions<string, UserServiceError, ActivityRecord>
+  options?: UseMutationOptions<string, UserServiceError, ActivityRecord>,
 ): UseMutationResult<string, UserServiceError, ActivityRecord> {
   const cacheManager = getUserServiceCacheManager();
 
@@ -456,7 +482,7 @@ export function useRecordActivity(
 }
 
 export function useRecordActivitiesBatch(
-  options?: UseMutationOptions<string[], UserServiceError, ActivityRecord[]>
+  options?: UseMutationOptions<string[], UserServiceError, ActivityRecord[]>,
 ): UseMutationResult<string[], UserServiceError, ActivityRecord[]> {
   const cacheManager = getUserServiceCacheManager();
 
@@ -481,20 +507,20 @@ export function useRecordActivitiesBatch(
 export function useGdprExportStatus(
   userId: string,
   requestId: string,
-  options?: Partial<UseQueryOptions<GDPRExportResponse, UserServiceError>>
+  options?: Partial<UseQueryOptions<GDPRExportResponse, UserServiceError>>,
 ): UseQueryResult<GDPRExportResponse, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.gdprExportStatus(userId, requestId),
     queryFn: () => userServiceClient.getGdprExportStatus(requestId),
     ...createUserServiceQueryOptions<GDPRExportResponse>(
       CACHE_TIMES.GDPR_EXPORT_STATUS,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     enabled: !!userId && !!requestId && options?.enabled !== false,
     refetchInterval: (query) => {
       // Poll every 5 seconds if export is still processing
-      const data = query?.state?.data
+      const data = query?.state?.data;
       return data?.status === "processing" || data?.status === "pending"
         ? 5000
         : false;
@@ -504,14 +530,14 @@ export function useGdprExportStatus(
 
 export function useGdprConsent(
   userId: string,
-  options?: Partial<UseQueryOptions<ConsentPreferences, UserServiceError>>
+  options?: Partial<UseQueryOptions<ConsentPreferences, UserServiceError>>,
 ): UseQueryResult<ConsentPreferences, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.gdprConsent(userId),
     queryFn: () => userServiceClient.getGdprConsent(userId),
     ...createUserServiceQueryOptions<ConsentPreferences>(
       CACHE_TIMES.GDPR_CONSENT,
-      GC_TIMES.LONG
+      GC_TIMES.LONG,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -520,14 +546,14 @@ export function useGdprConsent(
 
 export function usePrivacyReport(
   userId: string,
-  options?: Partial<UseQueryOptions<PrivacyReport, UserServiceError>>
+  options?: Partial<UseQueryOptions<PrivacyReport, UserServiceError>>,
 ): UseQueryResult<PrivacyReport, UserServiceError> {
   return useQuery({
     queryKey: queryKeys.privacyReport(userId),
     queryFn: () => userServiceClient.generatePrivacyReport(userId),
     ...createUserServiceQueryOptions<PrivacyReport>(
       CACHE_TIMES.PRIVACY_REPORT,
-      GC_TIMES.VERY_LONG
+      GC_TIMES.VERY_LONG,
     ),
     ...options,
     enabled: !!userId && options?.enabled !== false,
@@ -535,7 +561,7 @@ export function usePrivacyReport(
 }
 
 export function useRequestDataExport(
-  options?: UseMutationOptions<GDPRExportResponse, UserServiceError, string>
+  options?: UseMutationOptions<GDPRExportResponse, UserServiceError, string>,
 ): UseMutationResult<GDPRExportResponse, UserServiceError, string> {
   const queryClient = useQueryClient();
 
@@ -556,7 +582,7 @@ export function useRequestDataDeletion(
     { requestId: string },
     UserServiceError,
     { userId: string; reason: string }
-  >
+  >,
 ): UseMutationResult<
   { requestId: string },
   UserServiceError,
@@ -582,7 +608,7 @@ export function useUpdateConsent(
     void,
     UserServiceError,
     { userId: string; consent: ConsentPreferences }
-  >
+  >,
 ): UseMutationResult<
   void,
   UserServiceError,
@@ -606,14 +632,14 @@ export function useUpdateConsent(
 // ============================================================================
 
 export function useServiceHealth(
-  options?: Partial<UseQueryOptions<ServiceHealthStatus, UserServiceError>>
+  options?: Partial<UseQueryOptions<ServiceHealthStatus, UserServiceError>>,
 ) {
   return useQuery({
     queryKey: queryKeys.serviceHealth(),
     queryFn: () => userServiceClient.getHealth(),
     ...createUserServiceQueryOptions<ServiceHealthStatus>(
       CACHE_TIMES.SERVICE_HEALTH,
-      GC_TIMES.SHORT
+      GC_TIMES.SHORT,
     ),
     ...options,
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -622,12 +648,15 @@ export function useServiceHealth(
 }
 
 export function useServiceInfo(
-  options?: Partial<UseQueryOptions<ServiceInfo, UserServiceError>>
+  options?: Partial<UseQueryOptions<ServiceInfo, UserServiceError>>,
 ) {
   return useQuery({
     queryKey: queryKeys.serviceInfo(),
     queryFn: () => userServiceClient.getServiceInfo(),
-    ...createUserServiceQueryOptions<ServiceInfo>(CACHE_TIMES.SERVICE_INFO, GC_TIMES.MEDIUM),
+    ...createUserServiceQueryOptions<ServiceInfo>(
+      CACHE_TIMES.SERVICE_INFO,
+      GC_TIMES.MEDIUM,
+    ),
     ...options,
   });
 }

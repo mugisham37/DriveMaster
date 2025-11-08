@@ -1,13 +1,16 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React from "react";
 
 export interface NotificationsListProps {
-  notifications?: unknown[]
-  onNotificationClick?: (id: string) => void
+  notifications?: unknown[];
+  onNotificationClick?: (id: string) => void;
 }
 
-export function NotificationsList({ notifications = [], onNotificationClick }: NotificationsListProps) {
+export function NotificationsList({
+  notifications = [],
+  onNotificationClick,
+}: NotificationsListProps) {
   return (
     <div className="notifications-list">
       {notifications.length === 0 ? (
@@ -15,14 +18,17 @@ export function NotificationsList({ notifications = [], onNotificationClick }: N
       ) : (
         <ul>
           {notifications.map((_, index) => (
-            <li key={index} onClick={() => onNotificationClick?.(`notification-${index}`)}>
+            <li
+              key={index}
+              onClick={() => onNotificationClick?.(`notification-${index}`)}
+            >
               Notification {index + 1}
             </li>
           ))}
         </ul>
       )}
     </div>
-  )
+  );
 }
 
-export default NotificationsList
+export default NotificationsList;

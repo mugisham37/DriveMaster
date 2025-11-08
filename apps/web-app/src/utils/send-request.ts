@@ -1,38 +1,40 @@
 // Utility function to send requests, preserving exact behavior from Rails implementation
 
 export type APIError = {
-  type: string
-  message: string
-}
+  type: string;
+  message: string;
+};
 
 export function sendRequest({
   endpoint,
-  method = 'GET',
+  method = "GET",
   body,
   headers = {},
 }: {
-  endpoint: string
-  method?: string
-  body?: string | undefined
-  headers?: Record<string, string>
+  endpoint: string;
+  method?: string;
+  body?: string | undefined;
+  headers?: Record<string, string>;
 }) {
   const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
     ...headers,
-  }
+  };
 
-  const fetch = window.fetch(endpoint, {
-    method,
-    headers: defaultHeaders,
-    body: body || null,
-    credentials: 'same-origin',
-  }).then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    return response.json()
-  })
+  const fetch = window
+    .fetch(endpoint, {
+      method,
+      headers: defaultHeaders,
+      body: body || null,
+      credentials: "same-origin",
+    })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    });
 
-  return { fetch }
+  return { fetch };
 }

@@ -110,7 +110,7 @@ const webpackConfigPath = path.join(
   process.cwd(),
   "lib",
   "config",
-  "webpack.ts"
+  "webpack.ts",
 );
 
 if (fs.existsSync(webpackConfigPath)) {
@@ -134,7 +134,7 @@ console.log("🚀 Checking build optimization...");
 const buildOptPath = path.join(
   process.cwd(),
   "scripts",
-  "build-optimization.js"
+  "build-optimization.js",
 );
 
 if (fs.existsSync(buildOptPath)) {
@@ -265,11 +265,11 @@ console.log(`\n🎯 Performance Configuration Score: ${score}%`);
 
 if (score >= 90) {
   console.log(
-    "🎉 Excellent! Your performance configuration is well optimized."
+    "🎉 Excellent! Your performance configuration is well optimized.",
   );
 } else if (score >= 75) {
   console.log(
-    "👍 Good! Consider addressing the warnings for better performance."
+    "👍 Good! Consider addressing the warnings for better performance.",
   );
 } else if (score >= 60) {
   console.log("⚠️  Fair. Several optimizations are missing.");

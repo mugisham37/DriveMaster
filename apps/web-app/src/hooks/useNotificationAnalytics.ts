@@ -1,78 +1,81 @@
 /**
  * React Hooks for Notification Analytics
- * 
+ *
  * Provides hooks for tracking notification events and retrieving analytics data
  * with automatic batching, offline support, and real-time updates.
- * 
+ *
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { 
-  AnalyticsQueryParams, 
-  AnalyticsData, 
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  AnalyticsQueryParams,
+  AnalyticsData,
   DeliveryResult,
-  AnalyticsMetric 
-} from '../types/notification-service'
-import { 
-  getNotificationAnalyticsService, 
-  AnalyticsMetrics 
-} from '../lib/notification-service/analytics-service'
-import { useAuth } from './useAuth'
+  AnalyticsMetric,
+} from "../types/notification-service";
+import {
+  getNotificationAnalyticsService,
+  AnalyticsMetrics,
+} from "../lib/notification-service/analytics-service";
+import { useAuth } from "./useAuth";
 
 // ============================================================================
 // Query Keys
 // ============================================================================
 
 export const analyticsQueryKeys = {
-  all: ['notification-analytics'] as const,
-  analytics: (params: AnalyticsQueryParams) => 
-    [...analyticsQueryKeys.all, 'data', params] as const,
-  metrics: () => [...analyticsQueryKeys.all, 'metrics'] as const,
-  realtime: (params: AnalyticsQueryParams) => 
-    [...analyticsQueryKeys.all, 'realtime', params] as const,
-}
+  all: ["notification-analytics"] as const,
+  analytics: (params: AnalyticsQueryParams) =>
+    [...analyticsQueryKeys.all, "data", params] as const,
+  metrics: () => [...analyticsQueryKeys.all, "metrics"] as const,
+  realtime: (params: AnalyticsQueryParams) =>
+    [...analyticsQueryKeys.all, "realtime", params] as const,
+};
 
 // ============================================================================
 // Hook Types
 // ============================================================================
 
 export interface UseAnalyticsTrackingResult {
-  trackDelivery: (notificationId: string, result: DeliveryResult) => Promise<void>
-  trackOpen: (notificationId: string) => Promise<void>
-  trackClick: (notificationId: string, action?: string) => Promise<void>
-  trackDismiss: (notificationId: string) => Promise<void>
-  isTracking: boolean
-  metrics: AnalyticsMetrics
+  trackDelivery: (
+    notificationId: string,
+    result: DeliveryResult,
+  ) => Promise<void>;
+  trackOpen: (notificationId: string) => Promise<void>;
+  trackClick: (notificationId: string, action?: string) => Promise<void>;
+  trackDismiss: (notificationId: string) => Promise<void>;
+  isTracking: boolean;
+  metrics: AnalyticsMetrics;
 }
 
 export interface UseAnalyticsDataOptions extends AnalyticsQueryParams {
-  enabled?: boolean
-  refetchInterval?: number
-  staleTime?: number
+  enabled?: boolean;
+  refetchInterval?: number;
+  staleTime?: number;
 }
 
 export interface UseAnalyticsDataResult {
-  data: AnalyticsData[] | undefined
-  isLoading: boolean
-  isError: boolean
-  error: Error | null
-  refetch: () => void
+  data: AnalyticsData[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  refetch: () => void;
 }
 
 export interface UseRealtimeAnalyticsOptions extends AnalyticsQueryParams {
-  enabled?: boolean
-  updateInterval?: number
+  enabled?: boolean;
+  updateInterval?: number;
 }
 
 export interface UseRealtimeAnalyticsResult {
-  data: AnalyticsData[] | undefined
-  isLoading: boolean
-  isError: boolean
-  error: Error | null
-  isConnected: boolean
-  disconnect: () => void
+  data: AnalyticsData[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  isConnected: boolean;
+  disconnect: () => void;
 }
 
 // ============================================================================
@@ -84,88 +87,102 @@ export interface UseRealtimeAnalyticsResult {
  * Requirements: 5.1, 5.2, 5.3
  */
 export function useAnalyticsTracking(): UseAnalyticsTrackingResult {
-  const { user } = useAuth()
-  const [isTracking, setIsTracking] = useState(false)
+  const { user } = useAuth();
+  const [isTracking, setIsTracking] = useState(false);
   const [metrics, setMetrics] = useState<AnalyticsMetrics>({
     eventsQueued: 0,
     eventsSent: 0,
     eventsFailedToSend: 0,
     batchesSent: 0,
     averageBatchSize: 0,
-    offlineQueueSize: 0
-  })
+    offlineQueueSize: 0,
+  });
 
-  const analyticsService = getNotificationAnalyticsService()
+  const analyticsService = getNotificationAnalyticsService();
 
   // Update metrics periodically
   useEffect(() => {
     const updateMetrics = () => {
-      setMetrics(analyticsService.getMetrics())
-    }
+      setMetrics(analyticsService.getMetrics());
+    };
 
-    updateMetrics()
-    const interval = setInterval(updateMetrics, 5000) // Update every 5 seconds
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 5000); // Update every 5 seconds
 
-    return () => clearInterval(interval)
-  }, [analyticsService])
+    return () => clearInterval(interval);
+  }, [analyticsService]);
 
-  const trackDelivery = useCallback(async (
-    notificationId: string, 
-    result: DeliveryResult
-  ) => {
-    if (!user?.id) return
+  const trackDelivery = useCallback(
+    async (notificationId: string, result: DeliveryResult) => {
+      if (!user?.id) return;
 
-    setIsTracking(true)
-    try {
-      await analyticsService.trackDelivery(notificationId, String(user.id), result)
-    } catch (error) {
-      console.error('Failed to track delivery:', error)
-    } finally {
-      setIsTracking(false)
-    }
-  }, [user?.id, analyticsService])
+      setIsTracking(true);
+      try {
+        await analyticsService.trackDelivery(
+          notificationId,
+          String(user.id),
+          result,
+        );
+      } catch (error) {
+        console.error("Failed to track delivery:", error);
+      } finally {
+        setIsTracking(false);
+      }
+    },
+    [user?.id, analyticsService],
+  );
 
-  const trackOpen = useCallback(async (notificationId: string) => {
-    if (!user?.id) return
+  const trackOpen = useCallback(
+    async (notificationId: string) => {
+      if (!user?.id) return;
 
-    setIsTracking(true)
-    try {
-      await analyticsService.trackOpen(notificationId, String(user.id))
-    } catch (error) {
-      console.error('Failed to track open:', error)
-    } finally {
-      setIsTracking(false)
-    }
-  }, [user?.id, analyticsService])
+      setIsTracking(true);
+      try {
+        await analyticsService.trackOpen(notificationId, String(user.id));
+      } catch (error) {
+        console.error("Failed to track open:", error);
+      } finally {
+        setIsTracking(false);
+      }
+    },
+    [user?.id, analyticsService],
+  );
 
-  const trackClick = useCallback(async (
-    notificationId: string, 
-    action?: string
-  ) => {
-    if (!user?.id) return
+  const trackClick = useCallback(
+    async (notificationId: string, action?: string) => {
+      if (!user?.id) return;
 
-    setIsTracking(true)
-    try {
-      await analyticsService.trackClick(notificationId, String(user.id), action)
-    } catch (error) {
-      console.error('Failed to track click:', error)
-    } finally {
-      setIsTracking(false)
-    }
-  }, [user?.id, analyticsService])
+      setIsTracking(true);
+      try {
+        await analyticsService.trackClick(
+          notificationId,
+          String(user.id),
+          action,
+        );
+      } catch (error) {
+        console.error("Failed to track click:", error);
+      } finally {
+        setIsTracking(false);
+      }
+    },
+    [user?.id, analyticsService],
+  );
 
-  const trackDismiss = useCallback(async (notificationId: string) => {
-    if (!user?.id) return
+  const trackDismiss = useCallback(
+    async (notificationId: string) => {
+      if (!user?.id) return;
 
-    setIsTracking(true)
-    try {
-      await analyticsService.trackDismiss(notificationId, String(user.id))
-    } catch (error) {
-      console.error('Failed to track dismiss:', error)
-    } finally {
-      setIsTracking(false)
-    }
-  }, [user?.id, analyticsService])
+      setIsTracking(true);
+      try {
+        await analyticsService.trackDismiss(notificationId, String(user.id));
+      } catch (error) {
+        console.error("Failed to track dismiss:", error);
+      } finally {
+        setIsTracking(false);
+      }
+    },
+    [user?.id, analyticsService],
+  );
 
   return {
     trackDelivery,
@@ -173,8 +190,8 @@ export function useAnalyticsTracking(): UseAnalyticsTrackingResult {
     trackClick,
     trackDismiss,
     isTracking,
-    metrics
-  }
+    metrics,
+  };
 }
 
 // ============================================================================
@@ -186,35 +203,35 @@ export function useAnalyticsTracking(): UseAnalyticsTrackingResult {
  * Requirements: 5.4, 5.5
  */
 export function useAnalyticsData(
-  options: UseAnalyticsDataOptions
+  options: UseAnalyticsDataOptions,
 ): UseAnalyticsDataResult {
-  const { 
-    enabled = true, 
+  const {
+    enabled = true,
     refetchInterval = 60000, // 1 minute
     staleTime = 30000, // 30 seconds
-    ...params 
-  } = options
+    ...params
+  } = options;
 
   const query = useQuery({
     queryKey: analyticsQueryKeys.analytics(params),
     queryFn: async () => {
-      const analyticsService = getNotificationAnalyticsService()
-      return analyticsService.getAnalytics(params)
+      const analyticsService = getNotificationAnalyticsService();
+      return analyticsService.getAnalytics(params);
     },
     enabled,
     refetchInterval,
     staleTime,
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
-  })
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
   return {
     data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
-    refetch: query.refetch
-  }
+    refetch: query.refetch,
+  };
 }
 
 // ============================================================================
@@ -226,32 +243,29 @@ export function useAnalyticsData(
  * Requirements: 5.4, 5.5
  */
 export function useRealtimeAnalytics(
-  options: UseRealtimeAnalyticsOptions
+  options: UseRealtimeAnalyticsOptions,
 ): UseRealtimeAnalyticsResult {
-  const { 
-    enabled = true, 
-    ...params 
-  } = options
+  const { enabled = true, ...params } = options;
 
-  const [data, setData] = useState<AnalyticsData[] | undefined>()
-  const [isLoading, setIsLoading] = useState(true)
-  const [isError, setIsError] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const [isConnected, setIsConnected] = useState(false)
-  
-  const disconnectRef = useRef<(() => void) | null>(null)
-  const analyticsService = getNotificationAnalyticsService()
+  const [data, setData] = useState<AnalyticsData[] | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const disconnectRef = useRef<(() => void) | null>(null);
+  const analyticsService = getNotificationAnalyticsService();
 
   useEffect(() => {
     if (!enabled) {
-      setIsConnected(false)
-      return
+      setIsConnected(false);
+      return;
     }
 
-    let isMounted = true
-    setIsLoading(true)
-    setIsError(false)
-    setError(null)
+    let isMounted = true;
+    setIsLoading(true);
+    setIsError(false);
+    setError(null);
 
     const startRealtimeUpdates = async () => {
       try {
@@ -259,43 +273,43 @@ export function useRealtimeAnalytics(
           params,
           (newData) => {
             if (isMounted) {
-              setData(newData)
-              setIsLoading(false)
-              setIsConnected(true)
+              setData(newData);
+              setIsLoading(false);
+              setIsConnected(true);
             }
-          }
-        )
+          },
+        );
 
-        disconnectRef.current = cleanup
+        disconnectRef.current = cleanup;
       } catch (err) {
         if (isMounted) {
-          setIsError(true)
-          setError(err as Error)
-          setIsLoading(false)
-          setIsConnected(false)
+          setIsError(true);
+          setError(err as Error);
+          setIsLoading(false);
+          setIsConnected(false);
         }
       }
-    }
+    };
 
-    startRealtimeUpdates()
+    startRealtimeUpdates();
 
     return () => {
-      isMounted = false
+      isMounted = false;
       if (disconnectRef.current) {
-        disconnectRef.current()
-        disconnectRef.current = null
+        disconnectRef.current();
+        disconnectRef.current = null;
       }
-      setIsConnected(false)
-    }
-  }, [enabled, analyticsService, params])
+      setIsConnected(false);
+    };
+  }, [enabled, analyticsService, params]);
 
   const disconnect = useCallback(() => {
     if (disconnectRef.current) {
-      disconnectRef.current()
-      disconnectRef.current = null
+      disconnectRef.current();
+      disconnectRef.current = null;
     }
-    setIsConnected(false)
-  }, [])
+    setIsConnected(false);
+  }, []);
 
   return {
     data,
@@ -303,8 +317,8 @@ export function useRealtimeAnalytics(
     isError,
     error,
     isConnected,
-    disconnect
-  }
+    disconnect,
+  };
 }
 
 // ============================================================================
@@ -322,36 +336,36 @@ export function useAnalyticsMetrics() {
     eventsFailedToSend: 0,
     batchesSent: 0,
     averageBatchSize: 0,
-    offlineQueueSize: 0
-  })
+    offlineQueueSize: 0,
+  });
 
-  const analyticsService = getNotificationAnalyticsService()
+  const analyticsService = getNotificationAnalyticsService();
 
   useEffect(() => {
     const updateMetrics = () => {
-      setMetrics(analyticsService.getMetrics())
-    }
+      setMetrics(analyticsService.getMetrics());
+    };
 
-    updateMetrics()
-    const interval = setInterval(updateMetrics, 1000) // Update every second
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 1000); // Update every second
 
-    return () => clearInterval(interval)
-  }, [analyticsService])
+    return () => clearInterval(interval);
+  }, [analyticsService]);
 
   const resetMetrics = useCallback(() => {
-    analyticsService.resetMetrics()
-    setMetrics(analyticsService.getMetrics())
-  }, [analyticsService])
+    analyticsService.resetMetrics();
+    setMetrics(analyticsService.getMetrics());
+  }, [analyticsService]);
 
   const flush = useCallback(async () => {
-    await analyticsService.flush()
-  }, [analyticsService])
+    await analyticsService.flush();
+  }, [analyticsService]);
 
   return {
     metrics,
     resetMetrics,
-    flush
-  }
+    flush,
+  };
 }
 
 // ============================================================================
@@ -363,27 +377,30 @@ export function useAnalyticsMetrics() {
  * Requirements: 5.1, 5.2
  */
 export function useAutoAnalyticsTracking() {
-  const { trackOpen, trackClick, trackDismiss } = useAnalyticsTracking()
+  const { trackOpen, trackClick, trackDismiss } = useAnalyticsTracking();
 
   // Create event handlers that can be attached to notification components
-  const createTrackingHandlers = useCallback((notificationId: string) => {
-    return {
-      onOpen: () => trackOpen(notificationId),
-      onClick: (action?: string) => trackClick(notificationId, action),
-      onDismiss: () => trackDismiss(notificationId),
-      
-      // Convenience handlers for common actions
-      onView: () => trackOpen(notificationId),
-      onRead: () => trackClick(notificationId, 'read'),
-      onArchive: () => trackClick(notificationId, 'archive'),
-      onDelete: () => trackClick(notificationId, 'delete'),
-      onClose: () => trackDismiss(notificationId)
-    }
-  }, [trackOpen, trackClick, trackDismiss])
+  const createTrackingHandlers = useCallback(
+    (notificationId: string) => {
+      return {
+        onOpen: () => trackOpen(notificationId),
+        onClick: (action?: string) => trackClick(notificationId, action),
+        onDismiss: () => trackDismiss(notificationId),
+
+        // Convenience handlers for common actions
+        onView: () => trackOpen(notificationId),
+        onRead: () => trackClick(notificationId, "read"),
+        onArchive: () => trackClick(notificationId, "archive"),
+        onDelete: () => trackClick(notificationId, "delete"),
+        onClose: () => trackDismiss(notificationId),
+      };
+    },
+    [trackOpen, trackClick, trackDismiss],
+  );
 
   return {
-    createTrackingHandlers
-  }
+    createTrackingHandlers,
+  };
 }
 
 // ============================================================================
@@ -395,39 +412,62 @@ export function useAutoAnalyticsTracking() {
  * Requirements: 5.4, 5.5
  */
 export function useAnalyticsSummary(
-  params: Omit<AnalyticsQueryParams, 'metrics'> & { 
-    metrics?: AnalyticsMetric[] 
-  }
+  params: Omit<AnalyticsQueryParams, "metrics"> & {
+    metrics?: AnalyticsMetric[];
+  },
 ) {
   const defaultMetrics: AnalyticsMetric[] = [
-    'delivery_rate',
-    'open_rate',
-    'click_rate',
-    'conversion_rate'
-  ]
+    "delivery_rate",
+    "open_rate",
+    "click_rate",
+    "conversion_rate",
+  ];
 
   const analyticsParams: AnalyticsQueryParams = {
     ...params,
-    metrics: params.metrics || defaultMetrics
-  }
+    metrics: params.metrics || defaultMetrics,
+  };
 
-  const { data, isLoading, isError, error, refetch } = useAnalyticsData(analyticsParams)
+  const { data, isLoading, isError, error, refetch } =
+    useAnalyticsData(analyticsParams);
 
   // Calculate summary statistics
-  const summary = data ? {
-    totalNotifications: data.length,
-    totalDeliveries: data.length,
-    totalOpens: data.length,
-    totalClicks: data.length,
-    averageDeliveryRate: data.length > 0 ? 
-      data.reduce((sum, item) => sum + (item.metrics.delivery_rate || 0), 0) / data.length : 0,
-    averageOpenRate: data.length > 0 ? 
-      data.reduce((sum, item) => sum + (item.metrics.open_rate || 0), 0) / data.length : 0,
-    averageClickRate: data.length > 0 ? 
-      data.reduce((sum, item) => sum + (item.metrics.click_rate || 0), 0) / data.length : 0,
-    averageConversionRate: data.length > 0 ? 
-      data.reduce((sum, item) => sum + (item.metrics.conversion_rate || 0), 0) / data.length : 0
-  } : null
+  const summary = data
+    ? {
+        totalNotifications: data.length,
+        totalDeliveries: data.length,
+        totalOpens: data.length,
+        totalClicks: data.length,
+        averageDeliveryRate:
+          data.length > 0
+            ? data.reduce(
+                (sum, item) => sum + (item.metrics.delivery_rate || 0),
+                0,
+              ) / data.length
+            : 0,
+        averageOpenRate:
+          data.length > 0
+            ? data.reduce(
+                (sum, item) => sum + (item.metrics.open_rate || 0),
+                0,
+              ) / data.length
+            : 0,
+        averageClickRate:
+          data.length > 0
+            ? data.reduce(
+                (sum, item) => sum + (item.metrics.click_rate || 0),
+                0,
+              ) / data.length
+            : 0,
+        averageConversionRate:
+          data.length > 0
+            ? data.reduce(
+                (sum, item) => sum + (item.metrics.conversion_rate || 0),
+                0,
+              ) / data.length
+            : 0,
+      }
+    : null;
 
   return {
     data,
@@ -435,6 +475,6 @@ export function useAnalyticsSummary(
     isLoading,
     isError,
     error,
-    refetch
-  }
+    refetch,
+  };
 }

@@ -20,7 +20,8 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Exercism - Code Practice and Mentorship for Everyone",
-  description: "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
+  description:
+    "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
   keywords: "programming, coding, practice, mentorship, learn to code",
   authors: [{ name: "Exercism Team" }],
   creator: "Exercism",
@@ -30,10 +31,13 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://exercism.org'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://exercism.org",
+  ),
   openGraph: {
     title: "Exercism - Code Practice and Mentorship for Everyone",
-    description: "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
+    description:
+      "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
     url: "/",
     siteName: "Exercism",
     locale: "en_US",
@@ -42,7 +46,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Exercism - Code Practice and Mentorship for Everyone",
-    description: "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
+    description:
+      "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
     creator: "@exercism_io",
   },
   robots: {
@@ -51,9 +56,9 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
 };

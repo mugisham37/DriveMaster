@@ -3,24 +3,24 @@
  * React hook for accessing the user service client
  */
 
-import { useMemo } from 'react'
-import { UserServiceClient } from '../lib/user-service/unified-client'
+import { useMemo } from "react";
+import { UserServiceClient } from "../lib/user-service/unified-client";
 
 // Global client instance
-let globalUserServiceClient: UserServiceClient | null = null
+let globalUserServiceClient: UserServiceClient | null = null;
 
 export function useUserServiceClient(): UserServiceClient {
   return useMemo(() => {
     if (!globalUserServiceClient) {
-      globalUserServiceClient = new UserServiceClient()
+      globalUserServiceClient = new UserServiceClient();
     }
-    return globalUserServiceClient
-  }, [])
+    return globalUserServiceClient;
+  }, []);
 }
 
 export function getUserServiceClient(): UserServiceClient {
   if (!globalUserServiceClient) {
-    globalUserServiceClient = new UserServiceClient()
+    globalUserServiceClient = new UserServiceClient();
   }
-  return globalUserServiceClient
+  return globalUserServiceClient;
 }

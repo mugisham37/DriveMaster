@@ -1,50 +1,50 @@
 /**
  * Content Service Error Handler
- * 
+ *
  * Comprehensive error classification, recovery strategies, and user-friendly messaging
  * Requirements: 7.2, 7.5
  */
 
-import type { 
-  ContentServiceError, 
+import type {
+  ContentServiceError,
   ContentServiceErrorType,
   NotFoundError,
   RateLimitError,
-  ServiceUnavailableError
-} from '@/types'
+  ServiceUnavailableError,
+} from "@/types";
 
 // ============================================================================
 // Error Classification
 // ============================================================================
 
 export interface ErrorClassification {
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  category: 'user' | 'system' | 'network' | 'service'
-  recoverable: boolean
-  retryable: boolean
-  userActionRequired: boolean
-  escalationRequired: boolean
+  severity: "low" | "medium" | "high" | "critical";
+  category: "user" | "system" | "network" | "service";
+  recoverable: boolean;
+  retryable: boolean;
+  userActionRequired: boolean;
+  escalationRequired: boolean;
 }
 
 export interface RecoveryStrategy {
-  type: 'retry' | 'fallback' | 'redirect' | 'manual' | 'ignore'
-  maxAttempts?: number
-  delay?: number
-  backoffFactor?: number
-  fallbackAction?: () => Promise<unknown>
-  redirectUrl?: string
-  userMessage?: string
+  type: "retry" | "fallback" | "redirect" | "manual" | "ignore";
+  maxAttempts?: number;
+  delay?: number;
+  backoffFactor?: number;
+  fallbackAction?: () => Promise<unknown>;
+  redirectUrl?: string;
+  userMessage?: string;
 }
 
 export interface ErrorReport {
-  error: ContentServiceError
-  classification: ErrorClassification
-  recoveryStrategy: RecoveryStrategy
-  userMessage: string
-  technicalMessage: string
-  actionItems: string[]
-  correlationId?: string
-  context?: Record<string, unknown>
+  error: ContentServiceError;
+  classification: ErrorClassification;
+  recoveryStrategy: RecoveryStrategy;
+  userMessage: string;
+  technicalMessage: string;
+  actionItems: string[];
+  correlationId?: string;
+  context?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -52,23 +52,26 @@ export interface ErrorReport {
 // ============================================================================
 
 export class ErrorHandler {
-  private static errorCounts = new Map<string, number>()
-  private static lastErrorTimes = new Map<string, Date>()
-  private static recoveryAttempts = new Map<string, number>()
+  private static errorCounts = new Map<string, number>();
+  private static lastErrorTimes = new Map<string, Date>();
+  private static recoveryAttempts = new Map<string, number>();
 
   /**
    * Handles and classifies API errors with comprehensive recovery strategies
    */
-  static handleApiError(error: unknown, context?: Record<string, unknown>): ErrorReport {
-    const contentError = this.normalizeError(error)
-    const classification = this.classifyError(contentError)
-    const recoveryStrategy = this.determineRecoveryStrategy(contentError)
-    const userMessage = this.generateUserMessage(contentError)
-    const technicalMessage = this.generateTechnicalMessage(contentError)
-    const actionItems = this.generateActionItems(contentError)
+  static handleApiError(
+    error: unknown,
+    context?: Record<string, unknown>,
+  ): ErrorReport {
+    const contentError = this.normalizeError(error);
+    const classification = this.classifyError(contentError);
+    const recoveryStrategy = this.determineRecoveryStrategy(contentError);
+    const userMessage = this.generateUserMessage(contentError);
+    const technicalMessage = this.generateTechnicalMessage(contentError);
+    const actionItems = this.generateActionItems(contentError);
 
     // Track error for patterns and escalation
-    this.trackError(contentError)
+    this.trackError(contentError);
 
     const report: ErrorReport = {
       error: contentError,
@@ -76,18 +79,18 @@ export class ErrorHandler {
       recoveryStrategy,
       userMessage,
       technicalMessage,
-      actionItems
-    }
+      actionItems,
+    };
 
     if (contentError.correlationId) {
-      report.correlationId = contentError.correlationId
+      report.correlationId = contentError.correlationId;
     }
 
     if (context) {
-      report.context = context
+      report.context = context;
     }
 
-    return report
+    return report;
   }
 
   /**
@@ -95,242 +98,259 @@ export class ErrorHandler {
    */
   private static normalizeError(error: unknown): ContentServiceError {
     // Already a ContentServiceError
-    if (error && typeof error === 'object' && 'type' in error && 'timestamp' in error) {
-      return error as ContentServiceError
+    if (
+      error &&
+      typeof error === "object" &&
+      "type" in error &&
+      "timestamp" in error
+    ) {
+      return error as ContentServiceError;
     }
 
     // Axios error
-    if (error && typeof error === 'object' && 'isAxiosError' in error) {
-      return this.transformAxiosError(error as Record<string, unknown>)
+    if (error && typeof error === "object" && "isAxiosError" in error) {
+      return this.transformAxiosError(error as Record<string, unknown>);
     }
 
     // Standard Error
     if (error instanceof Error) {
       return {
-        type: 'server',
+        type: "server",
         message: error.message,
-        code: 'UNKNOWN_ERROR',
+        code: "UNKNOWN_ERROR",
         recoverable: false,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      };
     }
 
     // Unknown error
     return {
-      type: 'server',
-      message: 'An unknown error occurred',
-      code: 'UNKNOWN_ERROR',
+      type: "server",
+      message: "An unknown error occurred",
+      code: "UNKNOWN_ERROR",
       recoverable: false,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    };
   }
 
   /**
    * Transforms Axios errors to ContentServiceError
    */
-  private static transformAxiosError(_axiosError: Record<string, unknown>): ContentServiceError {
+  private static transformAxiosError(
+    _axiosError: Record<string, unknown>,
+  ): ContentServiceError {
     // Simple fallback transformation
-    const message = (_axiosError.message as string) || 'Request failed'
-    const code = (_axiosError.code as string) || 'REQUEST_ERROR'
-    
+    const message = (_axiosError.message as string) || "Request failed";
+    const code = (_axiosError.code as string) || "REQUEST_ERROR";
+
     return {
-      type: 'network',
+      type: "network",
       message,
       code,
       recoverable: true,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    };
   }
 
   /**
    * Classifies errors by severity and category
    */
-  private static classifyError(error: ContentServiceError): ErrorClassification {
-    const errorType = error.type
+  private static classifyError(
+    error: ContentServiceError,
+  ): ErrorClassification {
+    const errorType = error.type;
 
     switch (errorType) {
-      case 'network':
+      case "network":
         return {
-          severity: 'medium',
-          category: 'network',
+          severity: "medium",
+          category: "network",
           recoverable: true,
           retryable: true,
           userActionRequired: false,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'authentication':
+      case "authentication":
         return {
-          severity: 'medium',
-          category: 'user',
+          severity: "medium",
+          category: "user",
           recoverable: true,
           retryable: false,
           userActionRequired: true,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'authorization':
+      case "authorization":
         return {
-          severity: 'medium',
-          category: 'user',
+          severity: "medium",
+          category: "user",
           recoverable: false,
           retryable: false,
           userActionRequired: true,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'validation':
+      case "validation":
         return {
-          severity: 'low',
-          category: 'user',
+          severity: "low",
+          category: "user",
           recoverable: true,
           retryable: false,
           userActionRequired: true,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'not_found':
+      case "not_found":
         return {
-          severity: 'low',
-          category: 'user',
+          severity: "low",
+          category: "user",
           recoverable: false,
           retryable: false,
           userActionRequired: true,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'conflict':
+      case "conflict":
         return {
-          severity: 'medium',
-          category: 'user',
+          severity: "medium",
+          category: "user",
           recoverable: true,
           retryable: true,
           userActionRequired: true,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'timeout':
+      case "timeout":
         return {
-          severity: 'medium',
-          category: 'network',
+          severity: "medium",
+          category: "network",
           recoverable: true,
           retryable: true,
           userActionRequired: false,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'rate_limit':
+      case "rate_limit":
         return {
-          severity: 'medium',
-          category: 'system',
+          severity: "medium",
+          category: "system",
           recoverable: true,
           retryable: true,
           userActionRequired: false,
-          escalationRequired: false
-        }
+          escalationRequired: false,
+        };
 
-      case 'service_unavailable':
+      case "service_unavailable":
         return {
-          severity: 'high',
-          category: 'service',
+          severity: "high",
+          category: "service",
           recoverable: true,
           retryable: true,
           userActionRequired: false,
-          escalationRequired: true
-        }
+          escalationRequired: true,
+        };
 
-      case 'server':
+      case "server":
       default:
         return {
-          severity: 'high',
-          category: 'system',
+          severity: "high",
+          category: "system",
           recoverable: false,
           retryable: false,
           userActionRequired: false,
-          escalationRequired: true
-        }
+          escalationRequired: true,
+        };
     }
   }
 
   /**
    * Determines appropriate recovery strategy
    */
-  private static determineRecoveryStrategy(error: ContentServiceError): RecoveryStrategy {
-    const errorKey = `${error.type}_${error.code}`
-    const attemptCount = this.recoveryAttempts.get(errorKey) || 0
+  private static determineRecoveryStrategy(
+    error: ContentServiceError,
+  ): RecoveryStrategy {
+    const errorKey = `${error.type}_${error.code}`;
+    const attemptCount = this.recoveryAttempts.get(errorKey) || 0;
 
     switch (error.type) {
-      case 'network':
-      case 'timeout':
+      case "network":
+      case "timeout":
         return {
-          type: 'retry',
+          type: "retry",
           maxAttempts: 3,
           delay: this.calculateRetryDelay(attemptCount),
           backoffFactor: 2,
-          userMessage: 'Retrying connection...'
-        }
+          userMessage: "Retrying connection...",
+        };
 
-      case 'authentication':
+      case "authentication":
         return {
-          type: 'redirect',
-          redirectUrl: '/login',
-          userMessage: 'Please sign in to continue'
-        }
+          type: "redirect",
+          redirectUrl: "/login",
+          userMessage: "Please sign in to continue",
+        };
 
-      case 'authorization':
+      case "authorization":
         return {
-          type: 'manual',
-          userMessage: 'Contact your administrator for access'
-        }
+          type: "manual",
+          userMessage: "Contact your administrator for access",
+        };
 
-      case 'validation':
+      case "validation":
         return {
-          type: 'manual',
-          userMessage: 'Please correct the highlighted fields and try again'
-        }
+          type: "manual",
+          userMessage: "Please correct the highlighted fields and try again",
+        };
 
-      case 'not_found':
+      case "not_found":
         return {
-          type: 'manual',
-          userMessage: 'The requested resource was not found'
-        }
+          type: "manual",
+          userMessage: "The requested resource was not found",
+        };
 
-      case 'conflict':
+      case "conflict":
         return {
-          type: 'retry',
+          type: "retry",
           maxAttempts: 2,
           delay: 1000,
-          userMessage: 'Refreshing data and retrying...'
-        }
+          userMessage: "Refreshing data and retrying...",
+        };
 
-      case 'rate_limit':
-        const rateLimitError = error as RateLimitError
+      case "rate_limit":
+        const rateLimitError = error as RateLimitError;
         return {
-          type: 'retry',
+          type: "retry",
           maxAttempts: 1,
-          delay: Math.max(1000, (rateLimitError.resetTime.getTime() - Date.now())),
-          userMessage: 'Rate limit exceeded. Waiting to retry...'
-        }
+          delay: Math.max(
+            1000,
+            rateLimitError.resetTime.getTime() - Date.now(),
+          ),
+          userMessage: "Rate limit exceeded. Waiting to retry...",
+        };
 
-      case 'service_unavailable':
-        const serviceError = error as ServiceUnavailableError
-        const estimatedDelay = serviceError.estimatedRecoveryTime 
-          ? Math.max(5000, serviceError.estimatedRecoveryTime.getTime() - Date.now())
-          : 30000
+      case "service_unavailable":
+        const serviceError = error as ServiceUnavailableError;
+        const estimatedDelay = serviceError.estimatedRecoveryTime
+          ? Math.max(
+              5000,
+              serviceError.estimatedRecoveryTime.getTime() - Date.now(),
+            )
+          : 30000;
 
         return {
-          type: 'retry',
+          type: "retry",
           maxAttempts: 2,
           delay: estimatedDelay,
-          userMessage: 'Service temporarily unavailable. Retrying...'
-        }
+          userMessage: "Service temporarily unavailable. Retrying...",
+        };
 
-      case 'server':
+      case "server":
       default:
         return {
-          type: 'manual',
-          userMessage: 'An unexpected error occurred. Please try again later.'
-        }
+          type: "manual",
+          userMessage: "An unexpected error occurred. Please try again later.",
+        };
     }
   }
 
@@ -339,39 +359,44 @@ export class ErrorHandler {
    */
   private static generateUserMessage(error: ContentServiceError): string {
     const baseMessages: Record<ContentServiceErrorType, string> = {
-      network: 'Connection problem. Please check your internet connection and try again.',
-      authentication: 'Your session has expired. Please sign in again.',
-      authorization: 'You don\'t have permission to perform this action.',
-      validation: 'Please check your input and try again.',
-      not_found: 'The requested item could not be found.',
-      conflict: 'This item was modified by someone else. Please refresh and try again.',
-      timeout: 'The request took too long. Please try again.',
-      rate_limit: 'Too many requests. Please wait a moment and try again.',
-      service_unavailable: 'The service is temporarily unavailable. Please try again later.',
-      server: 'An unexpected error occurred. Please try again later.'
-    }
+      network:
+        "Connection problem. Please check your internet connection and try again.",
+      authentication: "Your session has expired. Please sign in again.",
+      authorization: "You don't have permission to perform this action.",
+      validation: "Please check your input and try again.",
+      not_found: "The requested item could not be found.",
+      conflict:
+        "This item was modified by someone else. Please refresh and try again.",
+      timeout: "The request took too long. Please try again.",
+      rate_limit: "Too many requests. Please wait a moment and try again.",
+      service_unavailable:
+        "The service is temporarily unavailable. Please try again later.",
+      server: "An unexpected error occurred. Please try again later.",
+    };
 
-    let message = baseMessages[error.type] || baseMessages.server
+    let message = baseMessages[error.type] || baseMessages.server;
 
     // Add specific context for certain errors
-    if (error.type === 'validation' && 'field' in error && error.field) {
-      message = `Please check the ${error.field} field and try again.`
+    if (error.type === "validation" && "field" in error && error.field) {
+      message = `Please check the ${error.field} field and try again.`;
     }
 
-    if (error.type === 'not_found' && 'resource' in error) {
-      const resourceName = ((error as NotFoundError).resource || 'resource').replace('_', ' ')
-      message = `The requested ${resourceName} could not be found.`
+    if (error.type === "not_found" && "resource" in error) {
+      const resourceName = (
+        (error as NotFoundError).resource || "resource"
+      ).replace("_", " ");
+      message = `The requested ${resourceName} could not be found.`;
     }
 
-    if (error.type === 'rate_limit' && 'resetTime' in error) {
-      const resetTime = (error as RateLimitError).resetTime
-      const waitTime = Math.ceil((resetTime.getTime() - Date.now()) / 1000)
+    if (error.type === "rate_limit" && "resetTime" in error) {
+      const resetTime = (error as RateLimitError).resetTime;
+      const waitTime = Math.ceil((resetTime.getTime() - Date.now()) / 1000);
       if (waitTime > 0) {
-        message = `Rate limit exceeded. Please wait ${waitTime} seconds and try again.`
+        message = `Rate limit exceeded. Please wait ${waitTime} seconds and try again.`;
       }
     }
 
-    return message
+    return message;
   }
 
   /**
@@ -380,114 +405,120 @@ export class ErrorHandler {
   private static generateTechnicalMessage(error: ContentServiceError): string {
     const parts = [
       `Type: ${error.type}`,
-      `Code: ${error.code || 'N/A'}`,
+      `Code: ${error.code || "N/A"}`,
       `Message: ${error.message}`,
-      `Timestamp: ${error.timestamp.toISOString()}`
-    ]
+      `Timestamp: ${error.timestamp.toISOString()}`,
+    ];
 
     if (error.correlationId) {
-      parts.push(`Correlation ID: ${error.correlationId}`)
+      parts.push(`Correlation ID: ${error.correlationId}`);
     }
 
-    if ('cause' in error && error.cause) {
-      parts.push(`Cause: ${error.cause}`)
+    if ("cause" in error && error.cause) {
+      parts.push(`Cause: ${error.cause}`);
     }
 
-    return parts.join(' | ')
+    return parts.join(" | ");
   }
 
   /**
    * Generates actionable items for error resolution
    */
   private static generateActionItems(error: ContentServiceError): string[] {
-    const actions: string[] = []
+    const actions: string[] = [];
 
     switch (error.type) {
-      case 'network':
-        actions.push('Check your internet connection')
-        actions.push('Try refreshing the page')
-        actions.push('Contact support if the problem persists')
-        break
+      case "network":
+        actions.push("Check your internet connection");
+        actions.push("Try refreshing the page");
+        actions.push("Contact support if the problem persists");
+        break;
 
-      case 'authentication':
-        actions.push('Sign in again')
-        actions.push('Clear browser cache and cookies')
-        actions.push('Contact support if you continue having trouble')
-        break
+      case "authentication":
+        actions.push("Sign in again");
+        actions.push("Clear browser cache and cookies");
+        actions.push("Contact support if you continue having trouble");
+        break;
 
-      case 'authorization':
-        actions.push('Contact your administrator for access')
-        actions.push('Verify you have the correct permissions')
-        break
+      case "authorization":
+        actions.push("Contact your administrator for access");
+        actions.push("Verify you have the correct permissions");
+        break;
 
-      case 'validation':
-        if ('field' in error && error.field) {
-          actions.push(`Check the ${error.field} field`)
+      case "validation":
+        if ("field" in error && error.field) {
+          actions.push(`Check the ${error.field} field`);
         }
-        if ('constraints' in error && error.constraints) {
-          actions.push(...(error.constraints as string[]).map((c: string) => `Ensure ${c}`))
+        if ("constraints" in error && error.constraints) {
+          actions.push(
+            ...(error.constraints as string[]).map(
+              (c: string) => `Ensure ${c}`,
+            ),
+          );
         }
-        actions.push('Review all required fields')
-        break
+        actions.push("Review all required fields");
+        break;
 
-      case 'not_found':
-        actions.push('Verify the item exists')
-        actions.push('Check the URL or search again')
-        actions.push('Contact support if you believe this is an error')
-        break
+      case "not_found":
+        actions.push("Verify the item exists");
+        actions.push("Check the URL or search again");
+        actions.push("Contact support if you believe this is an error");
+        break;
 
-      case 'conflict':
-        actions.push('Refresh the page to get the latest data')
-        actions.push('Try your action again')
-        actions.push('Contact the other user if needed')
-        break
+      case "conflict":
+        actions.push("Refresh the page to get the latest data");
+        actions.push("Try your action again");
+        actions.push("Contact the other user if needed");
+        break;
 
-      case 'timeout':
-        actions.push('Try again with a smaller request')
-        actions.push('Check your internet connection')
-        actions.push('Contact support if timeouts persist')
-        break
+      case "timeout":
+        actions.push("Try again with a smaller request");
+        actions.push("Check your internet connection");
+        actions.push("Contact support if timeouts persist");
+        break;
 
-      case 'rate_limit':
-        actions.push('Wait a moment before trying again')
-        actions.push('Reduce the frequency of your requests')
-        break
+      case "rate_limit":
+        actions.push("Wait a moment before trying again");
+        actions.push("Reduce the frequency of your requests");
+        break;
 
-      case 'service_unavailable':
-        actions.push('Wait a few minutes and try again')
-        actions.push('Check the service status page')
-        actions.push('Contact support if the issue persists')
-        break
+      case "service_unavailable":
+        actions.push("Wait a few minutes and try again");
+        actions.push("Check the service status page");
+        actions.push("Contact support if the issue persists");
+        break;
 
-      case 'server':
+      case "server":
       default:
-        actions.push('Try again in a few minutes')
-        actions.push('Contact support with the error details')
-        break
+        actions.push("Try again in a few minutes");
+        actions.push("Contact support with the error details");
+        break;
     }
 
-    return actions
+    return actions;
   }
 
   /**
    * Tracks error patterns for escalation
    */
   private static trackError(error: ContentServiceError): void {
-    const errorKey = `${error.type}_${error.code}`
-    const now = new Date()
+    const errorKey = `${error.type}_${error.code}`;
+    const now = new Date();
 
     // Update error count
-    const currentCount = this.errorCounts.get(errorKey) || 0
-    this.errorCounts.set(errorKey, currentCount + 1)
-    this.lastErrorTimes.set(errorKey, now)
+    const currentCount = this.errorCounts.get(errorKey) || 0;
+    this.errorCounts.set(errorKey, currentCount + 1);
+    this.lastErrorTimes.set(errorKey, now);
 
     // Update recovery attempt count
-    const attemptCount = this.recoveryAttempts.get(errorKey) || 0
-    this.recoveryAttempts.set(errorKey, attemptCount + 1)
+    const attemptCount = this.recoveryAttempts.get(errorKey) || 0;
+    this.recoveryAttempts.set(errorKey, attemptCount + 1);
 
     // Log error patterns for monitoring
     if (currentCount > 5) {
-      console.warn(`[ErrorHandler] High error frequency detected: ${errorKey} (${currentCount} occurrences)`)
+      console.warn(
+        `[ErrorHandler] High error frequency detected: ${errorKey} (${currentCount} occurrences)`,
+      );
     }
   }
 
@@ -496,36 +527,36 @@ export class ErrorHandler {
    */
   static isRetryableError(error: ContentServiceError): boolean {
     const retryableTypes: ContentServiceErrorType[] = [
-      'network',
-      'timeout', 
-      'rate_limit',
-      'service_unavailable',
-      'conflict'
-    ]
+      "network",
+      "timeout",
+      "rate_limit",
+      "service_unavailable",
+      "conflict",
+    ];
 
-    return retryableTypes.includes(error.type) && error.recoverable
+    return retryableTypes.includes(error.type) && error.recoverable;
   }
 
   /**
    * Calculates retry delay with exponential backoff
    */
   static getRetryDelay(error: ContentServiceError, attempt: number): number {
-    const baseDelay = error.retryAfter ? error.retryAfter * 1000 : 1000
-    const exponentialDelay = baseDelay * Math.pow(2, attempt - 1)
-    const jitteredDelay = exponentialDelay + (Math.random() * 1000)
-    
-    return Math.min(jitteredDelay, 30000) // Max 30 seconds
+    const baseDelay = error.retryAfter ? error.retryAfter * 1000 : 1000;
+    const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+    const jitteredDelay = exponentialDelay + Math.random() * 1000;
+
+    return Math.min(jitteredDelay, 30000); // Max 30 seconds
   }
 
   /**
    * Calculates retry delay for recovery attempts
    */
   private static calculateRetryDelay(attempt: number): number {
-    const baseDelay = 1000 // 1 second
-    const exponentialDelay = baseDelay * Math.pow(2, attempt)
-    const jitteredDelay = exponentialDelay + (Math.random() * 500)
-    
-    return Math.min(jitteredDelay, 30000) // Max 30 seconds
+    const baseDelay = 1000; // 1 second
+    const exponentialDelay = baseDelay * Math.pow(2, attempt);
+    const jitteredDelay = exponentialDelay + Math.random() * 500;
+
+    return Math.min(jitteredDelay, 30000); // Max 30 seconds
   }
 
   /**
@@ -534,23 +565,23 @@ export class ErrorHandler {
   static resetErrorTracking(errorType?: string): void {
     if (errorType) {
       // Reset specific error type
-      const keysToDelete: string[] = []
+      const keysToDelete: string[] = [];
       for (const [key] of this.errorCounts) {
         if (key.startsWith(errorType)) {
-          keysToDelete.push(key)
+          keysToDelete.push(key);
         }
       }
-      
-      keysToDelete.forEach(key => {
-        this.errorCounts.delete(key)
-        this.lastErrorTimes.delete(key)
-        this.recoveryAttempts.delete(key)
-      })
+
+      keysToDelete.forEach((key) => {
+        this.errorCounts.delete(key);
+        this.lastErrorTimes.delete(key);
+        this.recoveryAttempts.delete(key);
+      });
     } else {
       // Reset all
-      this.errorCounts.clear()
-      this.lastErrorTimes.clear()
-      this.recoveryAttempts.clear()
+      this.errorCounts.clear();
+      this.lastErrorTimes.clear();
+      this.recoveryAttempts.clear();
     }
   }
 
@@ -558,35 +589,39 @@ export class ErrorHandler {
    * Gets error statistics for monitoring
    */
   static getErrorStats(): {
-    totalErrors: number
-    errorsByType: Record<string, number>
-    recentErrors: Array<{ type: string; count: number; lastSeen: Date }>
+    totalErrors: number;
+    errorsByType: Record<string, number>;
+    recentErrors: Array<{ type: string; count: number; lastSeen: Date }>;
   } {
-    const totalErrors = Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0)
-    
-    const errorsByType: Record<string, number> = {}
-    const recentErrors: Array<{ type: string; count: number; lastSeen: Date }> = []
+    const totalErrors = Array.from(this.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
+
+    const errorsByType: Record<string, number> = {};
+    const recentErrors: Array<{ type: string; count: number; lastSeen: Date }> =
+      [];
 
     for (const [key, count] of this.errorCounts) {
-      const type = key.split('_')[0]
+      const type = key.split("_")[0];
       if (type) {
-        errorsByType[type] = (errorsByType[type] || 0) + count
-        
-        const lastSeen = this.lastErrorTimes.get(key)
+        errorsByType[type] = (errorsByType[type] || 0) + count;
+
+        const lastSeen = this.lastErrorTimes.get(key);
         if (lastSeen) {
-          recentErrors.push({ type: key, count, lastSeen })
+          recentErrors.push({ type: key, count, lastSeen });
         }
       }
     }
 
     // Sort recent errors by last seen time
-    recentErrors.sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime())
+    recentErrors.sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime());
 
     return {
       totalErrors,
       errorsByType,
-      recentErrors: recentErrors.slice(0, 10) // Top 10 recent errors
-    }
+      recentErrors: recentErrors.slice(0, 10), // Top 10 recent errors
+    };
   }
 
   // ============================================================================
@@ -594,5 +629,3 @@ export class ErrorHandler {
   // ============================================================================
   // Note: Additional helper methods for error classification can be added here as needed
 }
-
- 

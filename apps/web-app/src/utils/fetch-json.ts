@@ -1,28 +1,28 @@
-import { camelizeKeys } from 'humps'
+import { camelizeKeys } from "humps";
 
 export async function fetchJSON<T>(
   input: RequestInfo,
-  options: RequestInit
+  options: RequestInit,
 ): Promise<T> {
   const headers = {
-    'content-type': 'application/json',
-    accept: 'application/json',
-  }
+    "content-type": "application/json",
+    accept: "application/json",
+  };
 
   return fetch(input, Object.assign(options, { headers }))
     .then(async (response) => {
-      const contentType = response.headers.get('Content-Type')
+      const contentType = response.headers.get("Content-Type");
       if (
         !contentType ||
-        (!contentType.includes('+json') &&
-          !contentType.includes('application/json'))
+        (!contentType.includes("+json") &&
+          !contentType.includes("application/json"))
       ) {
-        throw response
+        throw response;
       }
 
-      if (!response.ok) throw response
+      if (!response.ok) throw response;
 
-      return response.json()
+      return response.json();
     })
-    .then((json) => camelizeKeys(json) as T)
+    .then((json) => camelizeKeys(json) as T);
 }

@@ -193,7 +193,7 @@ export interface GetActivitySummaryResponse {
   summary: ActivitySummary;
 }
 
-export type HealthCheckRequest = object
+export type HealthCheckRequest = object;
 
 export interface HealthCheckResponse {
   status: string;

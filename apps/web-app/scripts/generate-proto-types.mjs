@@ -5,18 +5,17 @@
  * Generates TypeScript types and gRPC client stubs from user-service protobuf definitions
  */
 
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-
+import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
 
 // Colors for output
 const colors = {
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  reset: '\x1b[0m'
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  reset: "\x1b[0m",
 };
 
 function printStatus(message) {
@@ -35,49 +34,46 @@ function printStep(message) {
 
 // Configuration
 const config = {
-  protoPath: '../../services/user-service/proto',
-  outputDir: 'src/generated/proto',
-  protoFiles: ['user_service.proto'],
-  tempDir: '.proto-temp'
+  protoPath: "../../services/user-service/proto",
+  outputDir: "src/generated/proto",
+  protoFiles: ["user_service.proto"],
+  tempDir: ".proto-temp",
 };
 
 // Check if required tools are available
 function checkDependencies() {
-  printStep('Checking dependencies...');
-  
+  printStep("Checking dependencies...");
+
   // For now, we'll generate types without protoc since we have comprehensive types already
-  printStatus('✓ Generating types from protobuf definitions manually');
+  printStatus("✓ Generating types from protobuf definitions manually");
   return true;
 }
 
 // Install required npm packages
 function installDependencies() {
-  printStep('Installing TypeScript protobuf dependencies...');
-  
-  const packages = [
-    'google-protobuf',
-    '@types/google-protobuf'
-  ];
-  
+  printStep("Installing TypeScript protobuf dependencies...");
+
+  const packages = ["google-protobuf", "@types/google-protobuf"];
+
   try {
-    execSync(`npm install ${packages.join(' ')}`, { stdio: 'inherit' });
-    printStatus('Dependencies installed successfully');
+    execSync(`npm install ${packages.join(" ")}`, { stdio: "inherit" });
+    printStatus("Dependencies installed successfully");
   } catch (error) {
-    printError('Failed to install dependencies');
+    printError("Failed to install dependencies");
     throw error;
   }
 }
 
 // Create output directories
 function createDirectories() {
-  printStep('Creating output directories...');
-  
+  printStep("Creating output directories...");
+
   const dirs = [
     config.outputDir,
     `${config.outputDir}/user-service`,
-    config.tempDir
+    config.tempDir,
   ];
-  
+
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -88,17 +84,17 @@ function createDirectories() {
 
 // Copy proto files to temp directory for processing
 function copyProtoFiles() {
-  printStep('Copying protobuf files...');
-  
+  printStep("Copying protobuf files...");
+
   for (const protoFile of config.protoFiles) {
     const sourcePath = path.join(config.protoPath, protoFile);
     const destPath = path.join(config.tempDir, protoFile);
-    
+
     if (!fs.existsSync(sourcePath)) {
       printError(`Proto file not found: ${sourcePath}`);
       throw new Error(`Missing proto file: ${protoFile}`);
     }
-    
+
     fs.copyFileSync(sourcePath, destPath);
     printStatus(`Copied ${protoFile}`);
   }
@@ -106,56 +102,67 @@ function copyProtoFiles() {
 
 // Generate TypeScript definitions using protoc
 function generateTypeScriptTypes() {
-  printStep('Generating TypeScript types...');
-  
+  printStep("Generating TypeScript types...");
+
   try {
     // Generate basic types manually since we don't have protoc available
-    printStatus('Generating TypeScript interfaces from protobuf definitions...');
+    printStatus(
+      "Generating TypeScript interfaces from protobuf definitions...",
+    );
     generateBasicTypeScriptInterfaces();
   } catch (error) {
-    printError('Failed to generate TypeScript types');
+    printError("Failed to generate TypeScript types");
     throw error;
   }
 }
 
 // Generate basic TypeScript interfaces from proto definitions
 function generateBasicTypeScriptInterfaces() {
-  printStep('Generating basic TypeScript interfaces...');
-  
-  const protoContent = fs.readFileSync(path.join(config.tempDir, 'user_service.proto'), 'utf8');
-  
+  printStep("Generating basic TypeScript interfaces...");
+
+  const protoContent = fs.readFileSync(
+    path.join(config.tempDir, "user_service.proto"),
+    "utf8",
+  );
+
   // Parse proto file and generate TypeScript interfaces
   const interfaces = parseProtoToTypeScript(protoContent);
-  
-  const outputPath = path.join(config.outputDir, 'user-service', 'user_service_pb.ts');
+
+  const outputPath = path.join(
+    config.outputDir,
+    "user-service",
+    "user_service_pb.ts",
+  );
   fs.writeFileSync(outputPath, interfaces);
-  
-  printStatus('Basic TypeScript interfaces generated');
+
+  printStatus("Basic TypeScript interfaces generated");
 }
 
 // Parse protobuf content and generate TypeScript interfaces
 function parseProtoToTypeScript(protoContent) {
-  const lines = protoContent.split('\n');
+  const lines = protoContent.split("\n");
   let output = [];
-  
-  output.push('// Generated TypeScript interfaces from user_service.proto');
-  output.push('// This file is auto-generated. Do not edit manually.');
-  output.push('');
-  output.push('import { Timestamp, Struct } from "google-protobuf/google/protobuf/timestamp_pb";');
-  output.push('');
-  
+
+  output.push("// Generated TypeScript interfaces from user_service.proto");
+  output.push("// This file is auto-generated. Do not edit manually.");
+  output.push("");
+  output.push(
+    'import { Timestamp, Struct } from "google-protobuf/google/protobuf/timestamp_pb";',
+  );
+  output.push("");
+
   // Extract messages and convert to TypeScript interfaces
   let currentMessage = null;
   let braceCount = 0;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Skip comments and empty lines
-    if (line.startsWith('//') || line.startsWith('/*') || line === '') {
+    if (line.startsWith("//") || line.startsWith("/*") || line === "") {
       continue;
     }
-    
+
     // Detect message start
     const messageMatch = line.match(/^message\s+(\w+)\s*\{/);
     if (messageMatch) {
@@ -164,60 +171,60 @@ function parseProtoToTypeScript(protoContent) {
       output.push(`export interface ${currentMessage} {`);
       continue;
     }
-    
+
     // Handle message content
     if (currentMessage && braceCount > 0) {
-      if (line.includes('{')) braceCount++;
-      if (line.includes('}')) braceCount--;
-      
+      if (line.includes("{")) braceCount++;
+      if (line.includes("}")) braceCount--;
+
       if (braceCount === 0) {
-        output.push('}');
-        output.push('');
+        output.push("}");
+        output.push("");
         currentMessage = null;
         continue;
       }
-      
+
       // Parse field definitions
       const fieldMatch = line.match(/^\s*(\w+)\s+(\w+)\s*=\s*\d+;/);
       if (fieldMatch) {
         const [, type, name] = fieldMatch;
         const tsType = protoTypeToTypeScript(type);
-        const optional = line.includes('optional') ? '?' : '';
+        const optional = line.includes("optional") ? "?" : "";
         output.push(`  ${camelCase(name)}${optional}: ${tsType};`);
       }
     }
   }
-  
-  return output.join('\n');
+
+  return output.join("\n");
 }
 
 // Convert protobuf types to TypeScript types
 function protoTypeToTypeScript(protoType) {
   const typeMap = {
-    'string': 'string',
-    'int32': 'number',
-    'int64': 'number',
-    'double': 'number',
-    'float': 'number',
-    'bool': 'boolean',
-    'bytes': 'Uint8Array',
-    'google.protobuf.Timestamp': 'Date',
-    'google.protobuf.Struct': 'Record<string, any>',
+    string: "string",
+    int32: "number",
+    int64: "number",
+    double: "number",
+    float: "number",
+    bool: "boolean",
+    bytes: "Uint8Array",
+    "google.protobuf.Timestamp": "Date",
+    "google.protobuf.Struct": "Record<string, any>",
   };
-  
+
   // Handle repeated fields
-  if (protoType.startsWith('repeated ')) {
-    const innerType = protoType.replace('repeated ', '');
+  if (protoType.startsWith("repeated ")) {
+    const innerType = protoType.replace("repeated ", "");
     return `${protoTypeToTypeScript(innerType)}[]`;
   }
-  
+
   // Handle map fields
   const mapMatch = protoType.match(/^map<(\w+),\s*(\w+)>$/);
   if (mapMatch) {
     const [, keyType, valueType] = mapMatch;
     return `Record<${protoTypeToTypeScript(keyType)}, ${protoTypeToTypeScript(valueType)}>`;
   }
-  
+
   return typeMap[protoType] || protoType;
 }
 
@@ -228,8 +235,8 @@ function camelCase(str) {
 
 // Generate gRPC client stubs
 function generateGrpcClient() {
-  printStep('Generating gRPC client stubs...');
-  
+  printStep("Generating gRPC client stubs...");
+
   const clientTemplate = `
 // Generated HTTP-based client for UserService (gRPC-compatible interface)
 // This file is auto-generated. Do not edit manually.
@@ -403,16 +410,20 @@ export class UserServiceGrpcClient {
 export default UserServiceGrpcClient;
 `;
 
-  const clientPath = path.join(config.outputDir, 'user-service', 'user_service_grpc_client.ts');
+  const clientPath = path.join(
+    config.outputDir,
+    "user-service",
+    "user_service_grpc_client.ts",
+  );
   fs.writeFileSync(clientPath, clientTemplate.trim());
-  
-  printStatus('gRPC client stubs generated');
+
+  printStatus("gRPC client stubs generated");
 }
 
 // Generate index file for easy imports
 function generateIndexFile() {
-  printStep('Generating index file...');
-  
+  printStep("Generating index file...");
+
   const indexContent = `
 // Generated index file for user-service protobuf types
 // This file is auto-generated. Do not edit manually.
@@ -435,16 +446,16 @@ export type {
 } from '../types/user-service';
 `;
 
-  const indexPath = path.join(config.outputDir, 'user-service', 'index.ts');
+  const indexPath = path.join(config.outputDir, "user-service", "index.ts");
   fs.writeFileSync(indexPath, indexContent.trim());
-  
-  printStatus('Index file generated');
+
+  printStatus("Index file generated");
 }
 
 // Generate runtime type validation utilities
 function generateValidationUtils() {
-  printStep('Generating runtime type validation utilities...');
-  
+  printStep("Generating runtime type validation utilities...");
+
   const validationContent = `
 // Runtime type validation utilities for user-service types
 // This file is auto-generated. Do not edit manually.
@@ -596,46 +607,51 @@ export const transformUserServiceError = (error: unknown): UserServiceError => {
 };
 `;
 
-  const validationPath = path.join(config.outputDir, 'user-service', 'validation.ts');
+  const validationPath = path.join(
+    config.outputDir,
+    "user-service",
+    "validation.ts",
+  );
   fs.writeFileSync(validationPath, validationContent.trim());
-  
-  printStatus('Validation utilities generated');
+
+  printStatus("Validation utilities generated");
 }
 
 // Clean up temporary files
 function cleanup() {
-  printStep('Cleaning up temporary files...');
-  
+  printStep("Cleaning up temporary files...");
+
   if (fs.existsSync(config.tempDir)) {
     fs.rmSync(config.tempDir, { recursive: true, force: true });
-    printStatus('Temporary files cleaned up');
+    printStatus("Temporary files cleaned up");
   }
 }
 
 // Update package.json scripts
 function updatePackageScripts() {
-  printStep('Updating package.json scripts...');
-  
-  const packageJsonPath = 'package.json';
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  
+  printStep("Updating package.json scripts...");
+
+  const packageJsonPath = "package.json";
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+
   // Add proto generation script
-  packageJson.scripts['generate:proto'] = 'node scripts/generate-proto-types.js';
-  packageJson.scripts['build:proto'] = 'npm run generate:proto';
-  
+  packageJson.scripts["generate:proto"] =
+    "node scripts/generate-proto-types.js";
+  packageJson.scripts["build:proto"] = "npm run generate:proto";
+
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  printStatus('Package.json scripts updated');
+  printStatus("Package.json scripts updated");
 }
 
 // Main execution function
 async function main() {
   try {
-    printStatus('Starting TypeScript protobuf generation for user-service...');
-    
+    printStatus("Starting TypeScript protobuf generation for user-service...");
+
     if (!checkDependencies()) {
       process.exit(1);
     }
-    
+
     installDependencies();
     createDirectories();
     copyProtoFiles();
@@ -645,22 +661,29 @@ async function main() {
     generateValidationUtils();
     updatePackageScripts();
     cleanup();
-    
-    printStatus('✅ TypeScript protobuf generation completed successfully!');
-    printStatus('');
-    printStatus('Generated files:');
-    printStatus(`  - TypeScript types: ${config.outputDir}/user-service/user_service_pb.ts`);
-    printStatus(`  - gRPC client: ${config.outputDir}/user-service/user_service_grpc_client.ts`);
-    printStatus(`  - Validation utils: ${config.outputDir}/user-service/validation.ts`);
+
+    printStatus("✅ TypeScript protobuf generation completed successfully!");
+    printStatus("");
+    printStatus("Generated files:");
+    printStatus(
+      `  - TypeScript types: ${config.outputDir}/user-service/user_service_pb.ts`,
+    );
+    printStatus(
+      `  - gRPC client: ${config.outputDir}/user-service/user_service_grpc_client.ts`,
+    );
+    printStatus(
+      `  - Validation utils: ${config.outputDir}/user-service/validation.ts`,
+    );
     printStatus(`  - Index file: ${config.outputDir}/user-service/index.ts`);
-    printStatus('');
-    printStatus('Usage:');
-    printStatus('  import { UserServiceGrpcClient } from "src/generated/proto/user-service";');
-    printStatus('');
-    printStatus('To regenerate types: npm run generate:proto');
-    
+    printStatus("");
+    printStatus("Usage:");
+    printStatus(
+      '  import { UserServiceGrpcClient } from "src/generated/proto/user-service";',
+    );
+    printStatus("");
+    printStatus("To regenerate types: npm run generate:proto");
   } catch (error) {
-    printError('Failed to generate TypeScript protobuf types');
+    printError("Failed to generate TypeScript protobuf types");
     printError(error.message);
     process.exit(1);
   }

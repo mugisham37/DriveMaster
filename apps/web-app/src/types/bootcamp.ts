@@ -40,7 +40,7 @@ export interface BootcampUserProject {
   status: "available" | "started" | "completed" | "locked";
   exercise_status: (
     exercise: BootcampExercise,
-    solution?: BootcampSolution
+    solution?: BootcampSolution,
   ) => string;
 }
 

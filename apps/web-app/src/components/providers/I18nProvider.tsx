@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import React, { ReactNode } from 'react'
+import React, { ReactNode } from "react";
 
 interface I18nProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -11,7 +11,7 @@ interface I18nProviderProps {
  * This is a placeholder implementation
  */
 export function I18nProvider({ children }: I18nProviderProps) {
-  return <>{children}</>
+  return <>{children}</>;
 }
 
-export default I18nProvider
+export default I18nProvider;

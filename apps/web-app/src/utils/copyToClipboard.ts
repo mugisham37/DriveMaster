@@ -1,11 +1,11 @@
-import copy from 'copy-to-clipboard'
+import copy from "copy-to-clipboard";
 
 export const copyToClipboard = async (text: string): Promise<void> => {
   try {
-    copy(text)
+    copy(text);
   } catch (error) {
-    if (process.env.NODE_ENV == 'production') {
-      throw error
+    if (process.env.NODE_ENV == "production") {
+      throw error;
     }
   }
-}
+};

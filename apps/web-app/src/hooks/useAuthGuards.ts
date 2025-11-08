@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 /**
  * Authentication Hooks for Component Use
- * 
+ *
  * Implements:
  * - useAuth hook for general authentication state access
  * - useRequireAuth hook with automatic redirect handling
@@ -11,12 +11,12 @@
  * - Requirements: 4.1, 4.2, 4.3, 4.4
  */
 
-import { useEffect, useCallback } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useAuth as useAuthContext } from '@/contexts/AuthContext'
-import { useAuthActions } from '@/hooks/useAuthActions'
-import type { AuthContextValue } from '@/contexts/AuthContext'
-import type { UseAuthActionsReturn } from '@/hooks/useAuthActions'
+import { useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useAuth as useAuthContext } from "@/contexts/AuthContext";
+import { useAuthActions } from "@/hooks/useAuthActions";
+import type { AuthContextValue } from "@/contexts/AuthContext";
+import type { UseAuthActionsReturn } from "@/hooks/useAuthActions";
 
 // ============================================================================
 // Core Authentication Hook
@@ -27,7 +27,7 @@ import type { UseAuthActionsReturn } from '@/hooks/useAuthActions'
  * Provides access to authentication state and basic user information
  */
 export function useAuth(): AuthContextValue {
-  return useAuthContext()
+  return useAuthContext();
 }
 
 // ============================================================================
@@ -35,47 +35,61 @@ export function useAuth(): AuthContextValue {
 // ============================================================================
 
 export interface UseRequireAuthOptions {
-  redirectTo?: string
-  preserveCallback?: boolean
+  redirectTo?: string;
+  preserveCallback?: boolean;
 }
 
 export interface UseRequireAuthReturn extends AuthContextValue {
-  isRedirecting: boolean
+  isRedirecting: boolean;
 }
 
 /**
  * Hook that requires authentication with automatic redirect handling
  * Redirects to sign-in page if user is not authenticated
  */
-export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireAuthReturn {
-  const {
-    redirectTo = '/auth/signin',
-    preserveCallback = true
-  } = options
+export function useRequireAuth(
+  options: UseRequireAuthOptions = {},
+): UseRequireAuthReturn {
+  const { redirectTo = "/auth/signin", preserveCallback = true } = options;
 
-  const auth = useAuthContext()
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const auth = useAuthContext();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const isRedirecting = !auth.isInitialized || (!auth.isAuthenticated && auth.isInitialized)
+  const isRedirecting =
+    !auth.isInitialized || (!auth.isAuthenticated && auth.isInitialized);
 
   useEffect(() => {
-    if (!auth.isInitialized) return
+    if (!auth.isInitialized) return;
 
     if (!auth.isAuthenticated) {
-      const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-      const callbackUrl = preserveCallback ? encodeURIComponent(currentUrl) : ''
-      const finalUrl = callbackUrl ? `${redirectTo}?callbackUrl=${callbackUrl}` : redirectTo
-      
-      router.push(finalUrl)
+      const currentUrl =
+        pathname +
+        (searchParams.toString() ? `?${searchParams.toString()}` : "");
+      const callbackUrl = preserveCallback
+        ? encodeURIComponent(currentUrl)
+        : "";
+      const finalUrl = callbackUrl
+        ? `${redirectTo}?callbackUrl=${callbackUrl}`
+        : redirectTo;
+
+      router.push(finalUrl);
     }
-  }, [auth.isInitialized, auth.isAuthenticated, redirectTo, preserveCallback, pathname, searchParams, router])
+  }, [
+    auth.isInitialized,
+    auth.isAuthenticated,
+    redirectTo,
+    preserveCallback,
+    pathname,
+    searchParams,
+    router,
+  ]);
 
   return {
     ...auth,
-    isRedirecting
-  }
+    isRedirecting,
+  };
 }
 
 // ============================================================================
@@ -83,34 +97,37 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
 // ============================================================================
 
 export interface UseRequireMentorOptions extends UseRequireAuthOptions {
-  mentorRedirectTo?: string
+  mentorRedirectTo?: string;
 }
 
 export interface UseRequireMentorReturn extends UseRequireAuthReturn {
-  isMentorRedirecting: boolean
+  isMentorRedirecting: boolean;
 }
 
 /**
  * Hook that requires mentor privileges
  * Redirects to dashboard if user is not a mentor
  */
-export function useRequireMentor(options: UseRequireMentorOptions = {}): UseRequireMentorReturn {
+export function useRequireMentor(
+  options: UseRequireMentorOptions = {},
+): UseRequireMentorReturn {
   const {
-    redirectTo = '/auth/signin',
-    mentorRedirectTo = '/dashboard?error=mentor-required',
-    preserveCallback = true
-  } = options
+    redirectTo = "/auth/signin",
+    mentorRedirectTo = "/dashboard?error=mentor-required",
+    preserveCallback = true,
+  } = options;
 
-  const authResult = useRequireAuth({ redirectTo, preserveCallback })
-  const router = useRouter()
+  const authResult = useRequireAuth({ redirectTo, preserveCallback });
+  const router = useRouter();
 
-  const isMentorRedirecting = authResult.isAuthenticated && !authResult.isMentor
+  const isMentorRedirecting =
+    authResult.isAuthenticated && !authResult.isMentor;
 
   useEffect(() => {
-    if (!authResult.isInitialized || authResult.isRedirecting) return
+    if (!authResult.isInitialized || authResult.isRedirecting) return;
 
     if (authResult.isAuthenticated && !authResult.isMentor) {
-      router.push(mentorRedirectTo)
+      router.push(mentorRedirectTo);
     }
   }, [
     authResult.isInitialized,
@@ -118,44 +135,47 @@ export function useRequireMentor(options: UseRequireMentorOptions = {}): UseRequ
     authResult.isMentor,
     authResult.isRedirecting,
     mentorRedirectTo,
-    router
-  ])
+    router,
+  ]);
 
   return {
     ...authResult,
-    isMentorRedirecting
-  }
+    isMentorRedirecting,
+  };
 }
 
 export interface UseRequireInsiderOptions extends UseRequireAuthOptions {
-  insiderRedirectTo?: string
+  insiderRedirectTo?: string;
 }
 
 export interface UseRequireInsiderReturn extends UseRequireAuthReturn {
-  isInsiderRedirecting: boolean
+  isInsiderRedirecting: boolean;
 }
 
 /**
  * Hook that requires insider privileges
  * Redirects to insiders page if user is not an insider
  */
-export function useRequireInsider(options: UseRequireInsiderOptions = {}): UseRequireInsiderReturn {
+export function useRequireInsider(
+  options: UseRequireInsiderOptions = {},
+): UseRequireInsiderReturn {
   const {
-    redirectTo = '/auth/signin',
-    insiderRedirectTo = '/insiders?error=insider-required',
-    preserveCallback = true
-  } = options
+    redirectTo = "/auth/signin",
+    insiderRedirectTo = "/insiders?error=insider-required",
+    preserveCallback = true,
+  } = options;
 
-  const authResult = useRequireAuth({ redirectTo, preserveCallback })
-  const router = useRouter()
+  const authResult = useRequireAuth({ redirectTo, preserveCallback });
+  const router = useRouter();
 
-  const isInsiderRedirecting = authResult.isAuthenticated && !authResult.isInsider
+  const isInsiderRedirecting =
+    authResult.isAuthenticated && !authResult.isInsider;
 
   useEffect(() => {
-    if (!authResult.isInitialized || authResult.isRedirecting) return
+    if (!authResult.isInitialized || authResult.isRedirecting) return;
 
     if (authResult.isAuthenticated && !authResult.isInsider) {
-      router.push(insiderRedirectTo)
+      router.push(insiderRedirectTo);
     }
   }, [
     authResult.isInitialized,
@@ -163,13 +183,13 @@ export function useRequireInsider(options: UseRequireInsiderOptions = {}): UseRe
     authResult.isInsider,
     authResult.isRedirecting,
     insiderRedirectTo,
-    router
-  ])
+    router,
+  ]);
 
   return {
     ...authResult,
-    isInsiderRedirecting
-  }
+    isInsiderRedirecting,
+  };
 }
 
 // ============================================================================
@@ -181,7 +201,7 @@ export function useRequireInsider(options: UseRequireInsiderOptions = {}): UseRe
  * Provides access to login, register, logout, and OAuth operations
  */
 export function useAuthActionsHook(): UseAuthActionsReturn {
-  return useAuthActions()
+  return useAuthActions();
 }
 
 // ============================================================================
@@ -189,29 +209,31 @@ export function useAuthActionsHook(): UseAuthActionsReturn {
 // ============================================================================
 
 export interface UseConditionalAuthOptions {
-  condition: boolean
-  redirectTo?: string
-  preserveCallback?: boolean
+  condition: boolean;
+  redirectTo?: string;
+  preserveCallback?: boolean;
 }
 
 /**
  * Hook that conditionally requires authentication based on a condition
  */
-export function useConditionalAuth(options: UseConditionalAuthOptions): UseRequireAuthReturn {
-  const { condition, ...authOptions } = options
-  const auth = useAuthContext()
-  const authResult = useRequireAuth(authOptions)
-  
+export function useConditionalAuth(
+  options: UseConditionalAuthOptions,
+): UseRequireAuthReturn {
+  const { condition, ...authOptions } = options;
+  const auth = useAuthContext();
+  const authResult = useRequireAuth(authOptions);
+
   // If condition is false, return auth state without redirect logic
   if (!condition) {
     return {
       ...auth,
-      isRedirecting: false
-    }
+      isRedirecting: false,
+    };
   }
-  
+
   // If condition is true, return the require auth result
-  return authResult
+  return authResult;
 }
 
 // ============================================================================
@@ -223,7 +245,7 @@ export function useConditionalAuth(options: UseConditionalAuthOptions): UseRequi
  * Useful for components that need to know auth state but handle redirects themselves
  */
 export function useAuthStatus() {
-  const auth = useAuthContext()
+  const auth = useAuthContext();
 
   return {
     isInitialized: auth.isInitialized,
@@ -233,30 +255,30 @@ export function useAuthStatus() {
     isInsider: auth.isInsider,
     user: auth.user,
     error: auth.state.error,
-    
+
     // Computed status
     isReady: auth.isInitialized && !auth.isLoading,
     hasError: !!auth.state.error,
-    
+
     // Permission checks
     canAccessMentoring: auth.isAuthenticated && auth.isMentor,
     canAccessInsiderFeatures: auth.isAuthenticated && auth.isInsider,
     canAccessDashboard: auth.isAuthenticated,
-    
+
     // Role checks
-    hasRole: (role: 'mentor' | 'insider' | 'user') => {
+    hasRole: (role: "mentor" | "insider" | "user") => {
       switch (role) {
-        case 'mentor':
-          return auth.isAuthenticated && auth.isMentor
-        case 'insider':
-          return auth.isAuthenticated && auth.isInsider
-        case 'user':
-          return auth.isAuthenticated
+        case "mentor":
+          return auth.isAuthenticated && auth.isMentor;
+        case "insider":
+          return auth.isAuthenticated && auth.isInsider;
+        case "user":
+          return auth.isAuthenticated;
         default:
-          return false
+          return false;
       }
-    }
-  }
+    },
+  };
 }
 
 // ============================================================================
@@ -264,64 +286,70 @@ export function useAuthStatus() {
 // ============================================================================
 
 export interface UseRouteProtectionOptions {
-  requireAuth?: boolean
-  requireMentor?: boolean
-  requireInsider?: boolean
-  redirectTo?: string
-  preserveCallback?: boolean
+  requireAuth?: boolean;
+  requireMentor?: boolean;
+  requireInsider?: boolean;
+  redirectTo?: string;
+  preserveCallback?: boolean;
 }
 
 export interface UseRouteProtectionReturn {
-  isAllowed: boolean
-  isLoading: boolean
-  isRedirecting: boolean
-  shouldRender: boolean
-  error: string | null
+  isAllowed: boolean;
+  isLoading: boolean;
+  isRedirecting: boolean;
+  shouldRender: boolean;
+  error: string | null;
 }
 
 /**
  * Hook for comprehensive route protection logic
  * Combines authentication, mentor, and insider requirements
  */
-export function useRouteProtection(options: UseRouteProtectionOptions = {}): UseRouteProtectionReturn {
+export function useRouteProtection(
+  options: UseRouteProtectionOptions = {},
+): UseRouteProtectionReturn {
   const {
     requireAuth = false,
     requireMentor = false,
     requireInsider = false,
-    redirectTo = '/auth/signin',
-    preserveCallback = true
-  } = options
+    redirectTo = "/auth/signin",
+    preserveCallback = true,
+  } = options;
 
-  const auth = useAuthContext()
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const auth = useAuthContext();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const isLoading = !auth.isInitialized || auth.isLoading
-  const isAllowed = checkAccess()
-  const isRedirecting = !isLoading && !isAllowed
-  const shouldRender = auth.isInitialized && !auth.isLoading && isAllowed
-  const error = getAccessError()
+  const isLoading = !auth.isInitialized || auth.isLoading;
+  const isAllowed = checkAccess();
+  const isRedirecting = !isLoading && !isAllowed;
+  const shouldRender = auth.isInitialized && !auth.isLoading && isAllowed;
+  const error = getAccessError();
 
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading) return;
 
     if (!isAllowed) {
-      const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-      const callbackUrl = preserveCallback ? encodeURIComponent(currentUrl) : ''
-      
-      let finalRedirectUrl = redirectTo
+      const currentUrl =
+        pathname +
+        (searchParams.toString() ? `?${searchParams.toString()}` : "");
+      const callbackUrl = preserveCallback
+        ? encodeURIComponent(currentUrl)
+        : "";
+
+      let finalRedirectUrl = redirectTo;
 
       // Determine appropriate redirect URL based on the access requirement
       if (requireMentor && auth.isAuthenticated && !auth.isMentor) {
-        finalRedirectUrl = '/dashboard?error=mentor-required'
+        finalRedirectUrl = "/dashboard?error=mentor-required";
       } else if (requireInsider && auth.isAuthenticated && !auth.isInsider) {
-        finalRedirectUrl = '/insiders?error=insider-required'
+        finalRedirectUrl = "/insiders?error=insider-required";
       } else if (callbackUrl) {
-        finalRedirectUrl = `${redirectTo}?callbackUrl=${callbackUrl}`
+        finalRedirectUrl = `${redirectTo}?callbackUrl=${callbackUrl}`;
       }
 
-      router.push(finalRedirectUrl)
+      router.push(finalRedirectUrl);
     }
   }, [
     isLoading,
@@ -336,47 +364,47 @@ export function useRouteProtection(options: UseRouteProtectionOptions = {}): Use
     preserveCallback,
     pathname,
     searchParams,
-    router
-  ])
+    router,
+  ]);
 
   return {
     isAllowed,
     isLoading,
     isRedirecting,
     shouldRender,
-    error
-  }
+    error,
+  };
 
   function checkAccess(): boolean {
     if (requireAuth && !auth.isAuthenticated) {
-      return false
+      return false;
     }
 
     if (requireMentor && (!auth.isAuthenticated || !auth.isMentor)) {
-      return false
+      return false;
     }
 
     if (requireInsider && (!auth.isAuthenticated || !auth.isInsider)) {
-      return false
+      return false;
     }
 
-    return true
+    return true;
   }
 
   function getAccessError(): string | null {
     if (requireAuth && !auth.isAuthenticated) {
-      return 'Authentication required'
+      return "Authentication required";
     }
 
     if (requireMentor && auth.isAuthenticated && !auth.isMentor) {
-      return 'Mentor privileges required'
+      return "Mentor privileges required";
     }
 
     if (requireInsider && auth.isAuthenticated && !auth.isInsider) {
-      return 'Insider privileges required'
+      return "Insider privileges required";
     }
 
-    return null
+    return null;
   }
 }
 
@@ -388,47 +416,62 @@ export function useRouteProtection(options: UseRouteProtectionOptions = {}): Use
  * Hook for handling authentication redirects manually
  */
 export function useAuthRedirect() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const redirectToLogin = useCallback((customRedirectTo?: string) => {
-    const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-    const redirectTo = customRedirectTo || '/auth/signin'
-    const callbackUrl = encodeURIComponent(currentUrl)
-    const finalUrl = `${redirectTo}?callbackUrl=${callbackUrl}`
-    
-    router.push(finalUrl)
-  }, [router, pathname, searchParams])
+  const redirectToLogin = useCallback(
+    (customRedirectTo?: string) => {
+      const currentUrl =
+        pathname +
+        (searchParams.toString() ? `?${searchParams.toString()}` : "");
+      const redirectTo = customRedirectTo || "/auth/signin";
+      const callbackUrl = encodeURIComponent(currentUrl);
+      const finalUrl = `${redirectTo}?callbackUrl=${callbackUrl}`;
 
-  const redirectToDashboard = useCallback((error?: string) => {
-    const dashboardUrl = error ? `/dashboard?error=${encodeURIComponent(error)}` : '/dashboard'
-    router.push(dashboardUrl)
-  }, [router])
+      router.push(finalUrl);
+    },
+    [router, pathname, searchParams],
+  );
 
-  const redirectToInsiders = useCallback((error?: string) => {
-    const insidersUrl = error ? `/insiders?error=${encodeURIComponent(error)}` : '/insiders'
-    router.push(insidersUrl)
-  }, [router])
+  const redirectToDashboard = useCallback(
+    (error?: string) => {
+      const dashboardUrl = error
+        ? `/dashboard?error=${encodeURIComponent(error)}`
+        : "/dashboard";
+      router.push(dashboardUrl);
+    },
+    [router],
+  );
+
+  const redirectToInsiders = useCallback(
+    (error?: string) => {
+      const insidersUrl = error
+        ? `/insiders?error=${encodeURIComponent(error)}`
+        : "/insiders";
+      router.push(insidersUrl);
+    },
+    [router],
+  );
 
   return {
     redirectToLogin,
     redirectToDashboard,
-    redirectToInsiders
-  }
+    redirectToInsiders,
+  };
 }
 
 /**
  * Hook for authentication state changes
  */
 export function useAuthStateChange(
-  callback: (isAuthenticated: boolean, user: AuthContextValue['user']) => void
+  callback: (isAuthenticated: boolean, user: AuthContextValue["user"]) => void,
 ) {
-  const auth = useAuthContext()
+  const auth = useAuthContext();
 
   useEffect(() => {
     if (auth.isInitialized) {
-      callback(auth.isAuthenticated, auth.user)
+      callback(auth.isAuthenticated, auth.user);
     }
-  }, [auth.isInitialized, auth.isAuthenticated, auth.user, callback])
+  }, [auth.isInitialized, auth.isAuthenticated, auth.user, callback]);
 }

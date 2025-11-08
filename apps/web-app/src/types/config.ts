@@ -1,6 +1,6 @@
 /**
  * Content Service Configuration Types
- * 
+ *
  * Configuration interfaces for content service client and related components
  */
 
@@ -9,15 +9,15 @@
 // ============================================================================
 
 export interface HttpClientConfig {
-  baseURL: string
-  timeout: number
-  retryAttempts: number
-  retryDelay: number
-  enableRequestLogging: boolean
-  enableResponseLogging: boolean
-  maxConcurrentRequests: number
-  requestInterceptors?: Array<(config: unknown) => unknown>
-  responseInterceptors?: Array<(response: unknown) => unknown>
+  baseURL: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  enableRequestLogging: boolean;
+  enableResponseLogging: boolean;
+  maxConcurrentRequests: number;
+  requestInterceptors?: Array<(config: unknown) => unknown>;
+  responseInterceptors?: Array<(response: unknown) => unknown>;
 }
 
 // ============================================================================
@@ -25,16 +25,16 @@ export interface HttpClientConfig {
 // ============================================================================
 
 export interface CacheConfig {
-  defaultTTL: number
-  searchTTL: number
-  mediaTTL: number
-  maxCacheSize: number
-  enableCompression: boolean
-  revalidateOnFocus: boolean
-  revalidateOnReconnect: boolean
-  dedupingInterval: number
-  errorRetryCount: number
-  errorRetryInterval: number
+  defaultTTL: number;
+  searchTTL: number;
+  mediaTTL: number;
+  maxCacheSize: number;
+  enableCompression: boolean;
+  revalidateOnFocus: boolean;
+  revalidateOnReconnect: boolean;
+  dedupingInterval: number;
+  errorRetryCount: number;
+  errorRetryInterval: number;
 }
 
 // ============================================================================
@@ -42,13 +42,13 @@ export interface CacheConfig {
 // ============================================================================
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number
-  timeout: number
-  successThreshold?: number
-  recoveryTimeout?: number
-  monitoringPeriod?: number
-  halfOpenMaxCalls?: number
-  enableMetrics?: boolean
+  failureThreshold: number;
+  timeout: number;
+  successThreshold?: number;
+  recoveryTimeout?: number;
+  monitoringPeriod?: number;
+  halfOpenMaxCalls?: number;
+  enableMetrics?: boolean;
 }
 
 // ============================================================================
@@ -56,14 +56,14 @@ export interface CircuitBreakerConfig {
 // ============================================================================
 
 export interface UploadConfig {
-  maxFileSize: number
-  allowedMimeTypes: string[]
-  chunkSize: number
-  maxConcurrentUploads: number
-  enableCompression: boolean
-  enableThumbnailGeneration: boolean
-  thumbnailSizes: Array<{ width: number; height: number }>
-  enableProgressTracking: boolean
+  maxFileSize: number;
+  allowedMimeTypes: string[];
+  chunkSize: number;
+  maxConcurrentUploads: number;
+  enableCompression: boolean;
+  enableThumbnailGeneration: boolean;
+  thumbnailSizes: Array<{ width: number; height: number }>;
+  enableProgressTracking: boolean;
 }
 
 // ============================================================================
@@ -71,14 +71,14 @@ export interface UploadConfig {
 // ============================================================================
 
 export interface SearchConfig {
-  defaultPageSize: number
-  maxPageSize: number
-  enableHighlighting: boolean
-  enableFaceting: boolean
-  enableSuggestions: boolean
-  suggestionMinLength: number
-  debounceDelay: number
-  maxSuggestions: number
+  defaultPageSize: number;
+  maxPageSize: number;
+  enableHighlighting: boolean;
+  enableFaceting: boolean;
+  enableSuggestions: boolean;
+  suggestionMinLength: number;
+  debounceDelay: number;
+  maxSuggestions: number;
 }
 
 // ============================================================================
@@ -86,13 +86,13 @@ export interface SearchConfig {
 // ============================================================================
 
 export interface WebSocketConfig {
-  url: string
-  reconnectAttempts: number
-  reconnectDelay: number
-  heartbeatInterval: number
-  enableCompression: boolean
-  enablePresence: boolean
-  presenceUpdateInterval: number
+  url: string;
+  reconnectAttempts: number;
+  reconnectDelay: number;
+  heartbeatInterval: number;
+  enableCompression: boolean;
+  enablePresence: boolean;
+  presenceUpdateInterval: number;
 }
 
 // ============================================================================
@@ -100,12 +100,12 @@ export interface WebSocketConfig {
 // ============================================================================
 
 export interface PerformanceConfig {
-  enableMetrics: boolean
-  enableProfiling: boolean
-  metricsReportingInterval: number
-  slowRequestThreshold: number
-  enableRequestTracing: boolean
-  tracingSampleRate: number
+  enableMetrics: boolean;
+  enableProfiling: boolean;
+  metricsReportingInterval: number;
+  slowRequestThreshold: number;
+  enableRequestTracing: boolean;
+  tracingSampleRate: number;
 }
 
 // ============================================================================
@@ -113,13 +113,13 @@ export interface PerformanceConfig {
 // ============================================================================
 
 export interface SecurityConfig {
-  enableRequestSigning: boolean
-  signingSecret?: string
-  enableCSRFProtection: boolean
-  allowedOrigins: string[]
-  enableRateLimiting: boolean
-  rateLimitRequests: number
-  rateLimitWindow: number
+  enableRequestSigning: boolean;
+  signingSecret?: string;
+  enableCSRFProtection: boolean;
+  allowedOrigins: string[];
+  enableRateLimiting: boolean;
+  rateLimitRequests: number;
+  rateLimitWindow: number;
 }
 
 // ============================================================================
@@ -127,16 +127,16 @@ export interface SecurityConfig {
 // ============================================================================
 
 export interface ContentServiceConfig {
-  baseURL: string
-  timeout: number
-  retryAttempts: number
-  retryDelay: number
-  circuitBreakerThreshold: number
-  circuitBreakerTimeout: number
-  enableRequestLogging: boolean
-  enableMetrics: boolean
-  enableCaching: boolean
-  enableWebSocket: boolean
+  baseURL: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  circuitBreakerThreshold: number;
+  circuitBreakerTimeout: number;
+  enableRequestLogging: boolean;
+  enableMetrics: boolean;
+  enableCaching: boolean;
+  enableWebSocket: boolean;
 }
 
 // ============================================================================
@@ -144,15 +144,15 @@ export interface ContentServiceConfig {
 // ============================================================================
 
 export interface EnvironmentConfig {
-  contentService: ContentServiceConfig
-  cache: CacheConfig
-  upload: UploadConfig
-  search: SearchConfig
-  webSocket?: WebSocketConfig
-  performance: PerformanceConfig
-  security: SecurityConfig
-  isDevelopment: boolean
-  isProduction: boolean
+  contentService: ContentServiceConfig;
+  cache: CacheConfig;
+  upload: UploadConfig;
+  search: SearchConfig;
+  webSocket?: WebSocketConfig;
+  performance: PerformanceConfig;
+  security: SecurityConfig;
+  isDevelopment: boolean;
+  isProduction: boolean;
 }
 
 // ============================================================================
@@ -160,14 +160,14 @@ export interface EnvironmentConfig {
 // ============================================================================
 
 export interface FeatureFlags {
-  enableRealTimeUpdates: boolean
-  enableBulkOperations: boolean
-  enableAdvancedSearch: boolean
-  enableMediaOptimization: boolean
-  enableCollaboration: boolean
-  enableWorkflowManagement: boolean
-  enableAnalytics: boolean
-  enableA11yFeatures: boolean
+  enableRealTimeUpdates: boolean;
+  enableBulkOperations: boolean;
+  enableAdvancedSearch: boolean;
+  enableMediaOptimization: boolean;
+  enableCollaboration: boolean;
+  enableWorkflowManagement: boolean;
+  enableAnalytics: boolean;
+  enableA11yFeatures: boolean;
 }
 
 // ============================================================================
@@ -175,12 +175,12 @@ export interface FeatureFlags {
 // ============================================================================
 
 export interface ClientDependencies {
-  httpClient?: unknown
-  cacheProvider?: unknown
-  webSocketClient?: unknown
-  authProvider?: unknown
-  metricsCollector?: unknown
-  logger?: unknown
+  httpClient?: unknown;
+  cacheProvider?: unknown;
+  webSocketClient?: unknown;
+  authProvider?: unknown;
+  metricsCollector?: unknown;
+  logger?: unknown;
 }
 
 // ============================================================================
@@ -188,14 +188,14 @@ export interface ClientDependencies {
 // ============================================================================
 
 export interface MonitoringConfig {
-  enableHealthChecks: boolean
-  healthCheckInterval: number
-  enableAlerts: boolean
+  enableHealthChecks: boolean;
+  healthCheckInterval: number;
+  enableAlerts: boolean;
   alertThresholds: {
-    errorRate: number
-    responseTime: number
-    availability: number
-  }
-  enableDashboard: boolean
-  metricsRetention: number
+    errorRate: number;
+    responseTime: number;
+    availability: number;
+  };
+  enableDashboard: boolean;
+  metricsRetention: number;
 }

@@ -1,69 +1,78 @@
 /**
  * React hooks for cross-tab cache synchronization
- * 
+ *
  * This module provides hooks to manage cross-tab cache synchronization,
  * conflict resolution, and consistency verification.
  */
 
-import { useEffect, useCallback, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { 
-  initializeCrossTabSync, 
+import { useEffect, useCallback, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  initializeCrossTabSync,
   getCrossTabSynchronizer,
   withCrossTabSync,
   type TabInfo,
-  type CacheConflict
-} from '@/lib/cache/cross-tab-sync'
+  type CacheConflict,
+} from "@/lib/cache/cross-tab-sync";
 
 // ============================================================================
 // Main Cross-Tab Sync Hook
 // ============================================================================
 
 export function useCrossTabSync() {
-  const queryClient = useQueryClient()
-  
+  const queryClient = useQueryClient();
+
   // Initialize synchronizer if not already done
   const getSynchronizer = useCallback(() => {
     try {
-      return getCrossTabSynchronizer()
+      return getCrossTabSynchronizer();
     } catch {
-      return initializeCrossTabSync(queryClient)
+      return initializeCrossTabSync(queryClient);
     }
-  }, [queryClient])
+  }, [queryClient]);
 
-  const synchronizer = getSynchronizer()
+  const synchronizer = getSynchronizer();
 
   return {
     // Broadcasting methods
     broadcastInvalidation: (queryKey: readonly unknown[], userId?: string) =>
       synchronizer.broadcastCacheInvalidation(queryKey, userId),
-    
-    broadcastUpdate: (queryKey: readonly unknown[], data: unknown, userId?: string) =>
-      synchronizer.broadcastCacheUpdate(queryKey, data, userId),
-    
-    broadcastOptimisticUpdate: (queryKey: readonly unknown[], data: unknown, userId?: string) =>
-      synchronizer.broadcastOptimisticUpdate(queryKey, data, userId),
-    
-    broadcastOptimisticRollback: (queryKey: readonly unknown[], userId?: string) =>
-      synchronizer.broadcastOptimisticRollback(queryKey, userId),
-    
+
+    broadcastUpdate: (
+      queryKey: readonly unknown[],
+      data: unknown,
+      userId?: string,
+    ) => synchronizer.broadcastCacheUpdate(queryKey, data, userId),
+
+    broadcastOptimisticUpdate: (
+      queryKey: readonly unknown[],
+      data: unknown,
+      userId?: string,
+    ) => synchronizer.broadcastOptimisticUpdate(queryKey, data, userId),
+
+    broadcastOptimisticRollback: (
+      queryKey: readonly unknown[],
+      userId?: string,
+    ) => synchronizer.broadcastOptimisticRollback(queryKey, userId),
+
     broadcastUserLogout: (userId: string) =>
       synchronizer.broadcastUserLogout(userId),
-    
+
     broadcastUserSwitch: (newUserId: string) =>
       synchronizer.broadcastUserSwitch(newUserId),
 
     // Sync management
     requestSync: () => synchronizer.requestCacheSync(),
-    
+
     // Status methods
     getActiveTabs: () => synchronizer.getActiveTabs(),
     getConflictStatus: () => synchronizer.getConflictStatus(),
-    
+
     // Consistency methods
     verifyConsistency: () => synchronizer.verifyCacheConsistency(),
-    repairInconsistencies: (userId: string) => synchronizer.repairCacheInconsistencies(userId)
-  }
+    repairInconsistencies: (userId: string) =>
+      synchronizer.repairCacheInconsistencies(userId),
+  };
 }
 
 // ============================================================================
@@ -71,31 +80,31 @@ export function useCrossTabSync() {
 // ============================================================================
 
 export function useTabActivityMonitor() {
-  const [activeTabs, setActiveTabs] = useState<TabInfo[]>([])
-  const [isMultiTab, setIsMultiTab] = useState(false)
-  const { getActiveTabs } = useCrossTabSync()
+  const [activeTabs, setActiveTabs] = useState<TabInfo[]>([]);
+  const [isMultiTab, setIsMultiTab] = useState(false);
+  const { getActiveTabs } = useCrossTabSync();
 
   useEffect(() => {
     const updateTabInfo = () => {
-      const tabs = getActiveTabs()
-      setActiveTabs(tabs)
-      setIsMultiTab(tabs.length > 1)
-    }
+      const tabs = getActiveTabs();
+      setActiveTabs(tabs);
+      setIsMultiTab(tabs.length > 1);
+    };
 
     // Update immediately
-    updateTabInfo()
+    updateTabInfo();
 
     // Update periodically
-    const interval = setInterval(updateTabInfo, 5000)
+    const interval = setInterval(updateTabInfo, 5000);
 
-    return () => clearInterval(interval)
-  }, [getActiveTabs])
+    return () => clearInterval(interval);
+  }, [getActiveTabs]);
 
   return {
     activeTabs,
     isMultiTab,
-    tabCount: activeTabs.length
-  }
+    tabCount: activeTabs.length,
+  };
 }
 
 // ============================================================================
@@ -103,44 +112,47 @@ export function useTabActivityMonitor() {
 // ============================================================================
 
 export function useConflictResolution() {
-  const [conflicts, setConflicts] = useState<CacheConflict[]>([])
-  const [hasConflicts, setHasConflicts] = useState(false)
-  const { getConflictStatus, repairInconsistencies } = useCrossTabSync()
+  const [conflicts, setConflicts] = useState<CacheConflict[]>([]);
+  const [hasConflicts, setHasConflicts] = useState(false);
+  const { getConflictStatus, repairInconsistencies } = useCrossTabSync();
 
   useEffect(() => {
     const updateConflictStatus = () => {
-      const status = getConflictStatus()
-      setConflicts(status.conflicts)
-      setHasConflicts(status.activeConflicts > 0)
-    }
+      const status = getConflictStatus();
+      setConflicts(status.conflicts);
+      setHasConflicts(status.activeConflicts > 0);
+    };
 
     // Update immediately
-    updateConflictStatus()
+    updateConflictStatus();
 
     // Update periodically
-    const interval = setInterval(updateConflictStatus, 2000)
+    const interval = setInterval(updateConflictStatus, 2000);
 
-    return () => clearInterval(interval)
-  }, [getConflictStatus])
+    return () => clearInterval(interval);
+  }, [getConflictStatus]);
 
-  const resolveAllConflicts = useCallback(async (userId: string) => {
-    if (hasConflicts) {
-      await repairInconsistencies(userId)
-      // Force update after repair
-      setTimeout(() => {
-        const status = getConflictStatus()
-        setConflicts(status.conflicts)
-        setHasConflicts(status.activeConflicts > 0)
-      }, 1000)
-    }
-  }, [hasConflicts, repairInconsistencies, getConflictStatus])
+  const resolveAllConflicts = useCallback(
+    async (userId: string) => {
+      if (hasConflicts) {
+        await repairInconsistencies(userId);
+        // Force update after repair
+        setTimeout(() => {
+          const status = getConflictStatus();
+          setConflicts(status.conflicts);
+          setHasConflicts(status.activeConflicts > 0);
+        }, 1000);
+      }
+    },
+    [hasConflicts, repairInconsistencies, getConflictStatus],
+  );
 
   return {
     conflicts,
     hasConflicts,
     conflictCount: conflicts.length,
-    resolveAllConflicts
-  }
+    resolveAllConflicts,
+  };
 }
 
 // ============================================================================
@@ -150,16 +162,16 @@ export function useConflictResolution() {
 export function useSynchronizedMutation<TData, TVariables>(
   mutationFn: (variables: TVariables) => Promise<TData>,
   queryKey: readonly unknown[],
-  userId?: string
+  userId?: string,
 ) {
-  const syncConfig = withCrossTabSync(mutationFn, queryKey, userId)
-  
+  const syncConfig = withCrossTabSync(mutationFn, queryKey, userId);
+
   return {
     mutationFn: syncConfig.mutationFn,
     onMutate: syncConfig.onMutate,
     onSuccess: syncConfig.onSuccess,
-    onError: syncConfig.onError
-  }
+    onError: syncConfig.onError,
+  };
 }
 
 // ============================================================================
@@ -167,29 +179,32 @@ export function useSynchronizedMutation<TData, TVariables>(
 // ============================================================================
 
 export function useUserSessionSync(userId?: string) {
-  const { broadcastUserLogout, broadcastUserSwitch } = useCrossTabSync()
+  const { broadcastUserLogout, broadcastUserSwitch } = useCrossTabSync();
 
   const handleLogout = useCallback(async () => {
     if (userId) {
-      await broadcastUserLogout(userId)
+      await broadcastUserLogout(userId);
     }
-  }, [userId, broadcastUserLogout])
+  }, [userId, broadcastUserLogout]);
 
-  const handleUserSwitch = useCallback(async (newUserId: string) => {
-    await broadcastUserSwitch(newUserId)
-  }, [broadcastUserSwitch])
+  const handleUserSwitch = useCallback(
+    async (newUserId: string) => {
+      await broadcastUserSwitch(newUserId);
+    },
+    [broadcastUserSwitch],
+  );
 
   // Auto-broadcast on user changes
   useEffect(() => {
     if (userId) {
-      broadcastUserSwitch(userId)
+      broadcastUserSwitch(userId);
     }
-  }, [userId, broadcastUserSwitch])
+  }, [userId, broadcastUserSwitch]);
 
   return {
     handleLogout,
-    handleUserSwitch
-  }
+    handleUserSwitch,
+  };
 }
 
 // ============================================================================
@@ -197,56 +212,56 @@ export function useUserSessionSync(userId?: string) {
 // ============================================================================
 
 export function useCacheConsistency(userId?: string) {
-  const [isConsistent, setIsConsistent] = useState(true)
-  const [isChecking, setIsChecking] = useState(false)
-  const { verifyConsistency, repairInconsistencies } = useCrossTabSync()
+  const [isConsistent, setIsConsistent] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
+  const { verifyConsistency, repairInconsistencies } = useCrossTabSync();
 
   const checkConsistency = useCallback(async () => {
-    if (!userId) return
+    if (!userId) return;
 
-    setIsChecking(true)
+    setIsChecking(true);
     try {
-      const consistent = await verifyConsistency()
-      setIsConsistent(consistent)
+      const consistent = await verifyConsistency();
+      setIsConsistent(consistent);
     } catch (error) {
-      console.warn('Consistency check failed:', error)
-      setIsConsistent(false)
+      console.warn("Consistency check failed:", error);
+      setIsConsistent(false);
     } finally {
-      setIsChecking(false)
+      setIsChecking(false);
     }
-  }, [userId, verifyConsistency])
+  }, [userId, verifyConsistency]);
 
   const repairConsistency = useCallback(async () => {
-    if (!userId) return
+    if (!userId) return;
 
-    setIsChecking(true)
+    setIsChecking(true);
     try {
-      await repairInconsistencies(userId)
-      setIsConsistent(true)
+      await repairInconsistencies(userId);
+      setIsConsistent(true);
     } catch (error) {
-      console.warn('Consistency repair failed:', error)
+      console.warn("Consistency repair failed:", error);
     } finally {
-      setIsChecking(false)
+      setIsChecking(false);
     }
-  }, [userId, repairInconsistencies])
+  }, [userId, repairInconsistencies]);
 
   // Auto-check consistency periodically
   useEffect(() => {
-    if (!userId) return
+    if (!userId) return;
 
-    checkConsistency()
-    
-    const interval = setInterval(checkConsistency, 60000) // Check every minute
+    checkConsistency();
 
-    return () => clearInterval(interval)
-  }, [userId, checkConsistency])
+    const interval = setInterval(checkConsistency, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [userId, checkConsistency]);
 
   return {
     isConsistent,
     isChecking,
     checkConsistency,
-    repairConsistency
-  }
+    repairConsistency,
+  };
 }
 
 // ============================================================================
@@ -254,55 +269,57 @@ export function useCacheConsistency(userId?: string) {
 // ============================================================================
 
 export function useCrossTabNotifications() {
-  const [notifications, setNotifications] = useState<Array<{
-    id: string
-    type: 'info' | 'warning' | 'error'
-    message: string
-    timestamp: number
-  }>>([])
+  const [notifications, setNotifications] = useState<
+    Array<{
+      id: string;
+      type: "info" | "warning" | "error";
+      message: string;
+      timestamp: number;
+    }>
+  >([]);
 
-  const { isMultiTab } = useTabActivityMonitor()
-  const { hasConflicts } = useConflictResolution()
+  const { isMultiTab } = useTabActivityMonitor();
+  const { hasConflicts } = useConflictResolution();
 
   // Add notifications based on cross-tab state
   useEffect(() => {
-    const newNotifications = []
+    const newNotifications = [];
 
     if (isMultiTab) {
       newNotifications.push({
-        id: 'multi-tab',
-        type: 'info' as const,
-        message: 'Multiple tabs detected. Cache is synchronized across tabs.',
-        timestamp: Date.now()
-      })
+        id: "multi-tab",
+        type: "info" as const,
+        message: "Multiple tabs detected. Cache is synchronized across tabs.",
+        timestamp: Date.now(),
+      });
     }
 
     if (hasConflicts) {
       newNotifications.push({
-        id: 'conflicts',
-        type: 'warning' as const,
-        message: 'Cache conflicts detected. Some data may be inconsistent.',
-        timestamp: Date.now()
-      })
+        id: "conflicts",
+        type: "warning" as const,
+        message: "Cache conflicts detected. Some data may be inconsistent.",
+        timestamp: Date.now(),
+      });
     }
 
-    setNotifications(newNotifications)
-  }, [isMultiTab, hasConflicts])
+    setNotifications(newNotifications);
+  }, [isMultiTab, hasConflicts]);
 
   const dismissNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }, [])
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
 
   const clearAllNotifications = useCallback(() => {
-    setNotifications([])
-  }, [])
+    setNotifications([]);
+  }, []);
 
   return {
     notifications,
     hasNotifications: notifications.length > 0,
     dismissNotification,
-    clearAllNotifications
-  }
+    clearAllNotifications,
+  };
 }
 
 // ============================================================================
@@ -310,38 +327,38 @@ export function useCrossTabNotifications() {
 // ============================================================================
 
 export function useCrossTabDebug() {
-  const { getActiveTabs, getConflictStatus } = useCrossTabSync()
+  const { getActiveTabs, getConflictStatus } = useCrossTabSync();
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     return {
       logTabState: () => {},
       logConflictState: () => {},
-      exportSyncData: () => null
-    }
+      exportSyncData: () => null,
+    };
   }
 
   return {
     logTabState: () => {
-      const tabs = getActiveTabs()
-      console.group('🔄 Cross-Tab State')
-      console.table(tabs)
-      console.groupEnd()
+      const tabs = getActiveTabs();
+      console.group("🔄 Cross-Tab State");
+      console.table(tabs);
+      console.groupEnd();
     },
 
     logConflictState: () => {
-      const conflicts = getConflictStatus()
-      console.group('⚠️ Conflict State')
-      console.log('Active conflicts:', conflicts.activeConflicts)
-      console.table(conflicts.conflicts)
-      console.groupEnd()
+      const conflicts = getConflictStatus();
+      console.group("⚠️ Conflict State");
+      console.log("Active conflicts:", conflicts.activeConflicts);
+      console.table(conflicts.conflicts);
+      console.groupEnd();
     },
 
     exportSyncData: () => {
       return {
         activeTabs: getActiveTabs(),
         conflicts: getConflictStatus(),
-        timestamp: Date.now()
-      }
-    }
-  }
+        timestamp: Date.now(),
+      };
+    },
+  };
 }

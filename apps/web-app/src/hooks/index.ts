@@ -1,9 +1,18 @@
-
 // Authentication hooks
-export { useAuthActions } from './useAuthActions'
-export type { UseAuthActionsReturn, LoginOptions, RegisterOptions, LogoutOptions, OAuthOptions } from './useAuthActions'
-export { useSessionTimeout, useSessionWarning } from './useSessionTimeout'
-export type { UseSessionTimeoutReturn, UseSessionWarningReturn, SessionTimeoutConfig } from './useSessionTimeout'
+export { useAuthActions } from "./useAuthActions";
+export type {
+  UseAuthActionsReturn,
+  LoginOptions,
+  RegisterOptions,
+  LogoutOptions,
+  OAuthOptions,
+} from "./useAuthActions";
+export { useSessionTimeout, useSessionWarning } from "./useSessionTimeout";
+export type {
+  UseSessionTimeoutReturn,
+  UseSessionWarningReturn,
+  SessionTimeoutConfig,
+} from "./useSessionTimeout";
 
 // Authentication hooks (new implementation)
 export {
@@ -19,8 +28,8 @@ export {
   withAuthActions,
   withRequireAuth,
   withRequireMentor,
-  withRequireInsider
-} from './useAuth'
+  withRequireInsider,
+} from "./useAuth";
 export type {
   UseRequireAuthOptions,
   UseRequireAuthReturn,
@@ -29,8 +38,8 @@ export type {
   UseRequireInsiderOptions,
   UseRequireInsiderReturn,
   WithAuthProps,
-  WithAuthActionsProps
-} from './useAuth'
+  WithAuthActionsProps,
+} from "./useAuth";
 
 // Legacy authentication guard hooks (deprecated)
 export {
@@ -43,8 +52,8 @@ export {
   useAuthStatus as useLegacyAuthStatus,
   useRouteProtection,
   useAuthRedirect as useLegacyAuthRedirect,
-  useAuthStateChange as useLegacyAuthStateChange
-} from './useAuthGuards'
+  useAuthStateChange as useLegacyAuthStateChange,
+} from "./useAuthGuards";
 export type {
   UseRequireAuthOptions as LegacyUseRequireAuthOptions,
   UseRequireAuthReturn as LegacyUseRequireAuthReturn,
@@ -54,8 +63,8 @@ export type {
   UseRequireInsiderReturn as LegacyUseRequireInsiderReturn,
   UseConditionalAuthOptions,
   UseRouteProtectionOptions,
-  UseRouteProtectionReturn
-} from './useAuthGuards'
+  UseRouteProtectionReturn,
+} from "./useAuthGuards";
 
 // Notification hooks
 export {
@@ -64,24 +73,24 @@ export {
   useNotificationMutations,
   useNotificationCounts,
   useNotification,
-  notificationQueryKeys
-} from './useNotifications'
+  notificationQueryKeys,
+} from "./useNotifications";
 export type {
   UseNotificationsOptions,
   UseNotificationsResult,
   UseInfiniteNotificationsResult,
   UseNotificationMutationsResult,
   UseNotificationCountsResult,
-  UseNotificationResult
-} from './useNotifications'
+  UseNotificationResult,
+} from "./useNotifications";
 
 export {
   useNotificationPermission,
   useDeviceTokenRegistration,
   useDeviceTokens,
   useDeviceTokenStats,
-  deviceTokenQueryKeys
-} from './useDeviceTokens'
+  deviceTokenQueryKeys,
+} from "./useDeviceTokens";
 export type {
   NotificationPermissionState,
   UseNotificationPermissionResult,
@@ -89,28 +98,28 @@ export type {
   UseDeviceTokenRegistrationResult,
   UseDeviceTokensOptions,
   UseDeviceTokensResult,
-  UseDeviceTokenStatsResult
-} from './useDeviceTokens'
+  UseDeviceTokenStatsResult,
+} from "./useDeviceTokens";
 
 export {
   useRealtimeNotifications,
-  useNotificationConnection
-} from '../components/notifications/useRealtimeNotifications'
+  useNotificationConnection,
+} from "../components/notifications/useRealtimeNotifications";
 export type {
   UseRealtimeNotificationsOptions,
   UseRealtimeNotificationsResult,
-  UseNotificationConnectionResult
-} from '../components/notifications/useRealtimeNotifications'
+  UseNotificationConnectionResult,
+} from "../components/notifications/useRealtimeNotifications";
 
 export {
   useNotificationPreferences,
   usePreferenceValidation,
-  preferencesQueryKeys
-} from './useNotificationPreferences'
+  preferencesQueryKeys,
+} from "./useNotificationPreferences";
 export type {
   UseNotificationPreferencesResult,
-  PreferenceValidationResult
-} from './useNotificationPreferences'
+  PreferenceValidationResult,
+} from "./useNotificationPreferences";
 
 // Notification filtering hooks
 export {
@@ -120,13 +129,13 @@ export {
   useInAppNotifications,
   useEmailNotifications,
   useNotificationTypeStatus,
-  useNotificationInsights
-} from './useNotificationFiltering'
+  useNotificationInsights,
+} from "./useNotificationFiltering";
 export type {
   UseNotificationFilteringOptions,
   FilteredNotificationResult,
-  UseNotificationFilteringResult
-} from './useNotificationFiltering'
+  UseNotificationFilteringResult,
+} from "./useNotificationFiltering";
 
 // Notification Analytics hooks
 export {
@@ -136,15 +145,15 @@ export {
   useAnalyticsMetrics,
   useAutoAnalyticsTracking,
   useAnalyticsSummary,
-  analyticsQueryKeys
-} from './useNotificationAnalytics'
+  analyticsQueryKeys,
+} from "./useNotificationAnalytics";
 export type {
   UseAnalyticsTrackingResult,
   UseAnalyticsDataOptions,
   UseAnalyticsDataResult,
   UseRealtimeAnalyticsOptions,
-  UseRealtimeAnalyticsResult
-} from './useNotificationAnalytics'
+  UseRealtimeAnalyticsResult,
+} from "./useNotificationAnalytics";
 
 // Analytics Dashboard hooks
 export {
@@ -168,22 +177,22 @@ export {
   useHealthStatus,
   useSystemPerformance,
   useAnalyticsSummary as useAnalyticsDashboardSummary,
-  useAnalyticsMutations
-} from './useAnalytics'
+  useAnalyticsMutations,
+} from "./useAnalytics";
 
 export {
   useRealtimeMetrics,
   useRealtimeEngagement,
   useRealtimeAlerts,
-  useRealtimeConnection
-} from './useRealtimeMetrics'
+  useRealtimeConnection,
+} from "./useRealtimeMetrics";
 
 export {
   useAnalyticsCrossTabSync,
   useAnalyticsOptimisticUpdates,
   useAnalyticsMutationsWithOptimistic,
-  useAnalyticsSync
-} from './useAnalyticsSync'
+  useAnalyticsSync,
+} from "./useAnalyticsSync";
 
 // Permission-aware analytics hooks
 export {
@@ -200,5 +209,5 @@ export {
   useEffectivenessReportWithPermissions,
   useHistoricalMetricsWithPermissions,
   useAnalyticsSummaryWithPermissions,
-  useAnalyticsComponentVisibility
-} from './useAnalyticsWithPermissions'
+  useAnalyticsComponentVisibility,
+} from "./useAnalyticsWithPermissions";
