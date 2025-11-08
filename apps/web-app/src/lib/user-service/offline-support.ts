@@ -84,6 +84,11 @@ export class OfflineStorageManager {
   }
 
   saveQueue(operations: QueuedOperation[]): void {
+    // Only run in browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
+
     try {
       // Enforce size limit
       const limitedOps = operations.slice(-this.maxSize);
@@ -101,6 +106,11 @@ export class OfflineStorageManager {
   }
 
   loadQueue(): QueuedOperation[] {
+    // Only run in browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return [];
+    }
+
     try {
       const stored = localStorage.getItem(this.storageKey);
       if (!stored) return [];
@@ -125,6 +135,11 @@ export class OfflineStorageManager {
   }
 
   clearQueue(): void {
+    // Only run in browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
+
     try {
       localStorage.removeItem(this.storageKey);
     } catch (error) {
@@ -133,6 +148,11 @@ export class OfflineStorageManager {
   }
 
   getStorageSize(): number {
+    // Only run in browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return 0;
+    }
+
     try {
       const stored = localStorage.getItem(this.storageKey);
       return stored ? stored.length : 0;
@@ -287,6 +307,11 @@ export class OfflineManager {
   // ============================================================================
 
   private initializeOfflineSupport(): void {
+    // Only run in browser environment
+    if (typeof window === "undefined") {
+      return;
+    }
+
     // Load persisted queue
     this.operationQueue = this.storage.loadQueue();
     this.updateState({ queuedOperations: this.operationQueue.length });

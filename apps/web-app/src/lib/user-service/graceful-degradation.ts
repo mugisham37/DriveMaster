@@ -656,6 +656,11 @@ export class GracefulDegradationManager {
   // ============================================================================
 
   private startHealthMonitoring(): void {
+    // Only run in browser environment
+    if (typeof window === "undefined") {
+      return;
+    }
+
     // Monitor network status
     window.addEventListener("online", () => {
       if (this.state.mode === "offline") {

@@ -1,0 +1,65 @@
+{
+  "timestamp": "2025-11-08T10:03:28.603Z",
+  "buildTime": 11,
+  "optimizations": [
+    "Asset manifest with 42 entries",
+    "15 assets analyzed"
+  ],
+  "buildStats": {
+    "pages": {
+      "/_app": [
+        "static/chunks/63a23e0fe82f8a7e.js",
+        "static/chunks/e985ad30651b44ab.js",
+        "static/chunks/turbopack-5af967850e072b96.js"
+      ],
+      "/_error": [
+        "static/chunks/66d7a2697a5cd65e.js",
+        "static/chunks/e985ad30651b44ab.js",
+        "static/chunks/turbopack-447982c39a8ac766.js"
+      ]
+    },
+    "devFiles": [],
+    "ampDevFiles": [],
+    "polyfillFiles": [
+      "static/chunks/a6dad97d9634a72d.js"
+    ],
+    "lowPriorityFiles": [
+      "static/iPAKgiXf5xkNOsdcjk50A/_ssgManifest.js",
+      "static/iPAKgiXf5xkNOsdcjk50A/_buildManifest.js"
+    ],
+    "rootMainFiles": [
+      "static/chunks/dc4e644fbd3d3f41.js",
+      "static/chunks/51b129b0c82c2450.js",
+      "static/chunks/0e49a099862ca6a3.js",
+      "static/chunks/d8bc1128c8174518.js",
+      "static/chunks/turbopack-fe0700a92249e1ec.js"
+    ],
+    "ampFirstPages": []
+  },
+  "recommendations": [
+    "Ensure all images use Next.js Image component with proper sizing",
+    "Use dynamic imports for large components and libraries",
+    "Implement proper caching headers for static assets",
+    "Monitor Core Web Vitals in production environment",
+    "Use React.memo() for expensive component renders",
+    "Implement code splitting at route level",
+    "Optimize bundle sizes by analyzing webpack-bundle-analyzer output",
+    "Use service workers for offline functionality and caching",
+    "Implement proper error boundaries for better UX",
+    "Monitor real-time performance metrics"
+  ],
+  "performance": {
+    "bundleAnalysis": false,
+    "assetOptimization": true,
+    "cacheHeaders": true,
+    "imageOptimization": true,
+    "codesplitting": true
+  },
+  "nextSteps": [
+    "Deploy to staging environment for performance testing",
+    "Run Lighthouse audits on key pages",
+    "Set up performance monitoring in production",
+    "Configure CDN for optimal asset delivery",
+    "Implement performance budgets in CI/CD"
+  ]
+}

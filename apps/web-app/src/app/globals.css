@@ -54,25 +54,6 @@
   /* Line heights */
   --line-height-paragraph: 1.6;
 }
-@import "../styles/bootcamp-exercises.css";
-@import "../styles/components/common.css";
-@import "../styles/components/dropdown.css";
-@import "../styles/components/impact.css";
-@import "../styles/components/journey.css";
-@import "../styles/components/bootcamp-widgets.css";
-@import "../styles/interpreter.css";
-@import "../styles/components/video-length.css";
-@import "../styles/components/contributing-header.css";
-@import "../styles/components/mentor-header.css";
-@import "../styles/components/partner-components.css";
-@import "../styles/components/profile-header.css";
-@import "../styles/components/navigation-helpers.css";
-@import "../styles/components/exercise-status-tag.css";
-@import "../styles/components/exercise-header-tabs.css";
-@import "../styles/components/track-header-tabs.css";
-@import "../styles/components/unlock-sentence.css";
-@import "../styles/components/flash-messages.css";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
