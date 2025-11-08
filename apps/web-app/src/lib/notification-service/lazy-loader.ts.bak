@@ -1,0 +1,577 @@
+/**
+ * Notification Service Lazy Loader
+ * Implements Task 12.3: Code Splitting and Lazy Loading
+ * 
+ * Provides notification-specific lazy loading and code splitting:
+ * - Code splitting for notification components to reduce initial bundle size
+ * - Lazy loading for notification images and rich content
+ * - Dynamic imports for notification-related utilities and libraries
+ * - Progressive loading for notification lists and detailed views
+ * 
+ * Requirements: 7.4
+ */
+
+import { lazy, ComponentType, ReactElement } from 'react'
+import { IntersectionObserver } from '@/lib/utils/intersection-observer'
+
+export interface LazyLoadConfig {
+  threshold: number
+  rootMargin: string
+  enableImageLazyLoading: boolean
+  enableComponentLazyLoading: boolean
+  enableUtilityLazyLoading: boolean
+  chunkPrefetchDelay: number
+}
+
+export interface LazyLoadStats {
+  componentsLoaded: number
+  imagesLoaded: number
+  utilitiesLoaded: number
+  bytesLoaded: number
+  loadTime: number
+  cacheHits: number
+}
+
+export class NotificationLazyLoader {
+  private config: LazyLoadConfig
+  private stats: LazyLoadStats
+  private componentCache: Map<string, ComponentType<any>> = new Map()
+  private utilityCache: Map<string, any> = new Map()
+  private imageCache: Map<string, HTMLImageElement> = new Map()
+  private intersectionObserver?: IntersectionObserver
+  private loadingPromises: Map<string, Promise<any>> = new Map()
+
+  constructor(config: Partial<LazyLoadConfig> = {}) {
+    this.config = {
+      threshold: 0.1,
+      rootMargin: '50px',
+      enableImageLazyLoading: true,
+      enableComponentLazyLoading: true,
+      enableUtilityLazyLoading: true,
+      chunkPrefetchDelay: 2000, // 2 seconds
+      ...config
+    }
+
+    this.stats = {
+      componentsLoaded: 0,
+      imagesLoaded: 0,
+      utilitiesLoaded: 0,
+      bytesLoaded: 0,
+      loadTime: 0,
+      cacheHits: 0
+    }
+
+    this.setupIntersectionObserver()
+    this.prefetchCriticalChunks()
+  }
+
+  /**
+   * Setup intersection observer for lazy loading
+   */
+  private setupIntersectionObserver(): void {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      return
+    }
+
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const element = entry.target as HTMLElement
+            const lazyType = element.dataset.lazyType
+            const lazySource = element.dataset.lazySource
+
+            if (lazyType && lazySource) {
+              this.handleLazyLoad(lazyType, lazySource, element)
+              this.intersectionObserver?.unobserve(element)
+            }
+          }
+        })
+      },
+      {
+        threshold: this.config.threshold,
+        rootMargin: this.config.rootMargin
+      }
+    )
+  }
+
+  /**
+   * Prefetch critical notification chunks
+   */
+  private prefetchCriticalChunks(): void {
+    if (typeof window === 'undefined') return
+
+    setTimeout(() => {
+      // Prefetch notification center (most likely to be used)
+      this.prefetchComponent('NotificationCenter')
+      
+      // Prefetch notification list (core functionality)
+      this.prefetchComponent('NotificationList')
+      
+      // Prefetch toast system (real-time notifications)
+      this.prefetchComponent('NotificationToastSystem')
+    }, this.config.chunkPrefetchDelay)
+  }
+
+  /**
+   * Lazy load notification component
+   */
+  lazyLoadComponent<T = any>(
+    componentName: string,
+    importFn: () => Promise<{ default: ComponentType<T> }>
+  ): ComponentType<T> {
+    if (!this.config.enableComponentLazyLoading) {
+      // Return immediately loaded component if lazy loading is disabled
+      return lazy(importFn)
+    }
+
+    // Check cache first
+    if (this.componentCache.has(componentName)) {
+      this.stats.cacheHits++
+      return this.componentCache.get(componentName)!
+    }
+
+    const LazyComponent = lazy(async () => {
+      const startTime = Date.now()
+      
+      try {
+        const module = await importFn()
+        const loadTime = Date.now() - startTime
+        
+        this.stats.componentsLoaded++
+        this.stats.loadTime += loadTime
+        this.stats.bytesLoaded += this.estimateComponentSize(componentName)
+        
+        // Cache the component
+        this.componentCache.set(componentName, module.default)
+        
+        console.log(`[LazyLoader] Loaded component ${componentName} in ${loadTime}ms`)
+        
+        return module
+      } catch (error) {
+        console.error(`[LazyLoader] Failed to load component ${componentName}:`, error)
+        throw error
+      }
+    })
+
+    return LazyComponent
+  }
+
+  /**
+   * Lazy load notification utility
+   */
+  async lazyLoadUtility<T = any>(
+    utilityName: string,
+    importFn: () => Promise<T>
+  ): Promise<T> {
+    if (!this.config.enableUtilityLazyLoading) {
+      return importFn()
+    }
+
+    // Check cache first
+    if (this.utilityCache.has(utilityName)) {
+      this.stats.cacheHits++
+      return this.utilityCache.get(utilityName)
+    }
+
+    // Check if already loading
+    if (this.loadingPromises.has(utilityName)) {
+      return this.loadingPromises.get(utilityName)
+    }
+
+    const loadingPromise = this.loadUtility(utilityName, importFn)
+    this.loadingPromises.set(utilityName, loadingPromise)
+    
+    try {
+      const result = await loadingPromise
+      this.loadingPromises.delete(utilityName)
+      return result
+    } catch (error) {
+      this.loadingPromises.delete(utilityName)
+      throw error
+    }
+  }
+
+  /**
+   * Load utility with performance tracking
+   */
+  private async loadUtility<T>(utilityName: string, importFn: () => Promise<T>): Promise<T> {
+    const startTime = Date.now()
+    
+    try {
+      const utility = await importFn()
+      const loadTime = Date.now() - startTime
+      
+      this.stats.utilitiesLoaded++
+      this.stats.loadTime += loadTime
+      this.stats.bytesLoaded += this.estimateUtilitySize(utilityName)
+      
+      // Cache the utility
+      this.utilityCache.set(utilityName, utility)
+      
+      console.log(`[LazyLoader] Loaded utility ${utilityName} in ${loadTime}ms`)
+      
+      return utility
+    } catch (error) {
+      console.error(`[LazyLoader] Failed to load utility ${utilityName}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Lazy load image with intersection observer
+   */
+  lazyLoadImage(
+    src: string,
+    placeholder?: string,
+    options?: {
+      alt?: string
+      className?: string
+      onLoad?: () => void
+      onError?: (error: Error) => void
+    }
+  ): ReactElement {
+    if (!this.config.enableImageLazyLoading) {
+      return <img src={src} alt={options?.alt} className={options?.className} />
+    }
+
+    const imageId = `lazy-image-${Date.now()}-${Math.random()}`
+    
+    return (
+      <img
+        id={imageId}
+        src={placeholder || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGNUY1RjUiLz48L3N2Zz4='}
+        alt={options?.alt}
+        className={options?.className}
+        data-lazy-type="image"
+        data-lazy-source={src}
+        ref={(element) => {
+          if (element && this.intersectionObserver) {
+            this.intersectionObserver.observe(element)
+          }
+        }}
+      />
+    )
+  }
+
+  /**
+   * Handle lazy loading based on type
+   */
+  private async handleLazyLoad(type: string, source: string, element: HTMLElement): Promise<void> {
+    switch (type) {
+      case 'image':
+        await this.loadImage(source, element as HTMLImageElement)
+        break
+      case 'component':
+        await this.loadComponentIntoElement(source, element)
+        break
+      default:
+        console.warn(`[LazyLoader] Unknown lazy load type: ${type}`)
+    }
+  }
+
+  /**
+   * Load image and update element
+   */
+  private async loadImage(src: string, imgElement: HTMLImageElement): Promise<void> {
+    const startTime = Date.now()
+    
+    try {
+      // Check cache first
+      if (this.imageCache.has(src)) {
+        const cachedImage = this.imageCache.get(src)!
+        imgElement.src = cachedImage.src
+        this.stats.cacheHits++
+        return
+      }
+
+      // Create new image for loading
+      const img = new Image()
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => {
+          const loadTime = Date.now() - startTime
+          
+          // Update stats
+          this.stats.imagesLoaded++
+          this.stats.loadTime += loadTime
+          this.stats.bytesLoaded += this.estimateImageSize(img)
+          
+          // Cache the image
+          this.imageCache.set(src, img)
+          
+          // Update the element
+          imgElement.src = src
+          imgElement.classList.add('lazy-loaded')
+          
+          console.log(`[LazyLoader] Loaded image ${src} in ${loadTime}ms`)
+          resolve()
+        }
+        
+        img.onerror = () => {
+          console.error(`[LazyLoader] Failed to load image: ${src}`)
+          reject(new Error(`Failed to load image: ${src}`))
+        }
+        
+        img.src = src
+      })
+    } catch (error) {
+      console.error('[LazyLoader] Image loading error:', error)
+      // Keep placeholder on error
+    }
+  }
+
+  /**
+   * Load component into element (for dynamic component loading)
+   */
+  private async loadComponentIntoElement(componentName: string, element: HTMLElement): Promise<void> {
+    try {
+      const component = await this.getComponent(componentName)
+      if (component) {
+        // This would require React rendering integration
+        // Implementation depends on your specific React setup
+        element.classList.add('component-loaded')
+      }
+    } catch (error) {
+      console.error(`[LazyLoader] Failed to load component ${componentName}:`, error)
+    }
+  }
+
+  /**
+   * Get component by name (for dynamic loading)
+   */
+  private async getComponent(componentName: string): Promise<ComponentType<any> | null> {
+    const componentMap: { [key: string]: () => Promise<{ default: ComponentType<any> }> } = {
+      NotificationCenter: () => import('@/components/notifications/NotificationCenter'),
+      NotificationList: () => import('@/components/notifications/NotificationsList'),
+      NotificationPreferences: () => import('@/components/notifications/NotificationPreferences'),
+      NotificationToastSystem: () => import('@/components/notifications/NotificationToastSystem'),
+      AchievementNotification: () => import('@/components/notifications/AchievementNotification'),
+      SpacedRepetitionReminder: () => import('@/components/notifications/SpacedRepetitionReminder'),
+      StreakReminder: () => import('@/components/notifications/StreakReminder'),
+      MockTestReminder: () => import('@/components/notifications/MockTestReminder'),
+      NotificationAnalyticsDashboard: () => import('@/components/notifications/NotificationAnalyticsDashboard'),
+      PushPermissionFlow: () => import('@/components/notifications/PushPermissionFlow')
+    }
+
+    const importFn = componentMap[componentName]
+    if (!importFn) {
+      console.warn(`[LazyLoader] Unknown component: ${componentName}`)
+      return null
+    }
+
+    return this.lazyLoadComponent(componentName, importFn)
+  }
+
+  /**
+   * Prefetch component for better performance
+   */
+  async prefetchComponent(componentName: string): Promise<void> {
+    try {
+      await this.getComponent(componentName)
+      console.log(`[LazyLoader] Prefetched component: ${componentName}`)
+    } catch (error) {
+      console.warn(`[LazyLoader] Failed to prefetch component ${componentName}:`, error)
+    }
+  }
+
+  /**
+   * Prefetch utility for better performance
+   */
+  async prefetchUtility(utilityName: string): Promise<void> {
+    const utilityMap: { [key: string]: () => Promise<any> } = {
+      'notification-analytics': () => import('./analytics-service'),
+      'notification-cache': () => import('./cache-manager'),
+      'notification-websocket': () => import('./websocket-client'),
+      'notification-security': () => import('./security'),
+      'notification-ab-testing': () => import('./ab-testing')
+    }
+
+    const importFn = utilityMap[utilityName]
+    if (!importFn) {
+      console.warn(`[LazyLoader] Unknown utility: ${utilityName}`)
+      return
+    }
+
+    try {
+      await this.lazyLoadUtility(utilityName, importFn)
+      console.log(`[LazyLoader] Prefetched utility: ${utilityName}`)
+    } catch (error) {
+      console.warn(`[LazyLoader] Failed to prefetch utility ${utilityName}:`, error)
+    }
+  }
+
+  /**
+   * Progressive loading for notification lists
+   */
+  createProgressiveLoader<T>(
+    items: T[],
+    batchSize: number = 20,
+    loadDelay: number = 100
+  ): {
+    visibleItems: T[]
+    loadMore: () => void
+    hasMore: boolean
+    isLoading: boolean
+  } {
+    let currentIndex = 0
+    let visibleItems: T[] = []
+    let isLoading = false
+
+    const loadMore = async () => {
+      if (isLoading || currentIndex >= items.length) return
+
+      isLoading = true
+      
+      // Simulate loading delay for better UX
+      await new Promise(resolve => setTimeout(resolve, loadDelay))
+      
+      const nextBatch = items.slice(currentIndex, currentIndex + batchSize)
+      visibleItems = [...visibleItems, ...nextBatch]
+      currentIndex += batchSize
+      
+      isLoading = false
+    }
+
+    // Load initial batch
+    loadMore()
+
+    return {
+      get visibleItems() { return visibleItems },
+      loadMore,
+      get hasMore() { return currentIndex < items.length },
+      get isLoading() { return isLoading }
+    }
+  }
+
+  /**
+   * Estimate component size for stats
+   */
+  private estimateComponentSize(componentName: string): number {
+    const sizeMap: { [key: string]: number } = {
+      NotificationCenter: 15000, // ~15KB
+      NotificationList: 8000,    // ~8KB
+      NotificationPreferences: 5000, // ~5KB
+      NotificationToastSystem: 3000, // ~3KB
+      AchievementNotification: 4000, // ~4KB
+      SpacedRepetitionReminder: 3500, // ~3.5KB
+      StreakReminder: 3000,      // ~3KB
+      MockTestReminder: 4000,    // ~4KB
+      NotificationAnalyticsDashboard: 12000, // ~12KB
+      PushPermissionFlow: 2500   // ~2.5KB
+    }
+
+    return sizeMap[componentName] || 5000 // Default 5KB
+  }
+
+  /**
+   * Estimate utility size for stats
+   */
+  private estimateUtilitySize(utilityName: string): number {
+    const sizeMap: { [key: string]: number } = {
+      'notification-analytics': 8000,  // ~8KB
+      'notification-cache': 6000,      // ~6KB
+      'notification-websocket': 10000, // ~10KB
+      'notification-security': 7000,   // ~7KB
+      'notification-ab-testing': 4000  // ~4KB
+    }
+
+    return sizeMap[utilityName] || 3000 // Default 3KB
+  }
+
+  /**
+   * Estimate image size for stats
+   */
+  private estimateImageSize(img: HTMLImageElement): number {
+    // Rough estimate based on dimensions
+    const area = img.naturalWidth * img.naturalHeight
+    return Math.floor(area * 0.1) // Rough estimate
+  }
+
+  /**
+   * Get lazy loading statistics
+   */
+  getStats(): LazyLoadStats {
+    return { ...this.stats }
+  }
+
+  /**
+   * Reset statistics
+   */
+  resetStats(): void {
+    this.stats = {
+      componentsLoaded: 0,
+      imagesLoaded: 0,
+      utilitiesLoaded: 0,
+      bytesLoaded: 0,
+      loadTime: 0,
+      cacheHits: 0
+    }
+  }
+
+  /**
+   * Clear all caches
+   */
+  clearCaches(): void {
+    this.componentCache.clear()
+    this.utilityCache.clear()
+    this.imageCache.clear()
+    this.loadingPromises.clear()
+  }
+
+  /**
+   * Cleanup resources
+   */
+  destroy(): void {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect()
+    }
+    this.clearCaches()
+  }
+}
+
+// Global lazy loader instance
+let globalNotificationLazyLoader: NotificationLazyLoader | null = null
+
+export function createNotificationLazyLoader(
+  config?: Partial<LazyLoadConfig>
+): NotificationLazyLoader {
+  if (!globalNotificationLazyLoader) {
+    globalNotificationLazyLoader = new NotificationLazyLoader(config)
+  }
+  return globalNotificationLazyLoader
+}
+
+export function getNotificationLazyLoader(): NotificationLazyLoader {
+  if (!globalNotificationLazyLoader) {
+    throw new Error('Notification lazy loader not initialized. Call createNotificationLazyLoader first.')
+  }
+  return globalNotificationLazyLoader
+}
+
+// Convenience function for lazy loading notification components
+export function lazyNotificationComponent<T = any>(
+  componentName: string
+): ComponentType<T> {
+  const loader = getNotificationLazyLoader()
+  
+  const componentMap: { [key: string]: () => Promise<{ default: ComponentType<T> }> } = {
+    NotificationCenter: () => import('@/components/notifications/NotificationCenter'),
+    NotificationList: () => import('@/components/notifications/NotificationsList'),
+    NotificationPreferences: () => import('@/components/notifications/NotificationPreferences'),
+    NotificationToastSystem: () => import('@/components/notifications/NotificationToastSystem'),
+    AchievementNotification: () => import('@/components/notifications/AchievementNotification'),
+    SpacedRepetitionReminder: () => import('@/components/notifications/SpacedRepetitionReminder'),
+    StreakReminder: () => import('@/components/notifications/StreakReminder'),
+    MockTestReminder: () => import('@/components/notifications/MockTestReminder'),
+    NotificationAnalyticsDashboard: () => import('@/components/notifications/NotificationAnalyticsDashboard'),
+    PushPermissionFlow: () => import('@/components/notifications/PushPermissionFlow')
+  }
+
+  const importFn = componentMap[componentName]
+  if (!importFn) {
+    throw new Error(`Unknown notification component: ${componentName}`)
+  }
+
+  return loader.lazyLoadComponent(componentName, importFn)
+}
