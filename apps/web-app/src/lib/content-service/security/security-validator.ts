@@ -7,7 +7,6 @@
 
 import DOMPurify from "isomorphic-dompurify";
 import type {
-  ContentItem,
   CreateItemDto,
   UpdateItemDto,
   UploadMediaDto,
@@ -159,7 +158,7 @@ export class InputValidator {
       const tagValidation = this.validateTags(data.tags);
       if (!tagValidation.isValid) {
         errors.push(...tagValidation.errors);
-      } else {
+      } else if (tagValidation.sanitizedTags) {
         sanitizedData.tags = tagValidation.sanitizedTags;
       }
     }
@@ -220,7 +219,7 @@ export class InputValidator {
       const tagValidation = this.validateTags(data.tags);
       if (!tagValidation.isValid) {
         errors.push(...tagValidation.errors);
-      } else {
+      } else if (tagValidation.sanitizedTags) {
         sanitizedData.tags = tagValidation.sanitizedTags;
       }
     }
@@ -273,15 +272,8 @@ export class InputValidator {
       }
     }
 
-    // Validate pagination if provided
-    if (data.pagination) {
-      const paginationValidation = this.validatePagination(data.pagination);
-      if (!paginationValidation.isValid) {
-        errors.push(...paginationValidation.errors);
-      } else {
-        sanitizedData.pagination = paginationValidation.sanitizedPagination;
-      }
-    }
+    // Note: Pagination is not part of SearchRequestDto,
+    // it's handled separately in query parameters
 
     return {
       isValid: errors.length === 0,
@@ -344,9 +336,11 @@ export class InputValidator {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static validateContent(content: any): {
     isValid: boolean;
     errors: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sanitizedContent?: any;
   } {
     const errors: string[] = [];
@@ -410,9 +404,11 @@ export class InputValidator {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static validateMetadata(metadata: any): {
     isValid: boolean;
     errors: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sanitizedMetadata?: any;
   } {
     const errors: string[] = [];
@@ -444,9 +440,11 @@ export class InputValidator {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static validateSearchFilters(filters: any): {
     isValid: boolean;
     errors: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sanitizedFilters?: any;
   } {
     const errors: string[] = [];
@@ -469,9 +467,11 @@ export class InputValidator {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static validatePagination(pagination: any): {
     isValid: boolean;
     errors: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sanitizedPagination?: any;
   } {
     const errors: string[] = [];

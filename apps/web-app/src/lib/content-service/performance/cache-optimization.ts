@@ -5,7 +5,7 @@
  * Requirements: 6.1, 6.2, 6.4, 6.5
  */
 
-import type { ContentItem, MediaAsset, SearchResult } from "../types";
+import type { ContentItem, MediaAsset } from "../types";
 
 /**
  * Advanced cache configuration with intelligent TTL
@@ -102,7 +102,11 @@ export class CacheKeyGenerator {
   /**
    * Generate cache key for search results
    */
-  static searchResults(query: string, filters?: any, userId?: string): string {
+  static searchResults(
+    query: string,
+    filters?: Record<string, unknown>,
+    userId?: string,
+  ): string {
     const filterHash = filters ? this.hashObject(filters) : "none";
     const userContext = userId || "anonymous";
     return `search:${this.hashString(query)}:${filterHash}:${userContext}`;
@@ -136,7 +140,7 @@ export class CacheKeyGenerator {
     return Math.abs(hash).toString(36);
   }
 
-  private static hashObject(obj: any): string {
+  private static hashObject(obj: Record<string, unknown>): string {
     return this.hashString(JSON.stringify(obj, Object.keys(obj).sort()));
   }
 }
@@ -259,18 +263,19 @@ export class CacheWarmer {
     const { contentServiceClient } = await import("../client");
 
     try {
-      // Get popular content (this would typically come from analytics)
+      // Get popular content (sorted by most recent updates as proxy for popularity)
       const popularContent = await contentServiceClient.getContentItems({
-        sortBy: "popularity",
+        sortBy: "updatedAt",
+        sortOrder: "desc",
         limit: 20,
         status: "published",
       });
 
       // Warm cache for each popular item
       const warmingPromises = popularContent.items.map((item) =>
-        this.queueWarmingTask(() =>
-          contentServiceClient.getContentItem(item.id),
-        ),
+        this.queueWarmingTask(async () => {
+          await contentServiceClient.getContentItem(item.id);
+        }),
       );
 
       await Promise.all(warmingPromises);
@@ -302,11 +307,13 @@ export class CacheWarmer {
       // Warm cache for user-specific content
       const contentIds = [
         ...userContent.items.map((item) => item.id),
-        ...recommendations.slice(0, 5).map((rec) => rec.contentId),
+        ...recommendations.slice(0, 5).map((rec) => rec.itemId),
       ];
 
       const warmingPromises = contentIds.map((id) =>
-        this.queueWarmingTask(() => contentServiceClient.getContentItem(id)),
+        this.queueWarmingTask(async () => {
+          await contentServiceClient.getContentItem(id);
+        }),
       );
 
       await Promise.all(warmingPromises);
@@ -325,11 +332,11 @@ export class CacheWarmer {
       const currentContent =
         await contentServiceClient.getContentItem(currentContentId);
 
-      // Get related content by tags
+      // Get related content by tags (without excludeIds since it's not supported)
       const relatedByTags = await contentServiceClient.getContentItems({
         tags: currentContent.tags.slice(0, 3),
-        limit: 5,
-        excludeIds: [currentContentId],
+        limit: 6, // Get more to filter out current item
+        status: "published",
       });
 
       // Get similar content recommendations
@@ -338,14 +345,19 @@ export class CacheWarmer {
         "similar",
       );
 
-      // Warm cache for related content
+      // Warm cache for related content (filter out current item)
       const relatedIds = [
-        ...relatedByTags.items.map((item) => item.id),
-        ...similarContent.slice(0, 3).map((rec) => rec.contentId),
+        ...relatedByTags.items
+          .filter((item) => item.id !== currentContentId)
+          .slice(0, 5)
+          .map((item) => item.id),
+        ...similarContent.slice(0, 3).map((rec) => rec.itemId),
       ];
 
       const warmingPromises = relatedIds.map((id) =>
-        this.queueWarmingTask(() => contentServiceClient.getContentItem(id)),
+        this.queueWarmingTask(async () => {
+          await contentServiceClient.getContentItem(id);
+        }),
       );
 
       await Promise.all(warmingPromises);
@@ -438,8 +450,6 @@ export class SmartCacheInvalidator {
     contentId: string,
     changeType: "create" | "update" | "delete" | "status-change",
   ): Promise<void> {
-    const { contentServiceCache } = await import("../cache");
-
     const keysToInvalidate = new Set<string>();
 
     // Always invalidate the specific content item
@@ -503,8 +513,6 @@ export class SmartCacheInvalidator {
    * Scheduled cache cleanup for expired entries
    */
   static async performScheduledCleanup(): Promise<void> {
-    const { contentServiceCache } = await import("../cache");
-
     try {
       // This would integrate with the actual cache implementation
       // to remove expired entries and optimize memory usage
@@ -521,13 +529,12 @@ export class SmartCacheInvalidator {
   }
 
   private static async executeInvalidation(patterns: string[]): Promise<void> {
-    const { contentServiceCache } = await import("../cache");
-
     try {
       // This would integrate with the actual cache implementation
       // to invalidate matching cache keys
       patterns.forEach((pattern) => {
         console.log(`Invalidating cache pattern: ${pattern}`);
+        // When cache implementation is available:
         // contentServiceCache.invalidatePattern(pattern)
       });
     } catch (error) {
@@ -555,7 +562,14 @@ export class CachePerformanceAnalyzer {
   static analyzePerformance(): {
     score: number;
     recommendations: string[];
-    metrics: typeof this.metrics;
+    metrics: {
+      hitRate: number;
+      missRate: number;
+      averageResponseTime: number;
+      cacheSize: number;
+      evictionRate: number;
+      warmingEffectiveness: number;
+    };
   } {
     const recommendations: string[] = [];
     let score = 100;

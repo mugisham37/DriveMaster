@@ -5,101 +5,102 @@
  * Requirements: 6.1, 6.2, 6.5
  */
 
-import { lazy, ComponentType } from "react";
 import type { ContentItem, MediaAsset } from "../types";
 
 /**
  * Lazy-loaded components for code splitting
+ * TODO: Uncomment when component modules are implemented
  */
 export const LazyContentComponents = {
-  // Content management components
-  ContentEditor: lazy(() =>
-    import("../components/content/content-editor").then((m) => ({
-      default: m.ContentEditor,
-    })),
-  ),
-  ContentList: lazy(() =>
-    import("../components/content/content-list").then((m) => ({
-      default: m.ContentList,
-    })),
-  ),
-  ContentPreview: lazy(() =>
-    import("../components/content/content-preview").then((m) => ({
-      default: m.ContentPreview,
-    })),
-  ),
+  // Content management components - TODO: Implement these components
+  // ContentEditor: lazy(() =>
+  //   import("../components/content/content-editor").then((m) => ({
+  //     default: m.ContentEditor,
+  //   })),
+  // ),
+  // ContentList: lazy(() =>
+  //   import("../components/content/content-list").then((m) => ({
+  //     default: m.ContentList,
+  //   })),
+  // ),
+  // ContentPreview: lazy(() =>
+  //   import("../components/content/content-preview").then((m) => ({
+  //     default: m.ContentPreview,
+  //   })),
+  // ),
 
-  // Media components
-  MediaUpload: lazy(() =>
-    import("../components/media/media-upload").then((m) => ({
-      default: m.MediaUpload,
-    })),
-  ),
-  MediaGallery: lazy(() =>
-    import("../components/media/media-gallery").then((m) => ({
-      default: m.MediaGallery,
-    })),
-  ),
+  // Media components - TODO: Implement these components
+  // MediaUpload: lazy(() =>
+  //   import("../components/media/media-upload").then((m) => ({
+  //     default: m.MediaUpload,
+  //   })),
+  // ),
+  // MediaGallery: lazy(() =>
+  //   import("../components/media/media-gallery").then((m) => ({
+  //     default: m.MediaGallery,
+  //   })),
+  // ),
 
-  // Workflow components
-  WorkflowStatus: lazy(() =>
-    import("../components/workflow/workflow-status").then((m) => ({
-      default: m.WorkflowStatus,
-    })),
-  ),
-  ReviewPanel: lazy(() =>
-    import("../components/workflow/review-panel").then((m) => ({
-      default: m.ReviewPanel,
-    })),
-  ),
-  WorkflowHistory: lazy(() =>
-    import("../components/workflow/workflow-history").then((m) => ({
-      default: m.WorkflowHistory,
-    })),
-  ),
+  // Workflow components - TODO: Implement these components
+  // WorkflowStatus: lazy(() =>
+  //   import("../components/workflow/workflow-status").then((m) => ({
+  //     default: m.WorkflowStatus,
+  //   })),
+  // ),
+  // ReviewPanel: lazy(() =>
+  //   import("../components/workflow/review-panel").then((m) => ({
+  //     default: m.ReviewPanel,
+  //   })),
+  // ),
+  // WorkflowHistory: lazy(() =>
+  //   import("../components/workflow/workflow-history").then((m) => ({
+  //     default: m.WorkflowHistory,
+  //   })),
+  // ),
 
-  // Monitoring components
-  PerformanceDashboard: lazy(() =>
-    import("../components/monitoring/performance-dashboard").then((m) => ({
-      default: m.PerformanceDashboard,
-    })),
-  ),
-  AlertSystem: lazy(() =>
-    import("../components/monitoring/alert-system").then((m) => ({
-      default: m.AlertSystem,
-    })),
-  ),
+  // Monitoring components - TODO: Implement these components
+  // PerformanceDashboard: lazy(() =>
+  //   import("../components/monitoring/performance-dashboard").then((m) => ({
+  //     default: m.PerformanceDashboard,
+  //   })),
+  // ),
+  // AlertSystem: lazy(() =>
+  //   import("../components/monitoring/alert-system").then((m) => ({
+  //     default: m.AlertSystem,
+  //   })),
+  // ),
 
-  // Real-time components
-  ContentSyncIndicator: lazy(() =>
-    import("../components/real-time/content-sync-indicator").then((m) => ({
-      default: m.ContentSyncIndicator,
-    })),
-  ),
+  // Real-time components - TODO: Implement these components
+  // ContentSyncIndicator: lazy(() =>
+  //   import("../components/real-time/content-sync-indicator").then((m) => ({
+  //     default: m.ContentSyncIndicator,
+  //   })),
+  // ),
 
-  // Collaboration components
-  PresenceIndicator: lazy(() =>
-    import("../components/collaboration/presence-indicator").then((m) => ({
-      default: m.PresenceIndicator,
-    })),
-  ),
-  CollaborationCursor: lazy(() =>
-    import("../components/collaboration/collaboration-cursor").then((m) => ({
-      default: m.CollaborationCursor,
-    })),
-  ),
+  // Collaboration components - TODO: Implement these components
+  // PresenceIndicator: lazy(() =>
+  //   import("../components/collaboration/presence-indicator").then((m) => ({
+  //     default: m.PresenceIndicator,
+  //   })),
+  // ),
+  // CollaborationCursor: lazy(() =>
+  //   import("../components/collaboration/collaboration-cursor").then((m) => ({
+  //     default: m.CollaborationCursor,
+  //   })),
+  // ),
 };
 
 /**
  * Dynamic import utilities for runtime code splitting
  */
 export class DynamicImportManager {
-  private static loadedModules = new Map<string, Promise<any>>();
+  private static loadedModules = new Map<string, Promise<unknown>>();
 
   /**
    * Dynamically import content service utilities
+   * TODO: Update when utility modules are implemented
    */
-  static async loadUtils(utilName: string): Promise<any> {
+  static async loadUtils(utilName: string): Promise<unknown> {
     const cacheKey = `utils-${utilName}`;
 
     if (this.loadedModules.has(cacheKey)) {
@@ -112,20 +113,21 @@ export class DynamicImportManager {
     return importPromise;
   }
 
-  private static async importUtil(utilName: string): Promise<any> {
+  private static async importUtil(utilName: string): Promise<unknown> {
     switch (utilName) {
-      case "csv-parser":
-        return import("../utils/csv-parser");
-      case "export-formatter":
-        return import("../utils/export-formatter");
+      // TODO: Uncomment when these utilities are implemented
+      // case "csv-parser":
+      //   return import("../utils/csv-parser");
+      // case "export-formatter":
+      //   return import("../utils/export-formatter");
       case "media-optimization":
         return import("../utils/media-optimization");
-      case "job-poller":
-        return import("../utils/job-poller");
-      case "validation":
-        return import("../utils/validation");
+      // case "job-poller":
+      //   return import("../utils/job-poller");
+      // case "validation":
+      //   return import("../utils/validation");
       default:
-        throw new Error(`Unknown utility: ${utilName}`);
+        throw new Error(`Unknown or not yet implemented utility: ${utilName}`);
     }
   }
 
@@ -191,9 +193,10 @@ export class ResourcePreloader {
         !this.preloadedResources.has(asset.url),
     );
 
-    const preloadPromises = imageAssets.map((asset) =>
-      this.preloadImage(asset.url || asset.cdnUrl),
-    );
+    const preloadPromises = imageAssets.map((asset) => {
+      const imageUrl = asset.url || asset.cdnUrl;
+      return imageUrl ? this.preloadImage(imageUrl) : Promise.resolve();
+    });
 
     await Promise.all(preloadPromises);
   }
@@ -231,10 +234,12 @@ export class ResourcePreloader {
       const relatedContent = await contentServiceClient.getContentItems({
         tags: currentContent.tags.slice(0, 3), // Use first 3 tags
         limit: 5,
-        excludeIds: [currentContent.id],
+        // TODO: Add excludeIds support to QueryItemsDto if needed
       });
 
-      const relatedIds = relatedContent.items.map((item) => item.id);
+      const relatedIds = relatedContent.items
+        .filter(item => item.id !== currentContent.id)
+        .map((item) => item.id);
       await this.preloadContent(relatedIds);
     } catch (error) {
       console.warn("Failed to preload related content:", error);
@@ -246,7 +251,7 @@ export class ResourcePreloader {
  * Network request optimization
  */
 export class NetworkOptimizer {
-  private static requestQueue: Array<() => Promise<any>> = [];
+  private static requestQueue: Array<() => Promise<unknown>> = [];
   private static isProcessing = false;
   private static readonly MAX_CONCURRENT_REQUESTS = 6;
 
@@ -270,7 +275,7 @@ export class NetworkOptimizer {
   /**
    * Queue non-critical requests for idle time processing
    */
-  static queueRequest(request: () => Promise<any>): void {
+  static queueRequest(request: () => Promise<unknown>): void {
     this.requestQueue.push(request);
     this.processQueueWhenIdle();
   }
@@ -332,14 +337,14 @@ export class MemoryOptimizer {
   private static readonly MAX_CACHE_SIZE = 100; // Maximum number of cached items
   private static cache = new Map<
     string,
-    { data: any; timestamp: number; size: number }
+    { data: unknown; timestamp: number; size: number }
   >();
   private static totalCacheSize = 0;
 
   /**
    * Intelligent cache management with size limits
    */
-  static setCacheItem(key: string, data: any): void {
+  static setCacheItem(key: string, data: unknown): void {
     const size = this.estimateObjectSize(data);
 
     // Remove old items if cache is too large
@@ -356,7 +361,7 @@ export class MemoryOptimizer {
     this.totalCacheSize += size;
   }
 
-  static getCacheItem(key: string): any | null {
+  static getCacheItem(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
 
@@ -376,7 +381,7 @@ export class MemoryOptimizer {
     });
   }
 
-  private static estimateObjectSize(obj: any): number {
+  private static estimateObjectSize(obj: unknown): number {
     // Rough estimation of object size in bytes
     const jsonString = JSON.stringify(obj);
     return new Blob([jsonString]).size;
@@ -415,6 +420,9 @@ export class MemoryOptimizer {
 export class PerformanceOptimizer {
   private static metrics = {
     bundleSize: 0,
+    lazyLoadedComponents: 0,
+    preloadedAssets: 0,
+    cacheUtilization: 0,
     loadTime: 0,
     renderTime: 0,
     cacheHitRate: 0,
@@ -427,7 +435,15 @@ export class PerformanceOptimizer {
   static analyzePerformance(): {
     score: number;
     recommendations: string[];
-    metrics: typeof this.metrics;
+    metrics: {
+      bundleSize: number;
+      lazyLoadedComponents: number;
+      preloadedAssets: number;
+      cacheUtilization: number;
+      renderTime: number;
+      cacheHitRate: number;
+      networkRequests: number;
+    };
   } {
     const recommendations: string[] = [];
     let score = 100;
@@ -532,8 +548,9 @@ export async function initializePerformanceOptimizations(): Promise<void> {
       const entries = list.getEntries();
       entries.forEach((entry) => {
         if (entry.entryType === "navigation") {
+          const navEntry = entry as PerformanceNavigationTiming;
           PerformanceOptimizer.updateMetrics({
-            loadTime: entry.loadEventEnd - entry.loadEventStart,
+            loadTime: navEntry.loadEventEnd - navEntry.loadEventStart,
           });
         }
       });
