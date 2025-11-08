@@ -15,7 +15,7 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div id="page-error" className="pt-60 pt-40">
+    <div id="page-error" className="pt-40">
       <div className="sm-container">
         <div className="flex items-center">
           <div className="mr-40">

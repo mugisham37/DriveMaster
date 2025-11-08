@@ -1,3 +1,14 @@
+// CSS Module declarations
+declare module "*.css" {
+  const content: { [className: string]: string };
+  export default content;
+}
+
+declare module "*.scss" {
+  const content: { [className: string]: string };
+  export default content;
+}
+
 declare module "reconnecting-websocket" {
   interface ReconnectingWebsocket extends WebSocket {
     [key: string]: unknown;

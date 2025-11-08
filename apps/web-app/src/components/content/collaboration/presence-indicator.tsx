@@ -10,6 +10,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { usePresenceTracking } from "@/hooks/use-real-time-content";
 import type { UserPresence } from "@/types/websocket";
 
@@ -66,9 +67,11 @@ export function UserAvatar({
   const avatarContent = (
     <div className="relative">
       {user.avatar ? (
-        <img
+        <Image
           src={user.avatar}
           alt={user.displayName}
+          width={size === "sm" ? 32 : size === "md" ? 40 : 48}
+          height={size === "sm" ? 32 : size === "md" ? 40 : 48}
           className={`${sizeClasses[size]} rounded-full object-cover`}
         />
       ) : (

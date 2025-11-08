@@ -980,7 +980,9 @@
     "ciphertext",
     "Prefetcher",
     "prefetcher",
-    "changeme"
+    "changeme",
+    "longtask",
+    "longtasks"
   ],
   "ignorePaths": [
     "node_modules/**",

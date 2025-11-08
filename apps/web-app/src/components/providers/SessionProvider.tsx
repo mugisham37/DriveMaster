@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 
@@ -12,3 +12,5 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // should be handled by authentication context
   return <>{children}</>;
 }
+
+export default SessionProvider;

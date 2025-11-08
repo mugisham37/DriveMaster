@@ -8,6 +8,7 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
+import Image from 'next/image'
 import { useMediaUpload, useBatchMediaUpload, useMediaValidation } from '@/hooks/use-media-operations'
 import type { MediaAsset } from '@/types'
 
@@ -86,9 +87,11 @@ export function FilePreview({ file, onRemove, validationResult }: FilePreviewPro
         {/* Preview/Icon */}
         <div className="flex-shrink-0">
           {previewUrl ? (
-            <img
+            <Image
               src={previewUrl}
               alt={file.name}
+              width={48}
+              height={48}
               className="w-12 h-12 object-cover rounded"
             />
           ) : (

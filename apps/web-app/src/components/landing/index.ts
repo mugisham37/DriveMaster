@@ -1,0 +1,4 @@
+// Landing page components barrel export
+export { LandingHero } from "./LandingHero";
+export { LanguageExploration } from "./LanguageExploration";
+export { ExerciseShowcase } from "./ExerciseShowcase";

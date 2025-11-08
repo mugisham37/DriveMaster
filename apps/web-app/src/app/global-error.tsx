@@ -18,7 +18,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
       <body>
         <div
           id="page-error"
-          className="pt-60 pt-40 min-h-screen flex items-center justify-center"
+          className="pt-40 min-h-screen flex items-center justify-center"
         >
           <div className="text-center">
             <div className="text-purple leading-110 text-[128px]">500</div>

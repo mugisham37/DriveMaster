@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
+import Image from "next/image";
 import { getNotificationWebSocketClient } from "@/lib/notification-service";
 import { useAuth } from "../../hooks/useAuth";
 import type {
@@ -137,9 +138,11 @@ export function useRealtimeNotifications(
       (t) => (
         <div className="flex items-start space-x-3 max-w-sm">
           {notification.iconUrl && (
-            <img
+            <Image
               src={notification.iconUrl}
               alt=""
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full flex-shrink-0"
             />
           )}
@@ -384,13 +387,14 @@ export function useRealtimeNotifications(
   ]);
 
   // Auto-connect and subscribe when user is available
+  // Auto-connect and subscribe when user is available
   useEffect(() => {
     if (!user?.id || !enabled) {
-      disconnect();
       return;
     }
 
     let currentSubId: string | null = null;
+    const wsClient = wsClientRef.current;
 
     // Connect and subscribe
     const setupConnection = async () => {
@@ -398,7 +402,7 @@ export function useRealtimeNotifications(
         await connect();
 
         // Subscribe to user notifications with filters
-        const subId = wsClientRef.current.subscribeToUserNotifications(
+        const subId = wsClient.subscribeToUserNotifications(
           String(user.id),
           filters,
         );
@@ -412,11 +416,11 @@ export function useRealtimeNotifications(
     setupConnection();
 
     return () => {
-      if (currentSubId) {
-        wsClientRef.current.unsubscribe(currentSubId);
+      if (currentSubId && wsClient) {
+        wsClient.unsubscribe(currentSubId);
       }
     };
-  }, [user?.id, enabled, connect, disconnect, filters]);
+  }, [user?.id, enabled, connect, filters]);
 
   // Cleanup on unmount
   useEffect(() => {

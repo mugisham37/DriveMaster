@@ -8,6 +8,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useContentItem } from "@/hooks/use-content-operations";
 import { useMediaAssets } from "@/hooks/use-media-operations";
 import {
@@ -66,9 +67,11 @@ export function MediaAssetPreview({ asset, onView }: MediaAssetPreviewProps) {
         {/* Thumbnail/Icon */}
         <div className="flex-shrink-0">
           {isImage ? (
-            <img
+            <Image
               src={asset.url}
               alt={asset.originalName}
+              width={64}
+              height={64}
               className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-80"
               onClick={onView}
             />
@@ -555,9 +558,11 @@ export function ContentPreview({
 
             <div className="p-4">
               {selectedAsset.mimeType.startsWith("image/") ? (
-                <img
+                <Image
                   src={selectedAsset.url}
                   alt={selectedAsset.originalName}
+                  width={800}
+                  height={600}
                   className="max-w-full h-auto"
                 />
               ) : selectedAsset.mimeType.startsWith("video/") ? (

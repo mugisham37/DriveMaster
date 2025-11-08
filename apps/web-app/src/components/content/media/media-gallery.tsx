@@ -8,6 +8,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   useMediaGallery,
   useDeleteMediaAsset,
@@ -127,9 +128,11 @@ export function MediaAssetCard({
         onClick={onView}
       >
         {isImage && signedUrl ? (
-          <img
+          <Image
             src={signedUrl}
             alt={asset.originalName}
+            width={size === "small" ? 128 : size === "medium" ? 192 : 256}
+            height={size === "small" ? 128 : size === "medium" ? 192 : 256}
             className="w-full h-full object-cover rounded-lg"
             loading="lazy"
           />
@@ -322,9 +325,11 @@ export function MediaViewer({ asset, onClose }: MediaViewerProps) {
         {/* Content */}
         <div className="p-4">
           {isImage && signedUrl ? (
-            <img
+            <Image
               src={signedUrl}
               alt={asset.originalName}
+              width={800}
+              height={600}
               className="max-w-full max-h-[70vh] mx-auto"
             />
           ) : isVideo && signedUrl ? (

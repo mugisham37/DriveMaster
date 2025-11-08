@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
-import { PerformanceMonitor } from "@/components/PerformanceMonitor";
+// Performance monitoring and flash messages
+import { PerformanceMonitor, FlashMessages } from "@/components";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 
