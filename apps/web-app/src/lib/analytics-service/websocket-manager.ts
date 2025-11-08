@@ -2527,7 +2527,7 @@ export class CompleteAnalyticsWebSocketManager {
   /**
    * Disconnects the WebSocket and stops all fallback mechanisms
    */
-  disconnect(): void {
+  async disconnect(): Promise<void> {
     this.websocketManager.disconnect();
     this.degradationManager.destroy();
   }
@@ -2606,6 +2606,41 @@ export class CompleteAnalyticsWebSocketManager {
    */
   forceMode(mode: "websocket" | "sse" | "polling" | "offline"): void {
     this.degradationManager.forceMode(mode);
+  }
+
+  /**
+   * Add event listener for WebSocket events
+   */
+  addEventListener(
+    event: string,
+    handler: (data: WebSocketMessage) => void,
+  ): void {
+    if (event === "connection_status_changed" && this.connectionStatusHandler) {
+      // Store handler for connection status changes
+      this.connectionStatusHandler = handler as unknown as (status: ConnectionStatus) => void;
+    }
+    // Delegate to websocket manager for other events
+    const manager = this.websocketManager as unknown as { addEventListener?: (event: string, handler: (data: WebSocketMessage) => void) => void };
+    if (typeof manager.addEventListener === "function") {
+      manager.addEventListener(event, handler);
+    }
+  }
+
+  /**
+   * Remove event listener for WebSocket events
+   */
+  removeEventListener(
+    event: string,
+    handler: (data: WebSocketMessage) => void,
+  ): void {
+    if (event === "connection_status_changed") {
+      this.connectionStatusHandler = undefined;
+    }
+    // Delegate to websocket manager for other events
+    const manager = this.websocketManager as unknown as { removeEventListener?: (event: string, handler: (data: WebSocketMessage) => void) => void };
+    if (typeof manager.removeEventListener === "function") {
+      manager.removeEventListener(event, handler);
+    }
   }
 
   /**

@@ -14,7 +14,7 @@ export {
   type OperationMetrics,
   type PerformanceEvent,
   type PerformanceConfig,
-} from "../../utils/performance-monitor";
+} from "@/utils/performance-monitor";
 
 export {
   errorMonitor,
@@ -24,4 +24,4 @@ export {
   type ErrorSeverity,
   type AlertSeverity,
   type ErrorMonitorConfig,
-} from "../../utils/error-monitor";
+} from "@/utils/error-monitor";

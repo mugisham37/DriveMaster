@@ -2,11 +2,13 @@
 
 import React from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { BegModal } from "@/components/modals/BegModal";
-import { SenioritySurveyModal } from "@/components/modals/SenioritySurveyModal";
-import { WelcomeModal } from "@/components/modals/WelcomeModal";
-import WelcomeToInsidersModal from "@/components/modals/WelcomeToInsidersModal";
-import TrackWelcomeModal from "@/components/modals/TrackWelcomeModal";
+import { 
+  BegModal,
+  SenioritySurveyModal,
+  WelcomeModal,
+  WelcomeToInsidersModal,
+  TrackWelcomeModal
+} from "@/components/modals";
 import { JSX } from "react/jsx-runtime";
 
 interface ModalProviderProps {
@@ -43,13 +45,7 @@ export function ModalProvider({
         <>
           <WelcomeModal numTracks={numTracks} />
           <SenioritySurveyModal />
-          <BegModal
-            previousDonor={
-              user?.totalDonatedInDollars
-                ? user.totalDonatedInDollars > 0
-                : false
-            }
-          />
+          <BegModal />
           <WelcomeToInsidersModal />
 
           {/* Track-specific modal */}

@@ -46,6 +46,7 @@ export interface UserProfile {
   isMentor: boolean;
   isInsider: boolean;
   seniority?: "beginner" | "intermediate" | "advanced" | "expert";
+  userRole?: "learner" | "mentor" | "admin";
   totalDonatedInDollars?: number;
   createdAt: string;
   updatedAt: string;

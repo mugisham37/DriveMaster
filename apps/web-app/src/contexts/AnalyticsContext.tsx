@@ -343,34 +343,32 @@ export function AnalyticsProvider({
   useEffect(() => {
     if (!webSocketManager) return;
 
-    const handleConnectionChange = (status: ConnectionStatus) => {
+    const handleConnectionChange = (data: unknown) => {
+      const status = data as ConnectionStatus;
       setConnectionStatus(status);
       setIsConnected(status === "connected");
     };
 
-    const handleError = (error: Error) => {
+    const handleError = (data: unknown) => {
+      const error = data as Error;
       console.error("[AnalyticsContext] WebSocket error:", error);
       setConnectionStatus("error");
       setIsConnected(false);
     };
 
-    // Set up event listeners if available
-    if (typeof webSocketManager.addEventListener === "function") {
-      webSocketManager.addEventListener(
+    // Set up event listeners
+    webSocketManager.addEventListener(
+      "connection_status_changed",
+      handleConnectionChange,
+    );
+    webSocketManager.addEventListener("error", handleError);
+
+    return () => {
+      webSocketManager.removeEventListener(
         "connection_status_changed",
         handleConnectionChange,
       );
-      webSocketManager.addEventListener("error", handleError);
-    }
-
-    return () => {
-      if (typeof webSocketManager.removeEventListener === "function") {
-        webSocketManager.removeEventListener(
-          "connection_status_changed",
-          handleConnectionChange,
-        );
-        webSocketManager.removeEventListener("error", handleError);
-      }
+      webSocketManager.removeEventListener("error", handleError);
     };
   }, [webSocketManager]);
 

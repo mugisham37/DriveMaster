@@ -15,11 +15,6 @@ import React, { useState } from "react";
 import { useGDPR } from "@/contexts/GDPRContext";
 import type {
   PrivacyReport,
-  DataCategoryReport,
-  ProcessingActivity,
-  ThirdPartySharing,
-  RetentionPolicy,
-  ComplianceStatus,
 } from "@/types/user-service";
 
 // ============================================================================
@@ -105,13 +100,13 @@ export function PrivacyReportViewer({
   const renderOverviewSection = () => {
     if (!privacyReport) return null;
 
-    const totalDataCategories = privacyReport.dataCategories.length;
-    const totalProcessingActivities = privacyReport.processingActivities.length;
-    const totalThirdParties = privacyReport.thirdPartySharing.length;
+    const totalDataCategories = privacyReport.dataCategories?.length || 0;
+    const totalProcessingActivities = privacyReport.processingActivities?.length || 0;
+    const totalThirdParties = privacyReport.thirdPartySharing?.length || 0;
     const complianceScore =
-      privacyReport.complianceStatus.overall === "compliant"
+      privacyReport.complianceStatus?.overall === "compliant"
         ? 100
-        : privacyReport.complianceStatus.overall === "partial"
+        : privacyReport.complianceStatus?.overall === "partial"
           ? 75
           : 50;
 

@@ -11,8 +11,8 @@ import React, { useState } from "react";
 import {
   useReviewContent,
   useWorkflowPermissions,
-} from "../../hooks/use-workflow-operations";
-import type { ContentItem, ReviewItemDto } from "../../types";
+} from "@/hooks/use-workflow-operations";
+import type { ContentItem, ReviewItemDto } from "@/types";
 
 // ============================================================================
 // Types

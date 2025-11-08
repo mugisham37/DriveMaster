@@ -12,7 +12,7 @@ import {
   errorMonitor,
   type ErrorAlert,
   type AlertSeverity,
-} from "../../utils/error-monitor";
+} from "@/utils/error-monitor";
 
 interface AlertSystemProps {
   maxVisibleAlerts?: number;

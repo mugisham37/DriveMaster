@@ -10,8 +10,8 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { useCollaboration } from "../../hooks/use-real-time-content";
-import type { UserPresence, CollaborationEvent } from "../../types/websocket";
+import { useCollaboration } from "@/hooks/use-real-time-content";
+import type { UserPresence } from "@/types/websocket";
 
 // ============================================================================
 // Types
@@ -88,7 +88,8 @@ export function RemoteCursor({ user, position, color }: RemoteCursorProps) {
 
 export function RemoteSelection({
   user,
-  selection,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  selection: _selection,
   color,
 }: RemoteSelectionProps) {
   return (
@@ -130,11 +131,13 @@ export function CollaborationCursor({
     enabled,
   });
 
-  const [localCursorPosition, setLocalCursorPosition] = useState<{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_localCursorPosition, setLocalCursorPosition] = useState<{
     line: number;
     column: number;
   } | null>(null);
-  const [localSelection, setLocalSelection] = useState<{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_localSelection, setLocalSelection] = useState<{
     start: number;
     end: number;
     text: string;
@@ -161,8 +164,9 @@ export function CollaborationCursor({
   ];
 
   const getUserColor = (userId: string): string => {
-    const index = Array.from(participants.keys()).indexOf(userId);
-    return userColors[index % userColors.length];
+    const index = participants.findIndex((p) => p.userId === userId);
+    const colorIndex = index >= 0 ? index % userColors.length : 0;
+    return userColors[colorIndex] || "#3B82F6"; // Default to blue
   };
 
   // Track local cursor position
@@ -238,7 +242,7 @@ export function CollaborationCursor({
   return (
     <div className={`relative ${className}`}>
       {/* Remote cursors */}
-      {Array.from(participants.values()).map((participant) => {
+      {participants.map((participant) => {
         if (!participant.currentPosition) return null;
 
         return (
@@ -252,7 +256,7 @@ export function CollaborationCursor({
       })}
 
       {/* Remote selections */}
-      {Array.from(participants.values()).map((participant) => {
+      {participants.map((participant) => {
         if (!participant.currentSelection) return null;
 
         return (
@@ -355,7 +359,8 @@ function calculateCursorPosition(
     const textBeforeCursor = textContent.substring(0, offset);
     const lines = textBeforeCursor.split("\n");
     const line = lines.length - 1;
-    const column = lines[lines.length - 1].length;
+    const lastLine = lines[lines.length - 1];
+    const column = lastLine ? lastLine.length : 0;
 
     return { line, column };
   } catch (error) {

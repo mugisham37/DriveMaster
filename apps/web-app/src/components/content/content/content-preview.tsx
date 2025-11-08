@@ -8,13 +8,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { useContentItem } from "../../hooks/use-content-operations";
-import { useMediaAssets } from "../../hooks/use-media-operations";
+import { useContentItem } from "@/hooks/use-content-operations";
+import { useMediaAssets } from "@/hooks/use-media-operations";
 import {
   useWorkflowHistory,
   useWorkflowPermissions,
-} from "../../hooks/use-workflow-operations";
-import type { ContentItem, MediaAsset, WorkflowTransition } from "../../types";
+} from "@/hooks/use-workflow-operations";
+import type { ContentItem, MediaAsset } from "@/types";
 
 // ============================================================================
 // Types
@@ -250,7 +250,7 @@ export function WorkflowHistory({
                 >
                   {transition.action
                     .replace("_", " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    .replace(/\b\w/g, (letter: string) => letter.toUpperCase())}
                 </span>
                 <span className="text-xs text-gray-500">
                   {new Date(transition.createdAt).toLocaleString()}
@@ -263,7 +263,7 @@ export function WorkflowHistory({
               )}
               {transition.metadata && (
                 <div className="text-xs text-gray-500 mt-1">
-                  By: {transition.metadata.performedBy || "System"}
+                  By: {transition.metadata.performedBy as string || "System"}
                 </div>
               )}
             </div>
@@ -401,11 +401,11 @@ export function ContentPreview({
     isLoading: isLoadingItem,
     error: itemError,
   } = useContentItem(itemId || null);
-  const { assets, isLoading: isLoadingAssets } = useMediaAssets(itemId || null);
+  const { assets } = useMediaAssets(itemId || null);
 
   // Use provided item or fetched item
   const item = providedItem || fetchedItem;
-  const permissions = useWorkflowPermissions(item);
+  const permissions = useWorkflowPermissions(item || null);
 
   // State
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);

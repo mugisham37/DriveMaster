@@ -10,8 +10,8 @@
 "use client";
 
 import React from "react";
-import { usePresenceTracking } from "../../hooks/use-real-time-content";
-import type { UserPresence } from "../../types/websocket";
+import { usePresenceTracking } from "@/hooks/use-real-time-content";
+import type { UserPresence } from "@/types/websocket";
 
 // ============================================================================
 // Types
@@ -53,11 +53,12 @@ export function UserAvatar({
     active: "bg-green-500",
     idle: "bg-yellow-500",
     away: "bg-gray-500",
+    offline: "bg-gray-300",
   };
 
   const initials = user.displayName
     .split(" ")
-    .map((name) => name.charAt(0))
+    .map((name: string) => name.charAt(0))
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -143,7 +144,7 @@ export function PresenceIndicator({
     <div className={`flex items-center space-x-1 ${className}`}>
       {/* User avatars */}
       <div className="flex -space-x-2">
-        {visibleUsers.map((user) => (
+        {visibleUsers.map((user: UserPresence) => (
           <UserAvatar
             key={user.userId}
             user={user}
@@ -179,7 +180,7 @@ export function PresenceIndicator({
 // ============================================================================
 
 export interface PresenceStatusBadgeProps {
-  status: "active" | "idle" | "away";
+  status: "active" | "idle" | "away" | "offline";
   showText?: boolean;
   className?: string;
 }
@@ -204,6 +205,11 @@ export function PresenceStatusBadge({
       color: "bg-gray-500",
       text: "Away",
       textColor: "text-gray-700",
+    },
+    offline: {
+      color: "bg-gray-300",
+      text: "Offline",
+      textColor: "text-gray-500",
     },
   };
 
@@ -262,7 +268,7 @@ export function PresenceList({
       </h4>
 
       <div className="space-y-1">
-        {activeUsers.map((user) => (
+        {activeUsers.map((user: UserPresence) => (
           <div
             key={user.userId}
             className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
@@ -329,9 +335,15 @@ export function CompactPresenceIndicator({
     return null;
   }
 
-  const activeCount = activeUsers.filter((u) => u.status === "active").length;
-  const idleCount = activeUsers.filter((u) => u.status === "idle").length;
-  const awayCount = activeUsers.filter((u) => u.status === "away").length;
+  const activeCount = activeUsers.filter(
+    (u: UserPresence) => u.status === "active",
+  ).length;
+  const idleCount = activeUsers.filter(
+    (u: UserPresence) => u.status === "idle",
+  ).length;
+  const awayCount = activeUsers.filter(
+    (u: UserPresence) => u.status === "away",
+  ).length;
 
   return (
     <div className={`flex items-center space-x-2 text-xs ${className}`}>

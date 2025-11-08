@@ -133,7 +133,6 @@ export function DataDeletionManager({
     checkDeletionStatus,
     cancelDeletionRequest,
     trackDataUsage,
-    isLoading,
     error,
     clearError,
   } = useGDPR();
@@ -179,9 +178,12 @@ export function DataDeletionManager({
       clearInterval(statusCheckInterval);
       setStatusCheckInterval(null);
     }
-  }, [state.activeDeleteRequest, checkDeletionStatus]);
+    
+    // Return empty cleanup function for other cases
+    return () => {};
+  }, [state.activeDeleteRequest, checkDeletionStatus, statusCheckInterval]);
 
-  // Cleanup interval on unmount
+    // Cleanup interval on unmount
   useEffect(() => {
     return () => {
       if (statusCheckInterval) {
@@ -452,7 +454,7 @@ export function DataDeletionManager({
         {!selectedConfig.reversible && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type "DELETE MY DATA" to confirm this irreversible action:
+              Type &quot;DELETE MY DATA&quot; to confirm this irreversible action:
             </label>
             <input
               type="text"

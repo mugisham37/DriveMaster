@@ -13,7 +13,7 @@ import React, { useState } from "react";
 import {
   useContentSync,
   useWebSocketConnection,
-} from "../../hooks/use-real-time-content";
+} from "@/hooks/use-real-time-content";
 
 // ============================================================================
 // Types
@@ -198,17 +198,16 @@ export function ContentSyncIndicator({
   itemId,
   enabled = true,
   showDetails = false,
-  autoSync = true,
   className = "",
 }: ContentSyncIndicatorProps) {
-  const { content, isLoading, hasConflicts, lastSync, sync, resolveConflicts } =
+  const { isLoading, hasConflicts, lastSync, sync, resolveConflicts } =
     useContentSync({
       itemId,
       enabled,
       enableOptimisticUpdates: true,
     });
 
-  const { isConnected, connectionState } = useWebSocketConnection();
+  const { isConnected } = useWebSocketConnection();
 
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
@@ -329,7 +328,11 @@ export function ContentSyncIndicator({
                 remoteChanges: 1, // Would be calculated from actual changes
                 lastSync,
               }
-            : undefined
+            : {
+                localChanges: 0,
+                remoteChanges: 0,
+                lastSync: new Date(),
+              }
         }
       />
     </>
@@ -351,6 +354,8 @@ export function ConnectionStatusIndicator({
 }: ConnectionStatusIndicatorProps) {
   const { isConnected, connectionState, connectionStats } =
     useWebSocketConnection();
+
+  const stats = connectionStats as { averageLatency?: number } | undefined;
 
   const getStatusColor = () => {
     switch (connectionState) {
@@ -394,9 +399,9 @@ export function ConnectionStatusIndicator({
         <div className="text-xs">
           <span className={getStatusColor()}>{getStatusText()}</span>
 
-          {connectionStats && isConnected && (
+          {stats && isConnected && stats.averageLatency !== undefined && (
             <div className="text-gray-500 mt-1">
-              Latency: {Math.round(connectionStats.averageLatency)}ms
+              Latency: {Math.round(stats.averageLatency)}ms
             </div>
           )}
         </div>

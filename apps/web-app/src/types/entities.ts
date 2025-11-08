@@ -12,6 +12,7 @@ export type ContentType =
   | "question"
   | "exercise"
   | "lesson"
+  | "quiz"
   | "article"
   | "video"
   | "assessment"
@@ -27,6 +28,7 @@ export type WorkflowStatus =
 export interface ContentMetadata {
   difficulty: "beginner" | "intermediate" | "advanced";
   estimatedTimeMinutes: number;
+  estimatedDuration?: number; // Duration in minutes (alias for estimatedTimeMinutes)
   prerequisites: string[];
   learningObjectives: string[];
   topics: string[];
@@ -34,11 +36,13 @@ export interface ContentMetadata {
   version: string;
   lastReviewed?: Date;
   reviewedBy?: string;
+  description?: string; // SEO description
 }
 
 export interface ContentData {
   body: string;
   format: "markdown" | "html" | "json";
+  summary?: string; // Brief summary of the content
   variables?: Record<string, unknown>;
   attachments?: string[];
 }
@@ -151,10 +155,14 @@ export interface WorkflowTransition {
   itemId: string;
   fromStatus: WorkflowStatus;
   toStatus: WorkflowStatus;
+  action: string; // Action taken (e.g., 'submit', 'approve', 'reject', 'publish')
   userId: string;
   reason?: string;
   notes?: string;
+  comment?: string; // Reviewer comment
   timestamp: Date;
+  createdAt: Date; // Alias for timestamp
+  metadata?: Record<string, unknown>; // Additional metadata about the transition
 }
 
 export interface ReviewDecision {

@@ -23,6 +23,7 @@ export interface UserProfile {
   name: string;
   email: string;
   avatar?: string;
+  userRole?: string;
   // Add more specific fields as needed
 }
 

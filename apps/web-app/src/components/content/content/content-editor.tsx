@@ -12,16 +12,17 @@ import {
   useCreateContentItem,
   useUpdateContentItem,
   useContentWithRealTime,
-  useWorkflowValidation,
-} from "../../hooks/use-content-operations";
-import { useWorkflowPermissions } from "../../hooks/use-workflow-operations";
+} from "@/hooks/use-content-operations";
+import {
+  useWorkflowPermissions,
+} from "@/hooks/use-workflow-operations";
 import { ContentSyncIndicator, PresenceIndicator } from "../index";
 import type {
   ContentItem,
   CreateItemDto,
   UpdateItemDto,
   ContentType,
-} from "../../types";
+} from "@/types";
 
 // ============================================================================
 // Types
@@ -70,7 +71,6 @@ export function ContentEditor({
   // Hooks
   const { createItem, isCreating, error: createError } = useCreateContentItem();
   const { updateItem, isUpdating, error: updateError } = useUpdateContentItem();
-  const { validateForReview, isValidating } = useWorkflowValidation();
 
   // Real-time content if editing existing item
   const {
@@ -86,7 +86,7 @@ export function ContentEditor({
   });
 
   // Get workflow permissions
-  const permissions = useWorkflowPermissions(realTimeItem);
+  const permissions = useWorkflowPermissions(realTimeItem || null);
 
   // Form state
   const [formData, setFormData] = useState<ContentFormData>(() => {
@@ -145,8 +145,11 @@ export function ContentEditor({
         updatePresence("active");
       }, 30000); // Update every 30 seconds
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+      };
     }
+    return undefined;
   }, [enableCollaboration, itemId, updatePresence]);
 
   // Handle cursor position changes for collaboration
@@ -158,7 +161,7 @@ export function ContentEditor({
     const textBeforeCursor = textarea.value.substring(0, cursorPos);
     const lines = textBeforeCursor.split("\n");
     const line = lines.length;
-    const column = lines[lines.length - 1].length;
+    const column = (lines[lines.length - 1] || "").length;
 
     if (
       line !== lastCursorPosition.current.line ||
@@ -170,18 +173,24 @@ export function ContentEditor({
   }, [enableCollaboration, itemId, sendCursorPosition]);
 
   // Form handlers
-  const updateFormField = useCallback((field: string, value: any) => {
+  const updateFormField = useCallback((field: string, value: unknown) => {
     setFormData((prev) => {
       const keys = field.split(".");
       const newData = { ...prev };
-      let current: any = newData;
+      let current: Record<string, unknown> = newData as Record<string, unknown>;
 
       for (let i = 0; i < keys.length - 1; i++) {
-        current[keys[i]] = { ...current[keys[i]] };
-        current = current[keys[i]];
+        const key = keys[i];
+        if (key) {
+          current[key] = { ...(current[key] as Record<string, unknown>) };
+          current = current[key] as Record<string, unknown>;
+        }
       }
 
-      current[keys[keys.length - 1]] = value;
+      const lastKey = keys[keys.length - 1];
+      if (lastKey) {
+        current[lastKey] = value;
+      }
       return newData;
     });
     setIsDirty(true);
@@ -235,7 +244,10 @@ export function ContentEditor({
       if (mode === "create") {
         const createData: CreateItemDto = {
           title: formData.title,
-          content: formData.content,
+          content: {
+            ...formData.content,
+            format: "markdown" as const, // Default format
+          },
           type: formData.type,
           tags: formData.tags,
           metadata: formData.metadata,
@@ -244,7 +256,10 @@ export function ContentEditor({
       } else if (itemId) {
         const updateData: UpdateItemDto = {
           title: formData.title,
-          content: formData.content,
+          content: {
+            ...formData.content,
+            format: "markdown" as const, // Default format
+          },
           tags: formData.tags,
           metadata: formData.metadata,
         };
@@ -271,6 +286,7 @@ export function ContentEditor({
 
       return () => clearTimeout(autoSaveTimer);
     }
+    return undefined;
   }, [mode, isDirty, itemId, handleSave]);
 
   const isLoading = isLoadingItem || isCreating || isUpdating || isSaving;

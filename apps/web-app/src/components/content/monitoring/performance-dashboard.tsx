@@ -11,8 +11,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   performanceMonitor,
   type PerformanceMetrics,
-} from "../../utils/performance-monitor";
-import { errorMonitor, type ErrorMetrics } from "../../utils/error-monitor";
+} from "@/utils/performance-monitor";
+import { errorMonitor, type ErrorMetrics } from "@/utils/error-monitor";
 
 interface PerformanceDashboardProps {
   className?: string;

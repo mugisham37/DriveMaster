@@ -11,7 +11,7 @@
  * - Requirements: 5.4, 8.4, 8.5
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useGDPR } from "@/contexts/GDPRContext";
 import type { PrivacyAlert, PrivacyIncident } from "@/contexts/GDPRContext";
 
@@ -146,7 +146,7 @@ export function PrivacyAlerts({ alerts, className = "" }: PrivacyAlertsProps) {
 
   const handleIncidentDataChange = (
     field: keyof PrivacyIncident,
-    value: any,
+    value: string | string[] | Date,
   ) => {
     setIncidentData((prev) => ({ ...prev, [field]: value }));
   };
@@ -504,7 +504,7 @@ export function PrivacyAlerts({ alerts, className = "" }: PrivacyAlertsProps) {
               </label>
               <select
                 value={filterSeverity}
-                onChange={(e) => setFilterSeverity(e.target.value as any)}
+                onChange={(e) => setFilterSeverity(e.target.value as "all" | "critical" | "high" | "medium" | "low")}
                 className="border border-gray-300 rounded px-3 py-1 text-sm"
               >
                 <option value="all">All</option>
@@ -521,7 +521,7 @@ export function PrivacyAlerts({ alerts, className = "" }: PrivacyAlertsProps) {
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as "date" | "severity")}
                 className="border border-gray-300 rounded px-3 py-1 text-sm"
               >
                 <option value="date">Date</option>

@@ -8,16 +8,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { useWorkflowHistory } from "../../hooks/use-workflow-operations";
-import type { WorkflowTransition } from "../../types";
+import { useWorkflowHistory } from "@/hooks/use-workflow-operations";
+import type { WorkflowTransition } from "@/types";
 
 // ============================================================================
 // Extended Types for UI
 // ============================================================================
 
-interface ExtendedWorkflowTransition extends WorkflowTransition {
+interface ExtendedWorkflowTransition extends Omit<WorkflowTransition, 'comment' | 'action'> {
   action: string;
-  comment?: string | undefined;
+  comment?: string;
   metadata?: {
     performedBy?: string;
     fromStatus?: string;
@@ -437,17 +437,25 @@ export function WorkflowHistory({
 
     // Convert WorkflowTransition to ExtendedWorkflowTransition for UI
     const extendedHistory: ExtendedWorkflowTransition[] = history.map(
-      (transition) => ({
-        ...transition,
-        action: `${transition.fromStatus}_to_${transition.toStatus}`,
-        comment: transition.notes,
-        metadata: {
-          performedBy: transition.userId,
-          fromStatus: transition.fromStatus,
-          toStatus: transition.toStatus,
-        },
-        createdAt: new Date(transition.timestamp),
-      }),
+      (transition) => {
+        const extended: ExtendedWorkflowTransition = {
+          ...transition,
+          action: `${transition.fromStatus}_to_${transition.toStatus}`,
+          metadata: {
+            performedBy: transition.userId,
+            fromStatus: transition.fromStatus,
+            toStatus: transition.toStatus,
+          },
+          createdAt: new Date(transition.timestamp),
+        };
+        
+        // Only add comment if it exists
+        if (transition.notes) {
+          extended.comment = transition.notes;
+        }
+        
+        return extended;
+      }
     );
 
     let filtered = filterTransitions(extendedHistory, filters);

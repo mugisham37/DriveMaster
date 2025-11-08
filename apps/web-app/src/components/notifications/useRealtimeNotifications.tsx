@@ -26,7 +26,8 @@ export type NotificationWebSocketState =
   | "connecting"
   | "connected"
   | "reconnecting"
-  | "error";
+  | "error"
+  | "fallback";
 
 export interface NotificationConnectionStats {
   totalConnections: number;
@@ -281,6 +282,7 @@ export function useRealtimeNotifications(
         "connected",
         "reconnecting",
         "error",
+        "fallback",
       ];
       const stateToSet = validStates.includes(newState) ? newState : "error";
       setConnectionState(stateToSet);

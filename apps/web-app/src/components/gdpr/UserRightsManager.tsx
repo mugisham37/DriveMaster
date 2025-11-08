@@ -210,10 +210,11 @@ export function UserRightsManager({ className = "" }: UserRightsManagerProps) {
 
   const rightsByCategory = USER_RIGHTS.reduce(
     (acc, right) => {
-      if (!acc[right.category]) {
-        acc[right.category] = [];
+      const category = right.category;
+      if (!acc[category]) {
+        acc[category] = [];
       }
-      acc[right.category].push(right);
+      acc[category]!.push(right);
       return acc;
     },
     {} as Record<string, UserRight[]>,
@@ -438,7 +439,7 @@ export function UserRightsManager({ className = "" }: UserRightsManagerProps) {
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">
-                  {request.details.description || "No description provided"}
+                  {(request.details.description as string) || "No description provided"}
                 </p>
                 <div className="text-xs text-gray-500">
                   Requested: {new Date(request.requestDate).toLocaleString()}

@@ -12,8 +12,8 @@ import {
   useMediaGallery,
   useDeleteMediaAsset,
   useMediaSignedUrl,
-} from "../../hooks/use-media-operations";
-import type { MediaAsset } from "../../types";
+} from "@/hooks/use-media-operations";
+import type { MediaAsset } from "@/types";
 
 // ============================================================================
 // Local Types
@@ -436,7 +436,7 @@ function GalleryFilters({
           </label>
           <select
             value={filters.sortBy || "createdAt"}
-            onChange={(e) => onFiltersChange("sortBy", e.target.value as any)}
+            onChange={(e) => onFiltersChange("sortBy", e.target.value as "createdAt" | "name" | "size")}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="createdAt">Date Added</option>
@@ -453,7 +453,7 @@ function GalleryFilters({
           <select
             value={filters.sortOrder || "desc"}
             onChange={(e) =>
-              onFiltersChange("sortOrder", e.target.value as unknown)
+              onFiltersChange("sortOrder", e.target.value as "asc" | "desc")
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >

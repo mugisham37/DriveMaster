@@ -111,9 +111,12 @@ export function DataExportManager({
       clearInterval(statusCheckInterval);
       setStatusCheckInterval(null);
     }
-  }, [state.activeExportRequest, checkExportStatus]);
+    
+    // Return empty cleanup function for other cases
+    return () => {};
+  }, [state.activeExportRequest, checkExportStatus, statusCheckInterval]);
 
-  // Cleanup interval on unmount
+    // Cleanup interval on unmount
   useEffect(() => {
     return () => {
       if (statusCheckInterval) {
@@ -287,7 +290,7 @@ export function DataExportManager({
   const renderExportInfo = () => (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
       <h3 className="text-lg font-semibold text-blue-900 mb-4">
-        What's Included in Your Data Export?
+        What&apos;s Included in Your Data Export?
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -476,7 +479,7 @@ export function DataExportManager({
                 onClick={() => setShowExportInfo(!showExportInfo)}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium mb-4"
               >
-                {showExportInfo ? "Hide" : "Show"} what's included →
+                {showExportInfo ? "Hide" : "Show"} what&apos;s included →
               </button>
             </div>
 

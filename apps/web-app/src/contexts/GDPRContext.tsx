@@ -480,7 +480,7 @@ function gdprReducer(state: GDPRState, action: GDPRAction): GDPRState {
         isReportLoading: false,
         isLoading: false,
         privacyReport: action.payload.report,
-        complianceStatus: action.payload.report.complianceStatus,
+        complianceStatus: action.payload.report.complianceStatus || null,
         reportError: null,
       };
 

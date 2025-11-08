@@ -8,8 +8,8 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
-import { useMediaUpload, useBatchMediaUpload, useMediaValidation } from '../../hooks/use-media-operations'
-import type { MediaAsset, UploadMediaDto } from '../../types'
+import { useMediaUpload, useBatchMediaUpload, useMediaValidation } from '@/hooks/use-media-operations'
+import type { MediaAsset } from '@/types'
 
 // ============================================================================
 // Types
@@ -34,14 +34,14 @@ export interface FilePreviewProps {
     isValid: boolean
     errors: string[]
     warnings: string[]
-  }
+  } | undefined
 }
 
 export interface UploadProgressProps {
   progress: number
-  fileName?: string
+  fileName?: string | undefined
   isComplete?: boolean
-  error?: string
+  error?: string | undefined
 }
 
 // ============================================================================
@@ -58,6 +58,7 @@ export function FilePreview({ file, onRemove, validationResult }: FilePreviewPro
       setPreviewUrl(url)
       return () => URL.revokeObjectURL(url)
     }
+    return undefined;
   }, [file])
 
   const formatFileSize = (bytes: number) => {
@@ -196,7 +197,7 @@ export function MediaUpload({
   // Hooks
   const { uploadMedia, isUploading: isSingleUploading, progress: singleProgress, error: singleError } = useMediaUpload({
     onSuccess: (asset) => onUploadComplete?.([asset]),
-    onError: onUploadError
+    onError: onUploadError || (() => {})
   })
 
   const { 
@@ -211,7 +212,7 @@ export function MediaUpload({
 
   // State
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [validationResults, setValidationResults] = useState<Map<string, any>>(new Map())
+  const [validationResults, setValidationResults] = useState<Map<string, { isValid: boolean; errors: string[]; warnings: string[] }>>(new Map())
   const [isDragOver, setIsDragOver] = useState(false)
 
   // Refs
@@ -322,12 +323,14 @@ export function MediaUpload({
       } else {
         // Single file upload
         const file = selectedFiles[0]
-        const result = await uploadMedia(itemId, file)
-        
-        if (result) {
-          onUploadComplete?([result])
-          setSelectedFiles([])
-          setValidationResults(new Map())
+        if (file) {
+          const result = await uploadMedia(itemId, file)
+          
+          if (result) {
+            onUploadComplete?.([result])
+            setSelectedFiles([])
+            setValidationResults(new Map())
+          }
         }
       }
     } catch (error) {

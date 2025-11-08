@@ -12,14 +12,14 @@ import {
   useContentItems,
   useContentFilters,
   useContentPagination,
-} from "../../hooks/use-content-operations";
-import { useWorkflowStatusSummary } from "../../hooks/use-workflow-operations";
+} from "@/hooks/use-content-operations";
+import { useWorkflowStatusSummary } from "@/hooks/use-workflow-operations";
 import type {
   ContentItem,
   QueryItemsDto,
   WorkflowStatus,
   ContentType,
-} from "../../types";
+} from "@/types";
 
 // ============================================================================
 // Types
@@ -42,9 +42,9 @@ export interface ContentListProps {
 export interface ContentListItemProps {
   item: ContentItem;
   isSelected?: boolean;
-  onSelect?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onSelect?: (() => void) | undefined;
+  onEdit?: (() => void) | undefined;
+  onDelete?: (() => void) | undefined;
   showActions?: boolean;
 }
 
@@ -258,9 +258,10 @@ function ContentFilters({
           <input
             type="text"
             value={filters.search || ""}
-            onChange={(e) =>
-              onFiltersChange({ search: e.target.value || undefined })
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+              onFiltersChange(value ? { search: value } : {});
+            }}
             placeholder="Search content..."
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -322,7 +323,7 @@ function ContentFilters({
             onChange={(e) => {
               const [sortBy, sortOrder] = e.target.value.split("-");
               onFiltersChange({
-                sortBy,
+                sortBy: sortBy as "title" | "createdAt" | "updatedAt" | "publishedAt",
                 sortOrder: sortOrder as "asc" | "desc",
               });
             }}

@@ -246,8 +246,8 @@ function UserServiceErrorFallback({
   const recoveryActions =
     UserServiceErrorMessageGenerator.getRecoveryActions(userServiceError);
 
-  const getSeverityColor = (_severity: string) => {
-    switch (_severity) {
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
       case "high":
         return "border-red-200 bg-red-50";
       case "medium":
@@ -259,8 +259,16 @@ function UserServiceErrorFallback({
     }
   };
 
-  const getSeverityIcon = (_severity: string) => {
-    return AlertTriangle();
+  const getSeverityIcon = (severity: string) => {
+    const iconClass = severity === "high" ? "text-red-500" :
+                      severity === "medium" ? "text-yellow-500" :
+                      severity === "low" ? "text-blue-500" :
+                      "text-gray-500";
+    return (
+      <div className={`w-6 h-6 ${iconClass}`}>
+        {AlertTriangle()}
+      </div>
+    );
   };
 
   return (

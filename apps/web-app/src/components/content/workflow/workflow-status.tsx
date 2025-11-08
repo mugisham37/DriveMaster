@@ -8,8 +8,8 @@
 "use client";
 
 import React from "react";
-import { useWorkflowPermissions } from "../../hooks/use-workflow-operations";
-import type { ContentItem, WorkflowStatus } from "../../types";
+import { useWorkflowPermissions } from "@/hooks/use-workflow-operations";
+import type { ContentItem, WorkflowStatus } from "@/types";
 
 // ============================================================================
 // Types

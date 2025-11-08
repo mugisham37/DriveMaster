@@ -479,6 +479,7 @@ export interface ActivityContextValue {
     metadata?: Record<string, unknown>,
   ) => Promise<void>;
   recordBatchActivities: (
+    userId: string,
     activities: Omit<ActivityRecord, "id" | "timestamp">[],
   ) => Promise<void>;
 
@@ -765,6 +766,27 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
   // Batching Logic (Task 7.4)
   // ============================================================================
 
+  // Batch record activities
+  const recordBatchActivities = useCallback(
+    async (
+      userId: string,
+      activities: Omit<ActivityRecord, "id" | "timestamp">[]
+    ): Promise<void> => {
+      if (!userId || activities.length === 0) return;
+
+      try {
+        // Record each activity
+        for (const activity of activities) {
+          await recordActivityMutation.mutateAsync(activity);
+        }
+      } catch (error) {
+        console.error("Failed to record batch activities:", error);
+        throw error;
+      }
+    },
+    [recordActivityMutation],
+  );
+
   const flushPendingActivities = useCallback(async () => {
     if (state.pendingActivities.length === 0) return;
 
@@ -782,7 +804,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
     if (userId) {
       await recordBatchActivities(userId, activitiesToFlush);
     }
-  }, [state.pendingActivities, recordBatchActivities, userId]);
+  }, [state.pendingActivities, userId, recordBatchActivities]);
 
   // Setup batching timer
   useEffect(() => {
