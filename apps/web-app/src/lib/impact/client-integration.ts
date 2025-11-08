@@ -1,12 +1,18 @@
 "use client";
 
 import { createRoot } from "react-dom/client";
-import { ImpactStat } from "@/components/impact/ImpactStat";
-import { ImpactMap } from "@/components/impact/ImpactMap";
-import { ImpactChart } from "@/components/impact/ImpactChart";
-import { ImpactTestimonialsList } from "@/components/impact/ImpactTestimonialsList";
+import {
+  ImpactStat,
+  ImpactMap,
+  ImpactChart,
+  ImpactTestimonialsList,
+} from "@/components/impact";
 
-// Initialize impact components on page load
+/**
+ * Initialize impact components on page load
+ * This function sets up various impact visualization components
+ * by finding elements in the DOM and mounting React components to them.
+ */
 export function initializeImpactComponents() {
   // Initialize Impact Stats
   const statElements = document.querySelectorAll("[data-metric-type]");

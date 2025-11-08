@@ -161,7 +161,7 @@ export class UserServicePerformanceMonitor {
   }
 
   /**
-   * Record a request completion
+   * Record a request operation
    */
   recordRequest(
     operation: string,
@@ -171,6 +171,11 @@ export class UserServicePerformanceMonitor {
   ): void {
     // Update response time metrics
     this.updateResponseTimeMetrics(responseTime);
+
+    // Log error if present
+    if (error) {
+      console.error("Request error for operation", operation, ":", error.message);
+    }
 
     // Update throughput metrics
     this.metrics.throughput.totalRequests++;

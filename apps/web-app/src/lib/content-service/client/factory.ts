@@ -7,7 +7,6 @@
 import { ContentServiceClient } from "./content-service-client";
 import type {
   ContentServiceClientConfig,
-  ContentServiceClientDependencies,
 } from "./types";
 import { contentServiceConfig } from "../../config/content-service";
 
@@ -23,7 +22,6 @@ export const contentServiceClient = new ContentServiceClient(
  */
 export function createContentServiceClient(
   config?: ContentServiceClientConfig,
-  dependencies?: ContentServiceClientDependencies,
 ): ContentServiceClient {
   return new ContentServiceClient(config);
 }

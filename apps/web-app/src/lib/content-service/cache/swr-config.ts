@@ -9,7 +9,6 @@ import type { SWRConfiguration } from "swr";
 import type {
   QueryItemsDto,
   SearchRequestDto,
-  SearchFilters,
   FacetedSearchDto,
 } from "../../../types/dtos";
 import { CacheStrategies } from "./cache-strategies";

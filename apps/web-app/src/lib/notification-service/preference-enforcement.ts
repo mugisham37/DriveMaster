@@ -14,7 +14,6 @@ import type {
   DeliveryChannel,
   QuietHours,
   FrequencySettings,
-  GlobalNotificationSettings,
 } from "@/types/notification-service";
 
 // ============================================================================
@@ -173,7 +172,7 @@ export class PreferenceEnforcementManager {
    * Get the next scheduled time for a notification type based on frequency settings
    */
   getNextScheduledTime(
-    type: NotificationType,
+    _type: NotificationType,
     frequencySettings: FrequencySettings,
     timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone,
   ): Date {
@@ -377,7 +376,7 @@ export class PreferenceEnforcementManager {
   }
 
   private checkGlobalLimits(
-    notification: Notification,
+    _notification: Notification,
     preferences: NotificationPreferences,
   ): PreferenceEnforcementResult {
     const { globalSettings } = preferences;
@@ -472,7 +471,7 @@ export class PreferenceEnforcementManager {
     this.clearBatch(type);
   }
 
-  private getNextDailyTime(timeString: string, _timezone: string): Date {
+  private getNextDailyTime(timeString: string, timezone: string): Date {
     const now = new Date();
     const parts = timeString.split(":").map(Number);
     const hours = parts[0] || 0;
@@ -486,13 +485,14 @@ export class PreferenceEnforcementManager {
       nextTime.setDate(nextTime.getDate() + 1);
     }
 
+    console.log("Next daily time for timezone", timezone, ":", nextTime);
     return nextTime;
   }
 
   private getNextWeeklyTime(
     dayOfWeek: number,
     timeString: string,
-    _timezone: string,
+    timezone: string,
   ): Date {
     const now = new Date();
     const parts = timeString.split(":").map(Number);
@@ -502,6 +502,7 @@ export class PreferenceEnforcementManager {
     const nextTime = new Date(now);
     nextTime.setHours(hours, minutes, 0, 0);
 
+    console.log("Next weekly time for timezone", timezone, ":", nextTime);
     // Calculate days until target day of week
     const currentDay = now.getDay();
     let daysUntilTarget = dayOfWeek - currentDay;

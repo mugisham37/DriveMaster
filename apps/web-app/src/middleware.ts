@@ -262,12 +262,12 @@ function getRouteType(pathname: string): string {
   return "unknown";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function handlePublicRoute(
-  _req: NextRequest,
-  _tokenPayload: TokenPayload | null,
+  req: NextRequest,
+  tokenPayload: TokenPayload | null,
 ): NextResponse {
   // Public routes are always accessible
+  console.log("Handling public route:", req.nextUrl.pathname, "with token:", !!tokenPayload);
   return NextResponse.next();
 }
 

@@ -14,6 +14,7 @@ import type {
   CircuitBreakerState,
   ServiceHealthStatus,
 } from "@/types/user-service";
+import type { CircuitBreakerConfig, RetryConfig, CircuitBreakerMetrics } from "./circuit-breaker";
 
 // ============================================================================
 // Enhanced Error Classification
@@ -233,7 +234,7 @@ export class EnhancedErrorClassifier {
       error &&
       typeof error === "object" &&
       "code" in error &&
-      typeof (error as any).code === "number"
+      typeof (error as { code?: unknown }).code === "number"
     ) {
       const grpcError = error as {
         code: number;
@@ -357,7 +358,7 @@ export class EnhancedUserServiceErrorHandler {
   private errorCallbacks: Map<string, (error: UserServiceError) => void> =
     new Map();
 
-  constructor(circuitBreakerConfig?: any, retryConfig?: any) {
+  constructor(circuitBreakerConfig?: CircuitBreakerConfig, retryConfig?: RetryConfig) {
     this.baseHandler = new UserServiceErrorHandler(
       circuitBreakerConfig,
       retryConfig,
@@ -468,7 +469,7 @@ export class EnhancedUserServiceErrorHandler {
     }
   }
 
-  startHealthMonitoring(healthCheckFunction: () => Promise<any>): void {
+  startHealthMonitoring(healthCheckFunction: () => Promise<ServiceHealthStatus>): void {
     this.baseHandler.startHealthMonitoring(healthCheckFunction);
   }
 
@@ -476,11 +477,11 @@ export class EnhancedUserServiceErrorHandler {
     this.baseHandler.stopHealthMonitoring();
   }
 
-  getCircuitBreakerState(): any {
+  getCircuitBreakerState(): CircuitBreakerState {
     return this.baseHandler.getCircuitBreakerState();
   }
 
-  getCircuitBreakerMetrics(): any {
+  getCircuitBreakerMetrics(): CircuitBreakerMetrics {
     return this.baseHandler.getCircuitBreakerMetrics();
   }
 
@@ -537,6 +538,7 @@ export class ErrorRecoveryStrategies {
 ErrorRecoveryStrategies.registerStrategy("UNAUTHORIZED", async (error) => {
   // Attempt token refresh
   try {
+    console.log("Attempting token refresh for error:", error.message);
     const response = await fetch("/api/auth/refresh", { method: "POST" });
     return response.ok;
   } catch {
@@ -573,8 +575,8 @@ export const enhancedUserServiceErrorHandler =
 // ============================================================================
 
 export function createEnhancedErrorHandler(
-  circuitBreakerConfig?: any,
-  retryConfig?: unknown,
+  circuitBreakerConfig?: CircuitBreakerConfig,
+  retryConfig?: RetryConfig,
 ): EnhancedUserServiceErrorHandler {
   return new EnhancedUserServiceErrorHandler(circuitBreakerConfig, retryConfig);
 }

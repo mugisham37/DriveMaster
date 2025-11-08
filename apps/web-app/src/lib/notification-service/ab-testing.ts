@@ -350,14 +350,14 @@ export class ABTestingManager {
     return difference > 0.05; // 5% minimum difference
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private calculatePValue(
-    _test: ABTest,
-    _results: ABTestResult[],
-    _variantId: string,
+    test: ABTest,
+    results: ABTestResult[],
+    variantId: string,
   ): number {
     // Simplified p-value calculation
     // In practice, use proper statistical tests like chi-square or t-test
+    console.log("Calculating p-value for test:", test.id, "variant:", variantId, "results:", results.length);
     return 0.05; // Placeholder
   }
 

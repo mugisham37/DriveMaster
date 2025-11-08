@@ -257,7 +257,7 @@ export class WebSocketManager {
    */
   private async resolveVersionConflict(
     notification: ContentChangeNotification,
-    _localItem: ContentItem,
+    localItem: ContentItem,
   ): Promise<void> {
     const conflict: ConflictResolution = {
       conflictId: `version_${notification.itemId}_${Date.now()}`,
@@ -271,6 +271,7 @@ export class WebSocketManager {
       timestamp: new Date(),
     };
 
+    console.log("Resolving version conflict for local item:", localItem.id);
     await this.processConflictResolution(conflict);
   }
 
@@ -366,9 +367,10 @@ export class WebSocketManager {
   /**
    * Gets recent local changes for an item (placeholder)
    */
-  private getRecentLocalChanges(_itemId: string): ContentChange[] {
+  private getRecentLocalChanges(itemId: string): ContentChange[] {
     // This would track local changes made in the last few minutes
     // For now, return empty array
+    console.log("Getting recent local changes for item:", itemId);
     return [];
   }
 

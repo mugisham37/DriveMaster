@@ -162,12 +162,12 @@ export class NotificationDataExporter {
   /**
    * Collect user analytics data
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async collectAnalytics(
-    _userId: string,
+    userId: string,
   ): Promise<Record<string, unknown>[]> {
     // This would typically call the analytics API
     // For now, return empty array
+    console.log("Collecting analytics for user:", userId);
     return [];
   }
 
@@ -791,12 +791,12 @@ export class NotificationPrivacyRights {
   /**
    * Calculate data retention information
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async calculateDataRetention(
-    _userId: string,
+    userId: string,
   ): Promise<DataRetentionInfo> {
     const now = Date.now();
 
+    console.log("Calculating data retention for user:", userId);
     return {
       notifications: {
         retentionPeriod: GDPR_CONFIG.dataRetentionPeriods.notifications,

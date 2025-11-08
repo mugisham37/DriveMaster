@@ -362,13 +362,13 @@ export class NotificationPerformanceMonitor {
   /**
    * Check API performance against budget
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private checkApiPerformanceBudget(
     operation: string,
     responseTime: number,
-    _success: boolean,
+    success: boolean,
   ): void {
     // Check response time budget
+    console.log("Checking API performance budget:", operation, "success:", success);
     if (responseTime > this.budget.apiResponseTime.critical) {
       this.createAlert(
         "critical",

@@ -181,6 +181,10 @@
     "Reconnections",
     "reconnection",
     "reconnect",
+    "realtime",
+    "testimonials",
+    "testimonial",
+    "mastery",
     "heartbeat",
     "heartbeats",
     "fallback",
@@ -958,7 +962,22 @@
     "ttfb",
     "exceljs",
     "spreadsheetml",
-    "unrouted"
+    "unrouted",
+    "unsub",
+    "creds",
+    "httponly",
+    "hackernews",
+    "Deduplicatable",
+    "deduplicatable",
+    "Batchable",
+    "batchable",
+    "unobserve",
+    "noopener",
+    "noreferrer",
+    "ciphertext",
+    "Prefetcher",
+    "prefetcher",
+    "changeme"
   ],
   "ignorePaths": [
     "node_modules/**",
@@ -1558,7 +1577,22 @@
         "angelikatyborska",
         "Angelika",
         "Tyborska",
-        "angelika"
+        "angelika",
+        "unsub",
+        "creds",
+        "httponly",
+        "hackernews",
+        "Deduplicatable",
+        "deduplicatable",
+        "Batchable",
+        "batchable",
+        "unobserve",
+        "noopener",
+        "noreferrer",
+        "ciphertext",
+        "Prefetcher",
+        "prefetcher",
+        "changeme"
       ]
     }
   ]

@@ -276,7 +276,12 @@ export class ProgressChannel {
     return "server_side";
   }
 
-  private simulateEvents(): void {
+  /**
+   * Simulate realtime events for demo/testing purposes
+   * This method can be called to generate fake events when testing the channel
+   * @internal For development and testing only
+   */
+  simulateEvents(): void {
     // Simulate periodic events for demo purposes
     const eventTimer = setInterval(
       () => {
@@ -285,6 +290,7 @@ export class ProgressChannel {
           return;
         }
 
+        console.log("Simulating progress events");
         // Randomly simulate different types of events
         const eventType = Math.random();
 

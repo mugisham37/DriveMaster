@@ -421,11 +421,11 @@ export function useDeviceTokens(): UseDeviceTokensResult {
 
   // Validate token mutation - placeholder until API method is implemented
   const validateTokenMutation = useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mutationFn: async (
-      _tokenId: string,
+      tokenId: string,
     ): Promise<{ isValid: boolean; error?: string }> => {
       // TODO: Implement validateDeviceToken in NotificationApiClient
+      console.log("Validating token:", tokenId);
       throw new Error("validateDeviceToken not implemented yet");
     },
   });

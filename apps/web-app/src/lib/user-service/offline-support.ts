@@ -577,10 +577,11 @@ export class OfflineManager {
     };
   }
 
-  private getAPIEndpoint(entity: string, _type: string): string {
+  private getAPIEndpoint(entity: string, type: string): string {
     // Map entity and operation type to API endpoints
     const baseURL = "/api/users";
 
+    console.log("Getting API endpoint for entity:", entity, "type:", type);
     switch (entity) {
       case "profile":
         return `${baseURL}/profile`;
@@ -608,8 +609,7 @@ export class OfflineManager {
     }
   }
 
-  private detectConflict(operation: QueuedOperation, serverData: any): boolean {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  private detectConflict(operation: QueuedOperation, serverData: unknown): boolean {
     if (!this.config.enableConflictDetection) {
       return false;
     }

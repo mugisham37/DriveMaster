@@ -230,9 +230,8 @@ export function useAchievementNotifications(
       setTimeout(() => {
         dismissAchievement(achievementId);
       }, config.autoCloseDelay);
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dismissAchievement and trackAchievementView are defined later in the file and adding them causes circular dependency
     [
       config.enableSounds,
       config.enableVibration,

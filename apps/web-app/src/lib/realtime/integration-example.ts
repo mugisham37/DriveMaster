@@ -4,15 +4,14 @@
  * This file demonstrates how to integrate and use the real-time communication system
  * in your application. It shows best practices and common usage patterns.
  *
- * NOTE: This is an example/documentation file with intentionally simplified types.
- * @ts-nocheck
+ * NOTE: This is an example/documentation file with simplified implementations.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { useEffect, useState, useRef } from "react";
 import {
-  getRealtimeSystem,
   initializeRealtimeSystem,
   type RealtimeSystemHandlers,
   type RealtimeSystemConfig,
@@ -164,26 +163,22 @@ export async function setupBasicRealtimeSystem(
  * Example: React hook for real-time system integration
  */
 export function useRealtimeIntegration(userId: string, authToken: string) {
-  const [isConnected, setIsConnected] = React.useState(false);
-  const [isReady, setIsReady] = React.useState(false);
-  const [systemStatus, setSystemStatus] = React.useState(null);
-  const [progressData, setProgressData] = React.useState<Record<
-    string,
-    number
-  > | null>(null);
-  const [activityData, setActivityData] = React.useState<{
-    recentActivities: unknown[];
-  } | null>(null);
-  const [insights, setInsights] = React.useState<unknown[]>([]);
-  const [recommendations, setRecommendations] = React.useState<unknown[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<any>(null);
+  const [progressData, setProgressData] = useState<Record<string, number> | null>(null);
+  const [activityData, setActivityData] = useState<{ recentActivities: any[] } | null>(null);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const systemRef = useRef<Awaited<ReturnType<typeof setupBasicRealtimeSystem>> | null>(null);
 
-  React.useEffect(() => {
-    let system: Awaited<ReturnType<typeof setupBasicRealtimeSystem>> | null =
-      null;
+  useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
 
-    const initializeSystem = async () => {
+    const initializeSystem = async (): Promise<void> => {
       try {
-        system = await setupBasicRealtimeSystem(userId, authToken);
+        const system = await setupBasicRealtimeSystem(userId, authToken);
+        systemRef.current = system;
 
         // Set up additional handlers for state updates
         system.setHandlers({
@@ -191,15 +186,15 @@ export function useRealtimeIntegration(userId: string, authToken: string) {
           onSystemDisconnect: () => setIsConnected(false),
           onSystemReady: () => setIsReady(true),
 
-          onProgressUpdate: (event: { topic: string; mastery: number }) => {
-            setProgressData((prev) => ({
+          onProgressUpdate: (event: any) => {
+            setProgressData((prev: any) => ({
               ...prev,
-              [event.topic]: event.mastery,
+              [event.topic]: event.mastery?.level || event.mastery,
             }));
           },
 
-          onActivityStream: (event: { activities: unknown[] }) => {
-            setActivityData((prev) => ({
+          onActivityStream: (event: any) => {
+            setActivityData((prev: any) => ({
               ...prev,
               recentActivities: [
                 event.activities[0],
@@ -208,21 +203,23 @@ export function useRealtimeIntegration(userId: string, authToken: string) {
             }));
           },
 
-          onInsightGenerated: (event: { insight: unknown }) => {
-            setInsights((prev) => [event.insight, ...prev].slice(0, 10));
+          onInsightGenerated: (event: any) => {
+            setInsights((prev: any) => [event.insight, ...prev].slice(0, 10));
           },
 
-          onRecommendationUpdate: (event: { recommendations: unknown[] }) => {
+          onRecommendationUpdate: (event: any) => {
             setRecommendations(event.recommendations);
           },
         });
 
         // Update status periodically
         const statusInterval = setInterval(() => {
-          setSystemStatus(system.getSystemStatus());
+          if (systemRef.current) {
+            setSystemStatus(systemRef.current.getSystemStatus());
+          }
         }, 5000);
 
-        return () => {
+        cleanupFn = () => {
           clearInterval(statusInterval);
         };
       } catch (error) {
@@ -230,11 +227,14 @@ export function useRealtimeIntegration(userId: string, authToken: string) {
       }
     };
 
-    initializeSystem();
+    void initializeSystem();
 
     return () => {
-      if (system) {
-        system.disconnect();
+      if (cleanupFn) {
+        cleanupFn();
+      }
+      if (systemRef.current) {
+        systemRef.current.disconnect();
       }
     };
   }, [userId, authToken]);
@@ -249,10 +249,10 @@ export function useRealtimeIntegration(userId: string, authToken: string) {
     recommendations,
 
     // Helper functions
-    getCachedProgress: () => system?.getCachedProgressSummary(userId),
-    getCachedStreak: () => system?.getCachedLearningStreak(userId),
-    forceSyncProgress: () => system?.forceSyncProgress(userId),
-    getUserActivityState: () => system?.getUserActivityState(userId),
+    getCachedProgress: () => systemRef.current?.getCachedProgressSummary(userId),
+    getCachedStreak: () => systemRef.current?.getCachedLearningStreak(userId),
+    forceSyncProgress: () => systemRef.current?.forceSyncProgress(userId),
+    getUserActivityState: () => systemRef.current?.getUserActivityState(userId),
   };
 }
 
@@ -263,10 +263,10 @@ export function useRealtimeIntegration(userId: string, authToken: string) {
 /**
  * Example: Custom event handling for specific use cases
  */
-export function setupCustomEventHandling(system) {
+export function setupCustomEventHandling(system: any) {
   // Handle milestone achievements with custom celebrations
   system.setHandlers({
-    onMilestoneAchieved: (event) => {
+    onMilestoneAchieved: (event: any) => {
       const milestone = event.milestone;
 
       // Different celebrations for different milestone types
@@ -295,7 +295,7 @@ export function setupCustomEventHandling(system) {
     },
 
     // Handle insights with priority-based notifications
-    onInsightGenerated: (event) => {
+    onInsightGenerated: (event: any) => {
       const insight = event.insight;
 
       // Show different types of notifications based on priority
@@ -312,16 +312,16 @@ export function setupCustomEventHandling(system) {
     },
 
     // Handle recommendations with smart filtering
-    onRecommendationUpdate: (event) => {
+    onRecommendationUpdate: (event: any) => {
       const recommendations = event.recommendations;
 
       // Filter recommendations based on user preferences
-      const filteredRecommendations = recommendations.filter((rec) => {
+      const filteredRecommendations = recommendations.filter((rec: any) => {
         return shouldShowRecommendation(rec, getUserPreferences());
       });
 
       // Sort by priority and relevance
-      const sortedRecommendations = filteredRecommendations.sort((a, b) => {
+      const sortedRecommendations = filteredRecommendations.sort((a: any, b: any) => {
         return b.priority * b.estimatedImpact - a.priority * a.estimatedImpact;
       });
 
@@ -337,7 +337,7 @@ export function setupCustomEventHandling(system) {
 /**
  * Example: Performance monitoring and optimization
  */
-export function setupPerformanceMonitoring(system) {
+export function setupPerformanceMonitoring(system: any) {
   // Monitor system performance
   setInterval(() => {
     const status = system.getSystemStatus();
@@ -369,9 +369,9 @@ export function setupPerformanceMonitoring(system) {
 /**
  * Example: Error handling and recovery strategies
  */
-export function setupErrorHandling(system) {
+export function setupErrorHandling(system: any) {
   system.setHandlers({
-    onSystemError: (error) => {
+    onSystemError: (error: any) => {
       console.error("Real-time system error:", error);
 
       // Different handling based on error type
@@ -430,53 +430,57 @@ export function setupErrorHandling(system) {
 // Helper Functions (Implementation would depend on your specific UI framework)
 // ============================================================================
 
-function showMasteryAchievementCelebration(milestone) {
+function showMasteryAchievementCelebration(milestone: any) {
   // Implementation depends on your UI framework
   console.log("🎉 Mastery achievement:", milestone.title);
 }
 
-function showStreakAchievementCelebration(milestone) {
+function showStreakAchievementCelebration(milestone: any) {
   console.log("🔥 Streak achievement:", milestone.title);
 }
 
-function showTimeAchievementCelebration(milestone) {
+function showTimeAchievementCelebration(milestone: any) {
   console.log("⏰ Time achievement:", milestone.title);
 }
 
-function showAttemptsAchievementCelebration(milestone) {
+function showAttemptsAchievementCelebration(milestone: any) {
   console.log("💪 Attempts achievement:", milestone.title);
 }
 
-function updateUserAchievements(milestone) {
+function updateUserAchievements(_milestone: any) {
   // Update user's achievement collection in your data store
 }
 
-function shouldShareAchievement(milestone) {
+function shouldShareAchievement(milestone: any) {
   // Check user preferences and milestone significance
   return milestone.value >= 100; // Example threshold
 }
 
-function showSocialSharePrompt(milestone) {
+function showSocialSharePrompt(_milestone: any) {
   // Show social media sharing UI
 }
 
-function showHighPriorityInsightNotification(insight) {
+function showHighPriorityInsightNotification(insight: any) {
   // Show prominent notification
+  console.log("High priority insight:", insight);
 }
 
-function showMediumPriorityInsightNotification(insight) {
+function showMediumPriorityInsightNotification(insight: any) {
   // Show standard notification
+  console.log("Medium priority insight:", insight);
 }
 
-function addInsightToQueue(insight) {
+function addInsightToQueue(insight: any) {
   // Add to insight queue for later display
+  console.log("Adding insight to queue:", insight);
 }
 
-function trackInsightGeneration(insight) {
+function trackInsightGeneration(insight: any) {
   // Track insight analytics
+  console.log("Tracking insight:", insight);
 }
 
-function shouldShowRecommendation(recommendation, userPreferences) {
+function shouldShowRecommendation(_recommendation: any, _userPreferences: any) {
   // Filter based on user preferences
   return true; // Simplified
 }
@@ -486,43 +490,44 @@ function getUserPreferences() {
   return {};
 }
 
-function updateRecommendationDisplay(recommendations) {
+function updateRecommendationDisplay(recommendations: any) {
   // Update recommendation UI
+  console.log("Updating recommendations:", recommendations);
 }
 
-function trackRecommendationUpdate(reason, count) {
+function trackRecommendationUpdate(_reason: any, _count: any) {
   // Track recommendation analytics
 }
 
-function showSystemHealthAlert(healthCheck) {
+function showSystemHealthAlert(_healthCheck: any) {
   // Show system health alert to user
 }
 
-function handleNetworkError(error) {
+function handleNetworkError(_error: any) {
   // Handle network-specific errors
 }
 
-function handleAuthError(error) {
+function handleAuthError(_error: any) {
   // Handle authentication errors
 }
 
-function handleServiceError(error) {
+function handleServiceError(_error: any) {
   // Handle service errors
 }
 
-function handleTimeoutError(error) {
+function handleTimeoutError(_error: any) {
   // Handle timeout errors
 }
 
-function handleCircuitBreakerError(error) {
+function handleCircuitBreakerError(_error: any) {
   // Handle circuit breaker errors
 }
 
-function handleGenericError(error) {
+function handleGenericError(_error: any) {
   // Handle generic errors
 }
 
-function trackRealtimeError(error) {
+function trackRealtimeError(_error: any) {
   // Track error analytics
 }
 
@@ -554,6 +559,3 @@ function syncOfflineChanges() {
   // Sync any changes made while offline
 }
 
-// Note: This is a React import that would normally be at the top
-// but is included here for the example to be self-contained
-declare const React: any;

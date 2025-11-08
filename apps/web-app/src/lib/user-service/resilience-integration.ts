@@ -19,21 +19,25 @@ import {
 } from "./index";
 import type {
   UserProfile,
+  UserUpdateRequest,
   UserPreferences,
+  PreferencesData,
   ProgressSummary,
   UserServiceError,
+  CircuitBreakerState,
 } from "@/types/user-service";
 import type { DegradationState } from "./graceful-degradation";
-import type { OfflineState } from "./offline-support";
+import type { OfflineState, ConflictResolution } from "./offline-support";
+import type { UserServiceClient } from "./unified-client";
 
 // ============================================================================
 // Resilient User Service Client
 // ============================================================================
 
 export class ResilientUserServiceClient {
-  private baseClient: any; // Your actual UserServiceClient
+  private baseClient: UserServiceClient;
 
-  constructor(baseClient: any) {
+  constructor(baseClient: UserServiceClient) {
     this.baseClient = baseClient;
     this.setupIntegration();
   }
@@ -101,12 +105,26 @@ export class ResilientUserServiceClient {
 
     return enhancedUserServiceErrorHandler.executeWithEnhancedProtection(
       async () => {
-        const result = await this.baseClient.updateUser(userId, updates);
+        // Get current profile to retrieve the version number
+        const currentProfile = await this.getUserProfile(userId);
+        
+        // Convert Partial<UserProfile> to UserUpdateRequest
+        const updateRequest: UserUpdateRequest = {
+          version: updates.version ?? currentProfile.version,
+          ...(updates.timezone && { timezone: updates.timezone }),
+          ...(updates.language && { language: updates.language }),
+          ...(updates.gdprConsent !== undefined && { gdprConsent: updates.gdprConsent }),
+        };
+
+        const result = await this.baseClient.updateUser(userId, updateRequest);
 
         // Clear any queued operations for this profile
         const queuedOps = offlineManager.getQueuedOperations();
         const profileOps = queuedOps.filter(
-          (op) => op.entity === "profile" && (op.data as any).userId === userId,
+          (op) => {
+            const data = op.data as Record<string, unknown> | undefined;
+            return op.entity === "profile" && data?.userId === userId;
+          },
         );
 
         for (const op of profileOps) {
@@ -132,7 +150,7 @@ export class ResilientUserServiceClient {
 
   async updateUserPreferences(
     userId: string,
-    preferences: Partial<UserPreferences>,
+    preferences: Partial<PreferencesData>,
   ): Promise<UserPreferences> {
     if (offlineManager.isOffline() && offlineManager.canQueue()) {
       const operationId = offlineManager.queueOperation(
@@ -147,7 +165,10 @@ export class ResilientUserServiceClient {
       );
 
       const currentPrefs = await this.getUserPreferences(userId);
-      return { ...currentPrefs, ...preferences };
+      return { 
+        ...currentPrefs, 
+        preferences: { ...currentPrefs.preferences, ...preferences } 
+      };
     }
 
     return enhancedUserServiceErrorHandler.executeWithEnhancedProtection(
@@ -269,7 +290,7 @@ export class ResilientUserServiceClient {
     }
   }
 
-  private handleSyncConflicts(conflicts: any[]): void {
+  private handleSyncConflicts(conflicts: ConflictResolution[]): void {
     // Handle conflicts that require manual resolution
     const manualConflicts = conflicts.filter((c) => c.resolution === "manual");
 
@@ -300,10 +321,16 @@ export class ResilientUserServiceClient {
   // ============================================================================
 
   getServiceHealth(): {
-    circuitBreaker: any;
+    circuitBreaker: CircuitBreakerState;
     degradation: DegradationState;
     offline: OfflineState;
-    contextHealth: Record<string, any>;
+    contextHealth: Record<string, {
+      isHealthy: boolean;
+      errorCount: number;
+      lastError?: UserServiceError;
+      lastErrorTime?: Date;
+      recoveryAttempts: number;
+    }>;
   } {
     return {
       circuitBreaker: enhancedUserServiceErrorHandler.getCircuitBreakerState(),
@@ -452,7 +479,12 @@ export function ResilientUserServiceProvider({
   }, [client]);
 
   return React.createElement(
-    UserServiceErrorBoundary,
+    UserServiceErrorBoundary as React.ComponentType<{
+      context?: string;
+      enableRetry?: boolean;
+      enableOfflineMode?: boolean;
+      children?: React.ReactNode;
+    }>,
     {
       context: "User Service Integration",
       enableRetry: true,
@@ -467,7 +499,7 @@ export function ResilientUserServiceProvider({
 // ============================================================================
 
 export function createResilientUserServiceClient(
-  baseClient: unknown,
+  baseClient: UserServiceClient,
 ): ResilientUserServiceClient {
   return new ResilientUserServiceClient(baseClient);
 }
@@ -480,56 +512,23 @@ export function ExampleUsage() {
   // This demonstrates how to use the resilient client in a React component
   const [client] = React.useState(() => {
     // Create your base client (this would be your actual UserServiceClient)
-    const baseClient = {}; // Your actual client instance
+    const baseClient = {} as UserServiceClient; // Your actual client instance
     return createResilientUserServiceClient(baseClient);
   });
 
-  const [userProfile, setUserProfile] = React.useState<UserProfile | null>(
+  // State for demonstration - setters would be used in actual implementation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [userProfile, _setUserProfile] = React.useState<UserProfile | null>(
     null,
   );
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [loading, _setLoading] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [error, _setError] = React.useState<string | null>(null);
 
-  const loadUserProfile = React.useCallback(
-    async (userId: string) => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const profile = await client.getUserProfile(userId);
-        setUserProfile(profile);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [client],
-  );
-
-  const updateProfile = React.useCallback(
-    async (updates: Partial<UserProfile>) => {
-      if (!userProfile) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const updatedProfile = await client.updateUserProfile(
-          userProfile.id,
-          updates,
-        );
-        setUserProfile(updatedProfile);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to update profile",
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [client, userProfile],
-  );
+  // Example usage functions would go here:
+  // const loadUserProfile = async (userId: string) => { ... }
+  // const updateProfile = async (updates: Partial<UserProfile>) => { ... }
 
   const content = React.createElement(
     "div",

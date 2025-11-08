@@ -602,9 +602,10 @@ export class LearningPatternAnalyzer {
   /**
    * Analyze preferred practice times (mock implementation)
    */
-  private static analyzePreferredTimes(_summary: ProgressSummary): number[] {
+  private static analyzePreferredTimes(summary: ProgressSummary): number[] {
     // In real implementation, this would analyze actual practice timestamps
     // For now, return common learning hours
+    console.log("Analyzing preferred times for summary:", summary.userId);
     return [9, 10, 14, 15, 19, 20]; // 9-10 AM, 2-3 PM, 7-8 PM
   }
 
@@ -750,10 +751,11 @@ export class PrefetchStrategyManager {
    */
   static generatePrefetchStrategies(
     learningPattern: LearningPattern,
-    _currentProgress: ProgressSummary,
+    currentProgress: ProgressSummary,
   ): PrefetchStrategy[] {
     const strategies: PrefetchStrategy[] = [];
 
+    console.log("Generating prefetch strategies for user:", currentProgress.userId);
     // High priority: User's preferred topics
     if (learningPattern.topicPreferences.length > 0) {
       strategies.push({

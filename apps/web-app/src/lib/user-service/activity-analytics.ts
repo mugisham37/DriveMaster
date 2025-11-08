@@ -1228,16 +1228,22 @@ export class ActivityDataExporter {
     // Add summary section
     lines.push("ACTIVITY SUMMARY");
     lines.push("Total Activities,Unique Days,Average Session Duration");
-    lines.push(
-      `${(data.summary as any)?.totalActivities || 0},${Object.keys((data.summary as any)?.dailyDistribution || {}).length},${(data.metrics as any)?.averageSessionDuration || (data.metrics as any)?.averageSessionLength || 0}`,
-    );
+    
+    const summary = data.summary as ActivitySummary | undefined;
+    const metrics = data.metrics as EngagementMetrics | null | undefined;
+    const totalActivities = summary?.totalActivities || 0;
+    const uniqueDays = Object.keys(summary?.dailyDistribution || {}).length;
+    const avgDuration = metrics?.averageSessionDuration || metrics?.averageSessionLength || 0;
+    
+    lines.push(`${totalActivities},${uniqueDays},${avgDuration}`);
     lines.push("");
 
     // Add activities section
     lines.push("RECENT ACTIVITIES");
     lines.push("Timestamp,Activity Type,Metadata");
 
-    for (const activity of (data.activities as any[]) || []) {
+    const activities = (data.activities as ActivityRecord[] | undefined) || [];
+    for (const activity of activities) {
       const metadata = JSON.stringify(activity.metadata).replace(/,/g, ";");
       lines.push(
         `${activity.timestamp.toISOString()},${activity.activityType},"${metadata}"`,
@@ -1250,7 +1256,8 @@ export class ActivityDataExporter {
     lines.push("SESSIONS");
     lines.push("Start Time,End Time,Duration (ms),Activity Count");
 
-    for (const session of (data.sessions as any[]) || []) {
+    const sessions = (data.sessions as ActivitySession[] | undefined) || [];
+    for (const session of sessions) {
       const endTime = session.endTime
         ? session.endTime.toISOString()
         : "Active";

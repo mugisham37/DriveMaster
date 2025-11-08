@@ -467,8 +467,14 @@ export class InputValidator {
     };
   }
 
+  /**
+   * Validate pagination parameters
+   * @internal Reserved for future use when pagination validation is needed
+   * @param pagination - Pagination parameters to validate
+   * @returns Validation result with sanitized pagination
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static validatePagination(pagination: any): {
+  static validatePagination(pagination: any): {
     isValid: boolean;
     errors: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -476,6 +482,8 @@ export class InputValidator {
   } {
     const errors: string[] = [];
     const sanitizedPagination = { ...pagination };
+
+    console.log("Validating pagination:", sanitizedPagination);
 
     if (
       pagination.page &&

@@ -310,16 +310,16 @@ export class RequestBatcher {
 
   /**
    * Execute a single request (to be implemented by the analytics client)
-   * @param _endpoint - The endpoint to call (unused in base implementation)
-   * @param _params - Optional parameters (unused in base implementation)
+   * @param endpoint - The endpoint to call (unused in base implementation)
+   * @param params - Optional parameters (unused in base implementation)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async executeSingleRequest(
-    _endpoint: string,
-    _params?: Record<string, unknown> | undefined,
+    endpoint: string,
+    params?: Record<string, unknown> | undefined,
   ): Promise<unknown> {
     // This will be implemented by the analytics client
     // Parameters are prefixed with _ to indicate they're intentionally unused in the base implementation
+    console.log("Execute single request:", endpoint, params);
     throw new Error(
       "executeSingleRequest must be implemented by the analytics client",
     );
