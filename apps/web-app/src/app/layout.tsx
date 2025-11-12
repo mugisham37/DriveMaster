@@ -5,6 +5,7 @@ import "./globals.css";
 import { PerformanceMonitor, FlashMessages } from "@/components";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
+import { EmailVerificationBanner } from "@/components/auth/shared";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -79,6 +80,7 @@ export default function RootLayout({
           <I18nProvider>
             <PerformanceMonitor />
             <FlashMessages />
+            <EmailVerificationBanner />
             {children}
           </I18nProvider>
         </AuthProvider>

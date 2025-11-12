@@ -47,6 +47,7 @@ import {
   isOAuthError,
   isServerError,
 } from "@/types/auth-service";
+import { useCrossTabNotifications } from "@/hooks/useCrossTabNotifications";
 
 // ============================================================================
 // Type Utilities
@@ -661,6 +662,18 @@ export interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+
+  // ============================================================================
+  // Cross-Tab Notifications
+  // ============================================================================
+
+  // Enable cross-tab event notifications
+  useCrossTabNotifications({
+    showLoginNotifications: true,
+    showLogoutNotifications: true,
+    showProfileUpdateNotifications: true,
+    showTokenRefreshNotifications: false, // Too frequent
+  });
 
   // ============================================================================
   // Initialization

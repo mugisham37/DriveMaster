@@ -40,6 +40,7 @@ export interface UserProfile {
   handle: string;
   name?: string;
   email: string;
+  emailVerified?: boolean;
   avatarUrl: string;
   reputation: string;
   flair: Flair | null;
@@ -52,6 +53,12 @@ export interface UserProfile {
   updatedAt: string;
   preferences: UserPreferences;
   tracks: StudentTrack[];
+  // Profile fields
+  bio?: string;
+  location?: string;
+  website?: string;
+  githubUsername?: string;
+  twitterUsername?: string;
 }
 
 export interface UserPreferences {
