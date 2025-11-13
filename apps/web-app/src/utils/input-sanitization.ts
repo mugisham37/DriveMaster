@@ -138,7 +138,7 @@ export function sanitizeUrl(url: string): string {
   const hasProtocol = /^[a-z]+:/i.test(sanitized);
 
   if (hasProtocol) {
-    const protocol = sanitized.split(':')[0].toLowerCase() + ':';
+    const protocol = (sanitized.split(':')[0]?.toLowerCase() || '') + ':';
     if (!allowedProtocols.includes(protocol)) {
       // Remove dangerous protocol
       sanitized = sanitized.replace(/^[a-z]+:/i, '');
@@ -341,11 +341,20 @@ export function sanitizeObject<T extends Record<string, unknown>>(
 
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
-      sanitized[key] = sanitizeInput(value, {
-        type: 'text',
-        maxLength: options.maxLength,
-        allowHtml: options.allowHtml,
-      });
+      const sanitizeOptions: {
+        type: 'text';
+        maxLength?: number;
+        allowHtml?: boolean;
+      } = { type: 'text' };
+      
+      if (options.maxLength !== undefined) {
+        sanitizeOptions.maxLength = options.maxLength;
+      }
+      if (options.allowHtml !== undefined) {
+        sanitizeOptions.allowHtml = options.allowHtml;
+      }
+      
+      sanitized[key] = sanitizeInput(value, sanitizeOptions);
     } else if (Array.isArray(value)) {
       sanitized[key] = value.map(item =>
         typeof item === 'string'

@@ -149,6 +149,7 @@ export function MFASetupModal({ open, onOpenChange, onSetupComplete }: MFASetupM
             <div className="flex flex-col items-center space-y-4">
               <Card className="p-4">
                 <CardContent className="p-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupData.qrCodeUrl}
                     alt="MFA QR Code"
