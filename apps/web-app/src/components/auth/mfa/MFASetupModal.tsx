@@ -86,7 +86,7 @@ export function MFASetupModal({ open, onOpenChange, onSetupComplete }: MFASetupM
       } else {
         setError("Invalid verification code. Please try again.");
       }
-    } catch (_err) {
+    } catch {
       setError("Failed to verify code. Please try again.");
     } finally {
       setIsVerifying(false);

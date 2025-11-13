@@ -207,8 +207,8 @@ export async function testRequestDeduplication() {
   const results = await Promise.all(promises);
 
   // All results should be identical (same request number)
-  const allSame = results.every(
-    (r) => r.requestNumber === results[0].requestNumber
+  const allSame = results.length > 0 && results.every(
+    (r) => r.requestNumber === results[0]?.requestNumber
   );
 
   console.log("[Performance Test] Deduplication test results:", {

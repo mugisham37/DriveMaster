@@ -119,7 +119,7 @@ export function ResetPasswordForm({
   // Form Submission
   // ============================================================================
 
-  const onSubmit = async (_data: ResetPasswordFormData) => {
+  const onSubmit = async () => {
     if (!token) {
       setTokenError("Reset token is missing. Please request a new password reset link.");
       return;

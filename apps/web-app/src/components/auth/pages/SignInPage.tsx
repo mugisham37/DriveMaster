@@ -83,7 +83,7 @@ export function SignInPage() {
       } else {
         setMfaError("Invalid verification code. Please try again.");
       }
-    } catch (_error) {
+    } catch {
       setMfaError("Failed to verify code. Please try again.");
     } finally {
       setIsVerifyingMFA(false);

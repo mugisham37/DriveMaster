@@ -250,7 +250,7 @@ export function formatValidationErrors(
   errors: Array<{ field: string; message: string }>
 ): string {
   if (errors.length === 0) return "";
-  if (errors.length === 1) return errors[0].message;
+  if (errors.length === 1) return errors[0]?.message || "";
 
   return `Please fix the following: ${errors.map((e) => e.field).join(", ")}`;
 }
