@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/guards/ProtectedRoute";
@@ -19,8 +20,14 @@ const PasswordChangePage = dynamic(
 
 export default function Security() {
   return (
-    <ProtectedRoute>
-      <PasswordChangePage />
-    </ProtectedRoute>
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <ProtectedRoute>
+        <PasswordChangePage />
+      </ProtectedRoute>
+    </Suspense>
   );
 }
