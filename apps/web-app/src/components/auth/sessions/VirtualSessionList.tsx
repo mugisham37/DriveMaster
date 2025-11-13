@@ -13,11 +13,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { AlertCircle, Loader2, Shield } from "lucide-react";
 
 // Dynamic import for react-window to handle missing types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let List: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ReactWindow = require("react-window");
   List = ReactWindow.FixedSizeList;
-} catch (e) {
+} catch {
   console.warn("react-window not available, virtual scrolling disabled");
 }
 import { toast } from "sonner";
@@ -60,6 +62,7 @@ export function VirtualSessionList({
   const [error, setError] = useState<string | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
   const [showBulkRevokeDialog, setShowBulkRevokeDialog] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState(600);
@@ -102,6 +105,7 @@ export function VirtualSessionList({
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initial fetch

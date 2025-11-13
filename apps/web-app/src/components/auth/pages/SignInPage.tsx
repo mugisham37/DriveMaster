@@ -61,6 +61,7 @@ export function SignInPage() {
   useEffect(() => {
     // This would be triggered by the login response indicating MFA is required
     // For demonstration, we're checking the user object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (state.user && (state.user as any).mfaEnabled && !state.isAuthenticated) {
       setShowMFAVerification(true);
     }
@@ -82,7 +83,7 @@ export function SignInPage() {
       } else {
         setMfaError("Invalid verification code. Please try again.");
       }
-    } catch (error) {
+    } catch (_error) {
       setMfaError("Failed to verify code. Please try again.");
     } finally {
       setIsVerifyingMFA(false);

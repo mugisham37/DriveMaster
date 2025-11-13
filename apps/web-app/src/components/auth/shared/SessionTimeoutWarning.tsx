@@ -172,7 +172,7 @@ export function SessionTimeoutWarning({
           <div className="space-y-2">
             <Progress value={progressPercentage} className="h-2" aria-label="Time remaining" />
             <p className="text-center text-xs text-muted-foreground">
-              Click "Stay Signed In" to continue your session
+              Click &quot;Stay Signed In&quot; to continue your session
             </p>
           </div>
         </div>

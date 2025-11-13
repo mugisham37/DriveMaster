@@ -26,6 +26,7 @@ import {
 export function PerformanceDashboard() {
   const [status, setStatus] = useState(getPerformanceStatus());
   const [isRunningTests, setIsRunningTests] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [testResults, setTestResults] = useState<Record<string, any> | null>(null);
 
   // Auto-refresh status every 5 seconds

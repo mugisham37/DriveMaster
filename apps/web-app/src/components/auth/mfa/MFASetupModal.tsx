@@ -86,7 +86,7 @@ export function MFASetupModal({ open, onOpenChange, onSetupComplete }: MFASetupM
       } else {
         setError("Invalid verification code. Please try again.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to verify code. Please try again.");
     } finally {
       setIsVerifying(false);
@@ -198,7 +198,7 @@ export function MFASetupModal({ open, onOpenChange, onSetupComplete }: MFASetupM
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Make sure to save this secret key. You'll need it if you lose access to your authenticator app.
+                Make sure to save this secret key. You&apos;ll need it if you lose access to your authenticator app.
               </AlertDescription>
             </Alert>
           </div>

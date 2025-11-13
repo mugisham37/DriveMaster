@@ -44,7 +44,7 @@ export function MFASettingsSection({
     try {
       await onEnableMFA?.();
       toast.success("Two-factor authentication enabled successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to enable two-factor authentication");
     }
   };
@@ -55,7 +55,7 @@ export function MFASettingsSection({
       await onDisableMFA?.();
       toast.success("Two-factor authentication disabled");
       setShowDisableDialog(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to disable two-factor authentication");
     } finally {
       setIsDisabling(false);
@@ -70,7 +70,7 @@ export function MFASettingsSection({
         setNewBackupCodes(codes);
         toast.success("Backup codes regenerated successfully");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to regenerate backup codes");
       setShowRegenerateDialog(false);
     } finally {
@@ -131,7 +131,7 @@ export function MFASettingsSection({
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Protect your account with two-factor authentication. You'll need to enter a code from your authenticator app when signing in.
+                  Protect your account with two-factor authentication. You&apos;ll need to enter a code from your authenticator app when signing in.
                 </AlertDescription>
               </Alert>
 
@@ -166,7 +166,7 @@ export function MFASettingsSection({
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      You're running low on backup codes. Generate new ones to ensure you can access your account if you lose your authenticator device.
+                      You&apos;re running low on backup codes. Generate new ones to ensure you can access your account if you lose your authenticator device.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -211,7 +211,7 @@ export function MFASettingsSection({
           <AlertDialogHeader>
             <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will make your account less secure. You'll only need your password to sign in.
+              This will make your account less secure. You&apos;ll only need your password to sign in.
               Are you sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -283,7 +283,7 @@ export function MFASettingsSection({
             ) : (
               <AlertDialogAction onClick={handleCloseRegenerateDialog} className="w-full">
                 <Check className="mr-2 h-4 w-4" />
-                I've Saved My Codes
+                I&apos;ve Saved My Codes
               </AlertDialogAction>
             )}
           </AlertDialogFooter>

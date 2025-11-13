@@ -159,9 +159,10 @@ export function AvatarUpload({ user, onSuccess, onError }: AvatarUploadProps) {
       formData.append("avatar", selectedFile);
 
       // Upload to API
+      // Type assertion needed as avatar upload might not be in the type yet
       const response = await profileSessionClient.updateProfile({
         avatar: selectedFile,
-      } as any); // Type assertion needed as avatar upload might not be in the type yet
+      } as unknown);
 
       clearInterval(progressInterval);
       setUploadProgress(100);

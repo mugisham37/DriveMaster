@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+'use client';
+
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/guards/ProtectedRoute";
@@ -15,11 +16,6 @@ const PasswordChangePage = dynamic(
     ssr: false, // Disable SSR for protected pages (requires auth check)
   }
 );
-
-export const metadata: Metadata = {
-  title: "Security Settings | DriveMaster",
-  description: "Manage your account security settings, including password changes and authentication methods.",
-};
 
 export default function Security() {
   return (

@@ -13,6 +13,7 @@ export function PasswordChangePage() {
   
   // Check if MFA is supported (backend has mfaEnabled flag)
   const mfaSupported = state.user && 'mfaEnabled' in state.user;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mfaEnabled = mfaSupported && (state.user as any).mfaEnabled;
 
   // Mock data for MFA settings - replace with actual API calls

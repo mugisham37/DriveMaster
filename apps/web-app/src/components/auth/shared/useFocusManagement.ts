@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Focus Management Hooks
  * 
@@ -80,6 +82,7 @@ export function useAutoFocusFirstInput(enabled = true, delay = 100) {
  * }
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useFocusFirstError(errors: Record<string, any>) {
   const previousErrorCount = useRef(0);
 
@@ -355,7 +358,7 @@ export function useAnnounce() {
 // Exports
 // ============================================================================
 
-export default {
+const focusManagementHooks = {
   useAutoFocusFirstInput,
   useFocusFirstError,
   useRouteFocusManagement,
@@ -363,3 +366,5 @@ export default {
   useSkipToContent,
   useAnnounce,
 };
+
+export default focusManagementHooks;

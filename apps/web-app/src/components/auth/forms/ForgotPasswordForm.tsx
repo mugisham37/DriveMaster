@@ -78,7 +78,7 @@ export function ForgotPasswordForm({
   // Form Submission
   // ============================================================================
 
-  const onSubmit = async (_data: ForgotPasswordFormData) => {
+  const onSubmit = async () => {
     try {
       setError(null);
       

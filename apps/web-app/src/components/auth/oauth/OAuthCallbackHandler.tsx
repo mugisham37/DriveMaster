@@ -103,6 +103,7 @@ export function OAuthCallbackHandler({
     };
 
     handleCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, searchParams, router, onSuccess, onError]);
 
   const handleRetry = () => {

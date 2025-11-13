@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+'use client';
+
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
@@ -14,11 +15,6 @@ const ProfilePage = dynamic(
     ssr: false, // Disable SSR for protected pages (requires auth check)
   }
 );
-
-export const metadata: Metadata = {
-  title: "Profile | DriveMaster",
-  description: "Manage your DriveMaster profile, preferences, and linked accounts",
-};
 
 export default function Profile() {
   return <ProfilePage />;

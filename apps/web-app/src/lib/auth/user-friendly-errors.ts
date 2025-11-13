@@ -149,6 +149,7 @@ function getAuthenticationError(error: AuthError): UserFriendlyError {
  */
 function getOAuthError(error: AuthError): UserFriendlyError {
   const code = error.code;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const provider = (error as any).provider || "the provider";
 
   switch (code) {

@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+'use client';
+
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/guards/ProtectedRoute";
@@ -15,11 +16,6 @@ const SessionManagementPage = dynamic(
     ssr: false, // Disable SSR for protected pages (requires auth check)
   }
 );
-
-export const metadata: Metadata = {
-  title: "Active Sessions | DriveMaster",
-  description: "View and manage your active sessions across all devices. Revoke access from devices you no longer use.",
-};
 
 export default function Sessions() {
   return (

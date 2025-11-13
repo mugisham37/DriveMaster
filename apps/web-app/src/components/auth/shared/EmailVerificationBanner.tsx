@@ -43,7 +43,7 @@ export function EmailVerificationBanner() {
         description: "Please check your inbox and spam folder.",
         icon: <CheckCircle2 className="h-4 w-4" />,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to send verification email", {
         description: "Please try again later or contact support.",
         icon: <AlertCircle className="h-4 w-4" />,
