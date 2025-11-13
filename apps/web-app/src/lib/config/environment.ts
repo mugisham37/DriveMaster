@@ -73,8 +73,25 @@ export interface EnvironmentConfig {
  * Validates required environment variables
  */
 function validateEnvironment(): void {
-  const required = ["NEXT_PUBLIC_AUTH_SERVICE_URL", "JWT_SECRET"];
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Only enforce strict validation in production
+  if (!isProduction) {
+    if (!process.env.NEXT_PUBLIC_AUTH_SERVICE_URL) {
+      console.warn(
+        "⚠️  NEXT_PUBLIC_AUTH_SERVICE_URL not set, using default: http://localhost:3002"
+      );
+    }
+    if (!process.env.JWT_SECRET) {
+      console.warn(
+        "⚠️  JWT_SECRET not set, using default (NOT FOR PRODUCTION)"
+      );
+    }
+    return;
+  }
 
+  // Production validation
+  const required = ["NEXT_PUBLIC_AUTH_SERVICE_URL", "JWT_SECRET"];
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -160,11 +177,18 @@ function createEnvironmentConfig(): EnvironmentConfig {
   const isDevelopment = process.env.NODE_ENV === "development";
   const isProduction = process.env.NODE_ENV === "production";
 
-  // Auth Service Configuration
-  const authServiceBaseUrl = validateUrl(
-    process.env.NEXT_PUBLIC_AUTH_SERVICE_URL!,
-    "NEXT_PUBLIC_AUTH_SERVICE_URL",
-  );
+  // Auth Service Configuration with defaults for development
+  const defaultAuthUrl = "http://localhost:3002";
+  const authServiceBaseUrl = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL
+    ? validateUrl(
+        process.env.NEXT_PUBLIC_AUTH_SERVICE_URL,
+        "NEXT_PUBLIC_AUTH_SERVICE_URL",
+      )
+    : isDevelopment
+      ? defaultAuthUrl
+      : (() => {
+          throw new Error("NEXT_PUBLIC_AUTH_SERVICE_URL is required in production");
+        })();
 
   const authService: AuthServiceConfig = {
     baseUrl: authServiceBaseUrl,

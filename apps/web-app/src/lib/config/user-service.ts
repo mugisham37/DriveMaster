@@ -28,8 +28,20 @@ export interface UserServiceEnvironmentConfig extends UserServiceConfig {
  * Validates required user-service environment variables
  */
 function validateUserServiceEnvironment(): void {
-  const required = ["NEXT_PUBLIC_USER_SERVICE_URL"];
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Only enforce strict validation in production
+  if (!isProduction) {
+    if (!process.env.NEXT_PUBLIC_USER_SERVICE_URL) {
+      console.warn(
+        "⚠️  NEXT_PUBLIC_USER_SERVICE_URL not set, using default: http://localhost:3001"
+      );
+    }
+    return;
+  }
 
+  // Production validation
+  const required = ["NEXT_PUBLIC_USER_SERVICE_URL"];
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -123,11 +135,21 @@ function createUserServiceConfig(): UserServiceEnvironmentConfig {
   const isDevelopment = process.env.NODE_ENV === "development";
   const isProduction = process.env.NODE_ENV === "production";
 
-  // Validate and parse URLs
-  const httpUrl = validateUrl(
-    process.env.NEXT_PUBLIC_USER_SERVICE_URL!,
-    "NEXT_PUBLIC_USER_SERVICE_URL",
-  );
+  // Provide default URLs for development
+  const defaultHttpUrl = "http://localhost:3001";
+  const defaultGrpcUrl = "http://localhost:50051";
+
+  // Validate and parse URLs with fallback to defaults in development
+  const httpUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL
+    ? validateUrl(
+        process.env.NEXT_PUBLIC_USER_SERVICE_URL,
+        "NEXT_PUBLIC_USER_SERVICE_URL",
+      )
+    : isDevelopment
+      ? defaultHttpUrl
+      : (() => {
+          throw new Error("NEXT_PUBLIC_USER_SERVICE_URL is required in production");
+        })();
 
   // gRPC URL is optional, defaults to HTTP URL with different port
   const grpcUrl = process.env.NEXT_PUBLIC_USER_SERVICE_GRPC_URL
@@ -135,7 +157,9 @@ function createUserServiceConfig(): UserServiceEnvironmentConfig {
         process.env.NEXT_PUBLIC_USER_SERVICE_GRPC_URL,
         "NEXT_PUBLIC_USER_SERVICE_GRPC_URL",
       )
-    : httpUrl.replace(":3002", ":3003"); // Default gRPC port
+    : isDevelopment
+      ? defaultGrpcUrl
+      : httpUrl.replace(":3001", ":50051"); // Default gRPC port
 
   // Parse configuration values
   const timeout = parseInteger(

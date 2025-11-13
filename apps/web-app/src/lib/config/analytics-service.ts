@@ -28,8 +28,20 @@ export interface AnalyticsServiceEnvironmentConfig
  * Validates required analytics-service environment variables
  */
 function validateAnalyticsServiceEnvironment(): void {
-  const required = ["NEXT_PUBLIC_ANALYTICS_SERVICE_URL"];
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Only enforce strict validation in production
+  if (!isProduction) {
+    if (!process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_URL) {
+      console.warn(
+        "⚠️  NEXT_PUBLIC_ANALYTICS_SERVICE_URL not set, using default: http://localhost:3009"
+      );
+    }
+    return;
+  }
 
+  // Production validation
+  const required = ["NEXT_PUBLIC_ANALYTICS_SERVICE_URL"];
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -105,11 +117,18 @@ function createAnalyticsServiceConfig(): AnalyticsServiceEnvironmentConfig {
   const isDevelopment = process.env.NODE_ENV === "development";
   const isProduction = process.env.NODE_ENV === "production";
 
-  // Validate and parse URLs
-  const baseUrl = validateUrl(
-    process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_URL!,
-    "NEXT_PUBLIC_ANALYTICS_SERVICE_URL",
-  );
+  // Validate and parse URLs with default for development
+  const defaultAnalyticsUrl = "http://localhost:3009";
+  const baseUrl = process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_URL
+    ? validateUrl(
+        process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_URL,
+        "NEXT_PUBLIC_ANALYTICS_SERVICE_URL",
+      )
+    : isDevelopment
+      ? defaultAnalyticsUrl
+      : (() => {
+          throw new Error("NEXT_PUBLIC_ANALYTICS_SERVICE_URL is required in production");
+        })();
 
   // WebSocket URL is optional, defaults to HTTP URL with ws:// protocol
   const wsUrl = process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_WS_URL

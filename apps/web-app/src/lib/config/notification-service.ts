@@ -44,8 +44,20 @@ export interface NotificationServiceEndpoints {
  * Validates required notification-service environment variables
  */
 function validateNotificationServiceEnvironment(): void {
-  const required = ["NEXT_PUBLIC_NOTIFICATION_SERVICE_URL"];
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  // Only enforce strict validation in production
+  if (!isProduction) {
+    if (!process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL) {
+      console.warn(
+        "⚠️  NEXT_PUBLIC_NOTIFICATION_SERVICE_URL not set, using default: http://localhost:3004"
+      );
+    }
+    return;
+  }
 
+  // Production validation
+  const required = ["NEXT_PUBLIC_NOTIFICATION_SERVICE_URL"];
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -121,11 +133,18 @@ function createNotificationServiceConfig(): NotificationServiceConfig {
   const isDevelopment = process.env.NODE_ENV === "development";
   const isProduction = process.env.NODE_ENV === "production";
 
-  // Base URL validation
-  const baseUrl = validateUrl(
-    process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL!,
-    "NEXT_PUBLIC_NOTIFICATION_SERVICE_URL",
-  );
+  // Base URL validation with default for development
+  const defaultNotificationUrl = "http://localhost:3004";
+  const baseUrl = process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL
+    ? validateUrl(
+        process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL,
+        "NEXT_PUBLIC_NOTIFICATION_SERVICE_URL",
+      )
+    : isDevelopment
+      ? defaultNotificationUrl
+      : (() => {
+          throw new Error("NEXT_PUBLIC_NOTIFICATION_SERVICE_URL is required in production");
+        })();
 
   // WebSocket URL - auto-generate from base URL if not provided
   const wsUrl =

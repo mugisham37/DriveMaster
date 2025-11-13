@@ -1,21 +1,20 @@
 {
-  "timestamp": "2025-11-08T10:03:28.603Z",
-  "buildTime": 11,
+  "timestamp": "2025-11-13T11:45:38.483Z",
+  "buildTime": 758,
   "optimizations": [
-    "Asset manifest with 42 entries",
-    "15 assets analyzed"
+    "Asset manifest with 52 entries"
   ],
   "buildStats": {
     "pages": {
       "/_app": [
-        "static/chunks/63a23e0fe82f8a7e.js",
-        "static/chunks/e985ad30651b44ab.js",
-        "static/chunks/turbopack-5af967850e072b96.js"
+        "static/chunks/e60ef129113f6e24.js",
+        "static/chunks/ed27964a8d216662.js",
+        "static/chunks/turbopack-d6b9df8a1e7f2096.js"
       ],
       "/_error": [
-        "static/chunks/66d7a2697a5cd65e.js",
-        "static/chunks/e985ad30651b44ab.js",
-        "static/chunks/turbopack-447982c39a8ac766.js"
+        "static/chunks/17722e3ac4e00587.js",
+        "static/chunks/ed27964a8d216662.js",
+        "static/chunks/turbopack-40490e255d3436d1.js"
       ]
     },
     "devFiles": [],
@@ -24,15 +23,16 @@
       "static/chunks/a6dad97d9634a72d.js"
     ],
     "lowPriorityFiles": [
-      "static/iPAKgiXf5xkNOsdcjk50A/_ssgManifest.js",
-      "static/iPAKgiXf5xkNOsdcjk50A/_buildManifest.js"
+      "static/tGEP2P5RcEWZR17l_gJwT/_ssgManifest.js",
+      "static/tGEP2P5RcEWZR17l_gJwT/_buildManifest.js"
     ],
     "rootMainFiles": [
-      "static/chunks/dc4e644fbd3d3f41.js",
-      "static/chunks/51b129b0c82c2450.js",
-      "static/chunks/0e49a099862ca6a3.js",
-      "static/chunks/d8bc1128c8174518.js",
-      "static/chunks/turbopack-fe0700a92249e1ec.js"
+      "static/chunks/9960ac5aead4a28b.js",
+      "static/chunks/e6b0468bc5e7fb2f.js",
+      "static/chunks/5c87a9fc4e0a87ff.js",
+      "static/chunks/2468949c4832742b.js",
+      "static/chunks/7ee45f2ee1949691.js",
+      "static/chunks/turbopack-a0dfd897a77af5f6.js"
     ],
     "ampFirstPages": []
   },
