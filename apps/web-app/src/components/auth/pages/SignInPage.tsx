@@ -134,18 +134,18 @@ export function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/20">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:p-4 bg-gradient-to-br from-background to-muted/20">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="space-y-1 text-center px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">
             Welcome back
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Sign in to your account to continue
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           {/* OAuth Buttons */}
           <OAuthButtons
             mode="login"
@@ -168,11 +168,11 @@ export function SignInPage() {
           <LoginForm redirectTo={callbackUrl} />
         </CardContent>
 
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 px-4 sm:px-6">
           {/* Forgot Password Link */}
           <Link
             href="/auth/forgot-password"
-            className="text-sm text-primary hover:underline text-center"
+            className="text-sm text-primary hover:underline text-center touch-target"
           >
             Forgot your password?
           </Link>
@@ -182,7 +182,7 @@ export function SignInPage() {
             Don&apos;t have an account?{" "}
             <Link
               href={`/auth/signup${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:underline font-medium touch-target"
             >
               Sign up
             </Link>

@@ -6,6 +6,7 @@ import { PerformanceMonitor, FlashMessages } from "@/components";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { EmailVerificationBanner } from "@/components/auth/shared";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -81,6 +82,7 @@ export default function RootLayout({
             <PerformanceMonitor />
             <FlashMessages />
             <EmailVerificationBanner />
+            <Toaster position="top-right" richColors closeButton />
             {children}
           </I18nProvider>
         </AuthProvider>

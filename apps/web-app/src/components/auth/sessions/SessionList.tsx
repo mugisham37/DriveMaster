@@ -201,8 +201,8 @@ export function SessionList({
         </div>
       )}
 
-      {/* Session cards */}
-      <div className="space-y-4">
+      {/* Session cards - Responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sessions.map((session) => (
           <SessionCard
             key={session.id}

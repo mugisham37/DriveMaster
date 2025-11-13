@@ -120,23 +120,23 @@ export function SessionCard({ session, onRevoke, isRevoking = false }: SessionCa
 
   return (
     <>
-      <Card className="relative">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4 flex-1">
+      <Card className="relative h-full">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="flex items-start gap-3 sm:gap-4 flex-1">
               {/* Device Icon */}
               <div className="flex-shrink-0 mt-1">
                 <DeviceIcon
-                  className="h-6 w-6 text-muted-foreground"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground"
                   aria-hidden="true"
                 />
               </div>
 
               {/* Session Details */}
-              <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
                 {/* Browser and OS */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-base">
+                  <h3 className="font-semibold text-sm sm:text-base">
                     {browserName} on {osName}
                   </h3>
                   {session.isCurrent && (

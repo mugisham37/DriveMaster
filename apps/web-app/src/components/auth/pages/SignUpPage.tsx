@@ -62,18 +62,18 @@ export function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted/20">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:p-4 bg-gradient-to-br from-background to-muted/20">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="space-y-1 text-center px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">
             Create an account
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Get started with DriveMaster today
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           {/* OAuth Buttons */}
           <OAuthButtons
             mode="register"
@@ -96,15 +96,15 @@ export function SignUpPage() {
           <RegisterForm redirectTo={callbackUrl} />
         </CardContent>
 
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 px-4 sm:px-6">
           {/* Terms of Service */}
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center text-muted-foreground leading-relaxed">
             By creating an account, you agree to our{" "}
             <Link
               href="/terms"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline touch-target"
             >
               Terms of Service
             </Link>{" "}
@@ -113,7 +113,7 @@ export function SignUpPage() {
               href="/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline touch-target"
             >
               Privacy Policy
             </Link>
@@ -124,7 +124,7 @@ export function SignUpPage() {
             Already have an account?{" "}
             <Link
               href={`/auth/signin${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:underline font-medium touch-target"
             >
               Sign in
             </Link>

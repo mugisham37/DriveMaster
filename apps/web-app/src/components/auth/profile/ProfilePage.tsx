@@ -200,55 +200,57 @@ export function ProfilePage({ className }: ProfilePageProps) {
     : user.handle?.slice(0, 2).toUpperCase() || "??";
 
   return (
-    <div className={`container max-w-5xl mx-auto py-8 px-4 space-y-8 ${className || ""}`}>
+    <div className={`container max-w-5xl mx-auto py-6 sm:py-8 px-4 space-y-6 sm:space-y-8 ${className || ""}`}>
       {/* Profile Header */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            {/* Avatar */}
-            <Avatar className="h-24 w-24">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+            {/* Avatar - Responsive size */}
+            <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
               <AvatarImage src={user.avatarUrl} alt={user.name || user.handle} />
-              <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
+              <AvatarFallback className="text-xl sm:text-2xl">{userInitials}</AvatarFallback>
             </Avatar>
 
             {/* User Info */}
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-2 sm:space-y-3 w-full">
               <div>
-                <h1 className="text-3xl font-bold">{user.name || user.handle}</h1>
-                <p className="text-muted-foreground">@{user.handle}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">{user.name || user.handle}</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">@{user.handle}</p>
               </div>
 
               {/* Badges and Roles */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {user.isMentor && (
-                  <Badge variant="default" className="gap-1">
+                  <Badge variant="default" className="gap-1 text-xs sm:text-sm">
                     <Shield className="h-3 w-3" aria-hidden="true" />
-                    Mentor
+                    <span className="hidden xs:inline">Mentor</span>
+                    <span className="xs:hidden">M</span>
                   </Badge>
                 )}
                 {user.isInsider && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs sm:text-sm">
                     <Star className="h-3 w-3" aria-hidden="true" />
-                    Insider
+                    <span className="hidden xs:inline">Insider</span>
+                    <span className="xs:hidden">I</span>
                   </Badge>
                 )}
                 {user.seniority && (
-                  <Badge variant="outline">{user.seniority}</Badge>
+                  <Badge variant="outline" className="text-xs sm:text-sm">{user.seniority}</Badge>
                 )}
               </div>
 
               {/* Reputation and Flair */}
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
                 {user.reputation !== undefined && (
                   <div className="flex items-center gap-1">
-                    <Award className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" aria-hidden="true" />
                     <span className="font-medium">{user.reputation}</span>
-                    <span className="text-muted-foreground">reputation</span>
+                    <span className="text-muted-foreground hidden xs:inline">reputation</span>
                   </div>
                 )}
                 {user.flair && (
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500" aria-hidden="true" />
+                    <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" aria-hidden="true" />
                     <span className="text-muted-foreground">{user.flair.name}</span>
                   </div>
                 )}
@@ -259,36 +261,40 @@ export function ProfilePage({ className }: ProfilePageProps) {
       </Card>
 
       {/* Profile Content Tabs */}
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile" className="gap-2">
-            <User className="h-4 w-4" aria-hidden="true" />
+      <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="profile" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Profile</span>
+            <span className="sm:hidden">Info</span>
           </TabsTrigger>
-          <TabsTrigger value="avatar" className="gap-2">
-            <User className="h-4 w-4" aria-hidden="true" />
+          <TabsTrigger value="avatar" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Avatar</span>
+            <span className="sm:hidden">Pic</span>
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2">
-            <Settings className="h-4 w-4" aria-hidden="true" />
+          <TabsTrigger value="preferences" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Preferences</span>
+            <span className="sm:hidden">Prefs</span>
           </TabsTrigger>
-          <TabsTrigger value="accounts" className="gap-2">
-            <LinkIcon className="h-4 w-4" aria-hidden="true" />
+          <TabsTrigger value="accounts" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+            <LinkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Accounts</span>
+            <span className="sm:hidden">Links</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Profile Information</CardTitle>
+              <CardDescription className="text-sm">
                 Update your personal information and social links
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <ProfileForm user={user} onSuccess={handleProfileUpdate} />
             </CardContent>
           </Card>
@@ -297,13 +303,13 @@ export function ProfilePage({ className }: ProfilePageProps) {
         {/* Avatar Tab */}
         <TabsContent value="avatar">
           <Card>
-            <CardHeader>
-              <CardTitle>Profile Picture</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Profile Picture</CardTitle>
+              <CardDescription className="text-sm">
                 Upload a new avatar image for your profile
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <AvatarUpload user={user} onSuccess={handleProfileUpdate} />
             </CardContent>
           </Card>
@@ -312,13 +318,13 @@ export function ProfilePage({ className }: ProfilePageProps) {
         {/* Preferences Tab */}
         <TabsContent value="preferences">
           <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Preferences</CardTitle>
+              <CardDescription className="text-sm">
                 Manage your theme, notifications, and regional settings
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <PreferencesForm user={user} onSuccess={handleProfileUpdate} />
             </CardContent>
           </Card>
@@ -327,13 +333,13 @@ export function ProfilePage({ className }: ProfilePageProps) {
         {/* Linked Accounts Tab */}
         <TabsContent value="accounts">
           <Card>
-            <CardHeader>
-              <CardTitle>Linked Accounts</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Linked Accounts</CardTitle>
+              <CardDescription className="text-sm">
                 Manage your connected social media accounts
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <LinkedProviders />
             </CardContent>
           </Card>

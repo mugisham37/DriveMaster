@@ -153,8 +153,8 @@ export function OAuthButtons({
         />
       )}
 
-      {/* OAuth provider buttons */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* OAuth provider buttons - Stack vertically on mobile, 2 columns on larger screens */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
         {availableProviders.map((provider) => {
           const isLoading = loadingProvider === provider.id;
           const isAnyLoading = loadingProvider !== null || state.isOAuthLoading;
