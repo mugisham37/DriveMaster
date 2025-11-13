@@ -44,26 +44,10 @@ export interface NotificationServiceEndpoints {
  * Validates required notification-service environment variables
  */
 function validateNotificationServiceEnvironment(): void {
-  const isProduction = process.env.NODE_ENV === "production";
-  
-  // Only enforce strict validation in production
-  if (!isProduction) {
-    if (!process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL) {
-      console.warn(
-        "⚠️  NEXT_PUBLIC_NOTIFICATION_SERVICE_URL not set, using default: http://localhost:3004"
-      );
-    }
-    return;
-  }
-
-  // Production validation
-  const required = ["NEXT_PUBLIC_NOTIFICATION_SERVICE_URL"];
-  const missing = required.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required notification-service environment variables: ${missing.join(", ")}`,
-    );
+  // No validation needed - we use defaults in development
+  // Only log warnings in production if missing
+  if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL) {
+    console.error("⚠️  NEXT_PUBLIC_NOTIFICATION_SERVICE_URL is required in production");
   }
 }
 

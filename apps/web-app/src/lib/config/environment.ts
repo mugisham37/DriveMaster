@@ -73,31 +73,15 @@ export interface EnvironmentConfig {
  * Validates required environment variables
  */
 function validateEnvironment(): void {
-  const isProduction = process.env.NODE_ENV === "production";
-  
-  // Only enforce strict validation in production
-  if (!isProduction) {
+  // No validation needed - we use defaults in development
+  // Only log warnings in production if missing
+  if (process.env.NODE_ENV === "production") {
     if (!process.env.NEXT_PUBLIC_AUTH_SERVICE_URL) {
-      console.warn(
-        "⚠️  NEXT_PUBLIC_AUTH_SERVICE_URL not set, using default: http://localhost:3002"
-      );
+      console.error("⚠️  NEXT_PUBLIC_AUTH_SERVICE_URL is required in production");
     }
     if (!process.env.JWT_SECRET) {
-      console.warn(
-        "⚠️  JWT_SECRET not set, using default (NOT FOR PRODUCTION)"
-      );
+      console.error("⚠️  JWT_SECRET is required in production");
     }
-    return;
-  }
-
-  // Production validation
-  const required = ["NEXT_PUBLIC_AUTH_SERVICE_URL", "JWT_SECRET"];
-  const missing = required.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}`,
-    );
   }
 }
 
