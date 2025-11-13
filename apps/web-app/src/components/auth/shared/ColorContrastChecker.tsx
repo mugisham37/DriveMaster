@@ -18,7 +18,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 // ============================================================================
 // Types
@@ -45,10 +45,13 @@ interface ContrastResult {
  * https://www.w3.org/TR/WCAG20-TECHS/G17.html
  */
 function getLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
+  const values = [r, g, b].map((c) => {
     c = c / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
+  const rs = values[0] ?? 0;
+  const gs = values[1] ?? 0;
+  const bs = values[2] ?? 0;
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
@@ -72,9 +75,9 @@ function getLuminanceFromHex(hex: string): number {
   hex = hex.replace('#', '');
 
   // Convert to RGB
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
 
   return getLuminance(r, g, b);
 }
@@ -84,11 +87,11 @@ function getLuminanceFromHex(hex: string): number {
  */
 function rgbToHex(rgb: string): string {
   const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-  if (!match) return '#000000';
+  if (!match || !match[1] || !match[2] || !match[3]) return '#000000';
 
-  const r = parseInt(match[1]);
-  const g = parseInt(match[2]);
-  const b = parseInt(match[3]);
+  const r = parseInt(match[1], 10);
+  const g = parseInt(match[2], 10);
+  const b = parseInt(match[3], 10);
 
   return '#' + [r, g, b].map(x => {
     const hex = x.toString(16);
@@ -135,7 +138,7 @@ export function ColorContrastChecker() {
 
       textElements.forEach((element) => {
         // Skip hidden elements
-        if (element.offsetParent === null) return;
+        if ((element as HTMLElement).offsetParent === null) return;
 
         // Skip elements without text
         const text = element.textContent?.trim();

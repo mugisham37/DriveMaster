@@ -24,7 +24,7 @@ interface EmptyStateProps {
   action?: {
     label: string;
     onClick: () => void;
-  };
+  } | undefined;
   className?: string;
 }
 

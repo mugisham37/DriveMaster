@@ -96,10 +96,10 @@ export function SuccessOverlay({
   duration?: number;
 }): React.ReactElement {
   React.useEffect(() => {
-    if (onComplete) {
-      const timer = setTimeout(onComplete, duration);
-      return () => clearTimeout(timer);
-    }
+    if (!onComplete) return;
+    
+    const timer = setTimeout(onComplete, duration);
+    return () => clearTimeout(timer);
   }, [onComplete, duration]);
 
   return (
@@ -120,7 +120,11 @@ export function SuccessOverlay({
 /**
  * Hook for managing success animations
  */
-export function useSuccessAnimation(duration = 2000) {
+export function useSuccessAnimation(duration = 2000): {
+  showSuccess: boolean;
+  triggerSuccess: () => void;
+  setShowSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+} {
   const [showSuccess, setShowSuccess] = React.useState(false);
 
   const triggerSuccess = React.useCallback(() => {

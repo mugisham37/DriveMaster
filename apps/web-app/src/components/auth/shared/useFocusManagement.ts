@@ -90,12 +90,14 @@ export function useFocusFirstError(errors: Record<string, any>) {
     // Only focus if new errors appeared
     if (currentErrorCount > 0 && currentErrorCount > previousErrorCount.current) {
       const firstErrorField = errorKeys[0];
-      const element = document.getElementById(firstErrorField);
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField);
 
-      if (element) {
-        element.focus();
-        // Scroll into view if needed
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (element) {
+          element.focus();
+          // Scroll into view if needed
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     }
 
@@ -213,7 +215,7 @@ export function useFocusTrap(enabled = true) {
     // Focus first element
     const focusableElements = getFocusableElements();
     if (focusableElements.length > 0) {
-      focusableElements[0].focus();
+      focusableElements[0]?.focus();
     }
 
     // Handle tab key

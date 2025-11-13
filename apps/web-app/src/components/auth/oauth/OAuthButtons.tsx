@@ -95,7 +95,7 @@ export interface OAuthButtonsProps {
 
 export function OAuthButtons({
   mode = "login",
-  onSuccess,
+  onSuccess: _onSuccess,
   redirectUrl,
   excludeProviders = [],
   className = "",

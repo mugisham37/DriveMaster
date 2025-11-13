@@ -45,10 +45,14 @@ const loginSchema = z.object({
     .string()
     .min(1, "Password is required")
     .min(6, "Password must be at least 6 characters"),
-  rememberMe: z.boolean().optional().default(false),
+  rememberMe: z.boolean(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
 
 // ============================================================================
 // Component Props
@@ -74,7 +78,13 @@ export function LoginForm({
   const { state } = useAuth();
   const { login } = useAuthActions();
 
-  const form = useForm<LoginFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -82,14 +92,6 @@ export function LoginForm({
       rememberMe: false,
     },
   });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
-    watch,
-  } = form;
 
   const rememberMe = watch("rememberMe");
 

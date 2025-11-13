@@ -102,7 +102,7 @@ export function PasswordChangeForm({
   // Form Submission
   // ============================================================================
 
-  const onSubmit = async (data: PasswordChangeFormData) => {
+  const onSubmit = async (_data: PasswordChangeFormData) => {
     try {
       setError(null);
 

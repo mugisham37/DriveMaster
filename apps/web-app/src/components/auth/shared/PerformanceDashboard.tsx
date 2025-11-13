@@ -18,7 +18,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  performanceMetrics,
   getPerformanceStatus,
   runPerformanceTestSuite,
   resetPerformanceTracking,
@@ -27,7 +26,7 @@ import {
 export function PerformanceDashboard() {
   const [status, setStatus] = useState(getPerformanceStatus());
   const [isRunningTests, setIsRunningTests] = useState(false);
-  const [testResults, setTestResults] = useState<unknown>(null);
+  const [testResults, setTestResults] = useState<Record<string, any> | null>(null);
 
   // Auto-refresh status every 5 seconds
   useEffect(() => {

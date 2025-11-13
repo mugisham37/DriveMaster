@@ -10,10 +10,16 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { FixedSizeList as List } from "react-window";
-// @ts-expect-error - react-window types may not be installed
-type ListType = typeof List;
 import { AlertCircle, Loader2, Shield } from "lucide-react";
+
+// Dynamic import for react-window to handle missing types
+let List: any = null;
+try {
+  const ReactWindow = require("react-window");
+  List = ReactWindow.FixedSizeList;
+} catch (e) {
+  console.warn("react-window not available, virtual scrolling disabled");
+}
 import { toast } from "sonner";
 import { SessionCard } from "./SessionCard";
 import { Button } from "@/components/ui/button";
@@ -54,7 +60,7 @@ export function VirtualSessionList({
   const [error, setError] = useState<string | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
   const [showBulkRevokeDialog, setShowBulkRevokeDialog] = useState(false);
-  const listRef = useRef<List>(null);
+  const listRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState(600);
 
@@ -175,7 +181,7 @@ export function VirtualSessionList({
 
   // Determine if virtual scrolling should be used
   const shouldUseVirtualScrolling = (count: number) => {
-    return enableVirtualScrolling && count >= virtualScrollThreshold;
+    return enableVirtualScrolling && count >= virtualScrollThreshold && List !== null;
   };
 
   // Count non-current sessions
