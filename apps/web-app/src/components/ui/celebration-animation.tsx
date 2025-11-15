@@ -30,4 +30,5 @@ export interface CelebrationAnimationProps {
   show?: boolean;
   
   /**
-   * Callback when animati
+   * Callback when animation completes
+   */

@@ -50,7 +50,7 @@ export function VisuallyHidden({
   className,
   showOnFocus = false,
 }: VisuallyHiddenProps) {
-  const Component = as as any;
+  const Component = as as React.ElementType;
   
   return (
     <Component

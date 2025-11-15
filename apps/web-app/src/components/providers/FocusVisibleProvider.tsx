@@ -42,7 +42,6 @@ export function FocusVisibleProvider({ children }: FocusVisibleProviderProps) {
 
   useEffect(() => {
     let hadKeyboardEvent = false;
-    let hadFocusVisibleRecently = false;
     let hadFocusVisibleRecentlyTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const inputTypesAllowlist = new Set([
@@ -122,9 +121,8 @@ export function FocusVisibleProvider({ children }: FocusVisibleProviderProps) {
         clearTimeout(hadFocusVisibleRecentlyTimeout);
       }
 
-      hadFocusVisibleRecently = true;
       hadFocusVisibleRecentlyTimeout = setTimeout(() => {
-        hadFocusVisibleRecently = false;
+        // Track focus visible state for a short time
       }, 100);
     }
 

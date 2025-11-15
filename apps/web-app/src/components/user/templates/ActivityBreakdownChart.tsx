@@ -61,7 +61,7 @@ export function ActivityBreakdownChart({
 
   // Transform Record to array for the chart
   const chartData = Object.entries(summary.activityBreakdown)
-    .filter(([_, count]) => count > 0)
+    .filter(([_type, count]) => count > 0)
     .map(([type, count]) => ({
       name: type.charAt(0).toUpperCase() + type.slice(1),
       value: count,

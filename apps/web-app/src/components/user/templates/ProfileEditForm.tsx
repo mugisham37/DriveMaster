@@ -16,7 +16,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -92,7 +92,7 @@ export function ProfileEditForm({
     if (hasChanges && form.formState.isValid && !form.formState.isSubmitting) {
       handleAutoSave(debouncedValues);
     }
-  }, [debouncedValues]);
+  }, [debouncedValues, form.formState.defaultValues, form.formState.isValid, form.formState.isSubmitting, handleAutoSave]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -103,7 +103,7 @@ export function ProfileEditForm({
       }
     });
     return () => subscription.unsubscribe();
-  }, [form.watch]);
+  }, [form]);
 
   // Warn on navigation with unsaved changes
   useEffect(() => {
@@ -118,7 +118,7 @@ export function ProfileEditForm({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges, saveStatus]);
 
-  const handleAutoSave = async (data: ProfileEditFormData) => {
+  const handleAutoSave = useCallback(async (data: ProfileEditFormData) => {
     try {
       setSaveStatus('saving');
       
@@ -143,7 +143,7 @@ export function ProfileEditForm({
       toast.error('Failed to save changes');
       console.error('Profile update error:', error);
     }
-  };
+  }, [userId, userProfile.version, updateProfile, onSuccess]);
 
   const onSubmit = async (data: ProfileEditFormData) => {
     await handleAutoSave(data);

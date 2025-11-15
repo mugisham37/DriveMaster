@@ -29,7 +29,7 @@ import { useCallback, useRef, useEffect } from 'react';
  * }, [handleScroll]);
  * ```
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 100
 ): (...args: Parameters<T>) => void {

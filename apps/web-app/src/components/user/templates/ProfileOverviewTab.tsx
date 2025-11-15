@@ -77,7 +77,7 @@ export function ProfileOverviewTab({ userId, userProfile, className = '' }: Prof
         },
       });
       toast.success('Theme updated');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to update theme');
     }
   };
@@ -96,7 +96,7 @@ export function ProfileOverviewTab({ userId, userProfile, className = '' }: Prof
         },
       });
       toast.success('Notifications updated');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to update notifications');
     }
   };

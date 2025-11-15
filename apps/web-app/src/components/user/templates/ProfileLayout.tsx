@@ -15,9 +15,10 @@
 
 import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileHeader } from '@/components/user/organisms/ProfileHeader';
 import { User, TrendingUp, Activity, Shield } from 'lucide-react';
+import type { UserProfile } from '@/types/user-service';
 
 // ============================================================================
 // Types
@@ -27,7 +28,7 @@ export type ProfileTab = 'overview' | 'progress' | 'activity' | 'gdpr';
 
 export interface ProfileLayoutProps {
   userId: string;
-  userProfile?: any; // Optional, ProfileHeader will fetch it
+  userProfile?: UserProfile; // Optional, ProfileHeader will fetch it
   children?: React.ReactNode;
   defaultTab?: ProfileTab;
   className?: string;
@@ -39,7 +40,7 @@ export interface ProfileLayoutProps {
 
 export function ProfileLayout({
   userId,
-  userProfile,
+  userProfile: _userProfile,
   children,
   defaultTab = 'overview',
   className = '',

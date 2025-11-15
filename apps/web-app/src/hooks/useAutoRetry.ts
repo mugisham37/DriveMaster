@@ -63,10 +63,10 @@ function calculateBackoffDelay(
 // Default Retry Logic
 // ============================================================================
 
-function defaultShouldRetry(error: unknown, attemptNumber: number): boolean {
+function defaultShouldRetry(error: unknown, _attemptNumber: number): boolean {
   // Don't retry validation errors or authorization errors
   if (typeof error === 'object' && error !== null) {
-    const errorType = (error as any).type;
+    const errorType = (error as { type?: string }).type;
     if (errorType === 'validation' || errorType === 'authorization') {
       return false;
     }

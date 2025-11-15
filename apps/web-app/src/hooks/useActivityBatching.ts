@@ -58,7 +58,7 @@ export function useActivityBatching(
     mutationFn: async (activities: Omit<ActivityRecord, 'id' | 'userId' | 'timestamp'>[]) => {
       // Record activities in batch
       const promises = activities.map(activity =>
-        userServiceClient.recordActivity(userId, activity as any)
+        userServiceClient.recordActivity(userId, activity)
       );
       return Promise.all(promises);
     },

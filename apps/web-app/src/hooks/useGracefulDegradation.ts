@@ -55,7 +55,7 @@ export function useGracefulDegradation<T = unknown>(
 
   const queryClient = useQueryClient();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [isServiceAvailable, setIsServiceAvailable] = useState(true);
+  const [isServiceAvailable] = useState(true);
   const [lastSuccessfulFetch, setLastSuccessfulFetch] = useState<Date | null>(null);
 
   // Monitor online/offline status
@@ -183,7 +183,6 @@ class OfflineOperationQueue {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
         // Note: We can't restore the operation functions, so we clear the queue
         // In a real implementation, you'd need to serialize operation metadata
         this.queue = [];

@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, TrendingUp, Users, Zap, AlertCircle } from 'lucide-react';
+import { Activity, TrendingUp, Users, Zap } from 'lucide-react';
 import { useUserServiceMetrics } from '@/hooks/useUserServiceMetrics';
 import type { MetricsSnapshot } from '@/lib/user-service/monitoring';
 

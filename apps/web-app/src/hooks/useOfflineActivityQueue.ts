@@ -87,7 +87,7 @@ export function useOfflineActivityQueue(userId: string | undefined) {
 
     try {
       // Get activities to sync
-      const activitiesToSync = queueRef.current.map(({ queuedAt: _queuedAt, ...activity }) => activity);
+      const activitiesToSync = queueRef.current.map(({ queuedAt, ...activity }) => activity);
 
       // Send batch request
       await recordBatch(activitiesToSync);

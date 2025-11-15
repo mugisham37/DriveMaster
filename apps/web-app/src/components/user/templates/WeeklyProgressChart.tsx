@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 export interface DailyProgressData {
   date: string;
@@ -22,12 +23,12 @@ export function WeeklyProgressChart({ data, className }: WeeklyProgressChartProp
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card border rounded-lg p-3 shadow-lg">
-          <p className="font-medium mb-2">{formatDate(label)}</p>
-          {payload.map((entry: any, index: number) => (
+          <p className="font-medium mb-2">{formatDate(label as string)}</p>
+          {payload.map((entry, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {entry.value}
               {entry.dataKey === 'studyTime' ? ' min' : entry.dataKey === 'accuracy' || entry.dataKey === 'mastery' ? '%' : ''}

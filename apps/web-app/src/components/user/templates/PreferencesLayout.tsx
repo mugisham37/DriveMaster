@@ -37,7 +37,7 @@ export function PreferencesLayout({
   onCategoryChange,
   className,
 }: PreferencesLayoutProps) {
-  const { data: preferences, isLoading, error } = useUserPreferences(userId || '');
+  const { data: preferences, isLoading, error: _error } = useUserPreferences(userId || '');
   const updatePreferences = useUpdateUserPreferences();
   const [activeCategory, setActiveCategory] = useState<PreferenceCategory>(category);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -94,7 +94,7 @@ export function PreferencesLayout({
     return <PreferencesLayoutSkeleton className={className} />;
   }
 
-  if (error || !preferences) {
+  if (_error || !preferences) {
     return (
       <div className={cn('rounded-lg border border-destructive bg-destructive/10 p-6', className)}>
         <p className="text-sm text-destructive">
