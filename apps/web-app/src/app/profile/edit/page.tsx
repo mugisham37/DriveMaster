@@ -14,6 +14,9 @@
 'use client';
 
 import React from 'react';
+
+// Force dynamic rendering - this page requires authentication
+export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserService';

@@ -4,7 +4,9 @@ import "./globals.css";
 // Performance monitoring and flash messages
 import { PerformanceMonitor, FlashMessages } from "@/components";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { GDPRProvider } from "@/contexts/GDPRContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { EmailVerificationBanner } from "@/components/auth/shared";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -77,15 +79,19 @@ export default function RootLayout({
         className={`${inter.variable} ${poppins.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <AuthProvider>
-          <I18nProvider>
-            <PerformanceMonitor />
-            <FlashMessages />
-            <EmailVerificationBanner />
-            <Toaster position="top-right" richColors closeButton />
-            {children}
-          </I18nProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <GDPRProvider>
+              <I18nProvider>
+                <PerformanceMonitor />
+                <FlashMessages />
+                <EmailVerificationBanner />
+                <Toaster position="top-right" richColors closeButton />
+                {children}
+              </I18nProvider>
+            </GDPRProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
