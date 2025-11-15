@@ -73,7 +73,7 @@ export function PreferencesLayout({
       toast.success('Preferences updated successfully');
       
       setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
+    } catch (_error) {
       setSaveStatus('error');
       toast.error('Failed to update preferences. Please try again.');
       setTimeout(() => setSaveStatus('idle'), 2000);
