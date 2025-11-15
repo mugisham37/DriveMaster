@@ -85,39 +85,6 @@ export function ProfileEditForm({
   const formValues = form.watch();
   const debouncedValues = useDebounce(formValues, 2000);
 
-  // Auto-save on debounced changes
-  useEffect(() => {
-    const hasChanges = JSON.stringify(debouncedValues) !== JSON.stringify(form.formState.defaultValues);
-    
-    if (hasChanges && form.formState.isValid && !form.formState.isSubmitting) {
-      handleAutoSave(debouncedValues);
-    }
-  }, [debouncedValues, form.formState.defaultValues, form.formState.isValid, form.formState.isSubmitting, handleAutoSave]);
-
-  // Track unsaved changes
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name) {
-        setHasUnsavedChanges(true);
-        setSaveStatus('idle');
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
-  // Warn on navigation with unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges && saveStatus !== 'saved') {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges, saveStatus]);
-
   const handleAutoSave = useCallback(async (data: ProfileEditFormData) => {
     try {
       setSaveStatus('saving');
@@ -144,6 +111,39 @@ export function ProfileEditForm({
       console.error('Profile update error:', error);
     }
   }, [userId, userProfile.version, updateProfile, onSuccess]);
+
+  // Auto-save on debounced changes
+  useEffect(() => {
+    const hasChanges = JSON.stringify(debouncedValues) !== JSON.stringify(form.formState.defaultValues);
+    
+    if (hasChanges && form.formState.isValid && !form.formState.isSubmitting) {
+      handleAutoSave(debouncedValues);
+    }
+  }, [debouncedValues, form.formState.defaultValues, form.formState.isValid, form.formState.isSubmitting, handleAutoSave]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    const subscription = form.watch((_, { name }) => {
+      if (name) {
+        setHasUnsavedChanges(true);
+        setSaveStatus('idle');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Warn on navigation with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && saveStatus !== 'saved') {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, saveStatus]);
 
   const onSubmit = async (data: ProfileEditFormData) => {
     await handleAutoSave(data);

@@ -58,7 +58,7 @@ export function PreferencesLayout({
   };
 
   const handlePreferenceChange = async (updates: Partial<PreferencesData>) => {
-    if (!preferences) return;
+    if (!preferences || !userId) return;
 
     setSaveStatus('saving');
     setHasUnsavedChanges(true);
@@ -91,7 +91,7 @@ export function PreferencesLayout({
   };
 
   if (isLoading) {
-    return <PreferencesLayoutSkeleton className={className} />;
+    return <PreferencesLayoutSkeleton {...(className && { className })} />;
   }
 
   if (_error || !preferences) {

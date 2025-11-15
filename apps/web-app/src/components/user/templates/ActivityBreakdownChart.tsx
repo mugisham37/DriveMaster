@@ -89,7 +89,7 @@ export function ActivityBreakdownChart({
   });
 
   const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; percentage: number } }> }) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length && payload[0]) {
       const data = payload[0].payload;
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
@@ -139,9 +139,9 @@ export function ActivityBreakdownChart({
             <Legend
               verticalAlign="bottom"
               height={36}
-              formatter={(value: string, entry: { payload: { value: number } }) => (
+              formatter={(value: string, entry: { payload?: { value?: number } }) => (
                 <span className="text-sm">
-                  {value} ({entry.payload.value})
+                  {value} ({entry.payload?.value || 0})
                 </span>
               )}
             />

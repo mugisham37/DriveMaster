@@ -16,7 +16,7 @@ interface MilestoneTrackerProps {
 }
 
 export function MilestoneTracker({ milestones, className }: MilestoneTrackerProps) {
-  const achievedCount = milestones.filter((m) => m.isAchieved).length;
+  const achievedCount = milestones.filter((m) => m.achieved).length;
   const totalCount = milestones.length;
 
   const getEstimatedDays = (date?: Date) => {

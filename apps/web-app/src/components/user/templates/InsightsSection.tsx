@@ -113,7 +113,7 @@ export function InsightsSection({
     if (!acc[category]) {
       acc[category] = [];
     }
-    acc[category].push(insight);
+    acc[category]!.push(insight);
     return acc;
   }, {} as Record<string, ActivityInsight[]>);
 
@@ -201,8 +201,8 @@ export function InsightsSection({
 
           {Object.keys(CATEGORY_CONFIG).map((category) => (
             <TabsContent key={category} value={category} className="mt-4 space-y-4">
-              {groupedInsights[category]?.length > 0 ? (
-                groupedInsights[category].map(renderInsight)
+              {(groupedInsights[category] || []).length > 0 ? (
+                (groupedInsights[category] || []).map(renderInsight)
               ) : (
                 <div className="py-8 text-center text-muted-foreground">
                   No {category} insights available

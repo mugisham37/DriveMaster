@@ -83,7 +83,7 @@ export function ActivityDistributionCharts({
   });
 
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length && payload[0]) {
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
           <p className="font-semibold">{label}</p>
