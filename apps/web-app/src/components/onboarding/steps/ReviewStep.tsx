@@ -50,7 +50,7 @@ export function ReviewStep() {
           Review Your Choices
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
-          Everything looks good? Let's get started!
+          Everything looks good? Let&apos;s get started!
         </p>
 
         {/* Profile Completeness */}

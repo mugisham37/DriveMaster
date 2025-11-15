@@ -93,7 +93,7 @@ export function OnboardingLayout({ children }: OnboardingLayoutProps) {
               className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline"
               disabled={isSaving}
             >
-              I'll set this later
+              I&apos;ll set this later
             </button>
           </div>
         )}

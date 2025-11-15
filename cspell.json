@@ -1598,7 +1598,22 @@
         "ciphertext",
         "Prefetcher",
         "prefetcher",
-        "changeme"
+        "changeme",
+        "Español",
+        "Français",
+        "Deutsch",
+        "Italiano",
+        "Português",
+        "العربية",
+        "overscan",
+        "lucide",
+        "sonner",
+        "hookform",
+        "alltime",
+        "beforeunload",
+        "WCAG",
+        "alertdialog",
+        "AEDT"
       ]
     }
   ]

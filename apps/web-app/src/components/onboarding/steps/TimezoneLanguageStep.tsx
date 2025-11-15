@@ -102,7 +102,7 @@ export function TimezoneLanguageStep() {
             Timezone
           </Label>
           <Select
-            value={formData.timezone}
+            value={formData.timezone ?? ''}
             onValueChange={(value) => setFormData({ timezone: value })}
           >
             <SelectTrigger id="timezone" className={errors.timezone ? "border-red-500" : ""}>
@@ -133,7 +133,7 @@ export function TimezoneLanguageStep() {
             Language
           </Label>
           <Select
-            value={formData.language}
+            value={formData.language ?? ''}
             onValueChange={(value) => setFormData({ language: value })}
           >
             <SelectTrigger id="language" className={errors.language ? "border-red-500" : ""}>
@@ -159,7 +159,7 @@ export function TimezoneLanguageStep() {
             Country
           </Label>
           <Select
-            value={formData.countryCode}
+            value={formData.countryCode ?? ''}
             onValueChange={(value) => setFormData({ countryCode: value })}
           >
             <SelectTrigger id="country" className={errors.countryCode ? "border-red-500" : ""}>
@@ -181,7 +181,7 @@ export function TimezoneLanguageStep() {
 
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 max-w-md mx-auto">
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          💡 <strong>Tip:</strong> We've pre-selected your timezone based on your browser settings. 
+          💡 <strong>Tip:</strong> We&apos;ve pre-selected your timezone based on your browser settings. 
           You can change it if needed.
         </p>
       </div>

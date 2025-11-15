@@ -86,7 +86,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="activityTracking"
-                checked={privacy.activityTracking}
+                checked={privacy.activityTracking ?? false}
                 onCheckedChange={(checked) => setPrivacy('activityTracking', checked)}
               />
             </div>
@@ -102,7 +102,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="analytics"
-                checked={privacy.analytics}
+                checked={privacy.analytics ?? false}
                 onCheckedChange={(checked) => setPrivacy('analytics', checked)}
               />
             </div>
@@ -118,7 +118,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="dataSharing"
-                checked={privacy.dataSharing}
+                checked={privacy.dataSharing ?? false}
                 onCheckedChange={(checked) => setPrivacy('dataSharing', checked)}
               />
             </div>
@@ -147,7 +147,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="emailNotif"
-                checked={notifications.email}
+                checked={notifications.email ?? false}
                 onCheckedChange={(checked) => setNotification('email', checked)}
               />
             </div>
@@ -166,7 +166,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="pushNotif"
-                checked={notifications.push}
+                checked={notifications.push ?? false}
                 onCheckedChange={(checked) => setNotification('push', checked)}
               />
             </div>
@@ -185,7 +185,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="inAppNotif"
-                checked={notifications.inApp}
+                checked={notifications.inApp ?? false}
                 onCheckedChange={(checked) => setNotification('inApp', checked)}
               />
             </div>
@@ -206,7 +206,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="achievements"
-                checked={notifications.achievements}
+                checked={notifications.achievements ?? false}
                 onCheckedChange={(checked) => setNotification('achievements', checked)}
               />
             </div>
@@ -220,7 +220,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="reminders"
-                checked={notifications.reminders}
+                checked={notifications.reminders ?? false}
                 onCheckedChange={(checked) => setNotification('reminders', checked)}
               />
             </div>
@@ -234,7 +234,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="recommendations"
-                checked={notifications.recommendations}
+                checked={notifications.recommendations ?? false}
                 onCheckedChange={(checked) => setNotification('recommendations', checked)}
               />
             </div>
@@ -250,7 +250,7 @@ export function PrivacyNotificationsStep() {
               </div>
               <Switch
                 id="marketing"
-                checked={notifications.marketing}
+                checked={notifications.marketing ?? false}
                 onCheckedChange={(checked) => setNotification('marketing', checked)}
               />
             </div>

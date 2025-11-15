@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 interface TrackWelcomeModalProps {
   isOpen?: boolean;
@@ -30,10 +31,12 @@ export default function TrackWelcomeModal({
           Welcome to {track?.title || "this track"}!
         </h2>
         {track?.iconUrl && (
-          <img 
+          <Image 
             src={track.iconUrl} 
             alt={track.title} 
-            className="w-16 h-16 mb-4"
+            width={64}
+            height={64}
+            className="mb-4"
           />
         )}
         <p className="text-gray-600 mb-4">

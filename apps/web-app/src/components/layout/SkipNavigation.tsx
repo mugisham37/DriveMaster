@@ -59,7 +59,7 @@ export function SkipNavigation({
   links = DEFAULT_SKIP_LINKS,
   className,
 }: SkipNavigationProps) {
-  const handleSkipClick = (event: any, targetId: string) => {
+  const handleSkipClick = (event: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     event.preventDefault();
     skipToContent(targetId);
   };

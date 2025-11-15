@@ -102,8 +102,9 @@ export function restoreFocus(element: HTMLElement | null) {
  */
 export function focusFirstElement(container: HTMLElement) {
   const focusableElements = getFocusableElements(container);
-  if (focusableElements.length > 0) {
-    focusableElements[0].focus();
+  const firstElement = focusableElements[0];
+  if (firstElement) {
+    firstElement.focus();
   }
 }
 

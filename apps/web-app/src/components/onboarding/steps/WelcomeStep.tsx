@@ -33,12 +33,12 @@ export function WelcomeStep() {
 
       <div className="max-w-2xl mx-auto space-y-4 text-left">
         <p className="text-gray-700 dark:text-gray-300">
-          We're excited to have you here! Let's take a few moments to personalize your experience.
+          We&apos;re excited to have you here! Let&apos;s take a few moments to personalize your experience.
         </p>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2">
           <h3 className="font-semibold text-gray-900 dark:text-white">
-            What we'll set up:
+            What we&apos;ll set up:
           </h3>
           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">

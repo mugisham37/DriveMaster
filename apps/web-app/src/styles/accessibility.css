@@ -280,11 +280,6 @@ a {
  * Accessible Hiding
  * ============================================================================ */
 
-/* Hide decorative elements from screen readers */
-[aria-hidden="true"] {
-  speak: none;
-}
-
 /* Ensure hidden elements are truly hidden */
 [hidden] {
   display: none !important;
@@ -297,12 +292,6 @@ a {
 /* Ensure labels are associated with inputs */
 label {
   cursor: pointer;
-}
-
-/* Ensure required fields are indicated */
-[required],
-[aria-required="true"] {
-  /* Visual indicator handled by form components */
 }
 
 /* Ensure error messages are visible */

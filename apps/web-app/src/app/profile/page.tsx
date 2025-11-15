@@ -20,7 +20,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserService';
 import { ProfileLayout } from '@/components/user/templates/ProfileLayout';
 import { ProfileOverviewTab } from '@/components/user/templates/ProfileOverviewTab';
-import type { UserProfile } from '@/types/user-service';
 import { TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
