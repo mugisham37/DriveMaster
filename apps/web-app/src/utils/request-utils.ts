@@ -10,7 +10,6 @@ export class RequestUtils {
     return `cs_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static buildQueryString(_params: Record<string, unknown>): string {
     // Implementation will be added later
     return "";

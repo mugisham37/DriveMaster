@@ -27,7 +27,7 @@ export interface VisuallyHiddenProps {
   /**
    * HTML element to render
    */
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 
   /**
    * Additional CSS classes

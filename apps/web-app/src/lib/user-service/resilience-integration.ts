@@ -512,13 +512,10 @@ export function ExampleUsage() {
   });
 
   // State for demonstration - setters would be used in actual implementation
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userProfile, _setUserProfile] = React.useState<UserProfile | null>(
     null,
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, _setLoading] = React.useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, _setError] = React.useState<string | null>(null);
 
   // Example usage functions would go here:

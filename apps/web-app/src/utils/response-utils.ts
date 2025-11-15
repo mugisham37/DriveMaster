@@ -11,13 +11,11 @@ export class ResponseUtils {
     return _response as T;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static extractErrorMessage(_response: unknown): string {
     // Implementation will be added later
     return "An error occurred";
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static isSuccessResponse(_response: unknown): boolean {
     // Implementation will be added later
     return true;
