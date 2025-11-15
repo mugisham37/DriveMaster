@@ -33,7 +33,7 @@ const DEFAULT_CONFIG: Required<BatchConfig> = {
  * 
  * // Record activities - they will be batched automatically
  * recordActivity({
- *   type: 'exercise_completed',
+ *   activityType: 'exercise_completed',
  *   metadata: { exerciseId: '123' }
  * });
  * 
@@ -49,16 +49,26 @@ export function useActivityBatching(
   const { maxBatchSize, maxWaitTime } = { ...DEFAULT_CONFIG, ...config };
 
   // Queue for pending activities
-  const queueRef = useRef<Omit<ActivityRecord, 'id' | 'userId' | 'timestamp'>[]>([]);
+  const queueRef = useRef<Pick<ActivityRecord, 'activityType' | 'metadata'>[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlushing = useRef(false);
 
   // Mutation for sending batched activities
   const { mutate: sendBatch, isPending } = useMutation({
-    mutationFn: async (activities: Omit<ActivityRecord, 'id' | 'userId' | 'timestamp'>[]) => {
+    mutationFn: async (activities: Pick<ActivityRecord, 'activityType' | 'metadata'>[]) => {
       // Record activities in batch
       const promises = activities.map(activity =>
-        userServiceClient.recordActivity(userId, activity)
+        userServiceClient.recordActivity({
+          ...activity,
+          userId,
+          id: `activity-${Date.now()}-${Math.random()}`,
+          timestamp: new Date(),
+          deviceType: 'web',
+          appVersion: '1.0.0',
+          platform: navigator.platform || 'unknown',
+          userAgent: navigator.userAgent || 'unknown',
+          ipAddress: 'unknown', // This would typically be set by the server
+        })
       );
       return Promise.all(promises);
     },
@@ -112,7 +122,7 @@ export function useActivityBatching(
 
   // Record an activity (adds to queue)
   const recordActivity = useCallback(
-    (activity: Omit<ActivityRecord, 'id' | 'userId' | 'timestamp'>) => {
+    (activity: Pick<ActivityRecord, 'activityType' | 'metadata'>) => {
       // Add to queue
       queueRef.current.push(activity);
 
@@ -182,7 +192,7 @@ export function useActivityRecorder(userId: string) {
   const recordExerciseCompletion = useCallback(
     (exerciseId: string, score: number) => {
       recordActivity({
-        type: 'exercise_completed',
+        activityType: 'exercise_complete',
         metadata: {
           exerciseId,
           score,
@@ -196,7 +206,7 @@ export function useActivityRecorder(userId: string) {
   const recordPageView = useCallback(
     (path: string) => {
       recordActivity({
-        type: 'page_view',
+        activityType: 'navigation',
         metadata: {
           path,
           viewedAt: new Date().toISOString(),
@@ -209,7 +219,7 @@ export function useActivityRecorder(userId: string) {
   const recordFeatureUsage = useCallback(
     (featureName: string, action: string) => {
       recordActivity({
-        type: 'feature_usage',
+        activityType: 'navigation',
         metadata: {
           featureName,
           action,
@@ -222,7 +232,7 @@ export function useActivityRecorder(userId: string) {
 
   const recordSessionStart = useCallback(() => {
     recordActivity({
-      type: 'session_start',
+      activityType: 'session_start',
       metadata: {
         startedAt: new Date().toISOString(),
       },
@@ -232,7 +242,7 @@ export function useActivityRecorder(userId: string) {
   const recordSessionEnd = useCallback(
     (duration: number) => {
       recordActivity({
-        type: 'session_end',
+        activityType: 'session_end',
         metadata: {
           duration,
           endedAt: new Date().toISOString(),

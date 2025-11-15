@@ -64,7 +64,7 @@ export interface UseKeyboardNavigationReturn {
   /**
    * Ref to attach to the container element
    */
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
 
   /**
    * Current focused index (for arrow key navigation)
@@ -303,12 +303,17 @@ export function useModalKeyboardNavigation(onClose: () => void) {
  * Hook for menu/dropdown keyboard navigation
  */
 export function useMenuKeyboardNavigation(onClose?: () => void) {
-  return useKeyboardNavigation({
+  const options: UseKeyboardNavigationOptions = {
     enableArrowKeys: true,
     orientation: 'vertical',
-    onEscape: onClose || undefined,
     autoFocus: true,
-  });
+  };
+  
+  if (onClose) {
+    options.onEscape = onClose;
+  }
+  
+  return useKeyboardNavigation(options);
 }
 
 /**

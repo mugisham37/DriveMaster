@@ -85,7 +85,7 @@ export function usePrefetchOnHover({ userId }: PrefetchOptions = {}) {
 
     queryClient.prefetchQuery({
       queryKey: queryKeys.engagementMetrics(userId, 30),
-      queryFn: () => userServiceClient.getEngagementMetrics(userId, { days: 30 }),
+      queryFn: () => userServiceClient.getEngagementMetrics(userId),
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
   }, [queryClient, userId]);

@@ -228,24 +228,27 @@ class OfflineOperationQueue {
     this.isProcessing = true;
 
     while (this.queue.length > 0) {
-      const operation = this.queue[0];
+      const operation = this.queue.shift();
+      
+      if (!operation) {
+        continue;
+      }
 
       try {
         await operation.operation();
-        // Success - remove from queue
-        this.queue.shift();
+        // Success - already removed from queue
         this.saveToStorage();
       } catch (error) {
         // Failure - increment retry count
         operation.retryCount++;
 
         if (operation.retryCount >= operation.maxRetries) {
-          // Max retries reached - remove from queue
+          // Max retries reached - already removed from queue
           console.error('Operation failed after max retries:', error);
-          this.queue.shift();
           this.saveToStorage();
         } else {
-          // Will retry later
+          // Will retry later - put back at the beginning
+          this.queue.unshift(operation);
           console.warn(`Operation failed, will retry (${operation.retryCount}/${operation.maxRetries}):`, error);
           break;
         }
