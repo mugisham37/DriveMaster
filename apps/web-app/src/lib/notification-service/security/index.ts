@@ -171,7 +171,7 @@ export class NotificationSecurityManager {
    */
   async processTemplateSecurely(
     template: Partial<NotificationTemplate>,
-    _userId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _userId: string,
   ): Promise<Partial<NotificationTemplate>> {
     try {
       // 1. Validate input
@@ -204,7 +204,7 @@ export class NotificationSecurityManager {
     method: string,
     url: string,
     body?: Record<string, unknown>,
-    _userId?: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _userId?: string,
   ): Promise<{
     headers: Record<string, string>;
     body?: Record<string, unknown>;

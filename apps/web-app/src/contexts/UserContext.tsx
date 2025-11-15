@@ -1049,7 +1049,6 @@ export function UserProvider({ children }: UserProviderProps) {
   }, [state.profile]);
 
   const linkAccount = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (_provider: string, _credentials: Record<string, unknown>) => {
       if (!userId) throw new Error("User not authenticated");
 

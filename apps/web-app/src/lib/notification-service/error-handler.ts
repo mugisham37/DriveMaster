@@ -551,7 +551,6 @@ export class NotificationErrorHandler {
   private async handleValidationError(
     error: NotificationError,
     // Context is not used but kept for interface consistency
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: ErrorContext,
   ): Promise<ErrorHandlingResult> {
     return {
@@ -590,7 +589,6 @@ export class NotificationErrorHandler {
   private async handleQuotaError(
     error: NotificationError,
     // Context is not used but kept for interface consistency
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: ErrorContext,
   ): Promise<ErrorHandlingResult> {
     const retryAfter = error.retryAfter || 60000; // Default 1 minute
@@ -630,9 +628,7 @@ export class NotificationErrorHandler {
   }
 
   private async handleTemplateError(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _error: NotificationError,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: ErrorContext,
   ): Promise<ErrorHandlingResult> {
     return {
@@ -667,9 +663,7 @@ export class NotificationErrorHandler {
   }
 
   private async handlePermissionError(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _error: NotificationError,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: ErrorContext,
   ): Promise<ErrorHandlingResult> {
     return {

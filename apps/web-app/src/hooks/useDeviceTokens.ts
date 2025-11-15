@@ -405,7 +405,6 @@ export function useDeviceTokens(): UseDeviceTokensResult {
 
   // Refresh token mutation - placeholder until API method is implemented
   const refreshTokenMutation = useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mutationFn: async (_tokenId: string): Promise<DeviceToken> => {
       // TODO: Implement refreshDeviceToken in NotificationApiClient
       throw new Error("refreshDeviceToken not implemented yet");

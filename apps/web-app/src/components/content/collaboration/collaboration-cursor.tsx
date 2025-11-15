@@ -88,7 +88,6 @@ export function RemoteCursor({ user, position, color }: RemoteCursorProps) {
 
 export function RemoteSelection({
   user,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   selection: _selection,
   color,
 }: RemoteSelectionProps) {
@@ -131,12 +130,10 @@ export function CollaborationCursor({
     enabled,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_localCursorPosition, setLocalCursorPosition] = useState<{
     line: number;
     column: number;
   } | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_localSelection, setLocalSelection] = useState<{
     start: number;
     end: number;

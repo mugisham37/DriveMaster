@@ -128,7 +128,6 @@ export class NotificationDataExporter {
   /**
    * Collect user notifications
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async collectNotifications(_userId: string): Promise<Notification[]> {
     // This would typically call the API, but for local data we use storage
     // In a real implementation, this would make an API call to get all user notifications
@@ -152,7 +151,6 @@ export class NotificationDataExporter {
   /**
    * Collect user device tokens
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async collectDeviceTokens(_userId: string): Promise<DeviceToken[]> {
     // This would typically call the API to get all user device tokens
     // For now, return empty array
@@ -264,7 +262,6 @@ export class NotificationDataExporter {
   /**
    * Verify user access for data export
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async verifyUserAccess(_userId: string): Promise<boolean> {
     try {
       await this.authHandler.getValidToken();
@@ -518,7 +515,6 @@ export class NotificationDataDeletion {
   /**
    * Verify user access
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async verifyUserAccess(_userId: string): Promise<boolean> {
     try {
       await this.authHandler.getValidToken();

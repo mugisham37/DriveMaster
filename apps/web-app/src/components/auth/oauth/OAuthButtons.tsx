@@ -95,7 +95,7 @@ export interface OAuthButtonsProps {
 
 export function OAuthButtons({
   mode = "login",
-  onSuccess: _onSuccess, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onSuccess: _onSuccess,
   redirectUrl,
   excludeProviders = [],
   className = "",

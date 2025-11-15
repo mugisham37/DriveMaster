@@ -101,16 +101,15 @@ export function StatusAnnouncement({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <LiveRegion
-      priority="polite"
-      role="status"
-      visuallyHidden={true}
-      className={className || undefined}
-    >
-      {children}
-    </LiveRegion>
-  );
+  const props: LiveRegionProps = {
+    children,
+    priority: "polite",
+    role: "status",
+    visuallyHidden: true,
+    ...(className && { className })
+  };
+  
+  return <LiveRegion {...props} />;
 }
 
 /**
@@ -123,16 +122,15 @@ export function AlertAnnouncement({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <LiveRegion
-      priority="assertive"
-      role="alert"
-      visuallyHidden={true}
-      className={className || undefined}
-    >
-      {children}
-    </LiveRegion>
-  );
+  const props: LiveRegionProps = {
+    children,
+    priority: "assertive",
+    role: "alert",
+    visuallyHidden: true,
+    ...(className && { className })
+  };
+  
+  return <LiveRegion {...props} />;
 }
 
 /**
@@ -145,8 +143,10 @@ export function LoadingAnnouncement({
   message?: string;
   className?: string;
 }) {
+  const props = className ? { className } : {};
+  
   return (
-    <StatusAnnouncement className={className || undefined}>
+    <StatusAnnouncement {...props}>
       {message}
     </StatusAnnouncement>
   );
