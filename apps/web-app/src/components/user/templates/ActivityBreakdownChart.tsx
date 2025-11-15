@@ -13,7 +13,7 @@ import { ActivitySummary } from '@/types/user-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ActivityBreakdownChartProps {
-  summary?: ActivitySummary;
+  summary?: ActivitySummary | undefined;
   isLoading?: boolean;
   className?: string;
 }

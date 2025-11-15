@@ -13,7 +13,7 @@ import { EngagementMetrics } from '@/types/user-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface EngagementMetricsSectionProps {
-  metrics?: EngagementMetrics;
+  metrics?: EngagementMetrics | undefined;
   isLoading?: boolean;
   className?: string;
 }

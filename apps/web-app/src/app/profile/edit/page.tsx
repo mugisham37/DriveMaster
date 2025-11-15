@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserService';
 import { ProfileEditForm } from '@/components/user/templates/ProfileEditForm';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,7 +55,7 @@ function ProfileEditSkeleton() {
 export default function ProfileEditPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const userId = user?.id || '';
+  const userId = user?.id?.toString() || '';
 
   const {
     data: userProfile,

@@ -61,6 +61,7 @@ export function StreakFlame({
       const timer = setTimeout(() => setCelebrate(false), 2000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [streak]);
 
   return (

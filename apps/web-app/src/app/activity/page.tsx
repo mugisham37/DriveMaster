@@ -28,7 +28,7 @@ import {
 import { ActivityLayout } from '@/components/user/templates/ActivityLayout';
 import { Button } from '@/components/ui/button';
 import { Download, FileJson, FileSpreadsheet } from 'lucide-react';
-import { DateRange, ActivityInsight } from '@/types/user-service';
+import { DateRange, ActivityInsight, ActivityType } from '@/types/user-service';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -129,15 +129,12 @@ export default function ActivityPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Export successful',
+      toast.success('Export successful', {
         description: 'Activity data exported as JSON',
       });
-    } catch (error) {
-      toast({
-        title: 'Export failed',
+    } catch {
+      toast.error('Export failed', {
         description: 'Failed to export activity data',
-        variant: 'destructive',
       });
     }
   };
@@ -170,22 +167,18 @@ export default function ActivityPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Export successful',
+      toast.success('Export successful', {
         description: 'Activity data exported as CSV',
       });
-    } catch (error) {
-      toast({
-        title: 'Export failed',
+    } catch {
+      toast.error('Export failed', {
         description: 'Failed to export activity data',
-        variant: 'destructive',
       });
     }
   };
 
   const handleInsightAction = (insight: ActivityInsight) => {
-    toast({
-      title: 'Action triggered',
+    toast.success('Action triggered', {
       description: `Taking action for: ${insight.title}`,
     });
     // Implement specific actions based on insight type
@@ -268,7 +261,7 @@ export default function ActivityPage() {
           <ActivityFeed
             userId={userId}
             dateRange={dateRange}
-            activityTypes={activityType === 'all' ? undefined : [activityType]}
+            activityTypes={activityType === 'all' ? undefined : [activityType as ActivityType]}
           />
         </ActivityLayout>
       </div>

@@ -19,12 +19,12 @@ export default function ActivityLayout({ children }: ActivityLayoutProps) {
   const { user } = useAuth();
   
   // Initialize real-time activity updates
-  useRealtimeActivity(user?.id);
+  useRealtimeActivity(user?.id?.toString());
 
   return (
     <div className="flex min-h-screen flex-col">
       {/* Real-time status bar */}
-      <RealtimeStatusBar userId={user?.id} />
+      <RealtimeStatusBar userId={user?.id?.toString()} />
       
       {/* Main content */}
       <main className="flex-1">

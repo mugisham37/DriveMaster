@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ActivityDistributionChartsProps {
-  summary?: ActivitySummary;
+  summary?: ActivitySummary | undefined;
   isLoading?: boolean;
   className?: string;
 }

@@ -131,7 +131,7 @@ export function ActivityItem({
               compact ? "text-sm" : "text-base"
             )}>
               {activity.activityType.charAt(0).toUpperCase() + activity.activityType.slice(1)}
-              {activity.metadata?.topic && `: ${activity.metadata.topic}`}
+              {activity.metadata?.topic && typeof activity.metadata.topic === 'string' ? `: ${String(activity.metadata.topic)}` : ''}
             </p>
             {hasExpandableContent && (
               <button

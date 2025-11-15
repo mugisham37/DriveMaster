@@ -19,7 +19,7 @@ export interface DateRange {
 export interface ActivityFeedProps {
   userId?: string;
   dateRange?: DateRange;
-  activityTypes?: ActivityType[];
+  activityTypes?: ActivityType[] | undefined;
   pageSize?: number;
   className?: string;
 }

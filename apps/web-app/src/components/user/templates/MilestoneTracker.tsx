@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Milestone } from '@/types/user-service';
 
 export interface MilestoneData extends Milestone {
-  estimatedCompletion?: Date;
+  estimatedCompletion?: Date | undefined;
 }
 
 interface MilestoneTrackerProps {

@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface InsightsSectionProps {
-  insights?: ActivityInsight[];
+  insights?: ActivityInsight[] | undefined;
   isLoading?: boolean;
   onActionClick?: (insight: ActivityInsight) => void;
   className?: string;

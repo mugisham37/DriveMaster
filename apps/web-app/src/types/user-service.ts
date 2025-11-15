@@ -22,6 +22,11 @@ export interface UserProfile {
   lastActiveAt: Date;
   isActive: boolean;
   version: number;
+  // Optional fields for frontend display compatibility
+  name?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  avatar?: string;
 }
 
 export interface UserUpdateRequest {

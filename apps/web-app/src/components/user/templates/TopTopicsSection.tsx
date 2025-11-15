@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 interface TopTopicsSectionProps {
-  summary?: ActivitySummary;
+  summary?: ActivitySummary | undefined;
   isLoading?: boolean;
   className?: string;
 }

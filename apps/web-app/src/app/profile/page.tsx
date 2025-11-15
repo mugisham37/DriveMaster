@@ -25,7 +25,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Code splitting: Lazy load heavy components (Task 12.2)
@@ -106,7 +106,7 @@ function ProfilePageError({ error, onRetry }: { error: string; onRetry: () => vo
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const userId = user?.id || '';
+  const userId = user?.id?.toString() || '';
   
   const {
     data: userProfile,

@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ProgressTrackingErrorBoundary } from '@/components/user/error-boundary';
+import { useAuth } from '@/hooks/useAuth';
 import { useProgressSummary } from '@/hooks/useUserService';
 import {
   ProgressLayout,
@@ -22,6 +23,7 @@ import {
   type MilestoneData,
   type DailyActivity,
   type Recommendation,
+  type RecommendationPriority,
 } from '@/components/user/templates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -65,28 +67,31 @@ const RecommendationsSection = dynamic(
 );
 
 export default function ProgressPage() {
+  const { user } = useAuth();
+  const userId = user?.id?.toString() || '';
   const [timeRange, setTimeRange] = useState<TimeRange>('7days');
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
-  const { data: progressData, isLoading, error, refetch } = useProgressSummary();
+  const { data: progressData, isLoading, error, refetch } = useProgressSummary(userId);
 
   // Handle new milestone celebrations
   React.useEffect(() => {
-    if (progressData?.newMilestones && progressData.newMilestones.length > 0) {
-      progressData.newMilestones.forEach((milestone: any) => {
-        toast({
-          title: (
+    if (progressData?.milestones && progressData.milestones.length > 0) {
+      progressData.milestones.forEach((milestone) => {
+        if (milestone.achieved && !milestone.achievedAt) {
+          toast.success(
             <div className="flex items-center gap-2">
               <PartyPopper className="h-5 w-5" />
               <span>Milestone Achieved!</span>
-            </div>
-          ),
-          description: milestone.title,
-          duration: 5000,
-        });
+            </div>,
+            {
+              description: milestone.title,
+              duration: 5000,
+            }
+          );
+        }
       });
     }
-  }, [progressData?.newMilestones, toast]);
+  }, [progressData?.milestones]);
 
   if (isLoading) {
     return (
@@ -136,46 +141,46 @@ export default function ProgressPage() {
   }
 
   // Transform API data to component props
-  const skillMasteryData: SkillMasteryData[] = progressData.skillMastery?.map((skill: any) => ({
-    id: skill.topicId,
-    topicName: skill.topicName,
-    mastery: skill.mastery || 0,
-    practiceCount: skill.practiceCount || 0,
-    timeSpent: skill.timeSpent || 0,
-    lastPracticed: new Date(skill.lastPracticed || Date.now()),
-  })) || [];
+  const skillMasteryData: SkillMasteryData[] = progressData.topicMasteries
+    ? Object.entries(progressData.topicMasteries).map(([topic, mastery]) => ({
+      id: topic,
+      topicName: topic,
+      mastery: mastery.mastery || 0,
+      practiceCount: mastery.practiceCount || 0,
+      timeSpent: mastery.totalTimeMs || 0,
+      lastPracticed: new Date(mastery.lastPracticed || Date.now()),
+    }))
+    : [];
 
-  const weeklyProgressData: DailyProgressData[] = progressData.weeklyProgress?.map((day: any) => ({
-    date: day.date,
+  const weeklyProgressData: DailyProgressData[] = progressData.weeklyProgress?.map((day) => ({
+    date: day.week,
     mastery: day.mastery,
     studyTime: day.studyTime,
     accuracy: day.accuracy,
   })) || [];
 
-  const milestoneData: MilestoneData[] = progressData.milestones?.map((milestone: any) => ({
+  const milestoneData: MilestoneData[] = progressData.milestones?.map((milestone) => ({
     ...milestone,
-    estimatedCompletion: milestone.estimatedCompletion ? new Date(milestone.estimatedCompletion) : undefined,
+    estimatedCompletion: undefined,
   })) || [];
 
-  const heatmapData: DailyActivity[] = progressData.activityHeatmap?.map((day: any) => ({
-    date: day.date,
-    intensity: day.intensity,
-    activityCount: day.activityCount,
-    studyTime: day.studyTime,
+  const heatmapData: DailyActivity[] = progressData.topicProgress?.map((topic) => ({
+    date: topic.lastPracticed?.toISOString().split('T')[0] || '',
+    intensity: Math.floor(topic.mastery * 100),
+    activityCount: topic.practiceCount,
+    studyTime: 0, // Not available in current data
   })) || [];
 
-  const recommendations: Recommendation[] = progressData.recommendations?.map((rec: any) => ({
-    id: rec.id,
-    title: rec.title,
-    description: rec.description,
-    priority: rec.priority,
-    estimatedImpact: rec.estimatedImpact,
-    actionLabel: rec.actionLabel,
-    actionUrl: rec.actionUrl,
+  const recommendations: Recommendation[] = progressData.recommendations?.map((rec, index) => ({
+    id: `rec-${index}`,
+    title: rec,
+    description: '',
+    priority: 'medium' as RecommendationPriority,
+    estimatedImpact: 5,
+    actionLabel: 'View',
+    actionUrl: undefined,
     onAction: () => {
-      if (rec.actionUrl) {
-        window.location.href = rec.actionUrl;
-      }
+      console.log('Recommendation:', rec);
     },
   })) || [];
 
@@ -196,7 +201,6 @@ export default function ProgressPage() {
 
         <ProgressLayout
           onTimeRangeChange={setTimeRange}
-          onTopicFilterChange={setSelectedTopic}
           topics={topics}
           defaultTimeRange={timeRange}
         >
@@ -205,16 +209,16 @@ export default function ProgressPage() {
             overallMastery={progressData.overallMastery || 0}
             totalTopics={progressData.totalTopics || 0}
             masteredTopics={progressData.masteredTopics || 0}
-            trend={progressData.trend || 'stable'}
+            trend="stable"
           />
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Learning Streak */}
             <LearningStreakDisplay
-              currentStreak={progressData.currentStreak || 0}
-              longestStreak={progressData.longestStreak || 0}
-              streakCalendar={progressData.streakCalendar || []}
+              currentStreak={progressData.learningStreak || 0}
+              longestStreak={progressData.learningStreak || 0}
+              streakCalendar={progressData.consecutiveDays > 0 ? Array(progressData.consecutiveDays).fill(true) : []}
             />
 
             {/* Weekly Progress Chart */}

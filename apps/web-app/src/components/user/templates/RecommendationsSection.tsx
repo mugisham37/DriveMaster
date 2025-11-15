@@ -16,7 +16,7 @@ export interface Recommendation {
   priority: RecommendationPriority;
   estimatedImpact: number; // 1-10 scale
   actionLabel: string;
-  actionUrl?: string;
+  actionUrl?: string | undefined;
   onAction?: () => void;
 }
 

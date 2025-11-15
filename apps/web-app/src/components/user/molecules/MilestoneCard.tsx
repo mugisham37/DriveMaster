@@ -90,6 +90,7 @@ export function MilestoneCard({
       const timer = setTimeout(() => setShowCelebration(false), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [milestone.achieved, milestone.achievedAt]);
 
   return (

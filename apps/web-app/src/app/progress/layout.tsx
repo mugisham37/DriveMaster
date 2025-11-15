@@ -19,12 +19,12 @@ export default function ProgressLayout({ children }: ProgressLayoutProps) {
   const { user } = useAuth();
   
   // Initialize real-time progress updates
-  useRealtimeProgress(user?.id);
+  useRealtimeProgress(user?.id?.toString());
 
   return (
     <div className="flex min-h-screen flex-col">
       {/* Real-time status bar */}
-      <RealtimeStatusBar userId={user?.id} />
+      <RealtimeStatusBar userId={user?.id?.toString()} />
       
       {/* Main content */}
       <main className="flex-1">

@@ -14,8 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 export interface ProfileAvatarProps {
-  src?: string;
-  alt: string;
+  src?: string | undefined;
+  alt?: string;
   size?: "sm" | "md" | "lg" | "xl";
   status?: "online" | "offline" | "away";
   showStatus?: boolean;
@@ -46,8 +46,8 @@ const statusSizes = {
 function getInitials(name: string): string {
   const parts = name.split(" ").filter(Boolean);
   if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  if (parts.length === 1) return (parts[0] || "?").charAt(0).toUpperCase();
+  return ((parts[0] || "").charAt(0) + (parts[parts.length - 1] || "").charAt(0)).toUpperCase();
 }
 
 export function ProfileAvatar({
@@ -59,7 +59,7 @@ export function ProfileAvatar({
   className,
   onClick,
 }: ProfileAvatarProps) {
-  const initials = getInitials(alt);
+  const initials = getInitials(alt || "User");
   const isClickable = !!onClick;
 
   const avatarElement = (
@@ -71,7 +71,7 @@ export function ProfileAvatar({
       onClick={onClick}
       tabIndex={isClickable ? 0 : undefined}
       role={isClickable ? "button" : undefined}
-      aria-label={isClickable ? `Change ${alt}'s avatar` : undefined}
+      aria-label={isClickable ? `Change ${alt || "user"}'s avatar` : undefined}
       onKeyDown={isClickable ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -79,7 +79,7 @@ export function ProfileAvatar({
         }
       } : undefined}
     >
-      <AvatarImage src={src} alt={alt} />
+      <AvatarImage src={src} alt={alt || "User avatar"} />
       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
         {initials}
       </AvatarFallback>
