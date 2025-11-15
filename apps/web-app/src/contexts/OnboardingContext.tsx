@@ -112,10 +112,14 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
     setState(prev => {
       const nextIndex = Math.min(prev.stepIndex + 1, STEPS.length - 1);
+      const nextStep = STEPS[nextIndex];
+      if (!nextStep) {
+        return prev; // Should not happen, but safety check
+      }
       return {
         ...prev,
         stepIndex: nextIndex,
-        currentStep: STEPS[nextIndex],
+        currentStep: nextStep,
         isValid: true,
         canProceed: true,
       };
@@ -128,10 +132,14 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const previousStep = useCallback(() => {
     setState(prev => {
       const prevIndex = Math.max(prev.stepIndex - 1, 0);
+      const prevStep = STEPS[prevIndex];
+      if (!prevStep) {
+        return prev; // Should not happen, but safety check
+      }
       return {
         ...prev,
         stepIndex: prevIndex,
-        currentStep: STEPS[prevIndex],
+        currentStep: prevStep,
         isValid: true,
         canProceed: true,
         error: null,
@@ -177,8 +185,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       // Note: countryCode is stored in formData but not sent to backend yet
       // as it's not part of UserUpdateRequest interface
       await userServiceClient.updateUser(userId, {
-        timezone: formData.timezone,
-        language: formData.language,
+        timezone: formData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: formData.language || 'en',
         gdprConsent: formData.gdprConsent || false,
         version: 1, // Required field
       });

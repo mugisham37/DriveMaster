@@ -120,7 +120,7 @@ export function TopTopicsSection({
                     style={{
                       width: `${Math.min(
                         100,
-                        (topic.timeSpent / summary.topTopics[0].timeSpent) * 100
+                        summary.topTopics[0] ? (topic.timeSpent / summary.topTopics[0].timeSpent) * 100 : 0
                       )}%`,
                     }}
                   />
