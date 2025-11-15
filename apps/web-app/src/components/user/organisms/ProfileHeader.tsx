@@ -30,8 +30,8 @@ export function ProfileHeader({
   onSettings,
   onExport,
 }: ProfileHeaderProps) {
-  const { profile, isLoading: profileLoading, error: profileError } = useUserProfile(userId);
-  const { summary, isLoading: progressLoading } = useProgressSummary(userId);
+  const { data: profile, isLoading: profileLoading, error: profileError } = useUserProfile(userId || '');
+  const { data: summary } = useProgressSummary(userId || '');
 
   if (profileLoading) {
     return <ProfileHeaderSkeleton className={className} />;
@@ -45,13 +45,13 @@ export function ProfileHeader({
     );
   }
 
-  const streak = summary?.streak?.currentStreak || 0;
+  const streak = summary?.learningStreak || 0;
   const overallMastery = summary?.overallMastery ? Math.round(summary.overallMastery * 100) : 0;
-  const totalStudyTime = summary?.totalStudyTime || 0;
-  const studyTimeHours = Math.floor(totalStudyTime / 3600);
+  const totalStudyTime = summary?.totalStudyTimeMs || 0;
+  const studyTimeHours = Math.floor(totalStudyTime / 3600000); // Convert ms to hours
 
   // Determine online status
-  const lastActive = profile.lastActive ? new Date(profile.lastActive) : null;
+  const lastActive = profile.lastActiveAt ? new Date(profile.lastActiveAt) : null;
   const isOnline = lastActive && (Date.now() - lastActive.getTime()) < 5 * 60 * 1000; // 5 minutes
   const status = isOnline ? 'online' : 'offline';
 
@@ -61,18 +61,18 @@ export function ProfileHeader({
         {/* Left section: Avatar and user info */}
         <div className="flex gap-4">
           <ProfileAvatar
-            src={profile.avatarUrl}
-            alt={profile.displayName || profile.email}
+            src=""
+            alt={profile.email}
             size="xl"
             status={status}
             showStatus
-            onClick={editable ? onEdit : undefined}
+            {...(editable && onEdit && { onClick: onEdit })}
             className="cursor-pointer"
           />
           
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold">{profile.displayName || 'User'}</h2>
+              <h2 className="text-2xl font-bold">{profile.email.split('@')[0] || 'User'}</h2>
               {profile.emailVerified && (
                 <VerificationBadge verified type="email" size="md" showTooltip />
               )}
@@ -146,7 +146,7 @@ export function ProfileHeader({
   );
 }
 
-function ProfileHeaderSkeleton({ className }: { className?: string }) {
+function ProfileHeaderSkeleton({ className }: { className: string | undefined }) {
   return (
     <div className={cn('rounded-lg border bg-card p-6', className)}>
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">

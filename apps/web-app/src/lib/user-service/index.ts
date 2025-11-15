@@ -41,17 +41,61 @@ export {
   getRecoveryAction,
 } from './error-messages';
 
-// Integration Testing
+// Error Handler
 export {
-  TEST_SCENARIOS,
-  INTEGRATION_CHECKLIST,
-  TEST_DATA,
-  PERFORMANCE_BENCHMARKS,
-  ACCESSIBILITY_REQUIREMENTS,
-} from './integration-testing';
+  EnhancedUserServiceErrorHandler,
+  enhancedUserServiceErrorHandler,
+  EnhancedErrorClassifier,
+  ErrorContextManager,
+  ErrorRecoveryStrategies,
+  createEnhancedErrorHandler,
+  isRecoverableError,
+  getErrorSeverity,
+  shouldNotifyUser,
+} from './error-handler';
+
+// Graceful Degradation
+export {
+  GracefulDegradationManager,
+  gracefulDegradationManager,
+  CachedDataManager,
+  FallbackDataProvider,
+  useGracefulDegradation,
+  type DegradationConfig,
+  type DegradationState,
+} from './graceful-degradation';
+
+// Offline Support
+export {
+  OfflineManager,
+  offlineManager,
+  OfflineStorageManager,
+  ConflictResolver,
+  OfflineIndicator,
+  useOfflineManager,
+  type OfflineConfig,
+  type OfflineState,
+  type QueuedOperation,
+  type ConflictResolution,
+  type SyncResult,
+  type OfflineIndicatorProps,
+} from './offline-support';
+
+// Unified Client
+export {
+  UserServiceClient,
+  userServiceClient,
+  createUserServiceClient,
+  createMockUserServiceClient,
+  type UserServiceClientConfig,
+  type ConnectionPoolConfig,
+  type ClientMetrics,
+  type ProgressUpdateData,
+  type ActivityUpdateData,
+} from './unified-client';
+
+// Circuit Breaker (from error-handler dependencies)
+export { UserServiceErrorHandler, ErrorClassifier } from './circuit-breaker';
 
 // Monitoring (if exists)
 export * from './monitoring';
-
-// Cache (if exists)
-export * from './user-service-cache';

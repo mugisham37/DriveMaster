@@ -614,10 +614,7 @@ function groupData(data: DataRecord[], config: GroupConfig): DataRecord[] {
   const grouped = data.reduce((groups: GroupedData, item) => {
     const key = String(item[field] || "undefined");
     if (!groups[key]) groups[key] = [];
-    const groupArray = groups[key];
-    if (groupArray) {
-      groupArray.push(item);
-    }
+    groups[key]?.push(item);
     return groups;
   }, {});
 
@@ -636,8 +633,10 @@ function groupDataByFields(data: DataRecord[], fields: string[]): GroupedData {
     const key = fields
       .map((field) => String(item[field] || "undefined"))
       .join("|");
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key]?.push(item);
     return groups;
   }, {});
 }
@@ -697,10 +696,7 @@ function aggregateByTime(
     if (!groups[key]) {
       groups[key] = [];
     }
-    const groupArray = groups[key];
-    if (groupArray) {
-      groupArray.push(item);
-    }
+    groups[key]?.push(item);
     return groups;
   }, {});
 

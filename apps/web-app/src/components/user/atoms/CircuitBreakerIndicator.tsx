@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// Card components removed as they are not used in this file
 import { Progress } from '@/components/ui/progress';
 
 // Simple icon components
@@ -115,9 +115,9 @@ function getStateDescription(state: CircuitBreakerState): string {
     case 'closed':
       return 'All systems are functioning normally. Your requests are being processed.';
     case 'open':
-      return 'We\'ve temporarily limited requests to protect the service from high error rates. This helps ensure system stability and faster recovery.';
+      return 'We&apos;ve temporarily limited requests to protect the service from high error rates. This helps ensure system stability and faster recovery.';
     case 'half-open':
-      return 'We\'re testing if the service has recovered. Some requests are being allowed through.';
+      return 'We&apos;re testing if the service has recovered. Some requests are being allowed through.';
   }
 }
 

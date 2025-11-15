@@ -92,8 +92,8 @@ export function showErrorToast(
 
   toast.error(message, {
     duration: options?.duration ?? 5000,
-    description,
-    action: options?.action,
+    ...(description && { description }),
+    ...(options?.action && { action: options.action }),
   });
 }
 
@@ -107,15 +107,23 @@ export function showNetworkError(
     description?: string;
   }
 ) {
-  showErrorToast(options?.message ?? ERROR_MESSAGES.NETWORK.CONNECTION_FAILED, {
-    description: options?.description,
-    action: onRetry
-      ? {
-          label: RECOVERY_ACTIONS.RETRY,
-          onClick: onRetry,
-        }
-      : undefined,
-  });
+  const toastOptions: {
+    description?: string;
+    action?: { label: string; onClick: () => void };
+  } = {};
+  
+  if (options?.description) {
+    toastOptions.description = options.description;
+  }
+  
+  if (onRetry) {
+    toastOptions.action = {
+      label: RECOVERY_ACTIONS.RETRY,
+      onClick: onRetry,
+    };
+  }
+  
+  showErrorToast(options?.message ?? ERROR_MESSAGES.NETWORK.CONNECTION_FAILED, toastOptions);
 }
 
 /**
@@ -128,15 +136,21 @@ export function showAuthError(
     description?: string;
   }
 ) {
-  showErrorToast(options?.message ?? ERROR_MESSAGES.AUTH.UNAUTHORIZED, {
+  const toastOptions: {
+    description: string;
+    action?: { label: string; onClick: () => void };
+  } = {
     description: options?.description ?? 'Please sign in to continue.',
-    action: onSignIn
-      ? {
-          label: RECOVERY_ACTIONS.SIGN_IN,
-          onClick: onSignIn,
-        }
-      : undefined,
-  });
+  };
+  
+  if (onSignIn) {
+    toastOptions.action = {
+      label: RECOVERY_ACTIONS.SIGN_IN,
+      onClick: onSignIn,
+    };
+  }
+  
+  showErrorToast(options?.message ?? ERROR_MESSAGES.AUTH.UNAUTHORIZED, toastOptions);
 }
 
 /**
@@ -165,16 +179,28 @@ export function showServerError(
     onContactSupport?: () => void;
   }
 ) {
-  showErrorToast(options?.message ?? ERROR_MESSAGES.GENERIC.SERVER_ERROR, {
-    description: options?.description,
-    correlationId,
-    action: options?.onContactSupport
-      ? {
-          label: RECOVERY_ACTIONS.CONTACT_SUPPORT,
-          onClick: options.onContactSupport,
-        }
-      : undefined,
-  });
+  const toastOptions: {
+    description?: string;
+    correlationId?: string;
+    action?: { label: string; onClick: () => void };
+  } = {};
+  
+  if (options?.description) {
+    toastOptions.description = options.description;
+  }
+  
+  if (correlationId) {
+    toastOptions.correlationId = correlationId;
+  }
+  
+  if (options?.onContactSupport) {
+    toastOptions.action = {
+      label: RECOVERY_ACTIONS.CONTACT_SUPPORT,
+      onClick: options.onContactSupport,
+    };
+  }
+  
+  showErrorToast(options?.message ?? ERROR_MESSAGES.GENERIC.SERVER_ERROR, toastOptions);
 }
 
 /**
@@ -186,16 +212,23 @@ export function showOfflineError(
     description?: string;
   }
 ) {
-  showErrorToast(ERROR_MESSAGES.NETWORK.OFFLINE, {
+  const toastOptions: {
+    description: string;
+    duration: number;
+    action?: { label: string; onClick: () => void };
+  } = {
     description: options?.description ?? 'Changes will sync when you reconnect.',
     duration: 0, // Don't auto-dismiss
-    action: onCheckConnection
-      ? {
-          label: RECOVERY_ACTIONS.CHECK_CONNECTION,
-          onClick: onCheckConnection,
-        }
-      : undefined,
-  });
+  };
+  
+  if (onCheckConnection) {
+    toastOptions.action = {
+      label: RECOVERY_ACTIONS.CHECK_CONNECTION,
+      onClick: onCheckConnection,
+    };
+  }
+  
+  showErrorToast(ERROR_MESSAGES.NETWORK.OFFLINE, toastOptions);
 }
 
 /**
@@ -207,20 +240,26 @@ export function showRateLimitError(
     onRetry?: () => void;
   }
 ) {
-  const description = retryAfter
-    ? `Please wait ${retryAfter} seconds before trying again.`
-    : undefined;
-
-  showErrorToast(ERROR_MESSAGES.GENERIC.RATE_LIMIT, {
-    description,
+  const toastOptions: {
+    description?: string;
+    duration: number;
+    action?: { label: string; onClick: () => void };
+  } = {
     duration: (retryAfter ?? 5) * 1000,
-    action: options?.onRetry
-      ? {
-          label: RECOVERY_ACTIONS.RETRY,
-          onClick: options.onRetry,
-        }
-      : undefined,
-  });
+  };
+  
+  if (retryAfter) {
+    toastOptions.description = `Please wait ${retryAfter} seconds before trying again.`;
+  }
+  
+  if (options?.onRetry) {
+    toastOptions.action = {
+      label: RECOVERY_ACTIONS.RETRY,
+      onClick: options.onRetry,
+    };
+  }
+  
+  showErrorToast(ERROR_MESSAGES.GENERIC.RATE_LIMIT, toastOptions);
 }
 
 /**

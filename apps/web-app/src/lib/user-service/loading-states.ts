@@ -38,7 +38,9 @@ export const TRANSITION_DURATIONS = {
  * Get appropriate skeleton count based on viewport
  */
 export function getSkeletonCount(type: 'list' | 'grid' | 'cards'): number {
-  if (typeof window === 'undefined') return 3;
+  if (typeof window === 'undefined') {
+    return 3;
+  }
   
   const width = window.innerWidth;
   
@@ -49,10 +51,10 @@ export function getSkeletonCount(type: 'list' | 'grid' | 'cards'): number {
       return width < 768 ? 2 : width < 1024 ? 4 : 6;
     case 'cards':
       return width < 768 ? 2 : 3;
-    default:
-      return 3;
   }
 }
+
+import React from 'react';
 
 /**
  * Delay showing loading state to avoid flashing for fast operations
@@ -66,10 +68,9 @@ export function useDelayedLoading(isLoading: boolean, delay = LOADING_DELAYS.SHO
       return () => clearTimeout(timer);
     } else {
       setShowLoading(false);
+      return undefined;
     }
   }, [isLoading, delay]);
   
   return showLoading;
 }
-
-import React from 'react';

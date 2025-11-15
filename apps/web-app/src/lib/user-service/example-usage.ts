@@ -6,7 +6,7 @@
  * activity monitoring, and GDPR compliance.
  */
 
-import { userServiceClient, createUserServiceClient } from "./index";
+import { userServiceClient, createUserServiceClient } from "./unified-client";
 import type {
   UserProfile,
   UserPreferences,
@@ -241,10 +241,10 @@ export async function exampleRealTimeStreaming(userId: string) {
     const progressStreamId = userServiceClient.subscribeToProgressUpdates(
       userId,
       {
-        onData: (progressUpdate) => {
+        onData: (progressUpdate: unknown) => {
           console.log("Progress update received:", progressUpdate);
         },
-        onError: (error) => {
+        onError: (error: unknown) => {
           console.error("Progress stream error:", error);
         },
         onEnd: () => {
@@ -257,10 +257,10 @@ export async function exampleRealTimeStreaming(userId: string) {
     const activityStreamId = userServiceClient.subscribeToActivityUpdates(
       userId,
       {
-        onData: (activityUpdate) => {
+        onData: (activityUpdate: unknown) => {
           console.log("Activity update received:", activityUpdate);
         },
-        onError: (error) => {
+        onError: (error: unknown) => {
           console.error("Activity stream error:", error);
         },
         onEnd: () => {

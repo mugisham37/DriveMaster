@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserPreferences, useUpdateUserPreferences } from '@/hooks/useUserService';
-import { UserPreferences } from '@/types/user-service';
+import type { PreferencesData } from '@/types/user-service';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RotateCcw, Save, Check } from 'lucide-react';
+import { RotateCcw, Check } from 'lucide-react';
 
 export type PreferenceCategory = 
   | 'appearance' 
@@ -34,7 +34,7 @@ export function PreferencesPanel({
   onCategoryChange,
   className,
 }: PreferencesPanelProps) {
-  const { preferences, isLoading, error } = useUserPreferences(userId);
+  const { data: preferences, isLoading } = useUserPreferences(userId || '');
   const updatePreferences = useUpdateUserPreferences();
   const [activeCategory, setActiveCategory] = useState<PreferenceCategory>(category);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -54,8 +54,8 @@ export function PreferencesPanel({
     onCategoryChange?.(newCategory as PreferenceCategory);
   };
 
-  const handlePreferenceChange = async (updates: Partial<UserPreferences>) => {
-    if (!preferences) return;
+  const handlePreferenceChange = async (updates: Partial<PreferencesData>) => {
+    if (!preferences || !userId) return;
 
     setSaveStatus('saving');
     setHasUnsavedChanges(true);
@@ -63,7 +63,7 @@ export function PreferencesPanel({
     try {
       await updatePreferences.mutateAsync({
         userId,
-        preferences: { ...preferences, ...updates },
+        preferences: { ...preferences.preferences, ...updates },
       });
       setSaveStatus('saved');
       setHasUnsavedChanges(false);
@@ -71,7 +71,8 @@ export function PreferencesPanel({
       
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to update preferences:', err);
       setSaveStatus('error');
       toast.error('Failed to update preferences');
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -79,8 +80,8 @@ export function PreferencesPanel({
   };
 
   const handleResetToDefaults = async () => {
-    const confirm = window.confirm('Are you sure you want to reset all preferences in this category to defaults?');
-    if (!confirm) return;
+    const confirmReset = window.confirm('Are you sure you want to reset all preferences in this category to defaults?');
+    if (!confirmReset) return;
 
     const defaults = getDefaultPreferences(activeCategory);
     await handlePreferenceChange(defaults);
@@ -90,7 +91,7 @@ export function PreferencesPanel({
     return <PreferencesPanelSkeleton className={className} />;
   }
 
-  if (error || !preferences) {
+  if (!preferences) {
     return (
       <div className={cn('rounded-lg border border-destructive bg-destructive/10 p-6', className)}>
         <p className="text-sm text-destructive">Failed to load preferences. Please try again.</p>
@@ -134,8 +135,8 @@ export function PreferencesPanel({
               <div className="space-y-2">
                 <Label>Theme</Label>
                 <Select
-                  value={preferences.theme}
-                  onValueChange={(value) => handlePreferenceChange({ theme: value as any })}
+                  value={preferences.preferences.theme}
+                  onValueChange={(value) => handlePreferenceChange({ theme: value as "light" | "dark" | "system" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -144,22 +145,6 @@ export function PreferencesPanel({
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
                     <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Layout Density</Label>
-                <Select
-                  value={preferences.layoutDensity || 'comfortable'}
-                  onValueChange={(value) => handlePreferenceChange({ layoutDensity: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="comfortable">Comfortable</SelectItem>
-                    <SelectItem value="compact">Compact</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -172,59 +157,43 @@ export function PreferencesPanel({
               <PreferenceToggle
                 label="Email Notifications"
                 description="Receive notifications via email"
-                value={preferences.notifications?.email ?? true}
+                value={preferences.preferences.notifications?.email ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, email: value }
+                  notifications: { ...preferences.preferences.notifications, email: value }
                 })}
               />
               <PreferenceToggle
                 label="Push Notifications"
                 description="Receive browser push notifications"
-                value={preferences.notifications?.push ?? true}
+                value={preferences.preferences.notifications?.push ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, push: value }
+                  notifications: { ...preferences.preferences.notifications, push: value }
                 })}
               />
               <PreferenceToggle
                 label="In-App Notifications"
                 description="Show notifications within the app"
-                value={preferences.notifications?.inApp ?? true}
+                value={preferences.preferences.notifications?.inApp ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, inApp: value }
+                  notifications: { ...preferences.preferences.notifications, inApp: value }
                 })}
               />
 
               <h3 className="mt-6 text-sm font-medium">Notification Types</h3>
               <PreferenceToggle
-                label="Achievement Notifications"
-                description="Get notified when you earn achievements"
-                value={preferences.notifications?.achievements ?? true}
-                onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, achievements: value }
-                })}
-              />
-              <PreferenceToggle
                 label="Reminder Notifications"
                 description="Receive study reminders"
-                value={preferences.notifications?.reminders ?? true}
+                value={preferences.preferences.notifications?.reminders ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, reminders: value }
-                })}
-              />
-              <PreferenceToggle
-                label="Recommendation Notifications"
-                description="Get personalized learning recommendations"
-                value={preferences.notifications?.recommendations ?? true}
-                onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, recommendations: value }
+                  notifications: { ...preferences.preferences.notifications, reminders: value }
                 })}
               />
               <PreferenceToggle
                 label="Marketing Communications"
                 description="Receive updates about new features and offers"
-                value={preferences.notifications?.marketing ?? false}
+                value={preferences.preferences.notifications?.marketing ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  notifications: { ...preferences.notifications, marketing: value }
+                  notifications: { ...preferences.preferences.notifications, marketing: value }
                 })}
               />
             </div>
@@ -235,9 +204,9 @@ export function PreferencesPanel({
               <div className="space-y-2">
                 <Label>Difficulty Level</Label>
                 <Select
-                  value={preferences.learning?.difficulty || 'intermediate'}
+                  value={preferences.preferences.learning?.difficulty || 'intermediate'}
                   onValueChange={(value) => handlePreferenceChange({
-                    learning: { ...preferences.learning, difficulty: value as any }
+                    learning: { ...preferences.preferences.learning, difficulty: value as "beginner" | "intermediate" | "advanced" }
                   })}
                 >
                   <SelectTrigger>
@@ -254,9 +223,9 @@ export function PreferencesPanel({
               <div className="space-y-2">
                 <Label>Learning Pace</Label>
                 <Select
-                  value={preferences.learning?.pace || 'normal'}
+                  value={preferences.preferences.learning?.pace || 'normal'}
                   onValueChange={(value) => handlePreferenceChange({
-                    learning: { ...preferences.learning, pace: value as any }
+                    learning: { ...preferences.preferences.learning, pace: value as "slow" | "normal" | "fast" }
                   })}
                 >
                   <SelectTrigger>
@@ -273,9 +242,9 @@ export function PreferencesPanel({
               <PreferenceToggle
                 label="Study Reminders"
                 description="Receive reminders to maintain your learning streak"
-                value={preferences.learning?.reminders ?? true}
+                value={preferences.preferences.learning?.reminders ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  learning: { ...preferences.learning, reminders: value }
+                  learning: { ...preferences.preferences.learning, reminders: value }
                 })}
               />
             </div>
@@ -286,9 +255,9 @@ export function PreferencesPanel({
               <div className="space-y-2">
                 <Label>Profile Visibility</Label>
                 <Select
-                  value={preferences.privacy?.profileVisibility || 'public'}
+                  value={preferences.preferences.privacy?.profileVisibility || 'public'}
                   onValueChange={(value) => handlePreferenceChange({
-                    privacy: { ...preferences.privacy, profileVisibility: value as any }
+                    privacy: { ...preferences.preferences.privacy, profileVisibility: value as "public" | "private" | "friends" }
                   })}
                 >
                   <SelectTrigger>
@@ -305,26 +274,26 @@ export function PreferencesPanel({
               <PreferenceToggle
                 label="Activity Tracking"
                 description="Allow tracking of your learning activities"
-                value={preferences.privacy?.activityTracking ?? true}
+                value={preferences.preferences.privacy?.activityTracking ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  privacy: { ...preferences.privacy, activityTracking: value }
+                  privacy: { ...preferences.preferences.privacy, activityTracking: value }
                 })}
                 helpText="Required for progress tracking and recommendations"
               />
               <PreferenceToggle
                 label="Data Sharing"
                 description="Share anonymized data to improve the platform"
-                value={preferences.privacy?.dataSharing ?? false}
+                value={preferences.preferences.privacy?.dataSharing ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  privacy: { ...preferences.privacy, dataSharing: value }
+                  privacy: { ...preferences.preferences.privacy, dataSharing: value }
                 })}
               />
               <PreferenceToggle
                 label="Analytics"
                 description="Allow analytics to help us improve your experience"
-                value={preferences.privacy?.analytics ?? true}
+                value={preferences.preferences.privacy?.analytics ?? true}
                 onChange={(value) => handlePreferenceChange({
-                  privacy: { ...preferences.privacy, analytics: value }
+                  privacy: { ...preferences.preferences.privacy, analytics: value }
                 })}
               />
             </div>
@@ -335,33 +304,33 @@ export function PreferencesPanel({
               <PreferenceToggle
                 label="High Contrast Mode"
                 description="Increase contrast for better visibility"
-                value={preferences.accessibility?.highContrast ?? false}
+                value={preferences.preferences.accessibility?.highContrast ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  accessibility: { ...preferences.accessibility, highContrast: value }
+                  accessibility: { ...preferences.preferences.accessibility, highContrast: value }
                 })}
               />
               <PreferenceToggle
                 label="Large Text"
                 description="Increase text size throughout the app"
-                value={preferences.accessibility?.largeText ?? false}
+                value={preferences.preferences.accessibility?.largeText ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  accessibility: { ...preferences.accessibility, largeText: value }
+                  accessibility: { ...preferences.preferences.accessibility, largeText: value }
                 })}
               />
               <PreferenceToggle
                 label="Reduced Motion"
                 description="Minimize animations and transitions"
-                value={preferences.accessibility?.reducedMotion ?? false}
+                value={preferences.preferences.accessibility?.reducedMotion ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  accessibility: { ...preferences.accessibility, reducedMotion: value }
+                  accessibility: { ...preferences.preferences.accessibility, reducedMotion: value }
                 })}
               />
               <PreferenceToggle
                 label="Screen Reader Optimization"
                 description="Optimize interface for screen readers"
-                value={preferences.accessibility?.screenReader ?? false}
+                value={preferences.preferences.accessibility?.screenReader ?? false}
                 onChange={(value) => handlePreferenceChange({
-                  accessibility: { ...preferences.accessibility, screenReader: value }
+                  accessibility: { ...preferences.preferences.accessibility, screenReader: value }
                 })}
               />
             </div>
@@ -372,7 +341,7 @@ export function PreferencesPanel({
               <div className="space-y-2">
                 <Label>Language</Label>
                 <Select
-                  value={preferences.language}
+                  value={preferences.preferences.language}
                   onValueChange={(value) => handlePreferenceChange({ language: value })}
                 >
                   <SelectTrigger>
@@ -384,28 +353,6 @@ export function PreferencesPanel({
                     <SelectItem value="fr">Français</SelectItem>
                     <SelectItem value="de">Deutsch</SelectItem>
                     <SelectItem value="pt">Português</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Timezone</Label>
-                <Select
-                  value={preferences.timezone}
-                  onValueChange={(value) => handlePreferenceChange({ timezone: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UTC">UTC</SelectItem>
-                    <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                    <SelectItem value="America/Chicago">Central Time</SelectItem>
-                    <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                    <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                    <SelectItem value="Europe/London">London</SelectItem>
-                    <SelectItem value="Europe/Paris">Paris</SelectItem>
-                    <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -424,7 +371,7 @@ export function PreferencesPanel({
   );
 }
 
-function PreferencesPanelSkeleton({ className }: { className?: string }) {
+function PreferencesPanelSkeleton({ className }: { className: string | undefined }) {
   return (
     <div className={cn('rounded-lg border bg-card', className)}>
       <div className="border-b p-4">
@@ -440,20 +387,18 @@ function PreferencesPanelSkeleton({ className }: { className?: string }) {
   );
 }
 
-function getDefaultPreferences(category: PreferenceCategory): Partial<UserPreferences> {
+function getDefaultPreferences(category: PreferenceCategory): Partial<PreferencesData> {
   switch (category) {
     case 'appearance':
-      return { theme: 'system', layoutDensity: 'comfortable' };
+      return { theme: 'system' };
     case 'notifications':
       return {
         notifications: {
           email: true,
           push: true,
           inApp: true,
-          achievements: true,
-          reminders: true,
-          recommendations: true,
           marketing: false,
+          reminders: true,
         },
       };
     case 'learning':
@@ -462,6 +407,7 @@ function getDefaultPreferences(category: PreferenceCategory): Partial<UserPrefer
           difficulty: 'intermediate',
           pace: 'normal',
           reminders: true,
+          streakNotifications: true,
         },
       };
     case 'privacy':
@@ -483,7 +429,7 @@ function getDefaultPreferences(category: PreferenceCategory): Partial<UserPrefer
         },
       };
     case 'language':
-      return { language: 'en', timezone: 'UTC' };
+      return { language: 'en' };
     default:
       return {};
   }

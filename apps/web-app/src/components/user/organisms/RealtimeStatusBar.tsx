@@ -102,7 +102,7 @@ export function RealtimeStatusBar({
             <div className="flex items-center gap-2 rounded-md bg-orange-50 px-3 py-1.5 text-sm dark:bg-orange-950">
               <Cloud className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               <span className="font-medium text-orange-600 dark:text-orange-400">
-                You're offline. Changes will sync when reconnected.
+                You&apos;re offline. Changes will sync when reconnected.
               </span>
             </div>
           )}

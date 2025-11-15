@@ -118,14 +118,16 @@ function isRecoverable(error: UserServiceError | Error | string): boolean {
 // User-Friendly Error Messages
 // ============================================================================
 
-const ERROR_MESSAGES: Record<string, {
+type ErrorMessageType = {
   title: string;
   description: string;
   actions: string[];
-}> = {
+};
+
+const ERROR_MESSAGES: Record<string, ErrorMessageType> = {
   network: {
     title: 'Connection Problem',
-    description: 'We couldn\'t reach our servers. Please check your internet connection.',
+    description: 'We couldn&apos;t reach our servers. Please check your internet connection.',
     actions: ['Check your internet connection', 'Try again in a moment', 'Refresh the page'],
   },
   timeout: {
@@ -135,7 +137,7 @@ const ERROR_MESSAGES: Record<string, {
   },
   authorization: {
     title: 'Authentication Required',
-    description: 'Your session has expired or you don\'t have permission for this action.',
+    description: 'Your session has expired or you don&apos;t have permission for this action.',
     actions: ['Sign in again', 'Refresh your session', 'Contact support if this persists'],
   },
   validation: {
@@ -145,12 +147,12 @@ const ERROR_MESSAGES: Record<string, {
   },
   service_unavailable: {
     title: 'Service Temporarily Unavailable',
-    description: 'Our service is temporarily unavailable. We\'re working to restore it.',
+    description: 'Our service is temporarily unavailable. We&apos;re working to restore it.',
     actions: ['Try again in a few minutes', 'Check our status page', 'Use offline features if available'],
   },
   circuit_breaker: {
     title: 'Service Protection Active',
-    description: 'We\'ve temporarily limited requests to protect the service. Please wait a moment.',
+    description: 'We&apos;ve temporarily limited requests to protect the service. Please wait a moment.',
     actions: ['Wait a few minutes', 'Try again later', 'Use offline features if available'],
   },
   rate_limit: {
@@ -165,8 +167,8 @@ const ERROR_MESSAGES: Record<string, {
   },
 };
 
-function getErrorInfo(errorType: string) {
-  return ERROR_MESSAGES[errorType] || ERROR_MESSAGES.unknown;
+function getErrorInfo(errorType: string): ErrorMessageType {
+  return (ERROR_MESSAGES[errorType] || ERROR_MESSAGES.unknown) as ErrorMessageType;
 }
 
 // ============================================================================
@@ -349,7 +351,7 @@ export function CircuitBreakerStatus({
       <AlertTitle>Service Protection Active</AlertTitle>
       <AlertDescription className="space-y-2">
         <p className="text-sm">
-          We've temporarily limited requests to protect the service from high error rates.
+          We&apos;ve temporarily limited requests to protect the service from high error rates.
           This is a temporary measure to ensure system stability.
         </p>
         <p className="text-sm font-medium">
@@ -385,7 +387,7 @@ export function OfflineModeIndicator({
   return (
     <Alert className={`border-orange-500 bg-orange-50 ${className}`}>
       <WifiOffIcon />
-      <AlertTitle className="text-orange-900">You're Offline</AlertTitle>
+      <AlertTitle className="text-orange-900">You&apos;re Offline</AlertTitle>
       <AlertDescription className="text-orange-800 space-y-2">
         <p className="text-sm">
           Your device has lost internet connection. Some features may be limited.

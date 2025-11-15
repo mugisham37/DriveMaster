@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+// Label import removed as it's not used
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useGDPR } from '@/contexts/GDPRContext';
@@ -114,7 +114,8 @@ export function ConsentManager({
       if (consentPreferences) {
         onConsentChange?.({ ...consentPreferences, [key]: granted });
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to update consent:', err);
       toast.error('Failed to update consent');
     }
   };
@@ -125,7 +126,8 @@ export function ConsentManager({
         await grantConsent(option.key, 'User accepted all consents');
       }
       toast.success('All consents granted');
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to accept all consents:', err);
       toast.error('Failed to accept all consents');
     }
   };
@@ -136,7 +138,8 @@ export function ConsentManager({
         await withdrawConsent(option.key, 'User rejected all consents');
       }
       toast.success('All consents withdrawn');
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to reject all consents:', err);
       toast.error('Failed to reject all consents');
     }
   };
@@ -356,7 +359,7 @@ export function ConsentManager({
   );
 }
 
-function ConsentManagerSkeleton({ className }: { className?: string }) {
+function ConsentManagerSkeleton({ className }: { className: string | undefined }) {
   return (
     <div className={cn('rounded-lg border bg-card', className)}>
       <div className="border-b p-6">

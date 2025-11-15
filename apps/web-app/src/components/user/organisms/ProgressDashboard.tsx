@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useProgressSummary } from '@/hooks/useUserService';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import type { SkillMastery, WeeklyProgressPoint, Milestone } from '@/types/user-service';
 
 export type TimeRange = '7days' | '30days' | 'alltime';
 
@@ -27,7 +28,7 @@ export function ProgressDashboard({
   className,
 }: ProgressDashboardProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>(initialTimeRange);
-  const { summary, isLoading, error } = useProgressSummary(userId);
+  const { data: summary, isLoading, error } = useProgressSummary(userId || '');
 
   if (isLoading) {
     return <ProgressDashboardSkeleton className={className} />;
@@ -42,10 +43,12 @@ export function ProgressDashboard({
   }
 
   const overallMastery = Math.round((summary.overallMastery || 0) * 100);
-  const totalTopics = summary.topicMasteries?.length || 0;
-  const masteredTopics = summary.topicMasteries?.filter(t => t.mastery >= 0.8).length || 0;
-  const streak = summary.streak?.currentStreak || 0;
-  const longestStreak = summary.streak?.longestStreak || 0;
+  const totalTopics = summary.topicMasteries ? Object.keys(summary.topicMasteries).length : 0;
+  const masteredTopics = summary.topicMasteries 
+    ? Object.values(summary.topicMasteries).filter((t: SkillMastery) => t.mastery >= 0.8).length 
+    : 0;
+  const streak = summary.learningStreak || 0;
+  const longestStreak = summary.consecutiveDays || 0;
 
   // Calculate trend (simplified - in real app would compare with previous period)
   const trend = overallMastery >= 70 ? 'improving' : overallMastery >= 50 ? 'stable' : 'declining';
@@ -138,7 +141,7 @@ export function ProgressDashboard({
             </p>
             {streak > 0 && (
               <p className="text-sm text-green-600">
-                Keep it up! You're on fire! 🔥
+                Keep it up! You&apos;re on fire! 🔥
               </p>
             )}
           </div>
@@ -149,17 +152,17 @@ export function ProgressDashboard({
       <div className="rounded-lg border bg-card p-6">
         <h3 className="mb-4 text-lg font-semibold">Skill Mastery</h3>
         <div className="space-y-3">
-          {summary.topicMasteries && summary.topicMasteries.length > 0 ? (
-            summary.topicMasteries
-              .sort((a, b) => a.mastery - b.mastery) // Show lowest mastery first for focus
-              .map((topic) => (
+          {summary.topicMasteries && Object.values(summary.topicMasteries).length > 0 ? (
+            Object.values(summary.topicMasteries)
+              .sort((a: SkillMastery, b: SkillMastery) => a.mastery - b.mastery) // Show lowest mastery first for focus
+              .map((topic: SkillMastery) => (
                 <SkillMasteryItem
-                  key={topic.topicId}
-                  topic={topic.topicName || topic.topicId}
+                  key={topic.topic}
+                  topic={topic.topic}
                   mastery={topic.mastery}
                   practiceCount={topic.practiceCount || 0}
                   lastPracticed={topic.lastPracticed ? new Date(topic.lastPracticed) : new Date()}
-                  timeSpent={topic.timeSpent || 0}
+                  timeSpent={topic.totalTimeMs || 0}
                 />
               ))
           ) : (
@@ -176,21 +179,21 @@ export function ProgressDashboard({
         <div className="rounded-lg border bg-card p-6">
           <h3 className="mb-4 text-lg font-semibold">Weekly Progress</h3>
           <div className="space-y-2">
-            {summary.weeklyProgress.map((day, index) => (
+            {summary.weeklyProgress.map((day: WeeklyProgressPoint, index: number) => (
               <div key={index} className="flex items-center gap-4">
                 <span className="w-12 text-sm text-muted-foreground">
-                  {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                  {day.week}
                 </span>
                 <div className="flex-1">
                   <div className="h-8 rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.min(day.masteryGain * 100, 100)}%` }}
+                      style={{ width: `${Math.min(day.mastery * 100, 100)}%` }}
                     />
                   </div>
                 </div>
                 <span className="w-16 text-right text-sm font-medium">
-                  {Math.round(day.masteryGain * 100)}%
+                  {Math.round(day.mastery * 100)}%
                 </span>
               </div>
             ))}
@@ -203,7 +206,7 @@ export function ProgressDashboard({
         <div className="rounded-lg border bg-card p-6">
           <h3 className="mb-4 text-lg font-semibold">Milestones</h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {summary.milestones.map((milestone) => (
+            {summary.milestones.map((milestone: Milestone) => (
               <MilestoneCard
                 key={milestone.id}
                 milestone={milestone}
@@ -226,24 +229,18 @@ export function ProgressDashboard({
         <div className="rounded-lg border bg-card p-6">
           <h3 className="mb-4 text-lg font-semibold">Recommendations</h3>
           <div className="space-y-3">
-            {summary.recommendations.map((rec, index) => (
+            {summary.recommendations.map((rec: string, index: number) => (
               <div
                 key={index}
                 className="flex items-start gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                   <span className="text-sm font-bold text-primary">
-                    {rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '•' : '·'}
+                    •
                   </span>
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium">{rec.title}</p>
-                  <p className="text-sm text-muted-foreground">{rec.description}</p>
-                  {rec.estimatedImpact && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Estimated impact: +{Math.round(rec.estimatedImpact * 100)}% mastery
-                    </p>
-                  )}
+                  <p className="font-medium">{rec}</p>
                 </div>
               </div>
             ))}
@@ -254,7 +251,7 @@ export function ProgressDashboard({
   );
 }
 
-function ProgressDashboardSkeleton({ className }: { className?: string }) {
+function ProgressDashboardSkeleton({ className }: { className: string | undefined }) {
   return (
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">

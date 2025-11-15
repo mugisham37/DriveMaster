@@ -8,15 +8,10 @@
  */
 
 import React from "react";
-import {
-  enhancedUserServiceErrorHandler,
-  gracefulDegradationManager,
-  offlineManager,
-  UserServiceErrorBoundary,
-  OfflineIndicator,
-  useGracefulDegradation,
-  useOfflineManager,
-} from "./index";
+import { enhancedUserServiceErrorHandler } from "./error-handler";
+import { gracefulDegradationManager, useGracefulDegradation } from "./graceful-degradation";
+import { offlineManager, OfflineIndicator, useOfflineManager } from "./offline-support";
+import { UserServiceErrorBoundary } from "../../components/user/error-boundary";
 import type {
   UserProfile,
   UserUpdateRequest,
@@ -27,7 +22,7 @@ import type {
   CircuitBreakerState,
 } from "@/types/user-service";
 import type { DegradationState } from "./graceful-degradation";
-import type { OfflineState, ConflictResolution } from "./offline-support";
+import type { OfflineState, ConflictResolution, QueuedOperation } from "./offline-support";
 import type { UserServiceClient } from "./unified-client";
 
 // ============================================================================
@@ -44,25 +39,25 @@ export class ResilientUserServiceClient {
 
   private setupIntegration(): void {
     // Set up error handling callbacks
-    enhancedUserServiceErrorHandler.onError("user-profile", (error) => {
+    enhancedUserServiceErrorHandler.onError("user-profile", (error: UserServiceError) => {
       this.handleUserProfileError(error);
     });
 
-    enhancedUserServiceErrorHandler.onError("user-preferences", (error) => {
+    enhancedUserServiceErrorHandler.onError("user-preferences", (error: UserServiceError) => {
       this.handleUserPreferencesError(error);
     });
 
-    enhancedUserServiceErrorHandler.onError("progress-tracking", (error) => {
+    enhancedUserServiceErrorHandler.onError("progress-tracking", (error: UserServiceError) => {
       this.handleProgressError(error);
     });
 
     // Set up degradation state monitoring
-    gracefulDegradationManager.onStateChange((state) => {
+    gracefulDegradationManager.onStateChange((state: DegradationState) => {
       this.handleDegradationStateChange(state);
     });
 
     // Set up offline state monitoring
-    offlineManager.onStateChange((state) => {
+    offlineManager.onStateChange((state: OfflineState) => {
       this.handleOfflineStateChange(state);
     });
   }
@@ -121,7 +116,7 @@ export class ResilientUserServiceClient {
         // Clear any queued operations for this profile
         const queuedOps = offlineManager.getQueuedOperations();
         const profileOps = queuedOps.filter(
-          (op) => {
+          (op: QueuedOperation) => {
             const data = op.data as Record<string, unknown> | undefined;
             return op.entity === "profile" && data?.userId === userId;
           },

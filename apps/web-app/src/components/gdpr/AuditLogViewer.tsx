@@ -11,7 +11,7 @@
  * - Requirements: 7.10
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useGDPR } from "@/contexts/GDPRContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,16 +29,11 @@ import { Download, Search } from "lucide-react";
 // Types
 // ============================================================================
 
-interface AuditLogEntry {
-  id: string;
-  timestamp: Date;
-  action: string;
+// Import AuditLogEntry from context to ensure type consistency
+import type { AuditLogEntry as ContextAuditLogEntry } from "@/contexts/GDPRContext";
+
+interface AuditLogEntry extends ContextAuditLogEntry {
   actionType: AuditActionType;
-  userId: string;
-  details: Record<string, unknown>;
-  outcome: "success" | "failure" | "pending";
-  ipAddress?: string;
-  userAgent?: string;
 }
 
 type AuditActionType =
@@ -127,10 +122,11 @@ const ACTION_TYPE_CONFIG: Record<
   },
 };
 
-const OUTCOME_CONFIG = {
+const OUTCOME_CONFIG: Record<"success" | "failure" | "pending" | "partial", { label: string; color: string }> = {
   success: { label: "Success", color: "bg-green-100 text-green-800" },
   failure: { label: "Failed", color: "bg-red-100 text-red-800" },
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
+  partial: { label: "Partial", color: "bg-yellow-100 text-yellow-800" },
 };
 
 // ============================================================================
@@ -153,35 +149,24 @@ export function AuditLogViewer({ className = "" }: AuditLogViewerProps) {
   const [itemsPerPage] = useState(20);
 
   // ============================================================================
-  // Effects
-  // ============================================================================
-
-  useEffect(() => {
-    loadAuditLog();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [auditLog, searchQuery, filterActionType, filterOutcome]);
-
-  // ============================================================================
   // Data Loading
   // ============================================================================
 
-  const loadAuditLog = async () => {
+  const loadAuditLog = useCallback(async () => {
     try {
       const log = await getAuditLog();
-      setAuditLog(log);
+      // Map context audit log entries to component audit log entries with actionType
+      const mappedLog: AuditLogEntry[] = log.map((entry) => ({
+        ...entry,
+        actionType: mapActionToActionType(entry.action),
+      }));
+      setAuditLog(mappedLog);
     } catch (error) {
       console.error("Failed to load audit log:", error);
     }
-  };
+  }, [getAuditLog]);
 
-  // ============================================================================
-  // Filtering
-  // ============================================================================
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...auditLog];
 
     // Search filter
@@ -209,6 +194,39 @@ export function AuditLogViewer({ className = "" }: AuditLogViewerProps) {
 
     setFilteredLog(filtered);
     setCurrentPage(1);
+  }, [auditLog, searchQuery, filterActionType, filterOutcome]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  useEffect(() => {
+    loadAuditLog();
+  }, [loadAuditLog]);
+
+  // ============================================================================
+  // Filtering
+  // ============================================================================
+  // Moved to useCallback above
+
+  // ============================================================================
+  // Helper function to map action to actionType
+  // ============================================================================
+  
+  const mapActionToActionType = (action: string): AuditActionType => {
+    // Map action strings to action types
+    if (action.includes("consent_granted")) return "consent_granted";
+    if (action.includes("consent_withdrawn")) return "consent_withdrawn";
+    if (action.includes("data_export_requested")) return "data_export_requested";
+    if (action.includes("data_export_downloaded")) return "data_export_downloaded";
+    if (action.includes("data_deletion_requested")) return "data_deletion_requested";
+    if (action.includes("data_deletion_cancelled")) return "data_deletion_cancelled";
+    if (action.includes("privacy_report")) return "privacy_report_generated";
+    if (action.includes("alert")) return "alert_acknowledged";
+    if (action.includes("incident")) return "incident_reported";
+    if (action.includes("preferences")) return "preferences_updated";
+    if (action.includes("profile")) return "profile_updated";
+    return "preferences_updated"; // default fallback
   };
 
   // ============================================================================
@@ -463,7 +481,7 @@ export function AuditLogViewer({ className = "" }: AuditLogViewerProps) {
 
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
+              let pageNum: number;
               if (totalPages <= 5) {
                 pageNum = i + 1;
               } else if (currentPage <= 3) {
