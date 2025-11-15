@@ -41,3 +41,8 @@ export {
   type AnalyticsContextValue,
   type AnalyticsProviderProps,
 } from "./AnalyticsContext";
+export {
+  OnboardingProvider,
+  useOnboarding,
+  type OnboardingContextValue,
+} from "./OnboardingContext";

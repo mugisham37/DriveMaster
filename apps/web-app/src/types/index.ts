@@ -1440,6 +1440,14 @@ export type { ContentItem } from "./entities";
 // Export analytics ContentItem with explicit alias
 export type { ContentItem as AnalyticsContentItem } from "./analytics-service";
 
+// Onboarding types
+export type {
+  OnboardingStep,
+  OnboardingFormData,
+  OnboardingState,
+  OnboardingContextValue,
+} from "./onboarding";
+
 // Content Service Error types - with Content prefix to avoid conflicts
 export type {
   ContentServiceErrorType,

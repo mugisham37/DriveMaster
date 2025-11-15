@@ -211,3 +211,102 @@ export {
   useAnalyticsSummaryWithPermissions,
   useAnalyticsComponentVisibility,
 } from "./useAnalyticsWithPermissions";
+
+// User Service hooks
+export {
+  useUserProfile,
+  useUserPreferences,
+  useUpdateUserProfile,
+  useUpdateUserPreferences,
+  useProgressSummary,
+  useSkillMastery,
+  useLearningStreak,
+  useMilestones,
+  useWeeklyProgress,
+  useUpdateSkillMastery,
+  useActivitySummary,
+  useEngagementMetrics as useUserEngagementMetrics,
+  useActivityInsights,
+  useActivityRecommendations,
+  useRecordActivity,
+  useRecordActivitiesBatch,
+  useGdprExportStatus,
+  useGdprConsent,
+  usePrivacyReport,
+  useRequestDataExport,
+  useRequestDataDeletion,
+  useUpdateConsent,
+  useServiceHealth,
+  useServiceInfo,
+  usePrefetchUserData,
+  useUserServiceCache,
+} from "./useUserService";
+
+// Authentication Bridge hooks
+export {
+  usePostAuthRedirect,
+  useAutoPostAuthRedirect,
+} from "./usePostAuthRedirect";
+export type {
+  UsePostAuthRedirectReturn,
+} from "./usePostAuthRedirect";
+
+// Real-Time Synchronization hooks
+export {
+  useRealtimeProgress,
+} from "./useRealtimeProgress";
+
+export {
+  useRealtimeActivity,
+} from "./useRealtimeActivity";
+
+export {
+  useOfflineActivityQueue,
+  useAutoQueueActivity,
+} from "./useOfflineActivityQueue";
+
+export {
+  useRealtimeSync,
+} from "./useRealtimeSync";
+export type {
+  RealtimeSyncStatus,
+} from "./useRealtimeSync";
+
+// Cross-Tab Synchronization hooks
+export {
+  useCrossTabSync,
+  useTabActivityMonitor,
+  useConflictResolution,
+  useSynchronizedMutation,
+  useUserSessionSync,
+  useCacheConsistency,
+  useCrossTabNotifications,
+  useCrossTabDebug,
+} from "./useCrossTabSync";
+
+// Performance Optimization hooks (Task 12)
+export {
+  usePrefetchOnHover,
+  createPrefetchHandler,
+} from "./usePrefetchOnHover";
+export type {
+  PrefetchOptions,
+} from "./usePrefetchOnHover";
+
+export {
+  useThrottle,
+  useThrottleValue,
+} from "./useThrottle";
+
+export {
+  useActivityBatching,
+  useActivityRecorder,
+} from "./useActivityBatching";
+
+// User Service Monitoring hooks (Task 17)
+export {
+  useUserServiceMetrics,
+} from "./useUserServiceMetrics";
+export type {
+  UseUserServiceMetricsResult,
+} from "./useUserServiceMetrics";

@@ -1,225 +1,57 @@
 /**
- * User Service Integration - Main Export File
- *
- * Exports all user service client components and utilities
+ * User Service Library - Main Export
+ * 
+ * Centralized exports for all user service utilities, configurations, and helpers
  */
 
-// Main unified client
+// Loading States
 export {
-  UserServiceClient,
-  userServiceClient,
-  createUserServiceClient,
-  createMockUserServiceClient,
-} from "./unified-client";
-export type {
-  UserServiceClientConfig,
-  ServiceClientDependencies,
-} from "./unified-client";
+  LOADING_DELAYS,
+  SKELETON_ANIMATION,
+  TRANSITION_DURATIONS,
+  getSkeletonCount,
+  useDelayedLoading,
+} from './loading-states';
 
-// HTTP client
+// Success Feedback
 export {
-  UserServiceHttpClient,
-  userServiceHttpClient,
-  createUserServiceHttpClient,
-} from "./http-client";
-export type {
-  HttpClientConfig,
-  RetryConfig as HttpRetryConfig,
-} from "./http-client";
+  SUCCESS_MESSAGES,
+  CELEBRATION_TRIGGERS,
+  showSuccessToast,
+  showCelebrationToast,
+  showProgressToast,
+  showStreakToast,
+  showMilestoneToast,
+  showLevelUpToast,
+  showAutoSaveToast,
+} from './success-feedback';
 
-// gRPC client
+// Error Messages
 export {
-  UserServiceGrpcClient,
-  userServiceGrpcClient,
-  createUserServiceGrpcClient,
-} from "./grpc-client";
-export type {
-  GrpcClientConfig,
-  StreamingConfig,
-  GrpcMetadata,
-  ProgressUpdateEvent,
-  ActivityUpdateEvent,
-  StreamingEventHandler,
-} from "./grpc-client";
+  ERROR_MESSAGES,
+  RECOVERY_ACTIONS,
+  showErrorToast,
+  showNetworkError,
+  showAuthError,
+  showValidationError,
+  showServerError,
+  showOfflineError,
+  showRateLimitError,
+  getUserFriendlyErrorMessage,
+  getRecoveryAction,
+} from './error-messages';
 
-// Circuit breaker and error handling
+// Integration Testing
 export {
-  CircuitBreaker,
-  RetryManager,
-  ServiceHealthMonitor,
-  UserServiceErrorHandler,
-  ErrorClassifier,
-  userServiceErrorHandler,
-  createCircuitBreaker,
-  createRetryManager,
-  createErrorHandler,
-} from "./circuit-breaker";
-export type {
-  CircuitBreakerConfig,
-  CircuitBreakerMetrics,
-  RetryConfig,
-} from "./circuit-breaker";
+  TEST_SCENARIOS,
+  INTEGRATION_CHECKLIST,
+  TEST_DATA,
+  PERFORMANCE_BENCHMARKS,
+  ACCESSIBILITY_REQUIREMENTS,
+} from './integration-testing';
 
-// Enhanced error handling and resilience
-export {
-  EnhancedErrorClassifier,
-  ErrorContextManager,
-  EnhancedUserServiceErrorHandler,
-  ErrorRecoveryStrategies,
-  enhancedUserServiceErrorHandler,
-  createEnhancedErrorHandler,
-  isRecoverableError,
-  getErrorSeverity,
-  shouldNotifyUser,
-} from "./error-handler";
+// Monitoring (if exists)
+export * from './monitoring';
 
-// Error boundaries and UI components
-export {
-  UserServiceErrorBoundary,
-  UserProfileErrorBoundary,
-  ProgressTrackingErrorBoundary,
-  ActivityMonitoringErrorBoundary,
-  GDPRComplianceErrorBoundary,
-  UserServiceErrorMessageGenerator,
-  UserServiceErrorLogger,
-  useUserServiceErrorHandler,
-} from "../../components/user/error-boundary";
-
-// Graceful degradation
-export {
-  GracefulDegradationManager,
-  CachedDataManager,
-  FallbackDataProvider,
-  gracefulDegradationManager,
-  useGracefulDegradation,
-} from "./graceful-degradation";
-export type {
-  DegradationConfig,
-  DegradationState,
-} from "./graceful-degradation";
-
-// Offline support and synchronization
-export {
-  OfflineManager,
-  OfflineStorageManager,
-  ConflictResolver,
-  OfflineIndicator,
-  offlineManager,
-  useOfflineManager,
-} from "./offline-support";
-export type {
-  OfflineConfig,
-  OfflineState,
-  QueuedOperation,
-  ConflictResolution,
-  SyncResult,
-} from "./offline-support";
-
-// Re-export types from the main types file
-export type {
-  UserProfile,
-  UserUpdateRequest,
-  UserPreferences,
-  PreferencesData,
-  NotificationPreferences,
-  PrivacyPreferences,
-  LearningPreferences,
-  AccessibilityPreferences,
-  ProgressSummary,
-  SkillMastery,
-  AttemptRecord,
-  LearningStreak,
-  Milestone,
-  WeeklyProgressPoint,
-  TopicProgressPoint,
-  ActivityType,
-  ActivityRecord,
-  ActivitySummary,
-  EngagementMetrics,
-  ActivityInsight,
-  ActivityRecommendation,
-  RecommendationAction,
-  TopicActivitySummary,
-  BehaviorPattern,
-  GDPRExportResponse,
-  GDPRDeleteResponse,
-  ConsentPreferences,
-  DataRetentionPreference,
-  CommunicationPreferences,
-  PrivacyReport,
-  DataCategoryReport,
-  ProcessingActivity,
-  ThirdPartySharing,
-  RetentionPolicy,
-  UserRightsStatus,
-  ComplianceStatus,
-  DateRange,
-  TimeRange,
-  UserServiceError,
-  UserServiceErrorType,
-  CircuitBreakerState,
-  ServiceHealthStatus,
-  ServiceInfo,
-  UserServiceConfig,
-  ProtocolType,
-  ServiceDiscoveryConfig,
-  ApiResponse,
-} from "@/types/user-service";
-
-// Progress analytics and visualization (Task 6.3)
-export {
-  ProgressAnalyticsManager,
-  ProgressTrendAnalyzer,
-  TopicComparisonAnalyzer,
-  PeerComparisonAnalyzer,
-  ChartDataGenerator,
-  HeatmapDataGenerator,
-} from "./progress-analytics";
-export type {
-  ProgressTrend,
-  TopicComparison,
-  PeerComparison,
-  PeerPerformance,
-  ChartData,
-  ChartDataset,
-  ChartOptions,
-  HeatmapData,
-  HeatmapTooltip,
-  ChartType,
-} from "./progress-analytics";
-
-// Progress calculation and optimization (Task 6.4)
-export {
-  ProgressCalculationManager,
-  ProgressCalculator,
-  ProgressPredictor,
-  LearningPatternAnalyzer,
-  PrefetchStrategyManager,
-  ProgressSummaryGenerator,
-} from "./progress-calculation";
-export type {
-  ProgressCalculationConfig,
-  MasteryCalculationResult,
-  MasteryFactors,
-  ProgressPrediction,
-  PracticeRecommendation,
-  LearningPattern,
-  PrefetchStrategy,
-} from "./progress-calculation";
-
-// Re-export configuration utilities
-export {
-  userServiceConfig,
-  selectProtocol,
-  getServiceUrl,
-  getServiceUrlForOperation,
-  serviceDiscovery,
-  validateUserServiceConfiguration,
-  startUserServiceMonitoring,
-  stopUserServiceMonitoring,
-  getUserServiceHealth,
-  refreshUserServiceHealth,
-  isUserServiceAvailable,
-  getRecommendedEndpoint,
-  createCorrelationId,
-} from "@/lib/config/user-service";
+// Cache (if exists)
+export * from './user-service-cache';

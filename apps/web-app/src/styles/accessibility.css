@@ -1,0 +1,392 @@
+/**
+ * Accessibility Styles
+ * 
+ * Global styles for accessibility features including:
+ * - Focus indicators
+ * - High contrast mode
+ * - Reduced motion
+ * - Screen reader only content
+ * 
+ * Requirements: 10.1, 10.8, 10.9, 10.10, 10.14
+ * Task: 13.1, 13.3
+ */
+
+/* ============================================================================
+ * Screen Reader Only
+ * ============================================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ============================================================================
+ * Focus Indicators
+ * ============================================================================ */
+
+/* Default focus styles for keyboard navigation */
+.focus-visible-enabled *:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-visible-enabled *:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Enhanced focus for interactive elements */
+.focus-visible-enabled button:focus-visible,
+.focus-visible-enabled a:focus-visible,
+.focus-visible-enabled [role="button"]:focus-visible,
+.focus-visible-enabled [role="link"]:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+}
+
+/* Focus for form inputs */
+.focus-visible-enabled input:focus-visible,
+.focus-visible-enabled textarea:focus-visible,
+.focus-visible-enabled select:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 0;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+}
+
+/* Skip navigation focus */
+.skip-navigation a:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+ * High Contrast Mode
+ * ============================================================================ */
+
+@media (prefers-contrast: high) {
+  /* Increase border widths */
+  * {
+    border-width: 2px !important;
+  }
+
+  /* Ensure text has strong contrast */
+  body {
+    color: #000;
+    background-color: #fff;
+  }
+
+  /* Make focus indicators more prominent */
+  .focus-visible-enabled *:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+
+  /* Enhance button contrast */
+  button,
+  [role="button"] {
+    border: 2px solid currentColor !important;
+  }
+
+  /* Enhance link contrast */
+  a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* High contrast mode support for Windows */
+@media (forced-colors: active) {
+  /* Ensure focus indicators are visible */
+  .focus-visible-enabled *:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+
+  /* Ensure borders are visible */
+  button,
+  input,
+  select,
+  textarea {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ============================================================================
+ * Reduced Motion
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable transform animations */
+  * {
+    transform: none !important;
+  }
+}
+
+/* ============================================================================
+ * Text Resizing
+ * ============================================================================ */
+
+/* Ensure text can be resized up to 200% */
+html {
+  font-size: 100%;
+}
+
+/* Prevent text overflow when resized */
+* {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ============================================================================
+ * Touch Targets
+ * ============================================================================ */
+
+/* Minimum touch target size (44x44px per WCAG) */
+button,
+a,
+[role="button"],
+[role="link"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exception for inline links in text */
+p a,
+li a,
+span a {
+  min-height: auto;
+  min-width: auto;
+}
+
+/* ============================================================================
+ * Color and Contrast
+ * ============================================================================ */
+
+/* Ensure sufficient contrast for text */
+body {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+}
+
+/* Ensure links are distinguishable */
+a {
+  text-decoration: underline;
+  text-decoration-skip-ink: auto;
+}
+
+/* Ensure focus is not indicated by color alone */
+*:focus-visible {
+  outline-style: solid;
+  outline-width: 2px;
+}
+
+/* ============================================================================
+ * Dark Mode Accessibility
+ * ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Ensure sufficient contrast in dark mode */
+  body {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+  }
+
+  /* Adjust focus indicators for dark mode */
+  .focus-visible-enabled *:focus-visible {
+    outline-color: hsl(var(--primary));
+  }
+}
+
+/* ============================================================================
+ * Keyboard Navigation Helpers
+ * ============================================================================ */
+
+/* Show keyboard focus indicator */
+[data-keyboard-focus="true"] {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Hide mouse focus indicator */
+[data-mouse-focus="true"] {
+  outline: none;
+}
+
+/* ============================================================================
+ * ARIA Live Regions
+ * ============================================================================ */
+
+/* Ensure live regions are positioned correctly */
+[role="status"],
+[role="alert"],
+[aria-live] {
+  position: relative;
+}
+
+/* ============================================================================
+ * Skip Links
+ * ============================================================================ */
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ============================================================================
+ * Accessible Hiding
+ * ============================================================================ */
+
+/* Hide decorative elements from screen readers */
+[aria-hidden="true"] {
+  speak: none;
+}
+
+/* Ensure hidden elements are truly hidden */
+[hidden] {
+  display: none !important;
+}
+
+/* ============================================================================
+ * Form Accessibility
+ * ============================================================================ */
+
+/* Ensure labels are associated with inputs */
+label {
+  cursor: pointer;
+}
+
+/* Ensure required fields are indicated */
+[required],
+[aria-required="true"] {
+  /* Visual indicator handled by form components */
+}
+
+/* Ensure error messages are visible */
+[role="alert"],
+[aria-invalid="true"] ~ [role="alert"] {
+  color: hsl(var(--destructive));
+  font-weight: 500;
+}
+
+/* ============================================================================
+ * Table Accessibility
+ * ============================================================================ */
+
+/* Ensure table headers are distinguishable */
+th {
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Ensure table cells have adequate padding */
+td,
+th {
+  padding: 0.5rem;
+}
+
+/* ============================================================================
+ * Modal and Dialog Accessibility
+ * ============================================================================ */
+
+/* Ensure modals trap focus */
+[role="dialog"],
+[role="alertdialog"] {
+  position: fixed;
+  z-index: 50;
+}
+
+/* Ensure modal backdrop is visible */
+[data-modal-backdrop] {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+/* ============================================================================
+ * Responsive Text
+ * ============================================================================ */
+
+/* Ensure text remains readable at all sizes */
+@media (max-width: 640px) {
+  html {
+    font-size: 100%;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 100%;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 100%;
+  }
+}
+
+/* ============================================================================
+ * Print Accessibility
+ * ============================================================================ */
+
+@media print {
+  /* Ensure focus indicators are not printed */
+  *:focus-visible {
+    outline: none;
+  }
+
+  /* Ensure links show their URLs */
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
+
+  /* Hide skip navigation in print */
+  .skip-navigation {
+    display: none;
+  }
+}

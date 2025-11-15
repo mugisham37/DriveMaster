@@ -1,0 +1,434 @@
+/**
+ * Dark Mode Styles
+ * Task 18.2: Implement dark mode support
+ * 
+ * Comprehensive dark mode styles for all components
+ * Ensures proper contrast ratios (WCAG AA compliant)
+ * Smooth transitions between themes
+ */
+
+/* ============================================================================
+ * Dark Mode Root Variables
+ * ============================================================================ */
+
+:root {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Dark mode colors */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+/* ============================================================================
+ * Theme Transition
+ * ============================================================================ */
+
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Disable transitions for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+ * Dark Mode Base Styles
+ * ============================================================================ */
+
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* ============================================================================
+ * Component-Specific Dark Mode Styles
+ * ============================================================================ */
+
+/* Cards */
+.dark .card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-color: hsl(var(--border));
+}
+
+/* Buttons */
+.dark .btn-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.dark .btn-secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.dark .btn-destructive {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+/* Inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: hsl(var(--input));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: hsl(var(--ring));
+  outline-color: hsl(var(--ring));
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Links */
+.dark a {
+  color: hsl(var(--primary));
+}
+
+.dark a:hover {
+  color: hsl(var(--primary-foreground));
+}
+
+/* Borders */
+.dark .border {
+  border-color: hsl(var(--border));
+}
+
+/* Shadows */
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+ * Status Colors (Dark Mode)
+ * ============================================================================ */
+
+.dark .status-success {
+  background-color: #065f46;
+  color: #d1fae5;
+}
+
+.dark .status-warning {
+  background-color: #78350f;
+  color: #fef3c7;
+}
+
+.dark .status-error {
+  background-color: #7f1d1d;
+  color: #fee2e2;
+}
+
+.dark .status-info {
+  background-color: #1e3a8a;
+  color: #dbeafe;
+}
+
+/* ============================================================================
+ * Progress Indicators (Dark Mode)
+ * ============================================================================ */
+
+.dark .progress-bar {
+  background-color: hsl(var(--muted));
+}
+
+.dark .progress-fill {
+  background-color: hsl(var(--primary));
+}
+
+/* ============================================================================
+ * Tables (Dark Mode)
+ * ============================================================================ */
+
+.dark table {
+  border-color: hsl(var(--border));
+}
+
+.dark th {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark td {
+  border-color: hsl(var(--border));
+}
+
+.dark tr:hover {
+  background-color: hsl(var(--muted));
+}
+
+/* ============================================================================
+ * Modals and Overlays (Dark Mode)
+ * ============================================================================ */
+
+.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.dark .modal-content {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+/* ============================================================================
+ * Navigation (Dark Mode)
+ * ============================================================================ */
+
+.dark nav {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.dark .nav-link {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .nav-link:hover,
+.dark .nav-link.active {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted));
+}
+
+/* ============================================================================
+ * Badges and Tags (Dark Mode)
+ * ============================================================================ */
+
+.dark .badge {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.dark .badge-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.dark .badge-success {
+  background-color: #065f46;
+  color: #d1fae5;
+}
+
+.dark .badge-warning {
+  background-color: #78350f;
+  color: #fef3c7;
+}
+
+.dark .badge-error {
+  background-color: #7f1d1d;
+  color: #fee2e2;
+}
+
+/* ============================================================================
+ * Tooltips (Dark Mode)
+ * ============================================================================ */
+
+.dark .tooltip {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border-color: hsl(var(--border));
+}
+
+/* ============================================================================
+ * Code Blocks (Dark Mode)
+ * ============================================================================ */
+
+.dark code {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.dark pre {
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
+}
+
+/* ============================================================================
+ * Skeleton Loaders (Dark Mode)
+ * ============================================================================ */
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.8) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+ * Charts and Visualizations (Dark Mode)
+ * ============================================================================ */
+
+.dark .chart-grid {
+  stroke: hsl(var(--border));
+}
+
+.dark .chart-text {
+  fill: hsl(var(--muted-foreground));
+}
+
+.dark .chart-line {
+  stroke: hsl(var(--primary));
+}
+
+.dark .chart-area {
+  fill: hsl(var(--primary) / 0.2);
+}
+
+/* ============================================================================
+ * Scrollbars (Dark Mode)
+ * ============================================================================ */
+
+.dark ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: hsl(var(--muted));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground));
+  border-radius: 6px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--foreground));
+}
+
+/* Firefox scrollbar */
+.dark * {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+}
+
+/* ============================================================================
+ * Selection (Dark Mode)
+ * ============================================================================ */
+
+.dark ::selection {
+  background-color: hsl(var(--primary) / 0.3);
+  color: hsl(var(--foreground));
+}
+
+/* ============================================================================
+ * Focus Indicators (Dark Mode)
+ * ============================================================================ */
+
+.dark *:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+ * Contrast Adjustments for Accessibility
+ * ============================================================================ */
+
+@media (prefers-contrast: high) {
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --border: 0 0% 50%;
+  }
+}
+
+/* ============================================================================
+ * Print Mode (Force Light Theme)
+ * ============================================================================ */
+
+@media print {
+  .dark {
+    color-scheme: light;
+  }
+
+  .dark body {
+    background-color: white;
+    color: black;
+  }
+
+  .dark .card {
+    background-color: white;
+    color: black;
+    border-color: #e5e7eb;
+  }
+}
