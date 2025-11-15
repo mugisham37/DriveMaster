@@ -87,6 +87,7 @@ export function useOfflineActivityQueue(userId: string | undefined) {
 
     try {
       // Get activities to sync
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const activitiesToSync = queueRef.current.map(({ queuedAt, ...activity }) => activity);
 
       // Send batch request

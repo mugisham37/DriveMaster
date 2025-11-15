@@ -32,3 +32,5 @@ export interface CelebrationAnimationProps {
   /**
    * Callback when animation completes
    */
+  onComplete?: () => void;
+}
