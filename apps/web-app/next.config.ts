@@ -53,6 +53,67 @@ const nextConfig: NextConfig = {
       ...performancePlugins,
     ];
 
+    // Apply advanced code splitting configuration
+    if (optimizedConfig.optimization) {
+      optimizedConfig.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          // React vendor chunk
+          reactVendor: {
+            test: /[\\/]node_modules[\\/](react|react-dom|react-is)[\\/]/,
+            name: 'vendor-react',
+            priority: 40,
+            reuseExistingChunk: true,
+          },
+          // Next.js framework chunk
+          nextVendor: {
+            test: /[\\/]node_modules[\\/](next)[\\/]/,
+            name: 'vendor-next',
+            priority: 35,
+            reuseExistingChunk: true,
+          },
+          // UI library chunk
+          uiVendor: {
+            test: /[\\/]node_modules[\\/](@radix-ui|class-variance-authority|clsx|tailwind-merge)[\\/]/,
+            name: 'vendor-ui',
+            priority: 30,
+            reuseExistingChunk: true,
+          },
+          // Chart library chunk (recharts is heavy)
+          chartsVendor: {
+            test: /[\\/]node_modules[\\/](recharts|d3-.*)[\\/]/,
+            name: 'vendor-charts',
+            priority: 25,
+            reuseExistingChunk: true,
+          },
+          // Form libraries chunk
+          formsVendor: {
+            test: /[\\/]node_modules[\\/](react-hook-form|zod|@hookform)[\\/]/,
+            name: 'vendor-forms',
+            priority: 20,
+            reuseExistingChunk: true,
+          },
+          // Common shared code
+          common: {
+            minChunks: 2,
+            priority: 5,
+            reuseExistingChunk: true,
+            name: 'common',
+          },
+        },
+        maxSize: {
+          javascript: 200 * 1024, // 200KB
+          styles: 100 * 1024, // 100KB
+        },
+        minSize: 20 * 1024, // 20KB
+      };
+
+      // Runtime chunk for webpack runtime code
+      optimizedConfig.optimization.runtimeChunk = {
+        name: 'runtime',
+      };
+    }
+
     return optimizedConfig;
   },
 
