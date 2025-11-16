@@ -1,8 +1,8 @@
 /**
  * Achievement Notifications Hook
- *
- * Provides functionality for sending, displaying, and managing achievement notifications
- * with comprehensive tracking and user engagement features.
+ * 
+ * Manages real-time achievement notifications:
+ * - th comprehensive tracking and user engagement features.
  *
  * Requirements: 3.1
  */
