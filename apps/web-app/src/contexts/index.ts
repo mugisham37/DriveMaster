@@ -50,3 +50,8 @@ export {
   useWebSocket,
   type WebSocketContextValue,
 } from "./WebSocketContext";
+export {
+  CrossTabSyncProvider,
+  useCrossTabSyncContext,
+  type CrossTabSyncContextValue,
+} from "./CrossTabSyncContext";

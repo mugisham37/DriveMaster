@@ -1,364 +1,247 @@
 /**
- * React hooks for cross-tab cache synchronization
- *
- * This module provides hooks to manage cross-tab cache synchronization,
- * conflict resolution, and consistency verification.
+ * Cross-Tab Synchronization Hook
+ * 
+ * Implements BroadcastChannel for cross-tab communication:
+ * - Creates BroadcastChannel for cross-tab communication
+ * - Broadcasts progress updates to other tabs when activity recorded
+ * - Listens for broadcasts in all tabs and updates ProgressContext
+ * - Ensures no duplicate API calls across tabs
+ * - Handles tab close cleanup
+ * 
+ * Requirements: 10.1, 10.2
  */
 
-import { useEffect, useCallback, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  initializeCrossTabSync,
-  getCrossTabSynchronizer,
-  withCrossTabSync,
-  type TabInfo,
-  type CacheConflict,
-} from "@/lib/cache/cross-tab-sync";
+import { useEffect, useCallback, useRef } from 'react';
+import { useProgress } from '@/contexts/ProgressContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================================================
-// Main Cross-Tab Sync Hook
+// Types
 // ============================================================================
 
-export function useCrossTabSync() {
-  const queryClient = useQueryClient();
+export interface ProgressBroadcastMessage {
+  type: 'progress_update' | 'milestone_achieved' | 'streak_update' | 'activity_recorded';
+  userId: string | number;
+  timestamp: number;
+  tabId: string;
+  data: unknown;
+}
 
-  // Initialize synchronizer if not already done
-  const getSynchronizer = useCallback(() => {
-    try {
-      return getCrossTabSynchronizer();
-    } catch {
-      return initializeCrossTabSync(queryClient);
+export interface UseCrossTabSyncOptions {
+  enabled?: boolean;
+  channelName?: string;
+  onMessage?: (message: ProgressBroadcastMessage) => void;
+  onError?: (error: Error) => void;
+}
+
+/**
+ * Hook to enable cross-tab synchronization for progress updates
+ */
+export function useCrossTabSync(options: UseCrossTabSyncOptions = {}) {
+  const {
+    enabled = true,
+    channelName = 'learning-platform-progress',
+    onMessage,
+    onError,
+  } = options;
+
+  const { user } = useAuth();
+  const progressContext = useProgress();
+  
+  const channelRef = useRef<BroadcastChannel | null>(null);
+  const tabIdRef = useRef<string>(generateTabId());
+  const lastBroadcastRef = useRef<number>(0);
+
+  // Handle progress update messages
+  const handleProgressUpdate = useCallback((_message: ProgressBroadcastMessage) => {
+    console.log('[useCrossTabSync] Processing progress update');
+    
+    // Trigger a refetch of progress data without making duplicate API calls
+    // The ProgressContext will handle the actual data fetching
+    progressContext.fetchProgressSummary();
+  }, [progressContext]);
+
+  // Handle milestone achievement messages
+  const handleMilestoneAchieved = useCallback((_message: ProgressBroadcastMessage) => {
+    console.log('[useCrossTabSync] Processing milestone achievement');
+    
+    // Trigger milestone check
+    progressContext.checkMilestoneAchievements();
+  }, [progressContext]);
+
+  // Handle streak update messages
+  const handleStreakUpdate = useCallback((_message: ProgressBroadcastMessage) => {
+    console.log('[useCrossTabSync] Processing streak update');
+    
+    // Trigger streak update
+    progressContext.updateLearningStreak();
+  }, [progressContext]);
+
+  // Handle activity recorded messages
+  const handleActivityRecorded = useCallback((_message: ProgressBroadcastMessage) => {
+    console.log('[useCrossTabSync] Processing activity recorded');
+    
+    // Trigger progress summary refresh
+    progressContext.fetchProgressSummary();
+  }, [progressContext]);
+
+  // Handle incoming broadcast messages
+  const handleBroadcastMessage = useCallback((message: ProgressBroadcastMessage) => {
+    // Ignore messages from this tab
+    if (message.tabId === tabIdRef.current) {
+      return;
     }
-  }, [queryClient]);
 
-  const synchronizer = getSynchronizer();
+    // Ignore messages for different users
+    if (user && message.userId !== user.id) {
+      return;
+    }
 
-  return {
-    // Broadcasting methods
-    broadcastInvalidation: (queryKey: readonly unknown[], userId?: string) =>
-      synchronizer.broadcastCacheInvalidation(queryKey, userId),
+    console.log('[useCrossTabSync] Received broadcast:', message.type, 'from tab:', message.tabId);
 
-    broadcastUpdate: (
-      queryKey: readonly unknown[],
-      data: unknown,
-      userId?: string,
-    ) => synchronizer.broadcastCacheUpdate(queryKey, data, userId),
-
-    broadcastOptimisticUpdate: (
-      queryKey: readonly unknown[],
-      data: unknown,
-      userId?: string,
-    ) => synchronizer.broadcastOptimisticUpdate(queryKey, data, userId),
-
-    broadcastOptimisticRollback: (
-      queryKey: readonly unknown[],
-      userId?: string,
-    ) => synchronizer.broadcastOptimisticRollback(queryKey, userId),
-
-    broadcastUserLogout: (userId: string) =>
-      synchronizer.broadcastUserLogout(userId),
-
-    broadcastUserSwitch: (newUserId: string) =>
-      synchronizer.broadcastUserSwitch(newUserId),
-
-    // Sync management
-    requestSync: () => synchronizer.requestCacheSync(),
-
-    // Status methods
-    getActiveTabs: () => synchronizer.getActiveTabs(),
-    getConflictStatus: () => synchronizer.getConflictStatus(),
-
-    // Consistency methods
-    verifyConsistency: () => synchronizer.verifyCacheConsistency(),
-    repairInconsistencies: (userId: string) =>
-      synchronizer.repairCacheInconsistencies(userId),
-  };
-}
-
-// ============================================================================
-// Tab Activity Monitoring Hook
-// ============================================================================
-
-export function useTabActivityMonitor() {
-  const [activeTabs, setActiveTabs] = useState<TabInfo[]>([]);
-  const [isMultiTab, setIsMultiTab] = useState(false);
-  const { getActiveTabs } = useCrossTabSync();
-
-  useEffect(() => {
-    const updateTabInfo = () => {
-      const tabs = getActiveTabs();
-      setActiveTabs(tabs);
-      setIsMultiTab(tabs.length > 1);
-    };
-
-    // Update immediately
-    updateTabInfo();
-
-    // Update periodically
-    const interval = setInterval(updateTabInfo, 5000);
-
-    return () => clearInterval(interval);
-  }, [getActiveTabs]);
-
-  return {
-    activeTabs,
-    isMultiTab,
-    tabCount: activeTabs.length,
-  };
-}
-
-// ============================================================================
-// Conflict Resolution Hook
-// ============================================================================
-
-export function useConflictResolution() {
-  const [conflicts, setConflicts] = useState<CacheConflict[]>([]);
-  const [hasConflicts, setHasConflicts] = useState(false);
-  const { getConflictStatus, repairInconsistencies } = useCrossTabSync();
-
-  useEffect(() => {
-    const updateConflictStatus = () => {
-      const status = getConflictStatus();
-      setConflicts(status.conflicts);
-      setHasConflicts(status.activeConflicts > 0);
-    };
-
-    // Update immediately
-    updateConflictStatus();
-
-    // Update periodically
-    const interval = setInterval(updateConflictStatus, 2000);
-
-    return () => clearInterval(interval);
-  }, [getConflictStatus]);
-
-  const resolveAllConflicts = useCallback(
-    async (userId: string) => {
-      if (hasConflicts) {
-        await repairInconsistencies(userId);
-        // Force update after repair
-        setTimeout(() => {
-          const status = getConflictStatus();
-          setConflicts(status.conflicts);
-          setHasConflicts(status.activeConflicts > 0);
-        }, 1000);
+    try {
+      // Route message to appropriate handler
+      switch (message.type) {
+        case 'progress_update':
+          handleProgressUpdate(message);
+          break;
+        case 'milestone_achieved':
+          handleMilestoneAchieved(message);
+          break;
+        case 'streak_update':
+          handleStreakUpdate(message);
+          break;
+        case 'activity_recorded':
+          handleActivityRecorded(message);
+          break;
+        default:
+          console.warn('[useCrossTabSync] Unknown message type:', message.type);
       }
-    },
-    [hasConflicts, repairInconsistencies, getConflictStatus],
-  );
 
-  return {
-    conflicts,
-    hasConflicts,
-    conflictCount: conflicts.length,
-    resolveAllConflicts,
-  };
-}
-
-// ============================================================================
-// Synchronized Mutation Hook
-// ============================================================================
-
-export function useSynchronizedMutation<TData, TVariables>(
-  mutationFn: (variables: TVariables) => Promise<TData>,
-  queryKey: readonly unknown[],
-  userId?: string,
-) {
-  const syncConfig = withCrossTabSync(mutationFn, queryKey, userId);
-
-  return {
-    mutationFn: syncConfig.mutationFn,
-    onMutate: syncConfig.onMutate,
-    onSuccess: syncConfig.onSuccess,
-    onError: syncConfig.onError,
-  };
-}
-
-// ============================================================================
-// User Session Sync Hook
-// ============================================================================
-
-export function useUserSessionSync(userId?: string) {
-  const { broadcastUserLogout, broadcastUserSwitch } = useCrossTabSync();
-
-  const handleLogout = useCallback(async () => {
-    if (userId) {
-      await broadcastUserLogout(userId);
-    }
-  }, [userId, broadcastUserLogout]);
-
-  const handleUserSwitch = useCallback(
-    async (newUserId: string) => {
-      await broadcastUserSwitch(newUserId);
-    },
-    [broadcastUserSwitch],
-  );
-
-  // Auto-broadcast on user changes
-  useEffect(() => {
-    if (userId) {
-      broadcastUserSwitch(userId);
-    }
-  }, [userId, broadcastUserSwitch]);
-
-  return {
-    handleLogout,
-    handleUserSwitch,
-  };
-}
-
-// ============================================================================
-// Cache Consistency Hook
-// ============================================================================
-
-export function useCacheConsistency(userId?: string) {
-  const [isConsistent, setIsConsistent] = useState(true);
-  const [isChecking, setIsChecking] = useState(false);
-  const { verifyConsistency, repairInconsistencies } = useCrossTabSync();
-
-  const checkConsistency = useCallback(async () => {
-    if (!userId) return;
-
-    setIsChecking(true);
-    try {
-      const consistent = await verifyConsistency();
-      setIsConsistent(consistent);
+      // Call custom handler if provided
+      onMessage?.(message);
     } catch (error) {
-      console.warn("Consistency check failed:", error);
-      setIsConsistent(false);
-    } finally {
-      setIsChecking(false);
+      const errorObj = error instanceof Error ? error : new Error('Failed to process broadcast message');
+      console.error('[useCrossTabSync] Message processing error:', errorObj);
+      onError?.(errorObj);
     }
-  }, [userId, verifyConsistency]);
+  }, [user, onMessage, onError, handleProgressUpdate, handleMilestoneAchieved, handleStreakUpdate, handleActivityRecorded]);
 
-  const repairConsistency = useCallback(async () => {
-    if (!userId) return;
+  // Initialize BroadcastChannel
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined' || !window.BroadcastChannel) {
+      console.warn('[useCrossTabSync] BroadcastChannel not supported or disabled');
+      return;
+    }
 
-    setIsChecking(true);
+    if (!user) {
+      return;
+    }
+
     try {
-      await repairInconsistencies(userId);
-      setIsConsistent(true);
-    } catch (error) {
-      console.warn("Consistency repair failed:", error);
-    } finally {
-      setIsChecking(false);
-    }
-  }, [userId, repairInconsistencies]);
+      // Create channel
+      channelRef.current = new BroadcastChannel(channelName);
+      console.log(`[useCrossTabSync] BroadcastChannel created: ${channelName} (tab: ${tabIdRef.current})`);
 
-  // Auto-check consistency periodically
-  useEffect(() => {
-    if (!userId) return;
-
-    checkConsistency();
-
-    const interval = setInterval(checkConsistency, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, [userId, checkConsistency]);
-
-  return {
-    isConsistent,
-    isChecking,
-    checkConsistency,
-    repairConsistency,
-  };
-}
-
-// ============================================================================
-// Cross-Tab Notification Hook
-// ============================================================================
-
-export function useCrossTabNotifications() {
-  const [notifications, setNotifications] = useState<
-    Array<{
-      id: string;
-      type: "info" | "warning" | "error";
-      message: string;
-      timestamp: number;
-    }>
-  >([]);
-
-  const { isMultiTab } = useTabActivityMonitor();
-  const { hasConflicts } = useConflictResolution();
-
-  // Add notifications based on cross-tab state
-  useEffect(() => {
-    const newNotifications = [];
-
-    if (isMultiTab) {
-      newNotifications.push({
-        id: "multi-tab",
-        type: "info" as const,
-        message: "Multiple tabs detected. Cache is synchronized across tabs.",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (hasConflicts) {
-      newNotifications.push({
-        id: "conflicts",
-        type: "warning" as const,
-        message: "Cache conflicts detected. Some data may be inconsistent.",
-        timestamp: Date.now(),
-      });
-    }
-
-    setNotifications(newNotifications);
-  }, [isMultiTab, hasConflicts]);
-
-  const dismissNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
-
-  const clearAllNotifications = useCallback(() => {
-    setNotifications([]);
-  }, []);
-
-  return {
-    notifications,
-    hasNotifications: notifications.length > 0,
-    dismissNotification,
-    clearAllNotifications,
-  };
-}
-
-// ============================================================================
-// Development/Debug Hook
-// ============================================================================
-
-export function useCrossTabDebug() {
-  const { getActiveTabs, getConflictStatus } = useCrossTabSync();
-
-  if (process.env.NODE_ENV !== "development") {
-    return {
-      logTabState: () => {},
-      logConflictState: () => {},
-      exportSyncData: () => null,
-    };
-  }
-
-  return {
-    logTabState: () => {
-      const tabs = getActiveTabs();
-      console.group("🔄 Cross-Tab State");
-      console.table(tabs);
-      console.groupEnd();
-    },
-
-    logConflictState: () => {
-      const conflicts = getConflictStatus();
-      console.group("⚠️ Conflict State");
-      console.log("Active conflicts:", conflicts.activeConflicts);
-      console.table(conflicts.conflicts);
-      console.groupEnd();
-    },
-
-    exportSyncData: () => {
-      return {
-        activeTabs: getActiveTabs(),
-        conflicts: getConflictStatus(),
-        timestamp: Date.now(),
+      // Set up message handler
+      channelRef.current.onmessage = (event: MessageEvent<ProgressBroadcastMessage>) => {
+        handleBroadcastMessage(event.data);
       };
-    },
+
+      // Set up error handler
+      channelRef.current.onmessageerror = (event) => {
+        const error = new Error('BroadcastChannel message error');
+        console.error('[useCrossTabSync] Message error:', event);
+        onError?.(error);
+      };
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error('Failed to create BroadcastChannel');
+      console.error('[useCrossTabSync] Initialization error:', errorObj);
+      onError?.(errorObj);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.close();
+        channelRef.current = null;
+        console.log('[useCrossTabSync] BroadcastChannel closed');
+      }
+    };
+  }, [enabled, channelName, user, onError, handleBroadcastMessage]);
+
+  // Broadcast a message to other tabs
+  const broadcast = useCallback((
+    type: ProgressBroadcastMessage['type'],
+    data: unknown
+  ) => {
+    if (!channelRef.current || !user) {
+      return;
+    }
+
+    // Throttle broadcasts to prevent flooding
+    const now = Date.now();
+    if (now - lastBroadcastRef.current < 100) {
+      return; // Skip if last broadcast was less than 100ms ago
+    }
+    lastBroadcastRef.current = now;
+
+    const message: ProgressBroadcastMessage = {
+      type,
+      userId: user.id,
+      timestamp: now,
+      tabId: tabIdRef.current,
+      data,
+    };
+
+    try {
+      channelRef.current.postMessage(message);
+      console.log('[useCrossTabSync] Broadcast sent:', type);
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error('Failed to broadcast message');
+      console.error('[useCrossTabSync] Broadcast error:', errorObj);
+      onError?.(errorObj);
+    }
+  }, [user, onError]);
+
+  // Broadcast progress update
+  const broadcastProgressUpdate = useCallback((data: unknown) => {
+    broadcast('progress_update', data);
+  }, [broadcast]);
+
+  // Broadcast milestone achievement
+  const broadcastMilestoneAchieved = useCallback((data: unknown) => {
+    broadcast('milestone_achieved', data);
+  }, [broadcast]);
+
+  // Broadcast streak update
+  const broadcastStreakUpdate = useCallback((data: unknown) => {
+    broadcast('streak_update', data);
+  }, [broadcast]);
+
+  // Broadcast activity recorded
+  const broadcastActivityRecorded = useCallback((data: unknown) => {
+    broadcast('activity_recorded', data);
+  }, [broadcast]);
+
+  return {
+    isEnabled: enabled && !!channelRef.current,
+    tabId: tabIdRef.current,
+    broadcast,
+    broadcastProgressUpdate,
+    broadcastMilestoneAchieved,
+    broadcastStreakUpdate,
+    broadcastActivityRecorded,
   };
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Generate a unique tab ID
+ */
+function generateTabId(): string {
+  return `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
