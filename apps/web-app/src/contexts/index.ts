@@ -45,3 +45,8 @@ export {
   OnboardingProvider,
   useOnboarding,
 } from "./OnboardingContext";
+export {
+  WebSocketProvider,
+  useWebSocket,
+  type WebSocketContextValue,
+} from "./WebSocketContext";

@@ -1,71 +1,71 @@
 /**
- * Real-time progress updates via WebSocket
+ * Real-time Progress Updates Hook
  * 
- * This hook connects to the WebSocket server to receive real-time progress updates
- * and automatically updates the React Query cache when events are received.
+ * Subscribes to user-specific progress updates via WebSocket:
+ * - Subscribes to progress channel on mount
+ * - Listens for progress update messages
+ * - Updates ProgressContext when messages received
+ * - Handles message parsing errors
+ * 
+ * Requirements: 10.3, 10.4
  */
 
-import { useEffect, useCallback, useState, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { globalConnectionPool } from "@/channels/connection-pool";
-import { RealtimeConnection } from "@/channels/connection";
-import { queryKeys } from "@/lib/cache/user-service-cache";
-import type { ProgressSummary, SkillMastery, Milestone } from "@/types/user-service";
+import { useEffect, useCallback, useRef } from 'react';
+import { useWebSocket } from '@/contexts/WebSocketContext';
+import { useProgress } from '@/contexts/ProgressContext';
+import { useAuth } from '@/contexts/AuthContext';
+import type {
+  ProgressUpdateData,
+  MilestoneData,
+  StreakData,
+} from '@/lib/realtime/websocket-manager';
 
-interface ProgressUpdateEvent {
-  type: "progress:updated";
-  userId: string;
-  data: {
-    summary?: ProgressSummary;
-    skillMastery?: SkillMastery;
-    milestone?: Milestone;
-  };
+export interface UseRealtimeProgressOptions {
+  enabled?: boolean;
+  onProgressUpdate?: (data: ProgressUpdateData) => void;
+  onMilestoneAchieved?: (data: MilestoneData) => void;
+  onStreakUpdate?: (data: StreakData) => void;
+  onError?: (error: Error) => void;
 }
 
-interface ConnectionStatus {
-  isConnected: boolean;
-  isConnecting: boolean;
-  error: Error | null;
-}
+/**
+ * Hook to subscribe to real-time progress updates
+ */
+export function useRealtimeProgress(options: UseRealtimeProgressOptions = {}) {
+  const {
+    enabled = true,
+    onProgressUpdate,
+    onMilestoneAchieved,
+    onStreakUpdate,
+    onError,
+  } = options;
 
-export function useRealtimeProgress(userId: string | undefined) {
-  const queryClient = useQueryClient();
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    isConnected: false,
-    isConnecting: false,
-    error: null,
-  });
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const connectionRef = useRef<RealtimeConnection | null>(null);
-  const subscriberIdRef = useRef<string>(`progress-${Math.random().toString(36).substr(2, 9)}`);
+  const { wsManager, connectionState } = useWebSocket();
+  const { updateMastery, updateStreak, addMilestone } = useProgress();
+  const { user } = useAuth();
+  
+  const isSubscribedRef = useRef(false);
 
-  const handleProgressUpdate = useCallback(
-    (event: ProgressUpdateEvent) => {
-      if (!userId || event.userId !== userId) return;
+  // Subscribe to progress channel
+  useEffect(() => {
+    if (!enabled || !wsManager || !connectionState.isConnected || !user) {
+      return;
+    }
 
-      const { data } = event;
+    // Subscribe to user-specific progress channel
+    const channels = [
+      `progress:${user.id}`,
+      `milestones:${user.id}`,
+      `streaks:${user.id}`,
+    ];
 
-      // Update React Query cache with new data
-      if (data.summary) {
-        queryClient.setQueryData(
-          queryKeys.progressSummary(userId),
-          data.summary
-        );
-      }
+    try {
+      wsManager.subscribe(channels);
+      isSubscribedRef.current = true;
 
-      if (data.skillMastery) {
-        const topic = data.skillMastery.topic;
-        queryClient.setQueryData(
-          queryKeys.skillMastery(userId, topic),
-          data.skillMastery
-        );
-        
-        // Also invalidate the list query
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.skillMastery(userId),
-        });
-      }
-
+      console.log('[useRealtimeProgress] Subscribed to channels:', channels);
+    } catch (error) {
+      const errorObj = error i
       if (data.milestone) {
         // Show celebration for new milestone
         queryClient.invalidateQueries({
