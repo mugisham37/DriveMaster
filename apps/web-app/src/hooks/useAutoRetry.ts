@@ -262,6 +262,30 @@ export function getRetryStatusMessage(state: RetryState): string | null {
   return `Retrying in ${seconds} second${seconds !== 1 ? 's' : ''}... (Attempt ${state.attemptNumber + 1})`;
 }
 
+/**
+ * Gets formatted retry information for display
+ */
+export function getRetryInfo(state: RetryState): {
+  message: string;
+  progress: number;
+  canRetry: boolean;
+} | null {
+  if (!state.isRetrying && state.attemptNumber === 0) {
+    return null;
+  }
+
+  const seconds = Math.ceil(state.nextRetryIn / 1000);
+  const message = state.hasReachedMaxRetries
+    ? 'Maximum retry attempts reached'
+    : `Retrying in ${seconds} second${seconds !== 1 ? 's' : ''}... (Attempt ${state.attemptNumber + 1})`;
+
+  return {
+    message,
+    progress: state.nextRetryIn > 0 ? 100 - (state.nextRetryIn / 1000) * 10 : 100,
+    canRetry: !state.hasReachedMaxRetries,
+  };
+}
+
 // ============================================================================
 // Hook for React Query Integration
 // ============================================================================
