@@ -35,32 +35,32 @@ export function ContentCard({
   const isClickable = !!onClick;
 
   // Get difficulty color
-  const getDifficultyColor = (difficulty?: number) => {
+  const getDifficultyColor = (difficulty?: 'beginner' | 'intermediate' | 'advanced') => {
     if (!difficulty) return 'bg-gray-100 text-gray-800';
-    if (difficulty < -1) return 'bg-green-100 text-green-800';
-    if (difficulty < 1) return 'bg-yellow-100 text-yellow-800';
+    if (difficulty === 'beginner') return 'bg-green-100 text-green-800';
+    if (difficulty === 'intermediate') return 'bg-yellow-100 text-yellow-800';
     return 'bg-red-100 text-red-800';
   };
 
   // Get difficulty label
-  const getDifficultyLabel = (difficulty?: number) => {
+  const getDifficultyLabel = (difficulty?: 'beginner' | 'intermediate' | 'advanced') => {
     if (!difficulty) return 'Unknown';
-    if (difficulty < -1) return 'Easy';
-    if (difficulty < 1) return 'Medium';
-    return 'Hard';
+    return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   };
 
   // Format time estimate
-  const formatTime = (seconds?: number) => {
-    if (!seconds) return 'N/A';
-    const minutes = Math.ceil(seconds / 60);
+  const formatTime = (minutes?: number) => {
+    if (!minutes) return 'N/A';
     return `${minutes} min`;
   };
 
   // Get highlighted text or fallback to description
   const getDescription = () => {
     if (highlights && highlights.length > 0) {
-      return highlights[0].text;
+      const firstHighlight = highlights[0];
+      if (firstHighlight && firstHighlight.fragments && firstHighlight.fragments.length > 0) {
+        return firstHighlight.fragments[0];
+      }
     }
     return item.metadata?.description || '';
   };
@@ -81,10 +81,10 @@ export function ContentCard({
       >
         <div className="flex gap-4 p-4">
           {/* Thumbnail */}
-          {item.metadata?.thumbnailUrl && (
+          {item.mediaAssets && item.mediaAssets.length > 0 && item.mediaAssets[0]?.url && (
             <div className="flex-shrink-0 w-32 h-24 overflow-hidden rounded-lg">
               <img
-                src={item.metadata.thumbnailUrl}
+                src={item.mediaAssets[0].url}
                 alt={item.title}
                 className="w-full h-full object-cover"
               />
@@ -107,11 +107,11 @@ export function ContentCard({
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{formatTime(item.metadata?.estimatedTime)}</span>
+                <span>{formatTime(item.metadata?.estimatedTimeMinutes)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <FileQuestion className="w-4 h-4" />
-                <span>{item.metadata?.questionCount || 0} questions</span>
+                <span>{item.type === 'lesson' ? 'Lesson' : item.type}</span>
               </div>
               {item.status === 'published' && (
                 <div className="flex items-center gap-1 text-green-600">
@@ -166,10 +166,10 @@ export function ContentCard({
           : undefined
       }
     >
-      {item.metadata?.thumbnailUrl && (
+      {item.mediaAssets && item.mediaAssets.length > 0 && item.mediaAssets[0]?.url && (
         <div className="relative w-full h-40 overflow-hidden rounded-t-lg">
           <img
-            src={item.metadata.thumbnailUrl}
+            src={item.mediaAssets[0].url}
             alt={item.title}
             className="w-full h-full object-cover"
           />
@@ -190,11 +190,11 @@ export function ContentCard({
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
-            <span>{formatTime(item.metadata?.estimatedTime)}</span>
+            <span>{formatTime(item.metadata?.estimatedTimeMinutes)}</span>
           </div>
           <div className="flex items-center gap-1">
             <FileQuestion className="w-4 h-4" />
-            <span>{item.metadata?.questionCount || 0} questions</span>
+            <span>{item.type === 'lesson' ? 'Lesson' : item.type}</span>
           </div>
         </div>
 

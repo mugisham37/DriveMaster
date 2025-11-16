@@ -7,10 +7,10 @@
  * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 13.2
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { SearchInterface } from '@/components/learning-platform/layer-2-features';
+import { EnhancedSearchInterface } from './EnhancedSearchInterface';
 import { TrendingSection } from './TrendingSection';
 import { BrowseByTopicSection } from './BrowseByTopicSection';
 import type { QueryItemsDto } from '@/types';
@@ -22,12 +22,12 @@ export function BrowseContent() {
 
   // Get initial query and filters from URL params
   const initialQuery = searchParams.get('q') || '';
-  const initialTopic = searchParams.get('topic') || undefined;
-  const initialDifficulty = searchParams.get('difficulty') || undefined;
-  const initialType = searchParams.get('type') || undefined;
+  const initialTopic = searchParams.get('topic');
+  const initialDifficulty = searchParams.get('difficulty');
+  const initialType = searchParams.get('type');
 
   // Build initial filters from URL params
-  const initialFilters: QueryItemsDto | undefined = React.useMemo(() => {
+  const initialFilters: QueryItemsDto = React.useMemo(() => {
     const filters: QueryItemsDto = {};
     if (initialTopic) {
       filters.tags = [initialTopic];
@@ -37,9 +37,9 @@ export function BrowseContent() {
       filters.search = initialDifficulty;
     }
     if (initialType) {
-      filters.type = initialType as any;
+      filters.type = initialType as 'lesson' | 'quiz' | 'assessment';
     }
-    return Object.keys(filters).length > 0 ? filters : undefined;
+    return filters;
   }, [initialTopic, initialDifficulty, initialType]);
 
   // Redirect to sign-in if not authenticated
@@ -63,44 +63,6 @@ export function BrowseContent() {
       const params = new URLSearchParams(searchParams.toString());
       params.set('topic', topic);
       router.push(`/browse?${params.toString()}`);
-    },
-    [router, searchParams]
-  );
-
-  // Handle search query change - update URL
-  const handleSearchQueryChange = useCallback(
-    (query: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (query) {
-        params.set('q', query);
-      } else {
-        params.delete('q');
-      }
-      router.push(`/browse?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
-  );
-
-  // Handle filter change - update URL
-  const handleFiltersChange = useCallback(
-    (filters: QueryItemsDto) => {
-      const params = new URLSearchParams(searchParams.toString());
-      
-      // Update topic filter
-      if (filters.tags && filters.tags.length > 0) {
-        params.set('topic', filters.tags[0]);
-      } else {
-        params.delete('topic');
-      }
-      
-      // Update type filter
-      if (filters.type) {
-        params.set('type', String(filters.type));
-      } else {
-        params.delete('type');
-      }
-      
-      router.push(`/browse?${params.toString()}`, { scroll: false });
     },
     [router, searchParams]
   );
@@ -133,7 +95,7 @@ export function BrowseContent() {
       <div className="space-y-12">
         {/* Search Interface */}
         <section>
-          <SearchInterface
+          <EnhancedSearchInterface
             initialQuery={initialQuery}
             initialFilters={initialFilters}
             onResultClick={handleResultClick}
