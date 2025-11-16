@@ -16,6 +16,9 @@ export * from './webpack-optimization';
 // Data prefetching
 export * from './prefetch';
 
+// Rendering optimizations
+export * from './rendering-optimizations';
+
 // Re-export commonly used utilities
 export {
   LazyChartComponents,
@@ -42,3 +45,21 @@ export {
   prefetchMultipleSWRData,
   addPrefetchTask,
 } from './prefetch';
+
+export {
+  useDebounce,
+  useDebouncedCallback,
+  useThrottledCallback,
+  useMemoizedSort,
+  useMemoizedFilter,
+  useMemoizedMap,
+  useMemoizedGroupBy,
+  useVirtualScroll,
+  calculateVisibleRange,
+  useIntersectionObserver,
+  useRenderTime,
+  useSlowRenderDetection,
+  useStableCallback,
+  useIsMounted,
+  useBatchedState,
+} from './rendering-optimizations';
