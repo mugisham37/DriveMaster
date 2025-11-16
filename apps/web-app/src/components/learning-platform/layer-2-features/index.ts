@@ -21,3 +21,6 @@ export type { PracticeSetupProps, PracticeSettings } from './PracticeSetup';
 
 export { PracticeSession } from './PracticeSession';
 export type { PracticeSessionProps, SessionSummary } from './PracticeSession';
+
+export { MockTestSetup } from './MockTestSetup';
+export type { MockTestSetupProps } from './MockTestSetup';
