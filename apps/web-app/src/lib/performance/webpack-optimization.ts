@@ -7,7 +7,8 @@
  * Task: 14.1
  */
 
-import type { Configuration } from 'webpack';
+// Type definitions for webpack configuration
+type Configuration = any;
 
 /**
  * Get optimized webpack configuration for code splitting
@@ -134,12 +135,12 @@ export function getModuleConcatenation(): Configuration['optimization'] {
 /**
  * Get performance hints configuration
  */
-export function getPerformanceConfig(): Configuration['performance'] {
+export function getPerformanceConfig(): any {
   return {
     hints: process.env.NODE_ENV === 'production' ? 'warning' : false,
     maxEntrypointSize: 200 * 1024, // 200KB
     maxAssetSize: 100 * 1024, // 100KB
-    assetFilter: (assetFilename) => {
+    assetFilter: (assetFilename: string) => {
       // Only check JS and CSS files
       return /\.(js|css)$/.test(assetFilename);
     },

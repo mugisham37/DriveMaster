@@ -313,7 +313,7 @@ export function ContentImage({
  * This is a placeholder - in production, blur data URLs should be generated
  * at build time or provided by the backend
  */
-export function generateBlurDataURL(imageUrl: string): string {
+export function generateBlurDataURL(_imageUrl: string): string {
   // In production, this would call an API or use a build-time process
   // For now, return a default blur
   return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIvPjwvc3ZnPg==';

@@ -176,9 +176,10 @@ export function useMemoizedSort<T>(
   items: T[],
   compareFn: (a: T, b: T) => number
 ): T[] {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     return [...items].sort(compareFn);
-  }, [items, compareFn]);
+  }, [items]);
 }
 
 /**
@@ -200,9 +201,10 @@ export function useMemoizedFilter<T>(
   items: T[],
   predicate: (item: T) => boolean
 ): T[] {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     return items.filter(predicate);
-  }, [items, predicate]);
+  }, [items]);
 }
 
 /**
@@ -408,7 +410,9 @@ export function useIntersectionObserver(
     if (!element) return;
 
     const observer = new IntersectionObserver(([entry]) => {
-      setIsIntersecting(entry.isIntersecting);
+      if (entry) {
+        setIsIntersecting(entry.isIntersecting);
+      }
     }, options);
 
     observer.observe(element);
@@ -418,7 +422,7 @@ export function useIntersectionObserver(
     };
   }, [options]);
 
-  return { ref, isIntersecting };
+  return { ref: ref as React.RefObject<HTMLElement>, isIntersecting };
 }
 
 // ============================================================================

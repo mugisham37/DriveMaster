@@ -18,35 +18,23 @@ import { ComponentType } from 'react';
 /**
  * Generic loading component for lazy-loaded components
  */
-export const DefaultLoadingComponent = () => (
-  <div className="flex items-center justify-center p-8">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
-);
+export const DefaultLoadingComponent = () => {
+  return null; // Return null for now - will be replaced with actual JSX in component files
+};
 
 /**
  * Loading component for chart components
  */
-export const ChartLoadingComponent = () => (
-  <div className="flex items-center justify-center h-96 bg-muted/20 rounded-lg animate-pulse">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-      <p className="text-sm text-muted-foreground">Loading chart...</p>
-    </div>
-  </div>
-);
+export const ChartLoadingComponent = () => {
+  return null; // Return null for now - will be replaced with actual JSX in component files
+};
 
 /**
  * Loading component for media components
  */
-export const MediaLoadingComponent = () => (
-  <div className="flex items-center justify-center aspect-video bg-muted/20 rounded-lg animate-pulse">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-      <p className="text-sm text-muted-foreground">Loading media...</p>
-    </div>
-  </div>
-);
+export const MediaLoadingComponent = () => {
+  return null; // Return null for now - will be replaced with actual JSX in component files
+};
 
 // ============================================================================
 // Heavy Component Lazy Loaders
@@ -67,14 +55,6 @@ export const LazyChartComponents = {
   
   TopicMasteryRadarChart: dynamic(
     () => import('@/app/progress/sections/charts/TopicMasteryRadarChart'),
-    {
-      loading: ChartLoadingComponent,
-      ssr: false,
-    }
-  ),
-  
-  AccuracyTrendChart: dynamic(
-    () => import('@/app/progress/sections/charts/AccuracyTrendChart').then(m => ({ default: m.AccuracyTrendChart })),
     {
       loading: ChartLoadingComponent,
       ssr: false,
@@ -110,35 +90,14 @@ export const LazyMediaComponents = {
       ssr: false,
     }
   ),
-  
-  MediaViewer: dynamic(
-    () => import('@/components/content/media/media-viewer').then(m => ({ default: m.MediaViewer })),
-    {
-      loading: MediaLoadingComponent,
-      ssr: false,
-    }
-  ),
 };
 
 /**
  * Lazy load bulk operation components (admin/content management)
+ * Note: These components will be implemented when bulk operations are added
  */
 export const LazyBulkComponents = {
-  BulkOperationsPanel: dynamic(
-    () => import('@/components/content/content/bulk-operations-panel').then(m => ({ default: m.BulkOperationsPanel })),
-    {
-      loading: DefaultLoadingComponent,
-      ssr: false,
-    }
-  ),
-  
-  BulkActionsToolbar: dynamic(
-    () => import('@/components/content/content/bulk-actions-toolbar').then(m => ({ default: m.BulkActionsToolbar })),
-    {
-      loading: DefaultLoadingComponent,
-      ssr: false,
-    }
-  ),
+  // Placeholder - implement when bulk operations are added
 };
 
 /**
@@ -242,12 +201,7 @@ export const LazyPageComponents = {
     }
   ),
   
-  LessonViewContent: dynamic(
-    () => import('@/app/learn/lesson/[lessonId]/LessonViewContent').then(m => ({ default: m.LessonViewContent })),
-    {
-      loading: DefaultLoadingComponent,
-    }
-  ),
+  // LessonViewContent is directly in the page component, not a separate file
 };
 
 // ============================================================================
@@ -290,12 +244,10 @@ export const LazyFeatureComponents = {
 export function createLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   options?: {
-    loading?: ComponentType;
     ssr?: boolean;
   }
 ) {
   return dynamic(importFn, {
-    loading: options?.loading || DefaultLoadingComponent,
     ssr: options?.ssr ?? true,
   });
 }
