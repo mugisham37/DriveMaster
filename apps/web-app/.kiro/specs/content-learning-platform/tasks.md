@@ -577,7 +577,8 @@ This implementation plan breaks down the content learning platform into discrete
   - Add accessible data table alternative for screen readers
   - _Requirements: 9.2_
 
-- [-] 9.5 Build Accuracy trend section with time-series chart
+- [x] 9.5 Build Accuracy trend section with time-series chart
+
 
   - Implement line chart displaying accuracy percentage over time
   - Add time range selector (7 days, 30 days, 90 days, all time)
@@ -586,12 +587,16 @@ This implementation plan breaks down the content learning platform into discrete
   - Add accessible data table alternative
   - _Requirements: 9.3_
 
-- [ ] 9.6 Build Weak areas panel with recommendations
+- [x] 9.6 Build Weak areas panel with recommendations
+
+
   - Identify topics with low mastery or declining performance
   - Display weak area cards with topic name, current mastery, recommendation
   - Add quick action buttons to start targeted practice on weak topics
   - Link to practice mode with pre-selected weak topic
   - _Requirements: 9.4_
+
+
 
 - [ ] 9.7 Build Milestone timeline
   - Display past achievements with dates
@@ -600,7 +605,8 @@ This implementation plan breaks down the content learning platform into discrete
   - Show estimated dates to reach milestones based on current pace
   - _Requirements: 9.4_
 
-- [ ] 9.8 Build Activity heatmap calendar
+- [-] 9.8 Build Activity heatmap calendar
+
   - Create calendar grid showing learning activity per day
   - Color each day by intensity of activity (darker = more active)
   - Highlight current streak
