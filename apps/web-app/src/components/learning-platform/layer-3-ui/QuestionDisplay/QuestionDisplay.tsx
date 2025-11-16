@@ -12,6 +12,7 @@ interface QuestionDisplayProps {
   selectedChoiceId?: string;
   showFeedback?: boolean;
   isDisabled?: boolean;
+  isReview?: boolean;
   onChoiceSelect: (choiceId: string) => void;
   onSubmit?: () => void;
   className?: string;

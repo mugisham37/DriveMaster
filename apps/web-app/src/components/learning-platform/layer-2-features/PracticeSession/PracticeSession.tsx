@@ -86,27 +86,35 @@ export function PracticeSession({
   const [showSummary, setShowSummary] = useState(false);
 
   // Helper function to convert ContentItem to Question
-  const convertToQuestion = useCallback((item: any): Question => {
+  const convertToQuestion = useCallback((item: Record<string, unknown>): Question => {
     // Extract question data from content item
-    const contentData = item.content?.body || item.content || '';
-    const content = typeof contentData === 'string' && contentData.startsWith('{')
-      ? JSON.parse(contentData)
-      : { body: contentData };
+    const contentData = (item.content as { body?: string })?.body || item.content || '';
+    
+    interface ParsedContent {
+      body?: string;
+      choices?: unknown[];
+      explanation?: string;
+      externalReferences?: unknown[];
+    }
+    
+    const content: ParsedContent = typeof contentData === 'string' && contentData.startsWith('{')
+      ? JSON.parse(contentData) as ParsedContent
+      : { body: typeof contentData === 'string' ? contentData : '' };
 
     return {
-      id: item.id,
-      text: content.body || item.title || '',
+      id: item.id as string,
+      text: content.body || (item.title as string) || '',
       type: 'multiple-choice',
-      choices: content.choices || [],
+      choices: (content.choices || []) as Question['choices'],
       explanation: content.explanation || '',
-      difficulty: item.metadata?.difficulty === 'beginner' ? -1 :
-                  item.metadata?.difficulty === 'intermediate' ? 0 : 1,
+      difficulty: (item.metadata as { difficulty?: string })?.difficulty === 'beginner' ? -1 :
+                  (item.metadata as { difficulty?: string })?.difficulty === 'intermediate' ? 0 : 1,
       discrimination: 1.0,
       guessing: 0.25,
-      topics: item.metadata?.topics || [],
-      mediaAssets: item.mediaAssets?.map((asset: any) => asset.id) || [],
-      externalReferences: content.externalReferences || [],
-      estimatedTimeSeconds: (item.metadata?.estimatedTimeMinutes || 2) * 60,
+      topics: ((item.metadata as { topics?: string[] })?.topics || []),
+      mediaAssets: ((item.mediaAssets as { id: string }[]) || []).map((asset) => asset.id),
+      externalReferences: ((content.externalReferences || []) as Question['externalReferences']) || [],
+      estimatedTimeSeconds: (((item.metadata as { estimatedTimeMinutes?: number })?.estimatedTimeMinutes || 2) * 60),
     };
   }, []);
 
@@ -115,9 +123,10 @@ export function PracticeSession({
     if (adaptiveQuestions.length > 0 && state.questions.length === 0) {
       // Convert recommendations to questions
       // Recommendations might be ContentItems directly or have an item property
-      const convertedQuestions = adaptiveQuestions.map(rec => 
-        convertToQuestion((rec as unknown).item || rec)
-      );
+      const convertedQuestions = adaptiveQuestions.map(rec => {
+        const item = (rec as { item?: Record<string, unknown> }).item || (rec as Record<string, unknown>);
+        return convertToQuestion(item);
+      });
       
       // Mix in review items (every 5th question) if available
       const mixedQuestions = [...convertedQuestions];
@@ -348,12 +357,23 @@ export function PracticeSession({
             </div>
           </div>
 
-          <button
-            onClick={onStop}
-            className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium"
-          >
-            Return to Dashboard
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                // Reset state and return to setup for new practice
+                onStop();
+              }}
+              className="flex-1 px-6 py-3 border rounded-md hover:bg-muted font-medium"
+            >
+              Start New Practice
+            </button>
+            <button
+              onClick={onStop}
+              className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium"
+            >
+              Return to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );

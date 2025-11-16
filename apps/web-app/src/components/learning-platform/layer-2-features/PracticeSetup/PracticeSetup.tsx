@@ -26,8 +26,19 @@ export interface PracticeSetupProps {
 }
 
 export function PracticeSetup({ onStart, onCancel }: PracticeSetupProps) {
-  const { items: topics, isLoading } = useContentItems({ type: 'topic' });
-  const { state: progressState, skillMasteries } = useProgress();
+  // Fetch lessons to extract topics from metadata
+  const { items: lessons, isLoading } = useContentItems({ type: 'lesson', limit: 100 });
+  const { skillMasteries } = useProgress();
+  
+  // Extract unique topics from lessons
+  const topics = React.useMemo(() => {
+    const topicSet = new Set<string>();
+    lessons.forEach(lesson => {
+      const lessonTopics = lesson.metadata?.topics || [];
+      lessonTopics.forEach((topic: string) => topicSet.add(topic));
+    });
+    return Array.from(topicSet).map(topic => ({ id: topic, title: topic }));
+  }, [lessons]);
 
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<number>(0);
@@ -47,7 +58,7 @@ export function PracticeSetup({ onStart, onCancel }: PracticeSetupProps) {
     if (recommendedTopics.length > 0 && selectedTopics.length === 0) {
       setSelectedTopics(recommendedTopics);
     }
-  }, [recommendedTopics.length]);
+  }, [recommendedTopics, selectedTopics.length]);
 
   const handleTopicToggle = (topic: string) => {
     setSelectedTopics((prev) =>
@@ -135,7 +146,7 @@ export function PracticeSetup({ onStart, onCancel }: PracticeSetupProps) {
                 {recommendedTopics.map((topic) => (
                   <TopicBadge
                     key={topic}
-                    topic={topic}
+                    topicName={topic}
                     masteryLevel={getMasteryLevel(topic)}
                     showMastery={true}
                     size="md"
