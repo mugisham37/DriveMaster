@@ -12,6 +12,8 @@ import { useRequireAuth } from '@/hooks/useAuth';
 import { RouteErrorBoundary } from '@/components/error-boundaries';
 import DashboardContent from './DashboardContent';
 
+// Note: Metadata is set in layout.tsx for this route group
+
 // Loading skeleton for the entire dashboard
 function DashboardSkeleton() {
   return (

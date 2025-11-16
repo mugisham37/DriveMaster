@@ -23,3 +23,22 @@ export {
   OverlayLoading,
   SuspenseFallback,
 } from "./ui/loading-states";
+
+// Re-export empty states
+export {
+  EmptyState,
+  NoSearchResults,
+  NoLessons,
+  NoProgress,
+  NoPracticeHistory,
+  NoMockTests,
+  NoRecommendations,
+  NoAchievements,
+  NoNotifications,
+  ErrorState,
+  NetworkErrorState,
+  NotFoundState,
+  SuccessState,
+  InfoState,
+  CompactEmptyState,
+} from "./ui/empty-states";

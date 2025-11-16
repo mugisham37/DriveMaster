@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Search & Browse | Learning Platform',
-  description: 'Search and browse learning content, lessons, and practice materials',
+  title: 'Browse & Search',
+  description: 'Search and discover driving lessons, practice questions, and learning materials. Filter by topic, difficulty, and more.',
 };
 
 export default function BrowseLayout({

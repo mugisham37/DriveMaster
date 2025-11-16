@@ -14,6 +14,7 @@ import { GlobalKeyboardShortcuts } from "@/components/accessibility/GlobalKeyboa
 import { GlobalAriaLiveRegions } from "@/components/accessibility/AriaLiveRegion";
 import { ReducedMotionProvider } from "@/components/accessibility/ReducedMotionProvider";
 import { HighContrastProvider } from "@/components/accessibility/HighContrastProvider";
+import { AnalyticsInitializer } from "@/components/analytics/AnalyticsInitializer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,36 +30,48 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Exercism - Code Practice and Mentorship for Everyone",
+  title: {
+    default: "DriveMaster - Master Your Driving Skills",
+    template: "%s | DriveMaster",
+  },
   description:
-    "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
-  keywords: "programming, coding, practice, mentorship, learn to code",
-  authors: [{ name: "Exercism Team" }],
-  creator: "Exercism",
-  publisher: "Exercism",
+    "Master your driving skills with comprehensive lessons, practice tests, and personalized learning paths. Prepare for your driving test with confidence.",
+  keywords: "driving lessons, driving test, practice test, driving school, learn to drive, driving exam preparation",
+  authors: [{ name: "DriveMaster Team" }],
+  creator: "DriveMaster",
+  publisher: "DriveMaster",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://exercism.org",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://drivemaster.com",
   ),
   openGraph: {
-    title: "Exercism - Code Practice and Mentorship for Everyone",
+    title: "DriveMaster - Master Your Driving Skills",
     description:
-      "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
+      "Master your driving skills with comprehensive lessons, practice tests, and personalized learning paths. Prepare for your driving test with confidence.",
     url: "/",
-    siteName: "Exercism",
+    siteName: "DriveMaster",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "DriveMaster - Master Your Driving Skills",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Exercism - Code Practice and Mentorship for Everyone",
+    title: "DriveMaster - Master Your Driving Skills",
     description:
-      "Level up your programming skills with 67 languages, and insightful discussion with our dedicated team of welcoming mentors.",
-    creator: "@exercism_io",
+      "Master your driving skills with comprehensive lessons, practice tests, and personalized learning paths. Prepare for your driving test with confidence.",
+    creator: "@drivemaster",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -70,6 +83,9 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -97,6 +113,7 @@ export default function RootLayout({
                     <EmailVerificationBanner />
                     <Toaster position="top-right" richColors closeButton />
                     <GlobalKeyboardShortcuts />
+                    <AnalyticsInitializer />
                     {children}
                   </HighContrastProvider>
                 </ReducedMotionProvider>
