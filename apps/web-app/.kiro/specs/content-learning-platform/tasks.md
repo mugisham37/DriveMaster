@@ -695,6 +695,7 @@ This implementation plan breaks down the content learning platform into discrete
 
 
 
+
 - [x] 11.1 Set up WebSocket connection management
 
 
@@ -742,13 +743,19 @@ This implementation plan breaks down the content learning platform into discrete
   - Test achievement notifications
   - _Requirements: 10.1, 10.3, 10.4_
 
-- [ ] 12. Implement offline support and activity queueing
-- [ ] 12.1 Set up offline detection
+- [-] 12. Implement offline support and activity queueing
+
+
+
+
+- [x] 12.1 Set up offline detection
+
   - Listen to navigator.onLine events for offline/online detection
   - Implement periodic heartbeat check (30 second interval)
   - Update UI state when offline detected
   - Display offline banner when connection lost
   - _Requirements: 11.1, 14.1_
+
 
 - [ ] 12.2 Implement offline activity queue
   - Create IndexedDB database for offline activity storage
