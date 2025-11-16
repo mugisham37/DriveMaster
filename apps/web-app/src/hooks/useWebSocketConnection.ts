@@ -101,10 +101,10 @@ export function useWebSocketConnection(options: UseWebSocketConnectionOptions = 
         try {
           setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
           
-          // Get auth token from user context or session storage
-          const authToken = user.token || sessionStorage.getItem('auth_token') || '';
+          // Get auth token from token storage
+          const authToken = tokenStorage.getAccessToken() || '';
           
-          await wsManagerRef.current!.connect(user.id, authToken);
+          await wsManagerRef.current!.connect(String(user.id), authToken);
         } catch (error) {
           const errorObj = error instanceof Error ? error : new Error('Connection failed');
           setConnectionState(prev => ({
@@ -129,8 +129,8 @@ export function useWebSocketConnection(options: UseWebSocketConnectionOptions = 
     try {
       setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
       
-      const authToken = user.token || sessionStorage.getItem('auth_token') || '';
-      await wsManagerRef.current.connect(user.id, authToken);
+        const authToken = tokenStorage.getAccessToken() || '';
+        await wsManagerRef.current.connect(String(user.id), authToken);
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error('Connection failed');
       setConnectionState(prev => ({

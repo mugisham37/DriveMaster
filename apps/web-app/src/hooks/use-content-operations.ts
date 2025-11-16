@@ -20,6 +20,7 @@ import type {
   SearchRequestDto,
   RecommendationType,
 } from "@/types";
+import type { Recommendation } from "@/lib/content-service/types";
 
 // ============================================================================
 // Content CRUD Hooks
@@ -325,7 +326,7 @@ export function useRecommendations(
   }, [mutateFn]);
 
   return {
-    recommendations: data || [],
+    recommendations: (data || []) as Recommendation[],
     isLoading,
     error,
     refresh,

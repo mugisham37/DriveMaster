@@ -6,13 +6,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  PerformanceManager,
-  createPerformanceManager,
-  PerformanceManagerConfig,
-  PerformanceManagerStats,
-} from "../lib/performance";
+// TODO: Implement PerformanceManager in lib/performance
+// import {
+//   PerformanceManager,
+//   createPerformanceManager,
+//   PerformanceManagerConfig,
+//   PerformanceManagerStats,
+// } from "../lib/performance";
 import { useUserServiceClient } from "./useUserServiceClient";
+
+// Temporary placeholder types
+type PerformanceManager = unknown;
+type PerformanceManagerConfig = unknown;
+type PerformanceManagerStats = {
+  prefetchStats: { total: number; hits: number; misses: number };
+  cacheStats: { size: number; hits: number; misses: number };
+  requestStats: { total: number; pending: number; failed: number };
+};
 
 export interface UsePerformanceManagerOptions {
   config?: Partial<PerformanceManagerConfig>;

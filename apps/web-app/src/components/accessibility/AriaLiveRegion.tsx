@@ -65,12 +65,12 @@ export function AriaLiveRegion({
 
     // Store in window for global access
     if (typeof window !== 'undefined') {
-      (window as any).__ariaAnnounce = announceFunction;
+      (window as Window & { __ariaAnnounce?: (message: string, priority: string) => void }).__ariaAnnounce = announceFunction;
     }
 
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).__ariaAnnounce;
+        delete (window as Window & { __ariaAnnounce?: (message: string, priority: string) => void }).__ariaAnnounce;
       }
     };
   }, []);

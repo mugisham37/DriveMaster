@@ -27,7 +27,7 @@ export function ProgressOverview({
   showDetailedStats = true,
 }: ProgressOverviewProps) {
   const { state, summary, learningStreak } = useProgress();
-  const { isConnected, lastUpdate } = useRealtimeProgress(userId);
+  const { isConnected } = useRealtimeProgress({ enabled: !!userId });
 
   // Animated counters for number updates
   const [questionsCount, setQuestionsCount] = useState<AnimatedNumber>({
@@ -48,11 +48,11 @@ export function ProgressOverview({
     if (summary) {
       setQuestionsCount(prev => ({
         ...prev,
-        target: summary.totalQuestionsAnswered || 0,
+        target: summary.totalAttempts || 0,
       }));
       setAccuracyPercent(prev => ({
         ...prev,
-        target: summary.overallAccuracy || 0,
+        target: summary.accuracyRate || 0,
       }));
       setTimeSpent(prev => ({
         ...prev,
@@ -93,16 +93,16 @@ export function ProgressOverview({
   // Show celebration animation for milestones
   const [showCelebration, setShowCelebration] = useState(false);
   useEffect(() => {
-    if (lastUpdate && summary) {
+    if (summary) {
       // Check for milestone achievements
       const milestones = [10, 50, 100, 500, 1000];
-      const totalQuestions = summary.totalQuestionsAnswered || 0;
+      const totalQuestions = summary.totalAttempts || 0;
       if (milestones.includes(totalQuestions)) {
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 3000);
       }
     }
-  }, [lastUpdate, summary]);
+  }, [summary]);
 
   // Loading state
   if (state.isLoading) {
@@ -132,8 +132,15 @@ export function ProgressOverview({
     );
   }
 
-  const dailyGoalProgress = summary?.dailyProgress || 0;
-  const dailyGoal = summary?.dailyGoal || 10;
+  // Calculate daily progress from recent attempts
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dailyGoalProgress = summary?.recentAttempts?.filter((attempt) => {
+    const attemptDate = new Date(attempt.timestamp);
+    attemptDate.setHours(0, 0, 0, 0);
+    return attemptDate.getTime() === today.getTime();
+  }).length || 0;
+  const dailyGoal = 10; // Default daily goal
   const dailyGoalPercent = Math.min((dailyGoalProgress / dailyGoal) * 100, 100);
 
   return (
@@ -158,7 +165,6 @@ export function ProgressOverview({
         <div className="bg-card border rounded-lg p-6">
           <StreakDisplay
             currentStreak={learningStreak.currentStreak}
-            longestStreak={learningStreak.longestStreak}
             showCalendar={true}
           />
         </div>
@@ -178,8 +184,7 @@ export function ProgressOverview({
           </div>
         </div>
         <ProgressBar
-          current={dailyGoalProgress}
-          max={dailyGoal}
+          value={dailyGoalPercent}
           variant="circular"
           color={dailyGoalPercent >= 100 ? 'success' : 'primary'}
           showLabel={true}
@@ -272,13 +277,13 @@ export function ProgressOverview({
       )}
 
       {/* Topics Mastered */}
-      {summary && summary.topicsMastered > 0 && (
+      {summary && summary.masteredTopics > 0 && (
         <div className="bg-card border rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Topics Mastered</h3>
               <p className="text-sm text-muted-foreground">
-                You've mastered {summary.topicsMastered} topics
+                You&apos;ve mastered {summary.masteredTopics} topics
               </p>
             </div>
             <div className="text-3xl">🏆</div>

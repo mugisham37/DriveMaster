@@ -10,7 +10,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useRecommendations } from '@/hooks/use-content-operations';
-import { usePrefetchOnHover, useMountPrefetch } from '@/lib/performance/prefetch';
+import { useMountPrefetch } from '@/lib/performance/prefetch';
 import { LessonCard, LessonCardSkeleton } from '../../layer-3-ui';
 
 export interface RecommendedLessonsProps {
@@ -36,8 +36,8 @@ export function RecommendedLessons({
     () => {
       if (recommendations && recommendations.length > 0) {
         // Prefetch first 3 recommended lessons
-        recommendations.slice(0, 3).forEach((lesson) => {
-          router.prefetch(`/learn/lesson/${lesson.id}`);
+        recommendations.slice(0, 3).forEach((recommendation) => {
+          router.prefetch(`/learn/lesson/${recommendation.itemId}`);
         });
       }
     },
@@ -106,22 +106,33 @@ export function RecommendedLessons({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendations.map((lesson) => {
-          // Create hover prefetch handlers for each lesson
-          const prefetchHandlers = usePrefetchOnHover(
-            () => router.prefetch(`/learn/lesson/${lesson.id}`),
-            { delay: 500 }
-          );
-
+        {recommendations.map((recommendation) => {
+          // Convert recommendation to minimal lesson structure for display
+          // TODO: Fetch full lesson data using recommendation.itemId
+          const lessonData = {
+            id: recommendation.itemId,
+            title: `Lesson ${recommendation.itemId}`,
+            description: recommendation.reason,
+            slug: recommendation.itemId,
+            type: 'lesson' as const,
+            difficulty: 'beginner' as const,
+            estimatedTimeMinutes: 30,
+            learningObjectives: [],
+            topics: [],
+            questions: [],
+            order: 0,
+            prerequisites: [],
+          };
+          
           return (
             <div
-              key={lesson.id}
-              {...prefetchHandlers}
+              key={recommendation.itemId}
+              onMouseEnter={() => router.prefetch(`/learn/lesson/${recommendation.itemId}`)}
             >
               <LessonCard
-                lesson={lesson}
+                lesson={lessonData}
                 showProgress={true}
-                onClick={() => handleLessonClick(lesson.id)}
+                onClick={() => handleLessonClick(recommendation.itemId)}
               />
             </div>
           );

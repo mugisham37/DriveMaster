@@ -69,7 +69,7 @@ export function measure(name: string, startMark: string, endMark: string): numbe
       performance.measure(name, startMark, endMark);
       const entries = performance.getEntriesByName(name, 'measure');
       if (entries.length > 0) {
-        return entries[0].duration;
+        return entries[0]?.duration ?? 0;
       }
     } catch (error) {
       console.warn('Performance measurement failed:', error);
@@ -354,7 +354,7 @@ export function getPerformanceSummary(): Record<string, {
     if (!summary[metric.name]) {
       summary[metric.name] = { values: [] };
     }
-    summary[metric.name].values.push(metric.value);
+    summary[metric.name]?.values.push(metric.value);
   });
 
   const result: Record<string, { count: number; average: number; min: number; max: number }> = {};

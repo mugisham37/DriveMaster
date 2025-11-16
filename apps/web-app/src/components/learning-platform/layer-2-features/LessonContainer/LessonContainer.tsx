@@ -7,7 +7,7 @@
  * Requirements: 2.3, 2.4, 3.1, 3.4, 6.1, 6.2, 6.6
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useContentItem } from '@/hooks/use-content-operations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivity } from '@/contexts/ActivityContext';
@@ -96,8 +96,13 @@ export function LessonContainer({
     }
   }, [state, lessonId]);
 
-  // Get current question
-  const questions = lesson?.metadata?.questions || [];
+  // Get current question - parse from content body if format is JSON
+  const questions = useMemo(() => 
+    lesson?.content?.format === 'json' 
+      ? (JSON.parse(lesson.content.body).questions || [])
+      : [],
+    [lesson]
+  );
   const currentQuestion = questions[state.currentIndex];
   const isLastQuestion = state.currentIndex === questions.length - 1;
   const totalQuestions = questions.length;
@@ -124,10 +129,11 @@ export function LessonContainer({
       newAnswers.set(currentQuestion.id, selectedChoice);
 
       // Check if answer is correct
-      const isCorrect = currentQuestion.correctChoiceIds?.includes(selectedChoice) || false;
+      const correctChoiceIds = currentQuestion.choices?.filter((c: { isCorrect: boolean }) => c.isCorrect).map((c: { id: string }) => c.id) || [];
+      const isCorrect = correctChoiceIds.includes(selectedChoice);
 
       // Record activity
-      await recordActivity('question_answered', {
+      await recordActivity('exercise_complete', {
         lessonId,
         questionId: currentQuestion.id,
         selectedChoiceId: selectedChoice,
@@ -156,6 +162,41 @@ export function LessonContainer({
     }
   }, [selectedChoice, currentQuestion, user, state, lessonId, recordActivity, announce]);
 
+  // Handle lesson completion
+  const handleLessonComplete = useCallback(async () => {
+    if (!lesson || !user) return;
+
+    const totalTime = Date.now() - state.startTime.getTime();
+    const correctAnswers = Array.from(state.answers.entries()).filter(([questionId, choiceId]) => {
+      const question = questions.find((q: { id: string }) => q.id === questionId);
+      const correctChoiceIds = question?.choices?.filter((c: { isCorrect: boolean }) => c.isCorrect).map((c: { id: string }) => c.id) || [];
+      return correctChoiceIds.includes(choiceId);
+    }).length;
+
+    const results: LessonResults = {
+      lessonId,
+      totalQuestions: questions.length,
+      correctAnswers,
+      accuracy: (correctAnswers / questions.length) * 100,
+      timeSpent: totalTime,
+      topicsCovered: lesson.metadata.topics || [],
+      completedAt: new Date(),
+    };
+
+    // Record lesson completion
+    await recordActivity('lesson_complete', {
+      ...results,
+    });
+
+    // Clear session storage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY + lessonId);
+    }
+
+    // Call completion callback
+    onComplete?.(results);
+  }, [lesson, user, state, lessonId, questions, recordActivity, onComplete]);
+
   // Handle next question
   const handleNext = useCallback(() => {
     if (isLastQuestion) {
@@ -176,42 +217,7 @@ export function LessonContainer({
       const nextIndex = state.currentIndex + 2; // +2 because we're moving to next
       announce(`Question ${nextIndex} of ${totalQuestions}`, 'polite');
     }
-  }, [isLastQuestion, state.currentIndex, totalQuestions, announce]);
-
-  // Handle lesson completion
-  const handleLessonComplete = useCallback(async () => {
-    if (!lesson || !user) return;
-
-    const totalTime = Date.now() - state.startTime.getTime();
-    const correctAnswers = Array.from(state.answers.entries()).filter(([questionId, choiceId]) => {
-      const question = questions.find(q => q.id === questionId);
-      return question?.correctChoiceIds?.includes(choiceId);
-    }).length;
-
-    const results: LessonResults = {
-      lessonId,
-      totalQuestions: questions.length,
-      correctAnswers,
-      accuracy: (correctAnswers / questions.length) * 100,
-      timeSpent: totalTime,
-      topicsCovered: lesson.topics || [],
-      completedAt: new Date(),
-    };
-
-    // Record lesson completion
-    await recordActivity('lesson_completed', {
-      lessonId,
-      ...results,
-    });
-
-    // Clear session storage
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY + lessonId);
-    }
-
-    // Call completion callback
-    onComplete?.(results);
-  }, [lesson, user, state, lessonId, questions, recordActivity, onComplete]);
+  }, [isLastQuestion, state.currentIndex, totalQuestions, announce, handleLessonComplete]);
 
   // Handle exit
   const handleExit = useCallback(() => {
@@ -258,7 +264,7 @@ export function LessonContainer({
         <div className="text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">No Questions Available</h2>
           <p className="text-muted-foreground mb-6">
-            This lesson doesn't have any questions yet.
+            This lesson doesn&apos;t have any questions yet.
           </p>
           <button
             onClick={handleExit}
@@ -273,7 +279,7 @@ export function LessonContainer({
 
   // Calculate correct answers so far
   const correctAnswers = Array.from(state.answers.entries()).filter(([questionId, choiceId]) => {
-    const question = questions.find((q: any) => q.id === questionId);
+    const question = questions.find((q: { id: string }) => q.id === questionId);
     return question?.correctChoiceIds?.includes(choiceId);
   }).length;
 
@@ -293,11 +299,11 @@ export function LessonContainer({
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <QuestionDisplay
           question={currentQuestion}
-          selectedChoice={selectedChoice}
+          selectedChoiceId={selectedChoice || undefined}
           showFeedback={state.showFeedback}
           onChoiceSelect={handleChoiceSelect}
           onSubmit={handleSubmit}
-          disabled={isSubmitting || state.showFeedback}
+          isDisabled={isSubmitting || state.showFeedback}
         />
 
         {/* Next Button (shown after feedback) */}

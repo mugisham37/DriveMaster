@@ -66,9 +66,9 @@ export function WebSocketProvider({
     getMetrics,
   } = useWebSocketConnection({
     autoConnect,
-    onConnect,
-    onDisconnect,
-    onError,
+    ...(onConnect && { onConnect }),
+    ...(onDisconnect && { onDisconnect }),
+    ...(onError && { onError }),
   });
 
   const contextValue: WebSocketContextValue = {

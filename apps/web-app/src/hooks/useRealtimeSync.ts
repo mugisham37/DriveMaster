@@ -40,7 +40,7 @@ export interface RealtimeSyncStatus {
  * Main hook for real-time synchronization
  */
 export function useRealtimeSync(userId: string | undefined) {
-  const progressSync = useRealtimeProgress(userId);
+  const progressSync = useRealtimeProgress({ enabled: !!userId });
   const activitySync = useRealtimeActivity(userId);
   const offlineQueue = useOfflineActivityQueue(userId);
   const crossTabSync = useCrossTabSync();
@@ -48,9 +48,9 @@ export function useRealtimeSync(userId: string | undefined) {
   const status: RealtimeSyncStatus = {
     progress: {
       isConnected: progressSync.isConnected,
-      isConnecting: progressSync.isConnecting,
-      error: progressSync.error,
-      lastUpdate: progressSync.lastUpdate,
+      isConnecting: false,
+      error: null,
+      lastUpdate: null,
     },
     activity: {
       isConnected: activitySync.isConnected,

@@ -14,7 +14,7 @@ import {
   UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
-import { useCrossTabSync } from "./useCrossTabSync";
+// import { useCrossTabSync } from "./useCrossTabSync"; // TODO: Implement optimistic update broadcasting
 import {
   queryKeys,
   CACHE_TIMES,
@@ -109,11 +109,13 @@ export function useUpdateUserProfile(
   const queryClient = useQueryClient();
   const optimisticManager = getOptimisticUpdateManager();
   const cacheManager = getUserServiceCacheManager();
-  const {
-    broadcastOptimisticUpdate,
-    broadcastUpdate,
-    broadcastOptimisticRollback,
-  } = useCrossTabSync();
+  // const crossTabSync = useCrossTabSync();
+  // TODO: Implement optimistic update broadcasting
+  // const {
+  //   broadcastOptimisticUpdate,
+  //   broadcastUpdate,
+  //   broadcastOptimisticRollback,
+  // } = crossTabSync;
 
   return useMutation({
     mutationFn: ({ userId, updates }) =>

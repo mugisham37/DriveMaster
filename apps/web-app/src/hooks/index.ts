@@ -275,13 +275,6 @@ export type {
 // Cross-Tab Synchronization hooks
 export {
   useCrossTabSync,
-  useTabActivityMonitor,
-  useConflictResolution,
-  useSynchronizedMutation,
-  useUserSessionSync,
-  useCacheConsistency,
-  useCrossTabNotifications,
-  useCrossTabDebug,
 } from "./useCrossTabSync";
 
 // Performance Optimization hooks (Task 12)
