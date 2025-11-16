@@ -92,7 +92,7 @@ export function useApiErrorHandler(options: UseApiErrorHandlerOptions = {}) {
    * Handles specific error types with appropriate actions
    */
   const handleSpecificError = useCallback(
-    (error: ContentServiceError, report: ErrorReport) => {
+    (error: ContentServiceError, report: ErrorReport): void => {
       switch (error.type) {
         case 'authentication':
           // Redirect to sign-in with return URL
@@ -204,6 +204,8 @@ export function useApiErrorHandler(options: UseApiErrorHandlerOptions = {}) {
 
       return () => clearTimeout(timeoutId);
     }
+    
+    return undefined;
   }, [autoRetry, state, maxRetries, onRetry]);
 
   return {
