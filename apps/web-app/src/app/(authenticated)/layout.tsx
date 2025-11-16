@@ -51,7 +51,7 @@ export default function AuthenticatedLayout({
         {/* Main Navigation */}
         <MainNavigation />
         
-        {/* Main Content Area */}
+        {/* Main Content Area with Route Transitions */}
         <main id="main-content" className="flex-1" tabIndex={-1}>
           {children}
         </main>

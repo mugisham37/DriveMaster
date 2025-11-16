@@ -154,11 +154,18 @@ const ROUTE_CONFIG = {
   // Protected routes that require authentication
   protected: [
     "/dashboard",
+    "/learn",
+    "/practice",
+    "/browse",
+    "/progress",
+    "/test",
     "/settings",
     "/notifications",
     "/solutions",
     "/iterations",
     "/profile",
+    "/activity",
+    "/onboarding",
   ],
 
   // Mentor-only routes
@@ -173,7 +180,7 @@ const ROUTE_CONFIG = {
   insider: ["/insiders", "/insider-features", "/beta"],
 
   // Admin routes (for future use)
-  admin: ["/admin"],
+  admin: ["/admin", "/monitoring"],
 };
 
 // ============================================================================
