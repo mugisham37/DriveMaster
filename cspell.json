@@ -983,7 +983,19 @@
     "prefetcher",
     "changeme",
     "longtask",
-    "longtasks"
+    "longtasks",
+    "prereq",
+    "prereqs",
+    "Prereq",
+    "Prereqs",
+    "contentinfo",
+    "CONTENTINFO",
+    "Mbps",
+    "unviewed",
+    "indexeddb",
+    "WCAG",
+    "alertdialog",
+    "overscroll"
   ],
   "ignorePaths": [
     "node_modules/**",

@@ -134,7 +134,7 @@ export function useOfflineSync() {
     return () => {
       window.removeEventListener("offline-sync-complete", handleSyncComplete);
     };
-  }, [toast]);
+  }, []);
 
   // ============================================================================
   // Show error notifications

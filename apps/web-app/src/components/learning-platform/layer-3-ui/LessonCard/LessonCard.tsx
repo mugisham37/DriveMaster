@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, FileQuestion } from 'lucide-react';
@@ -55,10 +56,11 @@ export function LessonCard({
     >
       {lesson.thumbnailUrl && (
         <div className="relative w-full h-40 overflow-hidden rounded-t-lg">
-          <img
+          <Image
             src={lesson.thumbnailUrl}
             alt={lesson.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
       )}

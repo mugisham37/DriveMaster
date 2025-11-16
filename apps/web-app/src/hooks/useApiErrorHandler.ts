@@ -53,42 +53,6 @@ export function useApiErrorHandler(options: UseApiErrorHandlerOptions = {}) {
   });
 
   /**
-   * Handles an API error
-   */
-  const handleError = useCallback(
-    (error: unknown, context?: Record<string, unknown>) => {
-      // Generate error report
-      const errorReport = ErrorHandler.handleApiError(error, context);
-      const contentError = errorReport.error;
-
-      // Update state
-      setState({
-        error: contentError,
-        errorReport,
-        isRetrying: false,
-        retryCount: 0,
-        canRetry: ErrorHandler.isRetryableError(contentError),
-      });
-
-      // Call custom error handler
-      if (onError) {
-        onError(contentError);
-      }
-
-      // Show notification if enabled
-      if (showNotification && typeof window !== 'undefined') {
-        showErrorNotification(errorReport);
-      }
-
-      // Handle specific error types
-      handleSpecificError(contentError, errorReport);
-
-      return errorReport;
-    },
-    [onError, showNotification]
-  );
-
-  /**
    * Handles specific error types with appropriate actions
    */
   const handleSpecificError = useCallback(
@@ -127,6 +91,42 @@ export function useApiErrorHandler(options: UseApiErrorHandlerOptions = {}) {
       }
     },
     [router]
+  );
+
+  /**
+   * Handles an API error
+   */
+  const handleError = useCallback(
+    (error: unknown, context?: Record<string, unknown>) => {
+      // Generate error report
+      const errorReport = ErrorHandler.handleApiError(error, context);
+      const contentError = errorReport.error;
+
+      // Update state
+      setState({
+        error: contentError,
+        errorReport,
+        isRetrying: false,
+        retryCount: 0,
+        canRetry: ErrorHandler.isRetryableError(contentError),
+      });
+
+      // Call custom error handler
+      if (onError) {
+        onError(contentError);
+      }
+
+      // Show notification if enabled
+      if (showNotification && typeof window !== 'undefined') {
+        showErrorNotification(errorReport);
+      }
+
+      // Handle specific error types
+      handleSpecificError(contentError, errorReport);
+
+      return errorReport;
+    },
+    [onError, showNotification, handleSpecificError]
   );
 
   /**

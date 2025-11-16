@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, FileQuestion, CheckCircle2 } from 'lucide-react';
@@ -82,11 +83,12 @@ export function ContentCard({
         <div className="flex gap-4 p-4">
           {/* Thumbnail */}
           {item.mediaAssets && item.mediaAssets.length > 0 && item.mediaAssets[0]?.url && (
-            <div className="flex-shrink-0 w-32 h-24 overflow-hidden rounded-lg">
-              <img
+            <div className="flex-shrink-0 w-32 h-24 overflow-hidden rounded-lg relative">
+              <Image
                 src={item.mediaAssets[0].url}
                 alt={item.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           )}
@@ -168,10 +170,11 @@ export function ContentCard({
     >
       {item.mediaAssets && item.mediaAssets.length > 0 && item.mediaAssets[0]?.url && (
         <div className="relative w-full h-40 overflow-hidden rounded-t-lg">
-          <img
+          <Image
             src={item.mediaAssets[0].url}
             alt={item.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
       )}

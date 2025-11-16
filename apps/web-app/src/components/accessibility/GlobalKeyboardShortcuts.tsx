@@ -11,7 +11,7 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Dialog,
@@ -62,7 +62,7 @@ export function GlobalKeyboardShortcuts() {
   // Global Shortcuts
   // ============================================================================
 
-  const globalShortcuts: KeyboardShortcut[] = [
+  const globalShortcuts: KeyboardShortcut[] = useMemo(() => [
     {
       key: '?',
       description: 'Show keyboard shortcuts',
@@ -93,13 +93,13 @@ export function GlobalKeyboardShortcuts() {
       action: () => router.push('/progress'),
       scope: 'global',
     },
-  ];
+  ], [router]);
 
   // ============================================================================
   // Lesson-Specific Shortcuts
   // ============================================================================
 
-  const lessonShortcuts: KeyboardShortcut[] = [
+  const lessonShortcuts: KeyboardShortcut[] = useMemo(() => [
     {
       key: '1',
       description: 'Select first choice',
@@ -154,7 +154,7 @@ export function GlobalKeyboardShortcuts() {
       },
       scope: 'lesson',
     },
-  ];
+  ], []);
 
   // ============================================================================
   // Keyboard Event Handler
@@ -199,7 +199,7 @@ export function GlobalKeyboardShortcuts() {
         shortcut.action();
       }
     },
-    [getCurrentScope, globalShortcuts, lessonShortcuts, router]
+    [getCurrentScope, globalShortcuts, lessonShortcuts]
   );
 
   // ============================================================================

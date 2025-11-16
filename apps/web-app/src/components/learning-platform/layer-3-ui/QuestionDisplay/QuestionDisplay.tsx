@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ChoiceButton } from '../ChoiceButton';
 import { Button } from '@/components/ui/button';
@@ -64,11 +65,14 @@ export function QuestionDisplay({
               key={assetId}
               className="relative group rounded-lg overflow-hidden border border-gray-200"
             >
-              <img
-                src={`/api/media/${assetId}`}
-                alt={`Question diagram ${index + 1}`}
-                className="w-full h-auto"
-              />
+              <div className="relative w-full h-64">
+                <Image
+                  src={`/api/media/${assetId}`}
+                  alt={`Question diagram ${index + 1}`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center gap-2">
                 <Button
                   size="sm"
@@ -168,11 +172,14 @@ export function QuestionDisplay({
           className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
           onClick={() => setExpandedMedia(null)}
         >
-          <img
-            src={`/api/media/${expandedMedia}`}
-            alt="Expanded media"
-            className="max-w-full max-h-full object-contain"
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={`/api/media/${expandedMedia}`}
+              alt="Expanded media"
+              fill
+              className="object-contain"
+            />
+          </div>
           <Button
             variant="secondary"
             className="absolute top-4 right-4"
