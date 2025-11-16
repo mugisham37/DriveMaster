@@ -9,6 +9,8 @@ import { I18nProvider } from "@/components/providers/I18nProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { EmailVerificationBanner } from "@/components/auth/shared";
 import { Toaster } from "@/components/ui/sonner";
+import { SkipNavigation } from "@/components/layout/SkipNavigation";
+import { GlobalKeyboardShortcuts } from "@/components/accessibility/GlobalKeyboardShortcuts";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -76,9 +78,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${poppins.variable} antialiased`}
+        className={`${inter.variable} ${poppins.variable} antialiased focus-visible-enabled`}
         suppressHydrationWarning={true}
       >
+        <SkipNavigation />
         <QueryProvider>
           <AuthProvider>
             <GDPRProvider>
@@ -87,6 +90,7 @@ export default function RootLayout({
                 <FlashMessages />
                 <EmailVerificationBanner />
                 <Toaster position="top-right" richColors closeButton />
+                <GlobalKeyboardShortcuts />
                 {children}
               </I18nProvider>
             </GDPRProvider>

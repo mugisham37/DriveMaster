@@ -83,23 +83,24 @@ export function QuestionDisplay({
 
       {/* Choices */}
       <div className="space-y-3" role="radiogroup" aria-label="Answer choices">
-        {question.choices.map((choice) => {
+        {question.choices.map((choice, index) => {
           const isSelected = selectedChoiceId === choice.id;
           const isCorrect = showFeedback && choice.isCorrect;
           const isIncorrect = showFeedback && isSelected && !choice.isCorrect;
 
           return (
-            <ChoiceButton
-              key={choice.id}
-              choiceId={choice.id}
-              text={choice.text}
-              isSelected={isSelected}
-              isCorrect={isCorrect}
-              isIncorrect={isIncorrect}
-              isDisabled={isDisabled}
-              showFeedback={showFeedback}
-              onClick={onChoiceSelect}
-            />
+            <div key={choice.id} data-choice-index={index}>
+              <ChoiceButton
+                choiceId={choice.id}
+                text={choice.text}
+                isSelected={isSelected}
+                isCorrect={isCorrect}
+                isIncorrect={isIncorrect}
+                isDisabled={isDisabled}
+                showFeedback={showFeedback}
+                onClick={onChoiceSelect}
+              />
+            </div>
           );
         })}
       </div>
@@ -112,6 +113,7 @@ export function QuestionDisplay({
             onClick={onSubmit}
             disabled={!selectedChoiceId}
             className="min-w-32"
+            data-submit-answer
           >
             Submit Answer
           </Button>
