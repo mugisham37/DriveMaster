@@ -1,249 +1,83 @@
 /**
- * Progress Dashboard Page
+ * Progress and Analytics Page (Layer 1)
  * 
- * Displays comprehensive progress tracking and visualization.
- * Implements code splitting for performance optimization.
+ * Comprehensive learning statistics, insights, and performance tracking.
  * 
- * Requirements: 5.1, 9.3 (code splitting), 11.6 (error boundaries)
- * Task: 8.9, 12.1 (route-based code splitting), 14.1 (error boundary wrapping)
+ * Requirements: 9.1, 13.2, 14.3
+ * Task: 9.1 - 9.8
  */
 
 'use client';
 
-import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { ProgressTrackingErrorBoundary } from '@/components/user/error-boundary';
+import React, { Suspense } from 'react';
+import { RouteErrorBoundary } from '@/components/error-boundaries';
 import { useAuth } from '@/hooks/useAuth';
-import { useProgressSummary } from '@/hooks/useUserService';
-import {
-  ProgressLayout,
-  type TimeRange,
-  type SkillMasteryData,
-  type DailyProgressData,
-  type MilestoneData,
-  type DailyActivity,
-  type Recommendation,
-  type RecommendationPriority,
-} from '@/components/user/templates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, PartyPopper } from 'lucide-react';
-import { toast } from 'sonner';
-
-// Code splitting: Lazy load heavy chart and visualization components (Task 12.2)
-const OverallMasterySection = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.OverallMasterySection })),
-  { loading: () => <Skeleton className="h-[200px] w-full" /> }
-);
-
-const SkillMasteryList = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.SkillMasteryList })),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const WeeklyProgressChart = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.WeeklyProgressChart })),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const LearningStreakDisplay = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.LearningStreakDisplay })),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const MilestoneTracker = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.MilestoneTracker })),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const ProgressHeatmap = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.ProgressHeatmap })),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const RecommendationsSection = dynamic(
-  () => import('@/components/user/templates').then(mod => ({ default: mod.RecommendationsSection })),
-  { loading: () => <Skeleton className="h-[200px] w-full" /> }
-);
+import { AlertCircle } from 'lucide-react';
+import { ProgressPageContent } from './ProgressPageContent';
 
 export default function ProgressPage() {
-  const { user } = useAuth();
-  const userId = user?.id?.toString() || '';
-  const [timeRange, setTimeRange] = useState<TimeRange>('7days');
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const { data: progressData, isLoading, error, refetch } = useProgressSummary(userId);
-
-  // Handle new milestone celebrations
-  React.useEffect(() => {
-    if (progressData?.milestones && progressData.milestones.length > 0) {
-      progressData.milestones.forEach((milestone) => {
-        if (milestone.achieved && !milestone.achievedAt) {
-          toast.success(
-            <div className="flex items-center gap-2">
-              <PartyPopper className="h-5 w-5" />
-              <span>Milestone Achieved!</span>
-            </div>,
-            {
-              description: milestone.title,
-              duration: 5000,
-            }
-          );
-        }
-      });
-    }
-  }, [progressData?.milestones]);
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-8 space-y-6">
-        <Skeleton className="h-12 w-64" />
-        <Skeleton className="h-[400px] w-full" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-[300px]" />
-          <Skeleton className="h-[300px]" />
-        </div>
-      </div>
-    );
+  // Authentication check
+  if (authLoading) {
+    return <ProgressPageSkeleton />;
   }
 
-  if (error) {
+  if (!isAuthenticated || !user) {
     return (
       <div className="container mx-auto py-8">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error Loading Progress</AlertTitle>
+          <AlertTitle>Authentication Required</AlertTitle>
           <AlertDescription>
-            {error instanceof Error ? error.message : 'Failed to load progress data'}
-            <button
-              onClick={() => refetch()}
-              className="ml-4 underline hover:no-underline"
-            >
-              Try again
-            </button>
+            Please sign in to view your progress and analytics.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
-
-  if (!progressData) {
-    return (
-      <div className="container mx-auto py-8">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No Progress Data</AlertTitle>
-          <AlertDescription>
-            Start learning to see your progress here!
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Transform API data to component props
-  const skillMasteryData: SkillMasteryData[] = progressData.topicMasteries
-    ? Object.entries(progressData.topicMasteries).map(([topic, mastery]) => ({
-      id: topic,
-      topicName: topic,
-      mastery: mastery.mastery || 0,
-      practiceCount: mastery.practiceCount || 0,
-      timeSpent: mastery.totalTimeMs || 0,
-      lastPracticed: new Date(mastery.lastPracticed || Date.now()),
-    }))
-    : [];
-
-  const weeklyProgressData: DailyProgressData[] = progressData.weeklyProgress?.map((day) => ({
-    date: day.week,
-    mastery: day.mastery,
-    studyTime: day.studyTime,
-    accuracy: day.accuracy,
-  })) || [];
-
-  const milestoneData: MilestoneData[] = progressData.milestones?.map((milestone) => ({
-    ...milestone,
-    estimatedCompletion: undefined,
-  })) || [];
-
-  const heatmapData: DailyActivity[] = progressData.topicProgress?.map((topic) => ({
-    date: topic.lastPracticed?.toISOString().split('T')[0] || '',
-    intensity: Math.floor(topic.mastery * 100),
-    activityCount: topic.practiceCount,
-    studyTime: 0, // Not available in current data
-  })) || [];
-
-  const recommendations: Recommendation[] = progressData.recommendations?.map((rec, index) => ({
-    id: `rec-${index}`,
-    title: rec,
-    description: '',
-    priority: 'medium' as RecommendationPriority,
-    estimatedImpact: 5,
-    actionLabel: 'View',
-    actionUrl: undefined,
-    onAction: () => {
-      console.log('Recommendation:', rec);
-    },
-  })) || [];
-
-  const topics = skillMasteryData.map((skill) => ({
-    id: skill.id,
-    name: skill.topicName,
-  }));
 
   return (
-    <ProgressTrackingErrorBoundary>
-      <div className="container mx-auto py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Progress Dashboard</h1>
-          <p className="text-muted-foreground">
-            Track your learning journey and skill development
-          </p>
-        </div>
+    <RouteErrorBoundary>
+      <Suspense fallback={<ProgressPageSkeleton />}>
+        <ProgressPageContent userId={user.id.toString()} />
+      </Suspense>
+    </RouteErrorBoundary>
+  );
+}
 
-        <ProgressLayout
-          onTimeRangeChange={setTimeRange}
-          topics={topics}
-          defaultTimeRange={timeRange}
-        >
-          {/* Overall Mastery */}
-          <OverallMasterySection
-            overallMastery={progressData.overallMastery || 0}
-            totalTopics={progressData.totalTopics || 0}
-            masteredTopics={progressData.masteredTopics || 0}
-            trend="stable"
-          />
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Learning Streak */}
-            <LearningStreakDisplay
-              currentStreak={progressData.learningStreak || 0}
-              longestStreak={progressData.learningStreak || 0}
-              streakCalendar={progressData.consecutiveDays > 0 ? Array(progressData.consecutiveDays).fill(true) : []}
-            />
-
-            {/* Weekly Progress Chart */}
-            <WeeklyProgressChart data={weeklyProgressData} />
-          </div>
-
-          {/* Skill Mastery List */}
-          <SkillMasteryList
-            skills={skillMasteryData}
-            onSkillClick={(skillId) => {
-              console.log('Skill clicked:', skillId);
-              // Navigate to skill details or open modal
-            }}
-          />
-
-          {/* Milestones */}
-          <MilestoneTracker milestones={milestoneData} />
-
-          {/* Activity Heatmap */}
-          <ProgressHeatmap data={heatmapData} />
-
-          {/* Recommendations */}
-          <RecommendationsSection recommendations={recommendations} />
-        </ProgressLayout>
+function ProgressPageSkeleton() {
+  return (
+    <div className="container mx-auto py-8 space-y-8">
+      {/* Header */}
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-4 w-96" />
       </div>
-    </ProgressTrackingErrorBoundary>
+
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-32" />
+        ))}
+      </div>
+
+      {/* Topic Mastery Section */}
+      <Skeleton className="h-96" />
+
+      {/* Accuracy Trend Section */}
+      <Skeleton className="h-80" />
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Skeleton className="h-96" />
+        <Skeleton className="h-96" />
+      </div>
+
+      {/* Activity Heatmap */}
+      <Skeleton className="h-64" />
+    </div>
   );
 }
