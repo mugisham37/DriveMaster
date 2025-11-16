@@ -13,3 +13,7 @@ export { copyToClipboard } from "./copyToClipboard";
 // Minimal UI utilities (kept due to existing usage)
 export { scrollToTop } from "./scroll-to-top";
 export { assembleClassNames } from "./assemble-classnames";
+
+// Learning platform utilities
+export * from "./learning-platform";
+export * from "./performance-monitoring";
