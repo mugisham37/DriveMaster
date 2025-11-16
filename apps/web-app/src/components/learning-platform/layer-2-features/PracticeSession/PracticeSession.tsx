@@ -11,9 +11,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRecommendations } from '@/hooks/use-content-operations';
 import { useSpacedRepetitionReminders } from '@/hooks/useSpacedRepetitionReminders';
 import { useActivity } from '@/contexts/ActivityContext';
-import { QuestionDisplay, TopicBadge } from '../../layer-3-ui';
+import { QuestionDisplay } from '../../layer-3-ui';
 import type { PracticeSettings } from '../PracticeSetup';
-import type { ContentItem } from '@/types/entities';
+import type { Question } from '@/types/learning-platform';
 
 export interface PracticeSessionProps {
   userId: string;
@@ -32,7 +32,7 @@ export interface SessionSummary {
 }
 
 interface SessionState {
-  questions: ContentItem[];
+  questions: Question[];
   currentIndex: number;
   answers: Map<string, { choiceId: string; isCorrect: boolean; timeSpent: number }>;
   startTime: Date;
@@ -54,17 +54,20 @@ export function PracticeSession({
     settings.timed && settings.timeLimit ? settings.timeLimit * 60 : 0
   );
 
-  // Fetch questions based on settings
-  const { recommendations: adaptiveQuestions, isLoading } = useRecommendations(
+  // Fetch questions based on settings - using 'personalized' type
+  const { recommendations, isLoading } = useRecommendations(
     userId,
-    'next-question',
+    'personalized',
     {
       limit: typeof settings.questionCount === 'number' ? settings.questionCount : 100,
     }
   );
+  
+  // Memoize the recommendations to avoid re-renders
+  const adaptiveQuestions = React.useMemo(() => recommendations || [], [recommendations]);
 
   // Fetch spaced repetition items
-  const { reminders: reviewItems } = useSpacedRepetitionReminders(userId);
+  const { activeReminders: reviewItems } = useSpacedRepetitionReminders();
 
   const [state, setState] = useState<SessionState>({
     questions: [],
@@ -82,43 +85,68 @@ export function PracticeSession({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
+  // Helper function to convert ContentItem to Question
+  const convertToQuestion = useCallback((item: any): Question => {
+    // Extract question data from content item
+    const contentData = item.content?.body || item.content || '';
+    const content = typeof contentData === 'string' && contentData.startsWith('{')
+      ? JSON.parse(contentData)
+      : { body: contentData };
+
+    return {
+      id: item.id,
+      text: content.body || item.title || '',
+      type: 'multiple-choice',
+      choices: content.choices || [],
+      explanation: content.explanation || '',
+      difficulty: item.metadata?.difficulty === 'beginner' ? -1 :
+                  item.metadata?.difficulty === 'intermediate' ? 0 : 1,
+      discrimination: 1.0,
+      guessing: 0.25,
+      topics: item.metadata?.topics || [],
+      mediaAssets: item.mediaAssets?.map((asset: any) => asset.id) || [],
+      externalReferences: content.externalReferences || [],
+      estimatedTimeSeconds: (item.metadata?.estimatedTimeMinutes || 2) * 60,
+    };
+  }, []);
+
   // Initialize questions (mix adaptive + review items)
   useEffect(() => {
     if (adaptiveQuestions.length > 0 && state.questions.length === 0) {
-      const mixedQuestions = [...adaptiveQuestions];
+      // Convert recommendations to questions
+      // Recommendations might be ContentItems directly or have an item property
+      const convertedQuestions = adaptiveQuestions.map(rec => 
+        convertToQuestion((rec as unknown).item || rec)
+      );
       
-      // Mix in review items (every 5th question)
+      // Mix in review items (every 5th question) if available
+      const mixedQuestions = [...convertedQuestions];
       if (reviewItems.length > 0) {
-        reviewItems.forEach((item, index) => {
+        reviewItems.forEach((reminder, index) => {
           const insertIndex = (index + 1) * 5;
           if (insertIndex < mixedQuestions.length) {
-            mixedQuestions.splice(insertIndex, 0, item.contentItem);
+            // Create a simple question from the review reminder
+            const reviewQuestion: Question = {
+              id: reminder.id,
+              text: `Review: ${reminder.topicName}`,
+              type: 'multiple-choice',
+              choices: [],
+              explanation: 'This is a review question from spaced repetition.',
+              difficulty: reminder.difficulty === 'easy' ? -1 : 
+                         reminder.difficulty === 'medium' ? 0 : 1,
+              discrimination: 1.0,
+              guessing: 0.25,
+              topics: [reminder.topicName],
+              estimatedTimeSeconds: 120,
+            };
+            mixedQuestions.splice(insertIndex, 0, reviewQuestion);
           }
         });
       }
 
       setState(prev => ({ ...prev, questions: mixedQuestions }));
     }
-  }, [adaptiveQuestions, reviewItems, state.questions.length]);
-
-  // Timer countdown
-  useEffect(() => {
-    if (settings.timed && timeRemaining > 0 && !showSummary) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            handleSessionComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-      };
-    }
-  }, [settings.timed, timeRemaining, showSummary]);
+  }, [adaptiveQuestions, reviewItems, state.questions.length, convertToQuestion]);
 
   const currentQuestion = state.questions[state.currentIndex];
   const isLastQuestion = state.currentIndex === state.questions.length - 1;
@@ -132,9 +160,76 @@ export function PracticeSession({
   const currentAccuracy = questionsAnswered > 0 
     ? Math.round((correctAnswers / questionsAnswered) * 100) 
     : 0;
-  const averageTime = questionsAnswered > 0
-    ? Array.from(state.answers.values()).reduce((sum, a) => sum + a.timeSpent, 0) / questionsAnswered / 1000
-    : 0;
+
+  // Handle stop
+  const handleStop = useCallback(() => {
+    if (confirm('Are you sure you want to stop? Your progress will be saved.')) {
+      const totalTime = Date.now() - state.startTime.getTime();
+      
+      // Calculate topic-wise performance
+      const topicStats = new Map<string, { correct: number; total: number }>();
+      state.questions.forEach((question) => {
+        const answer = state.answers.get(question.id);
+        if (answer) {
+          question.topics.forEach(topic => {
+            const stats = topicStats.get(topic) || { correct: 0, total: 0 };
+            stats.total++;
+            if (answer.isCorrect) stats.correct++;
+            topicStats.set(topic, stats);
+          });
+        }
+      });
+
+      const topicsPracticed = Array.from(topicStats.entries()).map(([topic, stats]) => ({
+        topic,
+        correct: stats.correct,
+        total: stats.total,
+      }));
+
+      // Generate recommendations
+      const recommendations: string[] = [];
+      if (currentAccuracy < 70) {
+        recommendations.push('Consider reviewing the basics before continuing');
+      }
+      topicsPracticed.forEach(({ topic, correct, total }) => {
+        if (correct / total < 0.6) {
+          recommendations.push(`Focus more on ${topic}`);
+        }
+      });
+
+      const summary: SessionSummary = {
+        totalQuestions: questionsAnswered,
+        correctAnswers,
+        accuracy: currentAccuracy,
+        timeSpent: totalTime,
+        topicsPracticed,
+        recommendations,
+      };
+
+      setShowSummary(true);
+      onComplete(summary);
+    }
+  }, [state, questionsAnswered, correctAnswers, currentAccuracy, onComplete]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (settings.timed && timeRemaining > 0 && !showSummary) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            handleStop();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+    }
+    return undefined;
+  }, [settings.timed, timeRemaining, showSummary, handleStop]);
 
   // Handle choice selection
   const handleChoiceSelect = useCallback((choiceId: string) => {
@@ -151,10 +246,12 @@ export function PracticeSession({
 
     try {
       const timeSpent = Date.now() - state.questionStartTime.getTime();
-      const isCorrect = currentQuestion.correctChoiceIds?.includes(selectedChoice) || false;
+      const isCorrect = currentQuestion.choices.some(
+        choice => choice.id === selectedChoice && choice.isCorrect
+      );
 
       // Record activity
-      await recordActivity('question_answered', {
+      await recordActivity('practice', {
         questionId: currentQuestion.id,
         selectedChoiceId: selectedChoice,
         isCorrect,
@@ -200,7 +297,7 @@ export function PracticeSession({
   // Handle next question
   const handleNext = useCallback(() => {
     if (isLastQuestion || questionsAnswered >= totalQuestions) {
-      handleSessionComplete();
+      handleStop();
     } else {
       setState(prev => ({
         ...prev,
@@ -210,62 +307,7 @@ export function PracticeSession({
       setSelectedChoice(undefined);
       setShowFeedback(false);
     }
-  }, [isLastQuestion, questionsAnswered, totalQuestions]);
-
-  // Handle session completion
-  const handleSessionComplete = useCallback(() => {
-    const totalTime = Date.now() - state.startTime.getTime();
-    
-    // Calculate topic-wise performance
-    const topicStats = new Map<string, { correct: number; total: number }>();
-    state.questions.forEach((question, index) => {
-      const answer = state.answers.get(question.id);
-      if (answer) {
-        question.topics?.forEach(topic => {
-          const stats = topicStats.get(topic) || { correct: 0, total: 0 };
-          stats.total++;
-          if (answer.isCorrect) stats.correct++;
-          topicStats.set(topic, stats);
-        });
-      }
-    });
-
-    const topicsPracticed = Array.from(topicStats.entries()).map(([topic, stats]) => ({
-      topic,
-      correct: stats.correct,
-      total: stats.total,
-    }));
-
-    // Generate recommendations
-    const recommendations: string[] = [];
-    if (currentAccuracy < 70) {
-      recommendations.push('Consider reviewing the basics before continuing');
-    }
-    topicsPracticed.forEach(({ topic, correct, total }) => {
-      if (correct / total < 0.6) {
-        recommendations.push(`Focus more on ${topic}`);
-      }
-    });
-
-    const summary: SessionSummary = {
-      totalQuestions: questionsAnswered,
-      correctAnswers,
-      accuracy: currentAccuracy,
-      timeSpent: totalTime,
-      topicsPracticed,
-      recommendations,
-    };
-
-    setShowSummary(true);
-    onComplete(summary);
-  }, [state, questionsAnswered, correctAnswers, currentAccuracy, onComplete]);
-
-  // Handle stop
-  const handleStop = useCallback(() => {
-    if (confirm('Are you sure you want to stop? Your progress will be saved.')) {
-      handleSessionComplete();
-    }
-  }, [handleSessionComplete]);
+  }, [isLastQuestion, questionsAnswered, totalQuestions, handleStop]);
 
   // Format time
   const formatTime = (seconds: number): string => {
@@ -359,11 +401,11 @@ export function PracticeSession({
           <>
             <QuestionDisplay
               question={currentQuestion}
-              selectedChoice={selectedChoice}
+              selectedChoiceId={selectedChoice || ''}
               showFeedback={showFeedback}
+              isDisabled={isSubmitting || showFeedback}
               onChoiceSelect={handleChoiceSelect}
               onSubmit={handleSubmit}
-              disabled={isSubmitting || showFeedback}
             />
 
             {showFeedback && (
