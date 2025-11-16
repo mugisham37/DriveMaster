@@ -76,7 +76,7 @@ export function WeakAreasPanel({ isLoading }: WeakAreasPanelProps) {
           <Alert>
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription>
-              Great job! You don't have any weak areas at the moment. Keep up the excellent work!
+              Great job! You don&apos;t have any weak areas at the moment. Keep up the excellent work!
             </AlertDescription>
           </Alert>
         ) : (

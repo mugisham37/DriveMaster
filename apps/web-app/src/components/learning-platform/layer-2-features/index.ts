@@ -26,7 +26,7 @@ export { MockTestSetup } from './MockTestSetup';
 export type { MockTestSetupProps } from './MockTestSetup';
 
 export { MockTestSession } from './MockTestSession';
-export type { MockTestSessionProps, MockTestResults } from './MockTestSession';
+export type { MockTestSessionProps, MockTestResults as MockTestResultsType } from './MockTestSession';
 
 export { MockTestResults } from './MockTestResults';
 export type { MockTestResultsProps } from './MockTestResults';

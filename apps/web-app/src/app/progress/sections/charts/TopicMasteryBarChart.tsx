@@ -69,7 +69,7 @@ export default function TopicMasteryBarChart({
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
-              const data = payload[0].payload as TopicMasteryData;
+              const data = payload[0]?.payload as TopicMasteryData;
               return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                   <p className="font-semibold">{data.name}</p>

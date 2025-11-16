@@ -57,7 +57,7 @@ export default function AccuracyLineChart({ data }: AccuracyLineChartProps) {
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
-              const data = payload[0].payload as AccuracyDataPoint;
+              const data = payload[0]?.payload as AccuracyDataPoint;
               return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                   <p className="font-semibold">{data.date}</p>

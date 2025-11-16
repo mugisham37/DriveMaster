@@ -32,7 +32,6 @@ interface TopicMasteryRadarChartProps {
 export default function TopicMasteryRadarChart({
   data,
   onTopicClick,
-  selectedTopic,
 }: TopicMasteryRadarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -59,7 +58,7 @@ export default function TopicMasteryRadarChart({
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
-              const data = payload[0].payload as TopicMasteryData;
+              const data = payload[0]?.payload as TopicMasteryData;
               return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                   <p className="font-semibold">{data.name}</p>

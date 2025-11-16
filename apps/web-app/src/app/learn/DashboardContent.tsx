@@ -19,7 +19,7 @@ import DashboardAchievements from './sections/DashboardAchievements';
 export default function DashboardContent() {
   const { user, isLoading: authLoading } = useAuth();
   const { state, error: progressError } = useProgress();
-  const { isConnected } = useRealtimeProgress(user?.id?.toString());
+  const { isConnected } = useRealtimeProgress({ enabled: !!user });
 
   // Handle loading states
   if (authLoading || state.isLoading) {

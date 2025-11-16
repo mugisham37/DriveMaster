@@ -78,7 +78,7 @@ const mockAchievements: Achievement[] = [
 ];
 
 export default function DashboardAchievements() {
-  const { activeAchievements, dismissAchievement } = useAchievementNotifications();
+  const { activeNotifications, dismissNotification } = useAchievementNotifications();
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
 
   const earnedAchievements = mockAchievements.filter(a => a.earned);
@@ -103,28 +103,23 @@ export default function DashboardAchievements() {
       </div>
 
       {/* Celebration Notifications */}
-      {activeAchievements.length > 0 && (
+      {activeNotifications.length > 0 && (
         <div className="fixed top-4 right-4 z-50 space-y-2">
-          {activeAchievements.map((achievement) => (
+          {activeNotifications.map((notification) => (
             <div
-              key={achievement.id}
+              key={notification.id}
               className="bg-card border-2 border-primary rounded-lg p-4 shadow-lg animate-in slide-in-from-right"
             >
               <div className="flex items-start gap-3">
-                <div className="text-3xl">{achievement.achievementIcon}</div>
+                <div className="text-3xl">🏆</div>
                 <div className="flex-1">
-                  <h3 className="font-semibold">{achievement.achievementName}</h3>
+                  <h3 className="font-semibold">{notification.milestone.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {achievement.achievementDescription}
+                    {notification.milestone.description}
                   </p>
-                  {achievement.points && (
-                    <p className="text-sm font-medium text-primary mt-1">
-                      +{achievement.points} points
-                    </p>
-                  )}
                 </div>
                 <button
-                  onClick={() => dismissAchievement(achievement.id)}
+                  onClick={() => dismissNotification(notification.id)}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <svg

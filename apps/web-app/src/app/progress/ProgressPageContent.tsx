@@ -48,7 +48,7 @@ export function ProgressPageContent({ userId }: ProgressPageContentProps) {
   const historicalMetricsQuery = useHistoricalMetrics(historicalQuery);
   
   // Real-time progress updates
-  const realtimeProgress = useRealtimeProgress(userId);
+  const realtimeProgress = useRealtimeProgress({ enabled: !!userId });
 
   // Loading state
   const isLoading = 
