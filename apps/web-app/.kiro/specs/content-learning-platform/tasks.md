@@ -447,12 +447,14 @@ This implementation plan breaks down the content learning platform into discrete
 
   - _Requirements: 7.3, 7.4, 7.5_
 
-- [ ] 7.4 Implement spaced repetition integration
+- [x] 7.4 Implement spaced repetition integration
+
   - Call useSpacedRepetitionReminders to fetch due review items
   - Mix review items into practice session questions
   - Mark review questions with "Review" badge
   - Track review completion and update schedules
   - _Requirements: 4.3, 7.3_
+
 
 - [ ] 7.5 Build Practice session summary screen
   - Display total questions answered and accuracy percentage

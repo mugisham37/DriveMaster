@@ -40,6 +40,7 @@ interface SessionState {
   consecutiveCorrect: number;
   consecutiveIncorrect: number;
   currentDifficulty: number;
+  reviewQuestionIds: Set<string>; // Track which questions are review questions
 }
 
 export function PracticeSession({
@@ -78,6 +79,7 @@ export function PracticeSession({
     consecutiveCorrect: 0,
     consecutiveIncorrect: 0,
     currentDifficulty: settings.difficulty,
+    reviewQuestionIds: new Set(),
   });
 
   const [selectedChoice, setSelectedChoice] = useState<string | undefined>();
@@ -130,6 +132,8 @@ export function PracticeSession({
       
       // Mix in review items (every 5th question) if available
       const mixedQuestions = [...convertedQuestions];
+      const reviewQuestionIds = new Set<string>();
+      
       if (reviewItems.length > 0) {
         reviewItems.forEach((reminder, index) => {
           const insertIndex = (index + 1) * 5;
@@ -149,11 +153,12 @@ export function PracticeSession({
               estimatedTimeSeconds: 120,
             };
             mixedQuestions.splice(insertIndex, 0, reviewQuestion);
+            reviewQuestionIds.add(reminder.id);
           }
         });
       }
 
-      setState(prev => ({ ...prev, questions: mixedQuestions }));
+      setState(prev => ({ ...prev, questions: mixedQuestions, reviewQuestionIds }));
     }
   }, [adaptiveQuestions, reviewItems, state.questions.length, convertToQuestion]);
 
@@ -424,6 +429,7 @@ export function PracticeSession({
               selectedChoiceId={selectedChoice || ''}
               showFeedback={showFeedback}
               isDisabled={isSubmitting || showFeedback}
+              isReview={state.reviewQuestionIds.has(currentQuestion.id)}
               onChoiceSelect={handleChoiceSelect}
               onSubmit={handleSubmit}
             />
