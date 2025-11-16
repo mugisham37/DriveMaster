@@ -117,6 +117,22 @@ export function useUpdateUserProfile(
   //   broadcastOptimisticRollback,
   // } = crossTabSync;
 
+  // Stub implementations until cross-tab sync is fully integrated
+  const broadcastOptimisticUpdate = (_queryKey: unknown, _data: unknown, _userId?: string) => {
+    // TODO: Implement when cross-tab sync is ready
+    console.debug('[useUserService] broadcastOptimisticUpdate called (not implemented)');
+  };
+
+  const broadcastOptimisticRollback = (_queryKey: unknown, _userId?: string) => {
+    // TODO: Implement when cross-tab sync is ready
+    console.debug('[useUserService] broadcastOptimisticRollback called (not implemented)');
+  };
+
+  const broadcastUpdate = (_queryKey: unknown, _data: unknown, _userId?: string) => {
+    // TODO: Implement when cross-tab sync is ready
+    console.debug('[useUserService] broadcastUpdate called (not implemented)');
+  };
+
   return useMutation({
     mutationFn: ({ userId, updates }) =>
       userServiceClient.updateUser(userId, updates),

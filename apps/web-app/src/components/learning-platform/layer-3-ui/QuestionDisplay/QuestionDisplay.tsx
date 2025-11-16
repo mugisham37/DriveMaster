@@ -9,7 +9,7 @@ import type { Question } from '@/types/learning-platform';
 
 interface QuestionDisplayProps {
   question: Question;
-  selectedChoiceId?: string;
+  selectedChoiceId?: string | undefined;
   showFeedback?: boolean;
   isDisabled?: boolean;
   isReview?: boolean;

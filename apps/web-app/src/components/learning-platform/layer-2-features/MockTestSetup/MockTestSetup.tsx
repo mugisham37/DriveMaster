@@ -137,7 +137,7 @@ export function MockTestSetup({ onStart }: MockTestSetupProps) {
             <div className="space-y-2">
               <p className="font-medium">Before you begin:</p>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Find a quiet place where you won't be interrupted</li>
+                <li>Find a quiet place where you won&apos;t be interrupted</li>
                 <li>Ensure you have a stable internet connection</li>
                 <li>You will have {TEST_CONFIG.timeLimit} minutes to complete {TEST_CONFIG.questionCount} questions</li>
                 <li>The test will auto-submit when time expires</li>
@@ -167,7 +167,7 @@ export function MockTestSetup({ onStart }: MockTestSetupProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Ready to begin?</AlertDialogTitle>
             <AlertDialogDescription>
-              Once you start the test, the timer will begin immediately. Make sure you're ready and have {TEST_CONFIG.timeLimit} minutes available.
+              Once you start the test, the timer will begin immediately. Make sure you&apos;re ready and have {TEST_CONFIG.timeLimit} minutes available.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

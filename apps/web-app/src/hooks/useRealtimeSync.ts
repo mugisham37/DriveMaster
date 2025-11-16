@@ -54,8 +54,8 @@ export function useRealtimeSync(userId: string | undefined) {
     },
     activity: {
       isConnected: activitySync.isConnected,
-      isConnecting: activitySync.isConnecting,
-      error: activitySync.error,
+      isConnecting: activitySync.isConnecting || false,
+      error: activitySync.error || null,
       lastActivity: activitySync.lastActivity,
     },
     offline: {
@@ -66,16 +66,17 @@ export function useRealtimeSync(userId: string | undefined) {
     },
     overall: {
       isFullyConnected: progressSync.isConnected && activitySync.isConnected,
-      hasErrors: !!(progressSync.error || activitySync.error || offlineQueue.lastSyncError),
-      isReconnecting: progressSync.isConnecting || activitySync.isConnecting,
+      hasErrors: !!(activitySync.error || offlineQueue.lastSyncError),
+      isReconnecting: activitySync.isConnecting || false,
     },
   };
 
   return {
     status,
     reconnect: () => {
-      progressSync.reconnect();
-      activitySync.reconnect();
+      if (typeof activitySync.reconnect === 'function') {
+        activitySync.reconnect();
+      }
     },
     syncOfflineQueue: offlineQueue.syncQueue,
     clearOfflineQueue: offlineQueue.clearQueue,

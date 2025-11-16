@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { WebSocketManager, createWebSocketManager } from '@/lib/realtime/websocket-manager';
 import { useAuth } from '@/contexts/AuthContext';
+import { tokenStorage } from '@/lib/http/interceptors';
 
 export interface WebSocketConnectionState {
   isConnected: boolean;
@@ -102,7 +103,7 @@ export function useWebSocketConnection(options: UseWebSocketConnectionOptions = 
           setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
           
           // Get auth token from token storage
-          const authToken = tokenStorage.getAccessToken() || '';
+          const authToken = (await tokenStorage.getAccessToken()) || '';
           
           await wsManagerRef.current!.connect(String(user.id), authToken);
         } catch (error) {
@@ -129,7 +130,7 @@ export function useWebSocketConnection(options: UseWebSocketConnectionOptions = 
     try {
       setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
       
-        const authToken = tokenStorage.getAccessToken() || '';
+        const authToken = (await tokenStorage.getAccessToken()) || '';
         await wsManagerRef.current.connect(String(user.id), authToken);
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error('Connection failed');
