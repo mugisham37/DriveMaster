@@ -1,0 +1,301 @@
+/**
+ * Browser Compatibility Styles
+ * 
+ * CSS fixes and polyfills for cross-browser compatibility
+ * Requirements: 13.1
+ * Task: 17.6
+ */
+
+/* ============================================================================
+   Safari-Specific Fixes
+   ============================================================================ */
+
+/* Fix for Safari date input styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* Fix for Safari flexbox bugs */
+@supports (-webkit-appearance: none) {
+  .flex-fix {
+    flex-shrink: 0;
+  }
+}
+
+/* Fix for Safari position: fixed with keyboard */
+@supports (-webkit-touch-callout: none) {
+  .fixed-with-keyboard {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+/* ============================================================================
+   Firefox-Specific Fixes
+   ============================================================================ */
+
+/* Custom scrollbar for Firefox */
+@-moz-document url-prefix() {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  }
+}
+
+/* Fix for Firefox input autofill */
+input:-moz-autofill {
+  background-color: transparent !important;
+}
+
+/* ============================================================================
+   Edge-Specific Fixes
+   ============================================================================ */
+
+/* Fix for Edge input clear button */
+input::-ms-clear {
+  display: none;
+}
+
+/* Fix for Edge input reveal button */
+input::-ms-reveal {
+  display: none;
+}
+
+/* ============================================================================
+   Mobile Safari Fixes
+   ============================================================================ */
+
+/* Prevent zoom on input focus */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area insets for iOS */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Disable pull-to-refresh on iOS */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================================================
+   Touch Device Optimizations
+   ============================================================================ */
+
+/* Improve touch target sizes */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improve touch scrolling */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   Webkit-Specific Fixes
+   ============================================================================ */
+
+/* Fix for webkit search input */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+}
+
+/* Fix for webkit number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ============================================================================
+   Animation Performance
+   ============================================================================ */
+
+/* Force GPU acceleration for animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimize animations for mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-smooth {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  /* Hide non-essential elements when printing */
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure content is visible */
+  body {
+    background: white;
+    color: black;
+  }
+  
+  /* Prevent page breaks inside elements */
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================================================
+   High Contrast Mode
+   ============================================================================ */
+
+@media (prefers-contrast: high) {
+  /* Increase contrast for better visibility */
+  * {
+    border-color: currentColor !important;
+  }
+  
+  button,
+  a {
+    text-decoration: underline;
+  }
+}
+
+/* ============================================================================
+   Reduced Motion
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   Dark Mode Support
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Ensure proper contrast in dark mode */
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   Focus Visible Polyfill
+   ============================================================================ */
+
+/* Only show focus styles when using keyboard */
+.focus-visible-enabled *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.focus-visible-enabled *:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Grid Layout Fallbacks
+   ============================================================================ */
+
+/* Fallback for browsers without grid support */
+@supports not (display: grid) {
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .grid > * {
+    flex: 1 1 auto;
+  }
+}
+
+/* ============================================================================
+   Flexbox Fallbacks
+   ============================================================================ */
+
+/* Fallback for older flexbox implementations */
+.flex {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-col {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   Sticky Position Fallback
+   ============================================================================ */
+
+@supports not (position: sticky) {
+  .sticky {
+    position: fixed;
+    top: 0;
+    z-index: 50;
+  }
+}

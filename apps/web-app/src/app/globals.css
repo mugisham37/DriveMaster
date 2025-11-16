@@ -4,6 +4,9 @@
 /* Note: @apply directives in component files may show as "unknown" but are valid Tailwind CSS */
 @import "tailwindcss";
 
+/* Browser Compatibility Styles */
+@import "../styles/browser-compatibility.css";
+
 /* Tailwind CSS v4 Custom Color Definitions */
 @theme {
   --color-text-color-1: #1a1a1a;
