@@ -7,12 +7,12 @@
  * Requirements: 2.3, 2.4, 3.1, 3.4, 6.1, 6.2, 6.6
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useContentItem } from '@/hooks/use-content-operations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivity } from '@/contexts/ActivityContext';
 import { QuestionDisplay } from '../../layer-3-ui';
-import type { ContentItem } from '@/types/entities';
+import { LessonHeader } from './LessonHeader';
 
 export interface LessonResults {
   lessonId: string;
@@ -257,52 +257,23 @@ export function LessonContainer({
     );
   }
 
+  // Calculate correct answers so far
+  const correctAnswers = Array.from(state.answers.entries()).filter(([questionId, choiceId]) => {
+    const question = questions.find((q: any) => q.id === questionId);
+    return question?.correctChoiceIds?.includes(choiceId);
+  }).length;
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Progress Header */}
-      <div className="sticky top-0 z-10 bg-background border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleExit}
-                className="text-muted-foreground hover:text-foreground"
-                aria-label="Exit lesson"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-              <div>
-                <h1 className="text-lg font-semibold">{lesson.title}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Question {state.currentIndex + 1} of {totalQuestions}
-                </p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {Math.round((state.currentIndex / totalQuestions) * 100)}% Complete
-            </div>
-          </div>
-          {/* Progress bar */}
-          <div className="w-full bg-muted rounded-full h-2">
-            <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(state.currentIndex / totalQuestions) * 100}%` }}
-            />
-          </div>
-        </div>
-      </div>
+      {/* Enhanced Progress Header */}
+      <LessonHeader
+        lessonTitle={lesson.title}
+        currentQuestionIndex={state.currentIndex}
+        totalQuestions={totalQuestions}
+        startTime={state.startTime}
+        correctAnswers={correctAnswers}
+        onExit={handleExit}
+      />
 
       {/* Question Content */}
       <div className="container mx-auto px-4 py-8 max-w-3xl">
