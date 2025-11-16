@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ChoiceButton } from '../ChoiceButton';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, Maximize2 } from 'lucide-react';
+import { Maximize2 } from 'lucide-react';
 import type { Question } from '@/types/learning-platform';
 
 interface QuestionDisplayProps {

@@ -3,7 +3,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { getMasteryColor, getMasteryCategory } from '@/utils/learning-platform';
 
 interface TopicBadgeProps {
   topicName: string;

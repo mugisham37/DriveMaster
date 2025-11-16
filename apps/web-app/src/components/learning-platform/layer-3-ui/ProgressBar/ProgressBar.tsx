@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 
 interface ProgressBarProps {
   value: number; // 0-100
@@ -84,14 +83,21 @@ export function ProgressBar({
 
   return (
     <div className={cn('w-full', className)}>
-      <Progress
-        value={clampedValue}
+      <div
         className={cn(
-          sizeClasses[size],
-          animated && 'transition-all duration-300'
+          'relative w-full overflow-hidden rounded-full bg-gray-200',
+          sizeClasses[size]
         )}
-        indicatorClassName={colorClasses[color]}
-      />
+      >
+        <div
+          className={cn(
+            'h-full transition-all',
+            colorClasses[color],
+            animated && 'duration-300 ease-in-out'
+          )}
+          style={{ width: `${clampedValue}%` }}
+        />
+      </div>
       {showLabel && (
         <span className="text-sm text-gray-600 mt-1 block">
           {Math.round(clampedValue)}%
