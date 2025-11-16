@@ -456,7 +456,8 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 4.3, 7.3_
 
 
-- [ ] 7.5 Build Practice session summary screen
+- [x] 7.5 Build Practice session summary screen
+
   - Display total questions answered and accuracy percentage
   - Show time spent and topics practiced
   - Display mastery level changes for each topic

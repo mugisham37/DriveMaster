@@ -342,42 +342,173 @@ export function PracticeSession({
   }
 
   if (showSummary) {
+    // Calculate time spent
+    const totalTime = Date.now() - state.startTime.getTime();
+    const timeSpentMinutes = Math.floor(totalTime / 60000);
+    const timeSpentSeconds = Math.floor((totalTime % 60000) / 1000);
+    
+    // Calculate topic-wise performance
+    const topicStats = new Map<string, { correct: number; total: number }>();
+    state.questions.forEach((question) => {
+      const answer = state.answers.get(question.id);
+      if (answer) {
+        question.topics.forEach(topic => {
+          const stats = topicStats.get(topic) || { correct: 0, total: 0 };
+          stats.total++;
+          if (answer.isCorrect) stats.correct++;
+          topicStats.set(topic, stats);
+        });
+      }
+    });
+
+    const topicsPracticed = Array.from(topicStats.entries()).map(([topic, stats]) => ({
+      topic,
+      correct: stats.correct,
+      total: stats.total,
+      accuracy: Math.round((stats.correct / stats.total) * 100),
+    }));
+
+    // Get incorrectly answered questions
+    const incorrectQuestions = state.questions.filter(q => {
+      const answer = state.answers.get(q.id);
+      return answer && !answer.isCorrect;
+    });
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+    if (currentAccuracy < 70) {
+      recommendations.push('Consider reviewing the basics before continuing');
+    }
+    topicsPracticed.forEach(({ topic, accuracy }) => {
+      if (accuracy < 60) {
+        recommendations.push(`Focus more on ${topic} (${accuracy}% accuracy)`);
+      }
+    });
+    if (recommendations.length === 0) {
+      recommendations.push('Great job! Keep practicing to maintain your skills');
+    }
+
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-card border rounded-lg p-8">
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🎉</div>
-            <h1 className="text-3xl font-bold mb-2">Practice Complete!</h1>
-            <p className="text-muted-foreground">Great job on completing your practice session</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="p-4 bg-muted rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-1">Questions</p>
-              <p className="text-2xl font-bold">{questionsAnswered}</p>
+      <div className="min-h-screen bg-background p-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card border rounded-lg p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">🎉</div>
+              <h1 className="text-3xl font-bold mb-2">Practice Complete!</h1>
+              <p className="text-muted-foreground">Great job on completing your practice session</p>
             </div>
-            <div className="p-4 bg-muted rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-1">Accuracy</p>
-              <p className="text-2xl font-bold">{currentAccuracy}%</p>
-            </div>
-          </div>
 
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                // Reset state and return to setup for new practice
-                onStop();
-              }}
-              className="flex-1 px-6 py-3 border rounded-md hover:bg-muted font-medium"
-            >
-              Start New Practice
-            </button>
-            <button
-              onClick={onStop}
-              className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium"
-            >
-              Return to Dashboard
-            </button>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-sm text-muted-foreground mb-1">Questions</p>
+                <p className="text-2xl font-bold">{questionsAnswered}</p>
+              </div>
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-sm text-muted-foreground mb-1">Accuracy</p>
+                <p className="text-2xl font-bold">{currentAccuracy}%</p>
+              </div>
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-sm text-muted-foreground mb-1">Time Spent</p>
+                <p className="text-2xl font-bold">{timeSpentMinutes}:{timeSpentSeconds.toString().padStart(2, '0')}</p>
+              </div>
+              <div className="p-4 bg-muted rounded-lg text-center">
+                <p className="text-sm text-muted-foreground mb-1">Topics</p>
+                <p className="text-2xl font-bold">{topicsPracticed.length}</p>
+              </div>
+            </div>
+
+            {/* Topics Practiced */}
+            {topicsPracticed.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Topics Practiced</h2>
+                <div className="space-y-3">
+                  {topicsPracticed.map(({ topic, correct, total, accuracy }) => (
+                    <div key={topic} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{topic}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {correct}/{total} correct
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-muted rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${
+                              accuracy >= 80 ? 'bg-green-500' :
+                              accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${accuracy}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold">{accuracy}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Questions to Review */}
+            {incorrectQuestions.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Questions to Review</h2>
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    You got {incorrectQuestions.length} question{incorrectQuestions.length !== 1 ? 's' : ''} wrong. Consider reviewing:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {incorrectQuestions.slice(0, 5).map((q) => (
+                      <li key={q.id} className="text-sm">
+                        {q.topics.join(', ')}
+                      </li>
+                    ))}
+                    {incorrectQuestions.length > 5 && (
+                      <li className="text-sm text-muted-foreground">
+                        ...and {incorrectQuestions.length - 5} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {recommendations.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Recommended Next Steps</h2>
+                <div className="space-y-2">
+                  {recommendations.map((rec, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                      <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <p className="text-sm">{rec}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  // Reset state and return to setup for new practice
+                  onStop();
+                }}
+                className="flex-1 px-6 py-3 border rounded-md hover:bg-muted font-medium"
+              >
+                Start New Practice
+              </button>
+              <button
+                onClick={onStop}
+                className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium"
+              >
+                Return to Dashboard
+              </button>
+            </div>
           </div>
         </div>
       </div>
