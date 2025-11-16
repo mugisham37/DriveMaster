@@ -55,3 +55,8 @@ export {
   useCrossTabSyncContext,
   type CrossTabSyncContextValue,
 } from "./CrossTabSyncContext";
+export {
+  AchievementNotificationsProvider,
+  useAchievementNotificationsContext,
+  type AchievementNotificationsContextValue,
+} from "./AchievementNotificationsContext";
