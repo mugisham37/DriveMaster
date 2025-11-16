@@ -28,11 +28,11 @@ import { cn } from '@/lib/utils';
 import type { LearningProgressMetrics } from '@/types/analytics-service';
 
 interface WeakAreasPanelProps {
-  progressData?: LearningProgressMetrics;
+  progressData: LearningProgressMetrics | undefined;
   isLoading: boolean;
 }
 
-export function WeakAreasPanel({ progressData, isLoading }: WeakAreasPanelProps) {
+export function WeakAreasPanel({ isLoading }: WeakAreasPanelProps) {
   const router = useRouter();
 
   if (isLoading) {
@@ -113,7 +113,7 @@ function WeakAreaCard({ area, onStartPractice }: WeakAreaCardProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <TopicBadge
-              topic={area.topic}
+              topicName={area.topic}
               masteryLevel={area.currentMastery}
               showMastery
               size="md"

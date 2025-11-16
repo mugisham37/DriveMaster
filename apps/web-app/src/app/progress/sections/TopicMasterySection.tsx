@@ -33,7 +33,7 @@ const LazyBarChart = lazy(() => import('./charts/TopicMasteryBarChart'));
 const LazyRadarChart = lazy(() => import('./charts/TopicMasteryRadarChart'));
 
 interface TopicMasterySectionProps {
-  progressData?: LearningProgressMetrics;
+  progressData: LearningProgressMetrics | undefined;
   isLoading: boolean;
 }
 
@@ -123,7 +123,7 @@ export function TopicMasterySection({ progressData, isLoading }: TopicMasterySec
                   className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
                 >
                   <TopicBadge
-                    topic={topic.name}
+                    topicName={topic.name}
                     masteryLevel={topic.mastery}
                     showMastery
                     size="md"

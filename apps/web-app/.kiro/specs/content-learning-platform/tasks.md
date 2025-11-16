@@ -537,7 +537,9 @@ This implementation plan breaks down the content learning platform into discrete
   - Test browse by topic filtering
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [-] 9. Implement Progress and Analytics page (Layer 1)
+- [x] 9. Implement Progress and Analytics page (Layer 1)
+
+
 
 
 - [x] 9.1 Create Progress and Analytics page component structure
@@ -598,14 +600,16 @@ This implementation plan breaks down the content learning platform into discrete
 
 
 
-- [ ] 9.7 Build Milestone timeline
+- [x] 9.7 Build Milestone timeline
+
   - Display past achievements with dates
   - Show current progress toward next milestones
   - Display upcoming milestones with requirements
   - Show estimated dates to reach milestones based on current pace
   - _Requirements: 9.4_
 
-- [-] 9.8 Build Activity heatmap calendar
+- [x] 9.8 Build Activity heatmap calendar
+
 
   - Create calendar grid showing learning activity per day
   - Color each day by intensity of activity (darker = more active)

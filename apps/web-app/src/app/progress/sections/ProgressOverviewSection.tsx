@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import type { LearningProgressMetrics } from '@/types/analytics-service';
 
 interface ProgressOverviewSectionProps {
-  progressData?: LearningProgressMetrics;
+  progressData: LearningProgressMetrics | undefined;
   isLoading: boolean;
 }
 
@@ -119,7 +119,6 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon: Icon, change, color, bgColor }: MetricCardProps) {
   const [displayValue, setDisplayValue] = useState(0);
-  const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
 
   // Animated counter effect
   useEffect(() => {
@@ -141,6 +140,7 @@ function MetricCard({ title, value, icon: Icon, change, color, bgColor }: Metric
 
       return () => clearInterval(timer);
     }
+    return undefined;
   }, [value]);
 
   const showChange = change !== 0;
@@ -194,5 +194,8 @@ function formatTime(ms: number): string {
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
-  return `${minutes}m`;
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+  return '0m';
 }

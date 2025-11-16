@@ -37,7 +37,7 @@ export function ProgressPageContent({ userId }: ProgressPageContentProps) {
   
   // Historical metrics for charts
   const historicalQuery: HistoricalQuery = {
-    metricType: 'progress',
+    metrics: ['accuracy', 'completions', 'studyTime'],
     timeRange: {
       start: getStartDate(timeRange),
       end: new Date(),

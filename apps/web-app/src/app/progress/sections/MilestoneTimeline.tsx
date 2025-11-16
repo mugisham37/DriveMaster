@@ -26,11 +26,11 @@ import { cn } from '@/lib/utils';
 import type { LearningProgressMetrics } from '@/types/analytics-service';
 
 interface MilestoneTimelineProps {
-  progressData?: LearningProgressMetrics;
+  progressData: LearningProgressMetrics | undefined;
   isLoading: boolean;
 }
 
-export function MilestoneTimeline({ progressData, isLoading }: MilestoneTimelineProps) {
+export function MilestoneTimeline({ isLoading }: MilestoneTimelineProps) {
   if (isLoading) {
     return (
       <Card>
@@ -88,7 +88,7 @@ interface MilestoneItemProps {
   isLast: boolean;
 }
 
-function MilestoneItem({ milestone, isLast }: MilestoneItemProps) {
+function MilestoneItem({ milestone }: MilestoneItemProps) {
   const statusConfig = getStatusConfig(milestone.status);
 
   return (
@@ -127,7 +127,7 @@ function MilestoneItem({ milestone, isLast }: MilestoneItemProps) {
         </div>
 
         {/* Progress bar for in-progress milestones */}
-        {milestone.status === 'in-progress' && (
+        {milestone.status === 'in-progress' && milestone.progress !== undefined && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{milestone.progress}% complete</span>

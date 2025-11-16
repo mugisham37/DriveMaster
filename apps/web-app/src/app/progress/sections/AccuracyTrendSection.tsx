@@ -25,20 +25,19 @@ import {
 } from '@/components/ui/table';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { HistoricalMetricsResponse } from '@/types/analytics-service';
+// Types imported from analytics service
 
 // Lazy load chart component
 const LazyAccuracyLineChart = lazy(() => import('./charts/AccuracyLineChart'));
 
 interface AccuracyTrendSectionProps {
-  historicalData?: HistoricalMetricsResponse;
+  historicalData: unknown;
   timeRange: '7days' | '30days' | '90days' | 'all';
   onTimeRangeChange: (range: '7days' | '30days' | '90days' | 'all') => void;
   isLoading: boolean;
 }
 
 export function AccuracyTrendSection({
-  historicalData,
   timeRange,
   onTimeRangeChange,
   isLoading,
