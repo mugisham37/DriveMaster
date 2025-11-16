@@ -7,7 +7,7 @@
  * Requirements: 8.1, 8.2, 8.3, 8.4, 13.3
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
@@ -16,7 +16,7 @@ import {
   useContentFilters,
 } from '@/hooks/use-content-operations';
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
-import { LessonCard, TopicBadge } from '../../layer-3-ui';
+import { LessonCard } from '../../layer-3-ui';
 import type { SearchRequestDto, ContentFilters } from '@/types';
 
 export interface SearchInterfaceProps {
@@ -41,8 +41,6 @@ export function SearchInterface({
   // Filter management
   const {
     params: filters,
-    updateFilter,
-    updateFilters,
     resetFilters,
     clearFilter,
   } = useContentFilters(initialFilters);
@@ -61,7 +59,7 @@ export function SearchInterface({
 
   // Search hooks
   const { results, isLoading, error } = useContentSearch(searchRequest);
-  const { suggestions, isLoading: suggestionsLoading } = useSearchSuggestions(
+  const { suggestions } = useSearchSuggestions(
     query,
     { limit: 5 }
   );
@@ -303,7 +301,7 @@ export function SearchInterface({
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-lg font-semibold mb-2">No Results Found</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Try adjusting your search terms or filters to find what you're looking for.
+                Try adjusting your search terms or filters to find what you&apos;re looking for.
               </p>
             </div>
           )}

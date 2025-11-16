@@ -67,7 +67,7 @@ export function useDebounce<T>(value: T, delay: number): T {
  * <input onChange={(e) => handleSearch(e.target.value)} />
  * ```
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -116,7 +116,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
  * <div onScroll={handleScroll}>...</div>
  * ```
  */
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -176,10 +176,9 @@ export function useMemoizedSort<T>(
   items: T[],
   compareFn: (a: T, b: T) => number
 ): T[] {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     return [...items].sort(compareFn);
-  }, [items]);
+  }, [items, compareFn]);
 }
 
 /**
@@ -201,10 +200,9 @@ export function useMemoizedFilter<T>(
   items: T[],
   predicate: (item: T) => boolean
 ): T[] {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     return items.filter(predicate);
-  }, [items]);
+  }, [items, predicate]);
 }
 
 /**
@@ -510,7 +508,7 @@ export function useSlowRenderDetection(
  * @param callback - Callback function
  * @returns Stable callback
  */
-export function useStableCallback<T extends (...args: any[]) => any>(
+export function useStableCallback<T extends (...args: unknown[]) => unknown>(
   callback: T
 ): T {
   const callbackRef = useRef(callback);
@@ -565,7 +563,7 @@ export function useIsMounted(): React.MutableRefObject<boolean> {
  * });
  * ```
  */
-export function useBatchedState<T extends Record<string, any>>(
+export function useBatchedState<T extends Record<string, unknown>>(
   initialState: T
 ): [T, (updates: Partial<T>) => void] {
   const [state, setState] = useState<T>(initialState);

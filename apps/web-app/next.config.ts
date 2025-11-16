@@ -55,7 +55,8 @@ const nextConfig: NextConfig = {
 
     // Apply advanced code splitting configuration
     if (optimizedConfig.optimization) {
-      optimizedConfig.optimization.splitChunks = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const splitChunksConfig: Record<string, any> = {
         chunks: 'all',
         cacheGroups: {
           // React vendor chunk
@@ -107,9 +108,12 @@ const nextConfig: NextConfig = {
         },
         minSize: 20 * 1024, // 20KB
       };
+      
+      optimizedConfig.optimization.splitChunks = splitChunksConfig;
 
       // Runtime chunk for webpack runtime code
-      optimizedConfig.optimization.runtimeChunk = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (optimizedConfig.optimization as Record<string, any>).runtimeChunk = {
         name: 'runtime',
       };
     }

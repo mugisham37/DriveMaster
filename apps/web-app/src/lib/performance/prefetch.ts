@@ -332,7 +332,7 @@ export async function prefetchMultipleSWRData<T>(
  */
 export function useLinkPrefetch(
   href: string,
-  router: any,
+  router: { prefetch?: (url: string) => void },
   delay: number = 500
 ): HoverPrefetchHandlers {
   return usePrefetchOnHover(

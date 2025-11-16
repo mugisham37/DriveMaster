@@ -270,7 +270,7 @@ export interface SuspenseFallbackProps {
   message?: string;
 }
 
-export function SuspenseFallback({ type = 'page', message }: SuspenseFallbackProps) {
+export function SuspenseFallback({ type = 'page', _message }: SuspenseFallbackProps) {
   switch (type) {
     case 'card':
       return <CardLoadingSkeleton />;

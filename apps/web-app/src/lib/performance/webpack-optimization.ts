@@ -8,7 +8,7 @@
  */
 
 // Type definitions for webpack configuration
-type Configuration = any;
+type Configuration = Record<string, unknown>;
 
 /**
  * Get optimized webpack configuration for code splitting
@@ -135,7 +135,7 @@ export function getModuleConcatenation(): Configuration['optimization'] {
 /**
  * Get performance hints configuration
  */
-export function getPerformanceConfig(): any {
+export function getPerformanceConfig(): Configuration['performance'] {
   return {
     hints: process.env.NODE_ENV === 'production' ? 'warning' : false,
     maxEntrypointSize: 200 * 1024, // 200KB
@@ -185,7 +185,9 @@ export function getCacheConfig(): Configuration['cache'] {
  * Bundle analyzer configuration (for development)
  */
 export function getBundleAnalyzerConfig() {
-  const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+  // Dynamic import to avoid bundling in production
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
   
   return new BundleAnalyzerPlugin({
     analyzerMode: process.env.ANALYZE === 'true' ? 'server' : 'disabled',
@@ -224,7 +226,7 @@ export interface BundleSizeReport {
 }
 
 export function validateBundleSizes(
-  stats: any,
+  stats: { assets?: Array<{ name: string; size: number; gzipSize?: number }> },
   targets: { initial: number; route: number; vendor: number }
 ): BundleSizeReport[] {
   const reports: BundleSizeReport[] = [];
@@ -233,7 +235,7 @@ export function validateBundleSizes(
     return reports;
   }
   
-  stats.assets.forEach((asset: any) => {
+  stats.assets.forEach((asset: { name: string; size: number; gzipSize?: number }) => {
     const name = asset.name;
     const size = asset.size / 1024; // Convert to KB
     const gzipSize = asset.gzipSize ? asset.gzipSize / 1024 : size * 0.3; // Estimate if not available

@@ -241,7 +241,7 @@ export const LazyFeatureComponents = {
 /**
  * Create a lazy-loaded component with custom loading state
  */
-export function createLazyComponent<T extends ComponentType<any>>(
+export function createLazyComponent<T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T }>,
   options?: {
     ssr?: boolean;
@@ -256,8 +256,8 @@ export function createLazyComponent<T extends ComponentType<any>>(
  * Preload a lazy component
  * Useful for prefetching components before they're needed
  */
-export function preloadComponent(component: any) {
-  if (component && typeof component.preload === 'function') {
+export function preloadComponent(component: unknown) {
+  if (component && typeof component === 'object' && 'preload' in component && typeof component.preload === 'function') {
     component.preload();
   }
 }

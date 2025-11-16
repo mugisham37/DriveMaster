@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerAuthSession } from "@/lib/auth";
+import { getServerAuthSession } from "@/lib/auth/server";
 
 /**
  * Authentication middleware for API routes
