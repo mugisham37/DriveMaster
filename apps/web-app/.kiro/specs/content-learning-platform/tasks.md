@@ -757,12 +757,14 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 11.1, 14.1_
 
 
-- [ ] 12.2 Implement offline activity queue
+- [x] 12.2 Implement offline activity queue
+
   - Create IndexedDB database for offline activity storage
   - Queue activities when offline instead of sending to backend
   - Store activities with timestamp and order
   - Display immediate UI feedback for queued activities
   - _Requirements: 11.2, 11.3_
+
 
 - [ ] 12.3 Implement offline content caching
   - Cache lesson data when loaded while online
