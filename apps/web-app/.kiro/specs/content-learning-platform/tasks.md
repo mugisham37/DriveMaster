@@ -705,7 +705,8 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 10.3, 14.1_
 
 
-- [ ] 11.2 Implement progress update subscriptions
+- [x] 11.2 Implement progress update subscriptions
+
   - Subscribe to user-specific progress channel on dashboard mount
   - Listen for progress update messages from backend
   - Update ProgressContext when messages received
@@ -713,7 +714,8 @@ This implementation plan breaks down the content learning platform into discrete
   - Add error handling for message parsing
   - _Requirements: 10.3, 10.4_
 
-- [ ] 11.3 Implement cross-tab synchronization with BroadcastChannel
+- [-] 11.3 Implement cross-tab synchronization with BroadcastChannel
+
   - Create BroadcastChannel for cross-tab communication
   - Broadcast progress updates to other tabs when activity recorded
   - Listen for broadcasts in all tabs and update ProgressContext

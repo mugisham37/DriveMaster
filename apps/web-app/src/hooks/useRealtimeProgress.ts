@@ -10,205 +10,66 @@
  * Requirements: 10.3, 10.4
  */
 
-import { useEffect, useCallback, useRef } from 'react';
-import { useWebSocket } from '@/contexts/WebSocketContext';
+import { useEffect } from 'react';
 import { useProgress } from '@/contexts/ProgressContext';
-import { useAuth } from '@/contexts/AuthContext';
-import type {
-  ProgressUpdateData,
-  MilestoneData,
-  StreakData,
-} from '@/lib/realtime/websocket-manager';
 
 export interface UseRealtimeProgressOptions {
   enabled?: boolean;
-  onProgressUpdate?: (data: ProgressUpdateData) => void;
-  onMilestoneAchieved?: (data: MilestoneData) => void;
-  onStreakUpdate?: (data: StreakData) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
   onError?: (error: Error) => void;
 }
 
 /**
  * Hook to subscribe to real-time progress updates
+ * 
+ * This hook leverages the existing ProgressContext's real-time subscription system.
+ * The ProgressContext already handles WebSocket connections via ProgressChannel.
  */
 export function useRealtimeProgress(options: UseRealtimeProgressOptions = {}) {
   const {
     enabled = true,
-    onProgressUpdate,
-    onMilestoneAchieved,
-    onStreakUpdate,
+    onConnect,
+    onDisconnect,
     onError,
   } = options;
 
-  const { wsManager, connectionState } = useWebSocket();
-  const { updateMastery, updateStreak, addMilestone } = useProgress();
-  const { user } = useAuth();
-  
-  const isSubscribedRef = useRef(false);
+  const { 
+    subscribeToProgressUpdates, 
+    unsubscribeFromProgressUpdates,
+    state 
+  } = useProgress();
 
-  // Subscribe to progress channel
+  // Subscribe to progress updates on mount
   useEffect(() => {
-    if (!enabled || !wsManager || !connectionState.isConnected || !user) {
+    if (!enabled) {
       return;
     }
 
-    // Subscribe to user-specific progress channel
-    const channels = [
-      `progress:${user.id}`,
-      `milestones:${user.id}`,
-      `streaks:${user.id}`,
-    ];
-
     try {
-      wsManager.subscribe(channels);
-      isSubscribedRef.current = true;
-
-      console.log('[useRealtimeProgress] Subscribed to channels:', channels);
+      subscribeToProgressUpdates();
+      console.log('[useRealtimeProgress] Subscribed to progress updates');
+      onConnect?.();
     } catch (error) {
-      const errorObj = error i
-      if (data.milestone) {
-        // Show celebration for new milestone
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.milestones(userId),
-        });
-        
-        // Trigger celebration notification
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("milestone:achieved", {
-              detail: data.milestone,
-            })
-          );
-        }
-      }
+      const errorObj = error instanceof Error ? error : new Error('Failed to subscribe');
+      console.error('[useRealtimeProgress] Subscription error:', errorObj);
+      onError?.(errorObj);
+    }
 
-      setLastUpdate(new Date());
-    },
-    [userId, queryClient]
-  );
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
-    const subscriberId = subscriberIdRef.current;
-
-    let mounted = true;
-
-    const connectToWebSocket = async () => {
-      try {
-        setConnectionStatus({
-          isConnected: false,
-          isConnecting: true,
-          error: null,
-        });
-
-        const connection = await globalConnectionPool.getConnection(
-          `${wsUrl}/progress/${userId}`,
-          subscriberId,
-          {
-            reconnectInterval: 1000,
-            maxReconnectAttempts: 10,
-            heartbeatInterval: 30000,
-          }
-        );
-
-        if (!mounted) return;
-
-        connectionRef.current = connection;
-
-        // Set up event listeners
-        connection.on("connected", () => {
-          if (mounted) {
-            setConnectionStatus({
-              isConnected: true,
-              isConnecting: false,
-              error: null,
-            });
-          }
-        });
-
-        connection.on("disconnected", () => {
-          if (mounted) {
-            setConnectionStatus({
-              isConnected: false,
-              isConnecting: false,
-              error: null,
-            });
-          }
-        });
-
-        connection.on("error", (event) => {
-          if (mounted) {
-            setConnectionStatus({
-              isConnected: false,
-              isConnecting: false,
-              error: event.error || new Error("WebSocket error"),
-            });
-          }
-        });
-
-        connection.on("message", (event) => {
-          if (mounted && event.data) {
-            const message = event.data as unknown as ProgressUpdateEvent;
-            if (message.type === "progress:updated") {
-              handleProgressUpdate(message);
-            }
-          }
-        });
-
-        // Subscribe to progress updates
-        if (connection.isReady()) {
-          connection.send({
-            type: "subscribe",
-            channel: "progress",
-            userId,
-          });
-        }
-      } catch (error) {
-        if (mounted) {
-          setConnectionStatus({
-            isConnected: false,
-            isConnecting: false,
-            error: error instanceof Error ? error : new Error("Connection failed"),
-          });
-        }
-      }
-    };
-
-    connectToWebSocket();
-
+    // Cleanup: unsubscribe on unmount
     return () => {
-      mounted = false;
-      
-      // Unsubscribe and release connection
-      if (connectionRef.current?.isReady()) {
-        try {
-          connectionRef.current.send({
-            type: "unsubscribe",
-            channel: "progress",
-            userId,
-          });
-        } catch (error) {
-          console.warn("Failed to unsubscribe from progress updates:", error);
-        }
+      try {
+        unsubscribeFromProgressUpdates();
+        console.log('[useRealtimeProgress] Unsubscribed from progress updates');
+        onDisconnect?.();
+      } catch (error) {
+        console.error('[useRealtimeProgress] Unsubscribe error:', error);
       }
-
-      globalConnectionPool.releaseConnection(
-        `${wsUrl}/progress/${userId}`,
-        subscriberId
-      );
     };
-  }, [userId, handleProgressUpdate]);
+  }, [enabled, subscribeToProgressUpdates, unsubscribeFromProgressUpdates, onConnect, onDisconnect, onError]);
 
   return {
-    ...connectionStatus,
-    lastUpdate,
-    reconnect: useCallback(() => {
-      if (connectionRef.current) {
-        connectionRef.current.disconnect();
-        connectionRef.current.connect();
-      }
-    }, []),
+    isConnected: state.isRealTimeConnected,
+    isSubscribed: state.isRealTimeConnected,
   };
 }
