@@ -30,7 +30,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
     };
   }
 
-  static override getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
       error,
@@ -71,7 +71,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
     });
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       // Use custom fallback if provided
       if (this.props.fallback) {

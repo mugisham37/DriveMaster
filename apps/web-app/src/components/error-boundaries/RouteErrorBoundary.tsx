@@ -66,7 +66,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     window.location.href = '/';
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">

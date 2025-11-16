@@ -139,7 +139,7 @@ export function highlightSearchTerms(text: string, searchTerm: string): string {
  */
 export function toTitleCase(str: string): string {
   return str.replace(/\w\S*/g, (txt) => {
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
   });
 }
 
@@ -338,7 +338,9 @@ export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    const temp = shuffled[i];
+    shuffled[i] = shuffled[j]!;
+    shuffled[j] = temp!;
   }
   return shuffled;
 }
@@ -352,7 +354,7 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
     if (!result[groupKey]) {
       result[groupKey] = [];
     }
-    result[groupKey].push(item);
+    result[groupKey]!.push(item);
     return result;
   }, {} as Record<string, T[]>);
 }
