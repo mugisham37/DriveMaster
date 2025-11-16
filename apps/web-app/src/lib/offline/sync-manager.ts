@@ -122,6 +122,8 @@ export class SyncManager {
       for (let i = 0; i < sortedActivities.length; i++) {
         const activity = sortedActivities[i];
 
+        if (!activity) continue;
+
         // Update progress
         this.updateState({
           progress: {
@@ -134,10 +136,11 @@ export class SyncManager {
 
         try {
           // Mark as syncing
-          await this.dbManager.updateActivity({
+          const syncingActivity: OfflineActivity = {
             ...activity,
             status: "syncing",
-          });
+          };
+          await this.dbManager.updateActivity(syncingActivity);
 
           // Attempt to sync with retry logic
           await this.syncActivityWithRetry(activity);
@@ -161,8 +164,14 @@ export class SyncManager {
 
           // Update activity status
           const updatedActivity: OfflineActivity = {
-            ...activity,
+            id: activity.id,
+            userId: activity.userId,
+            activityType: activity.activityType,
+            data: activity.data,
+            timestamp: activity.timestamp,
+            queuedAt: activity.queuedAt,
             retryCount: activity.retryCount + 1,
+            maxRetries: activity.maxRetries,
             status: activity.retryCount + 1 >= activity.maxRetries ? "failed" : "pending",
             error: errorMessage,
           };
@@ -267,21 +276,13 @@ export class SyncManager {
    * Sync a single activity (integrate with your API)
    */
   private async syncActivity(activity: OfflineActivity): Promise<void> {
-    // This is a placeholder - integrate with your actual API client
-    const activityData = activity.data;
+    // Import the user service client dynamically to avoid circular dependencies
+    const { userServiceClient } = await import("@/lib/user-service");
+    
+    const activityData = activity.data as Record<string, unknown>;
 
-    const response = await fetch("/api/users/activities", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(activityData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to sync activity: ${response.status} ${errorText}`);
-    }
+    // Record the activity using the user service client
+    await userServiceClient.recordActivity(activityData as never);
   }
 
   /**

@@ -247,25 +247,17 @@ export function useOfflineQueue(userId: string | undefined) {
   }, [userId, state.isSyncing, isOffline, updateCounts]);
 
   // ============================================================================
-  // Sync Activity (Placeholder - integrate with your API)
+  // Sync Activity (integrate with user service API)
   // ============================================================================
 
   const syncActivity = async (activity: OfflineActivity): Promise<void> => {
-    // This is a placeholder - integrate with your actual API client
-    // For now, we'll simulate the sync
-    const activityData = activity.data as ActivityRecord;
+    // Import the user service client dynamically
+    const { userServiceClient } = await import("@/lib/user-service");
+    
+    const activityData = activity.data as Record<string, unknown>;
 
-    const response = await fetch("/api/users/activities", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(activityData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to sync activity: ${response.status} ${response.statusText}`);
-    }
+    // Record the activity using the user service client
+    await userServiceClient.recordActivity(activityData as never);
   };
 
   // ============================================================================

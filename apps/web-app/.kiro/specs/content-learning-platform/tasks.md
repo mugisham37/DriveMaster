@@ -743,7 +743,11 @@ This implementation plan breaks down the content learning platform into discrete
   - Test achievement notifications
   - _Requirements: 10.1, 10.3, 10.4_
 
-- [-] 12. Implement offline support and activity queueing
+- [x] 12. Implement offline support and activity queueing
+
+
+
+
 
 
 
@@ -775,7 +779,10 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 11.2_
 
 
-- [ ] 12.4 Implement activity sync on reconnection
+- [x] 12.4 Implement activity sync on reconnection
+
+
+
   - Detect when connection is restored
   - Process offline queue in order
   - Send batched activities to backend
