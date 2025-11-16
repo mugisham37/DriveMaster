@@ -16,6 +16,7 @@ import { LessonContainer } from '@/components/learning-platform/layer-2-features
 import { LessonIntro } from '@/components/learning-platform/layer-2-features/LessonContainer/LessonIntro';
 import { LessonCompletion } from '@/components/learning-platform/layer-2-features/LessonContainer/LessonCompletion';
 import { EnhancedSkeleton } from '@/components/ui/enhanced-skeleton';
+import { useProgressPrefetch } from '@/lib/performance/prefetch';
 import type { LessonResults } from '@/components/learning-platform/layer-2-features/LessonContainer/LessonContainer';
 
 /**
@@ -76,22 +77,22 @@ function LessonViewPage() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [lessonResults, setLessonResults] = useState<LessonResults | null>(null);
   const [nextLessonId, _setNextLessonId] = useState<string | null>(null);
-  const [prefetchTriggered, setPrefetchTriggered] = useState(false);
+  const [currentProgress, setCurrentProgress] = useState(0);
   
-  // Prefetch next lesson
-  const triggerNextLessonPrefetch = useCallback(() => {
-    if (prefetchTriggered) return;
-    
-    setPrefetchTriggered(true);
-    
+  // Prefetch next lesson callback
+  const prefetchNextLesson = useCallback(() => {
     // TODO: Implement actual recommendation API call
     // For now, we'll just log that prefetch would happen
     // In production, this would call useRecommendations hook
-    console.log('Prefetching next recommended lesson...');
+    console.log('Prefetching next recommended lesson at 80% progress...');
     
     // Simulated next lesson ID (in production, get from recommendations API)
     // In production: setNextLessonId('next-lesson-id');
-  }, [prefetchTriggered]);
+    // router.prefetch(`/learn/lesson/${nextLessonId}`);
+  }, []);
+  
+  // Use progress-based prefetch hook (triggers at 80% by default)
+  useProgressPrefetch(prefetchNextLesson, currentProgress, 80);
   
   // Check if this is a resume (has saved progress)
   useEffect(() => {
@@ -104,9 +105,9 @@ function LessonViewPage() {
     }
   }, [lessonId]);
   
-  // Monitor progress and trigger prefetch at 80% completion
+  // Monitor progress and update progress state
   useEffect(() => {
-    if (typeof window === 'undefined' || prefetchTriggered || showIntro || showCompletion) {
+    if (typeof window === 'undefined' || showIntro || showCompletion) {
       return;
     }
     
@@ -121,17 +122,13 @@ function LessonViewPage() {
         
         if (questionCount > 0) {
           const progress = (currentIndex / questionCount) * 100;
-          
-          // Trigger prefetch at 80% completion
-          if (progress >= 80 && !prefetchTriggered) {
-            triggerNextLessonPrefetch();
-          }
+          setCurrentProgress(progress);
         }
       } catch (e) {
-        console.warn('Failed to parse lesson state for prefetch:', e);
+        console.warn('Failed to parse lesson state for progress:', e);
       }
     }
-  }, [lessonId, lesson, prefetchTriggered, showIntro, showCompletion, triggerNextLessonPrefetch]);
+  }, [lessonId, lesson, showIntro, showCompletion]);
   
   // Handle lesson start
   const handleStartLesson = useCallback(() => {
@@ -142,12 +139,8 @@ function LessonViewPage() {
   const handleLessonComplete = useCallback((results: LessonResults) => {
     setLessonResults(results);
     setShowCompletion(true);
-    
-    // Trigger prefetch for next lesson if not already done
-    if (!prefetchTriggered) {
-      triggerNextLessonPrefetch();
-    }
-  }, [prefetchTriggered, triggerNextLessonPrefetch]);
+    setCurrentProgress(100); // Ensure prefetch is triggered if not already
+  }, []);
   
   // Handle exit
   const handleExit = useCallback(() => {

@@ -10,7 +10,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useRecommendations } from '@/hooks/use-content-operations';
-import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
+import { usePrefetchOnHover, useMountPrefetch } from '@/lib/performance/prefetch';
 import { LessonCard, LessonCardSkeleton } from '../../layer-3-ui';
 
 export interface RecommendedLessonsProps {
@@ -31,13 +31,17 @@ export function RecommendedLessons({
     { limit }
   );
 
-  // Prefetch hook with 500ms delay
-  const { handleMouseEnter, handleMouseLeave } = usePrefetchOnHover(
-    async (lessonId: string) => {
-      // Prefetch the lesson page
-      router.prefetch(`/learn/lesson/${lessonId}`);
+  // Prefetch recommendations on mount (after initial render)
+  useMountPrefetch(
+    () => {
+      if (recommendations && recommendations.length > 0) {
+        // Prefetch first 3 recommended lessons
+        recommendations.slice(0, 3).forEach((lesson) => {
+          router.prefetch(`/learn/lesson/${lesson.id}`);
+        });
+      }
     },
-    500
+    !isLoading && !!recommendations
   );
 
   const handleLessonClick = (lessonId: string) => {
@@ -102,19 +106,26 @@ export function RecommendedLessons({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendations.map((lesson) => (
-          <div
-            key={lesson.id}
-            onMouseEnter={() => handleMouseEnter(lesson.id)}
-            onMouseLeave={handleMouseLeave}
-          >
-            <LessonCard
-              lesson={lesson}
-              showProgress={true}
-              onClick={() => handleLessonClick(lesson.id)}
-            />
-          </div>
-        ))}
+        {recommendations.map((lesson) => {
+          // Create hover prefetch handlers for each lesson
+          const prefetchHandlers = usePrefetchOnHover(
+            () => router.prefetch(`/learn/lesson/${lesson.id}`),
+            { delay: 500 }
+          );
+
+          return (
+            <div
+              key={lesson.id}
+              {...prefetchHandlers}
+            >
+              <LessonCard
+                lesson={lesson}
+                showProgress={true}
+                onClick={() => handleLessonClick(lesson.id)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

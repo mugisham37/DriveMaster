@@ -869,14 +869,16 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 13.1, 13.5_
 
 
-- [ ] 14.2 Implement data prefetching
+- [x] 14.2 Implement data prefetching
+
   - Add prefetch on mount for dashboard recommended lessons
   - Implement hover prefetch for lesson cards (500ms delay)
   - Prefetch next lesson at 80% completion in lesson view
   - Prefetch search result top 3 on hover
   - _Requirements: 13.3, 13.4_
 
-- [ ] 14.3 Implement image optimization
+- [-] 14.3 Implement image optimization
+
   - Use Next.js Image component throughout application
   - Configure responsive image sizes
   - Add lazy loading for below-fold images

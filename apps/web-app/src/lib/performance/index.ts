@@ -13,6 +13,9 @@ export * from './dynamic-imports';
 // Webpack optimization
 export * from './webpack-optimization';
 
+// Data prefetching
+export * from './prefetch';
+
 // Re-export commonly used utilities
 export {
   LazyChartComponents,
@@ -27,3 +30,15 @@ export {
   preloadComponent,
   BUNDLE_SIZE_TARGETS,
 } from './dynamic-imports';
+
+export {
+  usePrefetchOnHover,
+  useProgressPrefetch,
+  useMountPrefetch,
+  useBatchPrefetch,
+  usePredictivePrefetch,
+  useLinkPrefetch,
+  prefetchSWRData,
+  prefetchMultipleSWRData,
+  addPrefetchTask,
+} from './prefetch';
