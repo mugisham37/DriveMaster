@@ -54,7 +54,7 @@ export function AriaLiveRegion({
 
   // Expose announce function globally
   useEffect(() => {
-    const announceFunction = (msg: string, customPriority?: 'polite' | 'assertive') => {
+    const announceFunction = (msg: string) => {
       setMessage(msg);
       
       // Clear message after announcement

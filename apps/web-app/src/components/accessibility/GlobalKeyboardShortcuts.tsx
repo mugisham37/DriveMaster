@@ -13,7 +13,6 @@
 import * as React from 'react';
 import { useEffect, useCallback, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { KEYBOARD_KEYS } from '@/utils/accessibility';
 import {
   Dialog,
   DialogContent,
@@ -214,23 +213,6 @@ export function GlobalKeyboardShortcuts() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
-
-  // ============================================================================
-  // Get Shortcuts for Current Scope
-  // ============================================================================
-
-  const getShortcutsForDisplay = () => {
-    const currentScope = getCurrentScope();
-    const shortcuts = [...globalShortcuts];
-
-    if (currentScope === 'lesson') {
-      shortcuts.push(...lessonShortcuts);
-    }
-
-    return shortcuts.filter(
-      (s) => s.scope === 'global' || s.scope === currentScope
-    );
-  };
 
   // ============================================================================
   // Render

@@ -182,6 +182,6 @@ export function QuestionDisplay({
           </Button>
         </div>
       )}
-    </div>
+    </article>
   );
 }
