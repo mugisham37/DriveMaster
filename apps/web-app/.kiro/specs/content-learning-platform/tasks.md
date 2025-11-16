@@ -766,12 +766,14 @@ This implementation plan breaks down the content learning platform into discrete
   - _Requirements: 11.2, 11.3_
 
 
-- [ ] 12.3 Implement offline content caching
+- [x] 12.3 Implement offline content caching
+
   - Cache lesson data when loaded while online
   - Allow viewing cached lessons while offline
   - Cache user progress (last synced state)
   - Display "cached content" indicator when offline
   - _Requirements: 11.2_
+
 
 - [ ] 12.4 Implement activity sync on reconnection
   - Detect when connection is restored
