@@ -115,6 +115,116 @@
   }
 }
 
+/* High contrast mode class (applied via JavaScript) */
+.high-contrast {
+  /* Increase all border widths */
+  * {
+    border-width: 2px !important;
+  }
+
+  /* Strong text contrast */
+  color: #000;
+  background-color: #fff;
+
+  /* Enhanced focus indicators */
+  .focus-visible-enabled *:focus-visible {
+    outline-width: 3px !important;
+    outline-offset: 3px !important;
+    outline-color: #000 !important;
+  }
+
+  /* Button contrast */
+  button,
+  [role="button"] {
+    border: 2px solid #000 !important;
+    color: #000 !important;
+  }
+
+  button:hover,
+  [role="button"]:hover {
+    background-color: #000 !important;
+    color: #fff !important;
+  }
+
+  /* Link contrast */
+  a {
+    color: #0000EE !important;
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+  }
+
+  a:visited {
+    color: #551A8B !important;
+  }
+
+  a:hover {
+    color: #0000EE !important;
+    text-decoration-thickness: 3px !important;
+  }
+
+  /* Form elements */
+  input,
+  textarea,
+  select {
+    border: 2px solid #000 !important;
+    color: #000 !important;
+    background-color: #fff !important;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: 3px solid #000 !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Status colors with sufficient contrast */
+  .text-success,
+  [class*="text-green"] {
+    color: #006400 !important; /* Dark green for better contrast */
+  }
+
+  .text-error,
+  [class*="text-red"] {
+    color: #8B0000 !important; /* Dark red for better contrast */
+  }
+
+  .text-warning,
+  [class*="text-yellow"] {
+    color: #8B8000 !important; /* Dark yellow for better contrast */
+  }
+
+  .text-info,
+  [class*="text-blue"] {
+    color: #00008B !important; /* Dark blue for better contrast */
+  }
+
+  /* Background colors */
+  .bg-success,
+  [class*="bg-green"] {
+    background-color: #90EE90 !important; /* Light green */
+    color: #000 !important;
+  }
+
+  .bg-error,
+  [class*="bg-red"] {
+    background-color: #FFB6C1 !important; /* Light red */
+    color: #000 !important;
+  }
+
+  .bg-warning,
+  [class*="bg-yellow"] {
+    background-color: #FFFFE0 !important; /* Light yellow */
+    color: #000 !important;
+  }
+
+  .bg-info,
+  [class*="bg-blue"] {
+    background-color: #ADD8E6 !important; /* Light blue */
+    color: #000 !important;
+  }
+}
+
 /* High contrast mode support for Windows */
 @media (forced-colors: active) {
   /* Ensure focus indicators are visible */

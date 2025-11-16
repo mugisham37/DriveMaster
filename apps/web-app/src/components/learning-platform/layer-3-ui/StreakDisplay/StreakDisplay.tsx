@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Flame } from 'lucide-react';
-import { getAnimationDuration } from '@/utils/learning-platform';
+import { useReducedMotion } from '@/components/accessibility/ReducedMotionProvider';
 
 interface StreakDisplayProps {
   currentStreak: number;
@@ -21,6 +21,7 @@ export function StreakDisplay({
   className,
 }: StreakDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { getAnimationDuration, shouldReduceMotion } = useReducedMotion();
   const animationDuration = getAnimationDuration(300);
 
   const handleToggle = () => {
@@ -59,7 +60,7 @@ export function StreakDisplay({
         <Flame
           className={cn(
             'w-6 h-6 text-orange-500',
-            isStreakActive && 'animate-pulse'
+            isStreakActive && !shouldReduceMotion() && 'animate-pulse'
           )}
           style={{
             animationDuration: animationDuration ? `${animationDuration}ms` : undefined,

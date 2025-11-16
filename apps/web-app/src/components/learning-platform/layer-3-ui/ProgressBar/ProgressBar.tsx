@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/components/accessibility/ReducedMotionProvider';
 
 interface ProgressBarProps {
   value: number; // 0-100
@@ -22,7 +23,10 @@ export function ProgressBar({
   animated = true,
   className,
 }: ProgressBarProps) {
+  const { shouldReduceMotion } = useReducedMotion();
   const clampedValue = Math.min(100, Math.max(0, value));
+  const ariaLabel = `Progress: ${Math.round(clampedValue)} percent complete`;
+  const shouldAnimate = animated && !shouldReduceMotion();
 
   const colorClasses = {
     primary: 'bg-blue-600',
@@ -45,8 +49,15 @@ export function ProgressBar({
     const offset = circumference - (clampedValue / 100) * circumference;
 
     return (
-      <div className={cn('relative inline-flex items-center justify-center', className)}>
-        <svg width={circleSize} height={circleSize} className="transform -rotate-90">
+      <div 
+        className={cn('relative inline-flex items-center justify-center', className)}
+        role="progressbar"
+        aria-valuenow={Math.round(clampedValue)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={ariaLabel}
+      >
+        <svg width={circleSize} height={circleSize} className="transform -rotate-90" aria-hidden="true">
           <circle
             cx={circleSize / 2}
             cy={circleSize / 2}
@@ -67,13 +78,13 @@ export function ProgressBar({
             strokeDashoffset={offset}
             className={cn(
               colorClasses[color],
-              animated && 'transition-all duration-300 ease-in-out'
+              shouldAnimate && 'transition-all duration-300 ease-in-out'
             )}
             strokeLinecap="round"
           />
         </svg>
         {showLabel && (
-          <span className="absolute text-sm font-semibold text-gray-700">
+          <span className="absolute text-sm font-semibold text-gray-700" aria-hidden="true">
             {Math.round(clampedValue)}%
           </span>
         )}
@@ -88,18 +99,24 @@ export function ProgressBar({
           'relative w-full overflow-hidden rounded-full bg-gray-200',
           sizeClasses[size]
         )}
+        role="progressbar"
+        aria-valuenow={Math.round(clampedValue)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={ariaLabel}
       >
         <div
           className={cn(
-            'h-full transition-all',
+            'h-full',
             colorClasses[color],
-            animated && 'duration-300 ease-in-out'
+            shouldAnimate && 'transition-all duration-300 ease-in-out'
           )}
           style={{ width: `${clampedValue}%` }}
+          aria-hidden="true"
         />
       </div>
       {showLabel && (
-        <span className="text-sm text-gray-600 mt-1 block">
+        <span className="text-sm text-gray-600 mt-1 block" aria-hidden="true">
           {Math.round(clampedValue)}%
         </span>
       )}

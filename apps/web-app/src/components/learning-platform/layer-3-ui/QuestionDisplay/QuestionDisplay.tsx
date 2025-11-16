@@ -34,11 +34,15 @@ export function QuestionDisplay({
   const canSubmit = selectedChoiceId && !showFeedback && onSubmit;
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <article className={cn('space-y-6', className)} aria-label="Question">
       {/* Review Badge */}
       {isReview && (
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 border border-blue-300 rounded-md text-sm font-medium">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div 
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 border border-blue-300 rounded-md text-sm font-medium"
+          role="status"
+          aria-label="This is a review question"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Review Question
@@ -47,22 +51,22 @@ export function QuestionDisplay({
       
       {/* Question Text */}
       <div className="prose prose-sm max-w-none">
-        <p className="text-lg font-medium text-gray-900 leading-relaxed">
+        <h2 className="text-lg font-medium text-gray-900 leading-relaxed">
           {question.text}
-        </p>
+        </h2>
       </div>
 
       {/* Media Gallery */}
       {hasMedia && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {question.mediaAssets?.map((assetId) => (
-            <div
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Question media">
+          {question.mediaAssets?.map((assetId, index) => (
+            <figure
               key={assetId}
               className="relative group rounded-lg overflow-hidden border border-gray-200"
             >
               <img
                 src={`/api/media/${assetId}`}
-                alt="Question media"
+                alt={`Question diagram ${index + 1}`}
                 className="w-full h-auto"
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center gap-2">
@@ -71,14 +75,15 @@ export function QuestionDisplay({
                   variant="secondary"
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => setExpandedMedia(assetId)}
+                  aria-label={`View diagram ${index + 1} in fullscreen`}
                 >
-                  <Maximize2 className="w-4 h-4 mr-1" />
+                  <Maximize2 className="w-4 h-4 mr-1" aria-hidden="true" />
                   Fullscreen
                 </Button>
               </div>
-            </div>
+            </figure>
           ))}
-        </div>
+        </section>
       )}
 
       {/* Choices */}
@@ -114,6 +119,7 @@ export function QuestionDisplay({
             disabled={!selectedChoiceId}
             className="min-w-32"
             data-submit-answer
+            aria-label="Submit your answer"
           >
             Submit Answer
           </Button>
@@ -122,18 +128,22 @@ export function QuestionDisplay({
 
       {/* Explanation (shown after feedback) */}
       {showFeedback && question.explanation && (
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-blue-900 mb-2">Explanation</h4>
+        <section 
+          className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+          role="region"
+          aria-label="Answer explanation"
+        >
+          <h3 className="font-semibold text-blue-900 mb-2">Explanation</h3>
           <p className="text-sm text-blue-800 leading-relaxed">
             {question.explanation}
           </p>
-        </div>
+        </section>
       )}
 
       {/* External References */}
       {showFeedback && question.externalReferences && question.externalReferences.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-semibold text-gray-700">Learn More:</h4>
+        <nav className="mt-4 space-y-2" aria-label="Additional learning resources">
+          <h3 className="text-sm font-semibold text-gray-700">Learn More:</h3>
           <ul className="space-y-1">
             {question.externalReferences.map((ref, index) => (
               <li key={index}>
@@ -142,13 +152,14 @@ export function QuestionDisplay({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-blue-600 hover:underline"
+                  aria-label={`${ref.title}, opens in new window`}
                 >
                   {ref.title} ({ref.type})
                 </a>
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
       )}
 
       {/* Fullscreen Media Modal */}

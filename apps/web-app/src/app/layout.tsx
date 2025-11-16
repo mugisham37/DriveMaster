@@ -11,6 +11,9 @@ import { EmailVerificationBanner } from "@/components/auth/shared";
 import { Toaster } from "@/components/ui/sonner";
 import { SkipNavigation } from "@/components/layout/SkipNavigation";
 import { GlobalKeyboardShortcuts } from "@/components/accessibility/GlobalKeyboardShortcuts";
+import { GlobalAriaLiveRegions } from "@/components/accessibility/AriaLiveRegion";
+import { ReducedMotionProvider } from "@/components/accessibility/ReducedMotionProvider";
+import { HighContrastProvider } from "@/components/accessibility/HighContrastProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -82,16 +85,21 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <SkipNavigation />
+        <GlobalAriaLiveRegions />
         <QueryProvider>
           <AuthProvider>
             <GDPRProvider>
               <I18nProvider>
-                <PerformanceMonitor />
-                <FlashMessages />
-                <EmailVerificationBanner />
-                <Toaster position="top-right" richColors closeButton />
-                <GlobalKeyboardShortcuts />
-                {children}
+                <ReducedMotionProvider>
+                  <HighContrastProvider>
+                    <PerformanceMonitor />
+                    <FlashMessages />
+                    <EmailVerificationBanner />
+                    <Toaster position="top-right" richColors closeButton />
+                    <GlobalKeyboardShortcuts />
+                    {children}
+                  </HighContrastProvider>
+                </ReducedMotionProvider>
               </I18nProvider>
             </GDPRProvider>
           </AuthProvider>

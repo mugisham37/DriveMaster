@@ -11,6 +11,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useContentItem } from '@/hooks/use-content-operations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivity } from '@/contexts/ActivityContext';
+import { useScreenReaderAnnouncement } from '@/hooks/useScreenReaderAnnouncement';
 import { QuestionDisplay } from '../../layer-3-ui';
 import { LessonHeader } from './LessonHeader';
 
@@ -48,6 +49,7 @@ export function LessonContainer({
   const { item: lesson, isLoading, error } = useContentItem(lessonId);
   const { user } = useAuth();
   const { recordActivity } = useActivity();
+  const { announce } = useScreenReaderAnnouncement();
 
   // State management
   const [state, setState] = useState<LessonState>(() => {
@@ -140,18 +142,26 @@ export function LessonContainer({
         answers: newAnswers,
         showFeedback: true,
       }));
+
+      // Announce result to screen readers
+      const feedbackMessage = isCorrect 
+        ? 'Correct! Your answer is right.' 
+        : 'Incorrect. Please review the explanation.';
+      announce(feedbackMessage, 'polite');
     } catch (error) {
       console.error('Failed to submit answer:', error);
+      announce('Failed to submit answer. Please try again.', 'assertive');
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedChoice, currentQuestion, user, state, lessonId, recordActivity]);
+  }, [selectedChoice, currentQuestion, user, state, lessonId, recordActivity, announce]);
 
   // Handle next question
   const handleNext = useCallback(() => {
     if (isLastQuestion) {
       // Lesson complete
       handleLessonComplete();
+      announce('Lesson completed! Congratulations!', 'polite');
     } else {
       // Move to next question
       setState(prev => ({
@@ -161,8 +171,12 @@ export function LessonContainer({
         questionStartTime: new Date(),
       }));
       setSelectedChoice(undefined);
+      
+      // Announce progress
+      const nextIndex = state.currentIndex + 2; // +2 because we're moving to next
+      announce(`Question ${nextIndex} of ${totalQuestions}`, 'polite');
     }
-  }, [isLastQuestion]);
+  }, [isLastQuestion, state.currentIndex, totalQuestions, announce]);
 
   // Handle lesson completion
   const handleLessonComplete = useCallback(async () => {
