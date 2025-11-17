@@ -26,10 +26,12 @@ export function NotificationBadge({
   useEffect(() => {
     if (count > prevCount) {
       setShouldPulse(true);
+      setPrevCount(count);
       const timer = setTimeout(() => setShouldPulse(false), 1000);
       return () => clearTimeout(timer);
     }
     setPrevCount(count);
+    return undefined;
   }, [count, prevCount]);
 
   // Don't render if count is 0 and showZero is false

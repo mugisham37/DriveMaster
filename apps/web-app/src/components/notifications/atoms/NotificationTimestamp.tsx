@@ -42,6 +42,8 @@ export function NotificationTimestamp({
       const interval = setInterval(updateRelativeTime, 60000); // Update every minute
       return () => clearInterval(interval);
     }
+    
+    return undefined;
   }, [timestamp]);
 
   const getAbsoluteFormat = () => {

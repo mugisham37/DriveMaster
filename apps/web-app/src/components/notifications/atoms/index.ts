@@ -17,4 +17,9 @@ export {
 export {
   NotificationStatusIndicator,
   type NotificationStatusIndicatorProps,
- 
+  type NotificationStatus,
+} from './NotificationStatusIndicator';
+export {
+  NotificationPriorityBadge,
+  type NotificationPriorityBadgeProps,
+} from './NotificationPriorityBadge';
