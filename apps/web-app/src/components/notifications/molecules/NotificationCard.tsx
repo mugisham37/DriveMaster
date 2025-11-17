@@ -10,8 +10,8 @@ import { NotificationStatusIndicator } from '../atoms/NotificationStatusIndicato
 import { NotificationPriorityBadge } from '../atoms/NotificationPriorityBadge';
 import { useNotificationMutations } from '@/hooks/useNotifications';
 import type { Notification } from '@/types/notification-service';
-import ReactMarkdown from 'react-markdown';
 import DOMPurify from 'isomorphic-dompurify';
+import Image from 'next/image';
 
 export interface NotificationCardProps {
   notification: Notification;
@@ -50,14 +50,12 @@ export function NotificationCard({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = () => {
     deleteNotification.mutate(notification.id);
     onDelete?.(notification.id);
   };
 
-  const handleMarkAsRead = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleMarkAsRead = () => {
     markAsRead.mutate(notification.id);
     onRead?.(notification.id);
   };
@@ -93,7 +91,7 @@ export function NotificationCard({
         <div className="flex-shrink-0">
           <NotificationIcon
             type={notification.type}
-            iconUrl={notification.iconUrl}
+            iconUrl={notification.iconUrl || undefined}
             priority={notification.priority}
             isRead={notification.status.isRead}
             size={compact ? 'sm' : 'md'}
@@ -118,7 +116,7 @@ export function NotificationCard({
                 size="sm"
               />
               <NotificationStatusIndicator
-                status={notification.status.deliveryStatus}
+                status={notification.status.isDelivered ? 'delivered' : 'pending'}
                 size="sm"
               />
             </div>
@@ -126,24 +124,7 @@ export function NotificationCard({
 
           {/* Body */}
           <div className={cn('text-sm text-muted-foreground mb-2', compact && 'text-xs')}>
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => <p className="mb-1">{children}</p>,
-                a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    target={href?.startsWith('http') ? '_blank' : undefined}
-                    rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="text-blue-600 hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {sanitizedBody}
-            </ReactMarkdown>
+            <div dangerouslySetInnerHTML={{ __html: sanitizedBody }} />
             {notification.body.length > 200 && (
               <button
                 onClick={handleToggleExpand}
@@ -156,12 +137,13 @@ export function NotificationCard({
 
           {/* Image */}
           {notification.imageUrl && (
-            <div className="mb-2">
-              <img
+            <div className="mb-2 relative w-full h-48">
+              <Image
                 src={notification.imageUrl}
                 alt={notification.title}
-                className="rounded-md max-w-full h-auto"
-                loading="lazy"
+                fill
+                className="rounded-md object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
           )}

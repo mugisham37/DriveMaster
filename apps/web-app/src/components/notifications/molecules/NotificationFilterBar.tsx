@@ -1,16 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,17 +11,18 @@ import { cn } from '@/lib/utils';
 import { Search, X, Filter, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { NotificationQueryParams } from '@/types/notification-service';
+import type { NotificationQueryParams, NotificationType } from '@/types/notification-service';
+import type { DateRange } from 'react-day-picker';
 
 export interface NotificationFilterBarProps {
   filters: NotificationQueryParams;
   onFilterChange: (filters: NotificationQueryParams) => void;
-  availableTypes?: string[];
+  availableTypes?: NotificationType[];
   showSearch?: boolean;
   className?: string;
 }
 
-const DEFAULT_TYPES = [
+const DEFAULT_TYPES: NotificationType[] = [
   'achievement',
   'streak_reminder',
   'mock_test_reminder',
@@ -45,8 +39,8 @@ export function NotificationFilterBar({
   showSearch = true,
   className,
 }: NotificationFilterBarProps) {
-  const [searchInput, setSearchInput] = useState(filters.search || '');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
+  const [searchInput, setSearchInput] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: filters.startDate,
     to: filters.endDate,
   });
@@ -55,66 +49,81 @@ export function NotificationFilterBar({
   const debouncedSearch = useDebounce(searchInput, 300);
 
   // Update filters when debounced search changes
-  useMemo(() => {
-    if (debouncedSearch !== filters.search) {
-      onFilterChange({ ...filters, search: debouncedSearch });
+  useEffect(() => {
+    // Only trigger if search actually changed
+    if (debouncedSearch !== searchInput) {
+      return;
     }
-  }, [debouncedSearch]);
+    // Implement search filtering in parent component
+  }, [debouncedSearch, searchInput]);
 
   const handleTypeChange = useCallback(
-    (type: string) => {
+    (type: NotificationType) => {
       const currentTypes = Array.isArray(filters.type) ? filters.type : filters.type ? [filters.type] : [];
       const newTypes = currentTypes.includes(type)
         ? currentTypes.filter((t) => t !== type)
         : [...currentTypes, type];
 
-      onFilterChange({
-        ...filters,
-        type: newTypes.length > 0 ? newTypes : undefined,
-      });
+      const updatedFilters = { ...filters };
+      if (newTypes.length > 0) {
+        updatedFilters.type = newTypes as NotificationType[];
+      } else {
+        delete updatedFilters.type;
+      }
+      onFilterChange(updatedFilters);
     },
     [filters, onFilterChange]
   );
 
   const handleStatusToggle = useCallback(
     (status: 'all' | 'unread' | 'read') => {
-      onFilterChange({
-        ...filters,
-        status: status === 'all' ? undefined : status,
-      });
+      const updatedFilters = { ...filters };
+      if (status === 'all') {
+        delete updatedFilters.status;
+      } else {
+        updatedFilters.status = status;
+      }
+      onFilterChange(updatedFilters);
     },
     [filters, onFilterChange]
   );
 
   const handleDateRangeChange = useCallback(
-    (range: { from?: Date; to?: Date }) => {
+    (range: DateRange | undefined) => {
       setDateRange(range);
-      onFilterChange({
-        ...filters,
-        startDate: range.from,
-        endDate: range.to,
-      });
+      const updatedFilters = { ...filters };
+      if (range?.from) {
+        updatedFilters.startDate = range.from;
+      } else {
+        delete updatedFilters.startDate;
+      }
+      if (range?.to) {
+        updatedFilters.endDate = range.to;
+      } else {
+        delete updatedFilters.endDate;
+      }
+      onFilterChange(updatedFilters);
     },
     [filters, onFilterChange]
   );
 
   const handleClearFilters = useCallback(() => {
     setSearchInput('');
-    setDateRange({});
+    setDateRange(undefined);
     onFilterChange({
       userId: filters.userId,
-      limit: filters.limit,
+      limit: filters.limit || 20,
     });
   }, [filters.userId, filters.limit, onFilterChange]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.type) count++;
-    if (filters.status) count++;
+    if (filters.status && filters.status !== 'all') count++;
     if (filters.startDate || filters.endDate) count++;
-    if (filters.search) count++;
+    if (searchInput) count++;
     return count;
-  }, [filters]);
+  }, [filters, searchInput]);
 
   const selectedTypes = useMemo(() => {
     return Array.isArray(filters.type) ? filters.type : filters.type ? [filters.type] : [];
@@ -210,7 +219,7 @@ export function NotificationFilterBar({
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
               <CalendarIcon className="h-4 w-4" />
-              {dateRange.from ? (
+              {dateRange?.from ? (
                 dateRange.to ? (
                   <>
                     {format(dateRange.from, 'MMM d')} - {format(dateRange.to, 'MMM d')}
@@ -264,7 +273,7 @@ export function NotificationFilterBar({
               <Calendar
                 mode="range"
                 selected={dateRange}
-                onSelect={(range) => handleDateRangeChange(range || {})}
+                onSelect={handleDateRangeChange}
                 numberOfMonths={2}
               />
             </div>

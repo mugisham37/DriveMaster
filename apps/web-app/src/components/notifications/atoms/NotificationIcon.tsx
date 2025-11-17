@@ -21,13 +21,15 @@ export type NotificationType =
   | 'mentoring'
   | 'course_update'
   | 'spaced_repetition'
+  | 'community'
+  | 'marketing'
   | 'general';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent' | 'critical';
 
 export interface NotificationIconProps {
   type: NotificationType;
-  iconUrl?: string;
+  iconUrl?: string | undefined;
   priority: NotificationPriority;
   isRead: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -42,6 +44,8 @@ const typeIconMap: Record<NotificationType, LucideIcon> = {
   mentoring: User,
   course_update: BookOpen,
   spaced_repetition: Bell,
+  community: User,
+  marketing: Bell,
   general: Bell,
 };
 
@@ -53,6 +57,8 @@ const typeColorMap: Record<NotificationType, string> = {
   mentoring: 'text-purple-500',
   course_update: 'text-green-500',
   spaced_repetition: 'text-blue-400',
+  community: 'text-indigo-500',
+  marketing: 'text-pink-500',
   general: 'text-gray-400',
 };
 

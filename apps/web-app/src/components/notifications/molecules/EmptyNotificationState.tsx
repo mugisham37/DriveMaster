@@ -38,7 +38,7 @@ const stateConfig: Record<
   error: {
     icon: AlertCircle,
     title: 'Something went wrong',
-    description: 'We couldn't load your notifications. Please try again.',
+    description: "We couldn't load your notifications. Please try again.",
     actionLabel: 'Try again',
     iconColor: 'text-red-500',
   },
