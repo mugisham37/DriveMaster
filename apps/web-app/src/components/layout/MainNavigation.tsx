@@ -106,7 +106,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function MainNavigation() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if a nav item is active
@@ -131,7 +131,7 @@ export function MainNavigation() {
 
   // Handle sign out
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
   };
 
   // Close mobile menu when route changes

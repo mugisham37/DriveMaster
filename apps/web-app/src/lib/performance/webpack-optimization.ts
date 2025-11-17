@@ -186,7 +186,7 @@ export function getCacheConfig(): Configuration['cache'] {
  */
 export function getBundleAnalyzerConfig() {
   // Dynamic import to avoid bundling in production
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
   
   return new BundleAnalyzerPlugin({

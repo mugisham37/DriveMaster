@@ -1,41 +1,134 @@
 /**
- * React Hooks for Notification Analytics
+ * Notification Analytics Hook
  *
- * Provides hooks for tracking notification events and retrieving analytics data
- * with automatic batching, offline support, and real-time updates.
+ * Provides hooks for analytics data fetching, engagement tracking,
+ * and data transformation for charts and reports.
  *
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
+ * Requirements: 14.1, 14.2, 14.3, 14.4, 14.5
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
+import { notificationApiClient } from "@/lib/notification-service";
+import { useAuth } from "./useAuth";
+import { requireStringUserId } from "@/utils/user-id-helpers";
+import type {
   AnalyticsQueryParams,
   AnalyticsData,
   DeliveryResult,
-  AnalyticsMetric,
-} from "../types/notification-service";
-import {
-  getNotificationAnalyticsService,
-  AnalyticsMetrics,
-} from "../lib/notification-service/analytics-service";
-import { useAuth } from "./useAuth";
+  NotificationError,
+} from "@/types/notification-service";
 
 // ============================================================================
 // Query Keys
 // ============================================================================
 
 export const analyticsQueryKeys = {
-  all: ["notification-analytics"] as const,
-  analytics: (params: AnalyticsQueryParams) =>
+  all: ["notificationAnalytics"] as const,
+  data: (params: AnalyticsQueryParams) =>
     [...analyticsQueryKeys.all, "data", params] as const,
-  metrics: () => [...analyticsQueryKeys.all, "metrics"] as const,
-  realtime: (params: AnalyticsQueryParams) =>
-    [...analyticsQueryKeys.all, "realtime", params] as const,
+  delivery: (params: AnalyticsQueryParams) =>
+    [...analyticsQueryKeys.all, "delivery", params] as const,
+  engagement: (params: AnalyticsQueryParams) =>
+    [...analyticsQueryKeys.all, "engagement", params] as const,
+  summary: (userId?: string) =>
+    [...analyticsQueryKeys.all, "summary", userId] as const,
 };
 
 // ============================================================================
-// Hook Types
+// Analytics Data Hook
+// ============================================================================
+
+export interface UseNotificationAnalyticsOptions extends AnalyticsQueryParams {
+  enabled?: boolean;
+  refetchInterval?: number;
+}
+
+export interface UseNotificationAnalyticsResult {
+  analyticsData: AnalyticsData[];
+  isLoading: boolean;
+  isError: boolean;
+  error: NotificationError | null;
+  refetch: () => void;
+  // Computed metrics
+  deliveryRate: number;
+  openRate: number;
+  clickRate: number;
+  engagementScore: number;
+}
+
+/**
+ * Hook for fetching notification analytics data
+ * Requirements: 14.1, 14.2, 14.3
+ */
+export function useNotificationAnalytics(
+  options: UseNotificationAnalyticsOptions,
+): UseNotificationAnalyticsResult {
+  const { enabled = true, refetchInterval, ...params } = options;
+
+  const query = useQuery({
+    queryKey: analyticsQueryKeys.data(params),
+    queryFn: () => notificationApiClient.getAnalytics(params),
+    enabled,
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
+    ...(refetchInterval && { refetchInterval }),
+  });
+
+  // Calculate aggregate metrics
+  const metrics = useMemo(() => {
+    if (!query.data || query.data.length === 0) {
+      return {
+        deliveryRate: 0,
+        openRate: 0,
+        clickRate: 0,
+        engagementScore: 0,
+      };
+    }
+
+    const totals = query.data.reduce(
+      (acc, data) => {
+        const metrics = data.metrics as Record<string, number>;
+        return {
+          sent: acc.sent + (metrics.sent || 0),
+          delivered: acc.delivered + (metrics.delivered || 0),
+          opened: acc.opened + (metrics.opened || 0),
+          clicked: acc.clicked + (metrics.clicked || 0),
+        };
+      },
+      { sent: 0, delivered: 0, opened: 0, clicked: 0 },
+    );
+
+    const deliveryRate =
+      totals.sent > 0 ? (totals.delivered / totals.sent) * 100 : 0;
+    const openRate =
+      totals.delivered > 0 ? (totals.opened / totals.delivered) * 100 : 0;
+    const clickRate =
+      totals.opened > 0 ? (totals.clicked / totals.opened) * 100 : 0;
+
+    // Engagement score: weighted average of open and click rates
+    const engagementScore = openRate * 0.6 + clickRate * 0.4;
+
+    return {
+      deliveryRate: Math.round(deliveryRate * 100) / 100,
+      openRate: Math.round(openRate * 100) / 100,
+      clickRate: Math.round(clickRate * 100) / 100,
+      engagementScore: Math.round(engagementScore * 100) / 100,
+    };
+  }, [query.data]);
+
+  return {
+    analyticsData: query.data || [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error as NotificationError | null,
+    refetch: query.refetch,
+    ...metrics,
+  };
+}
+
+// ============================================================================
+// Analytics Tracking Hook
 // ============================================================================
 
 export interface UseAnalyticsTrackingResult {
@@ -45,361 +138,212 @@ export interface UseAnalyticsTrackingResult {
   ) => Promise<void>;
   trackOpen: (notificationId: string) => Promise<void>;
   trackClick: (notificationId: string, action?: string) => Promise<void>;
-  trackDismiss: (notificationId: string) => Promise<void>;
   isTracking: boolean;
-  metrics: AnalyticsMetrics;
 }
-
-export interface UseAnalyticsDataOptions extends AnalyticsQueryParams {
-  enabled?: boolean;
-  refetchInterval?: number;
-  staleTime?: number;
-}
-
-export interface UseAnalyticsDataResult {
-  data: AnalyticsData[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  refetch: () => void;
-}
-
-export interface UseRealtimeAnalyticsOptions extends AnalyticsQueryParams {
-  enabled?: boolean;
-  updateInterval?: number;
-}
-
-export interface UseRealtimeAnalyticsResult {
-  data: AnalyticsData[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  isConnected: boolean;
-  disconnect: () => void;
-}
-
-// ============================================================================
-// Analytics Tracking Hook
-// ============================================================================
 
 /**
- * Hook for tracking notification events
- * Requirements: 5.1, 5.2, 5.3
+ * Hook for tracking notification engagement events
+ * Requirements: 14.4, 14.5
  */
 export function useAnalyticsTracking(): UseAnalyticsTrackingResult {
   const { user } = useAuth();
-  const [isTracking, setIsTracking] = useState(false);
-  const [metrics, setMetrics] = useState<AnalyticsMetrics>({
-    eventsQueued: 0,
-    eventsSent: 0,
-    eventsFailedToSend: 0,
-    batchesSent: 0,
-    averageBatchSize: 0,
-    offlineQueueSize: 0,
+  const queryClient = useQueryClient();
+
+  const trackDeliveryMutation = useMutation({
+    mutationFn: ({
+      notificationId,
+      result,
+    }: {
+      notificationId: string;
+      result: DeliveryResult;
+    }) => notificationApiClient.trackDelivery(notificationId, result),
+    onSuccess: () => {
+      // Invalidate analytics queries
+      queryClient.invalidateQueries({
+        queryKey: analyticsQueryKeys.all,
+      });
+    },
   });
 
-  const analyticsService = getNotificationAnalyticsService();
-
-  // Update metrics periodically
-  useEffect(() => {
-    const updateMetrics = () => {
-      setMetrics(analyticsService.getMetrics());
-    };
-
-    updateMetrics();
-    const interval = setInterval(updateMetrics, 5000); // Update every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [analyticsService]);
-
-  const trackDelivery = useCallback(
-    async (notificationId: string, result: DeliveryResult) => {
-      if (!user?.id) return;
-
-      setIsTracking(true);
-      try {
-        await analyticsService.trackDelivery(
-          notificationId,
-          String(user.id),
-          result,
-        );
-      } catch (error) {
-        console.error("Failed to track delivery:", error);
-      } finally {
-        setIsTracking(false);
-      }
+  const trackOpenMutation = useMutation({
+    mutationFn: (notificationId: string) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      return notificationApiClient.trackOpen(
+        notificationId,
+        requireStringUserId(user.id),
+      );
     },
-    [user?.id, analyticsService],
-  );
-
-  const trackOpen = useCallback(
-    async (notificationId: string) => {
-      if (!user?.id) return;
-
-      setIsTracking(true);
-      try {
-        await analyticsService.trackOpen(notificationId, String(user.id));
-      } catch (error) {
-        console.error("Failed to track open:", error);
-      } finally {
-        setIsTracking(false);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: analyticsQueryKeys.all,
+      });
     },
-    [user?.id, analyticsService],
-  );
+  });
 
-  const trackClick = useCallback(
-    async (notificationId: string, action?: string) => {
-      if (!user?.id) return;
-
-      setIsTracking(true);
-      try {
-        await analyticsService.trackClick(
-          notificationId,
-          String(user.id),
-          action,
-        );
-      } catch (error) {
-        console.error("Failed to track click:", error);
-      } finally {
-        setIsTracking(false);
-      }
+  const trackClickMutation = useMutation({
+    mutationFn: ({
+      notificationId,
+      action,
+    }: {
+      notificationId: string;
+      action?: string;
+    }) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      return notificationApiClient.trackClick(
+        notificationId,
+        requireStringUserId(user.id),
+        action,
+      );
     },
-    [user?.id, analyticsService],
-  );
-
-  const trackDismiss = useCallback(
-    async (notificationId: string) => {
-      if (!user?.id) return;
-
-      setIsTracking(true);
-      try {
-        await analyticsService.trackDismiss(notificationId, String(user.id));
-      } catch (error) {
-        console.error("Failed to track dismiss:", error);
-      } finally {
-        setIsTracking(false);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: analyticsQueryKeys.all,
+      });
     },
-    [user?.id, analyticsService],
-  );
-
-  return {
-    trackDelivery,
-    trackOpen,
-    trackClick,
-    trackDismiss,
-    isTracking,
-    metrics,
-  };
-}
-
-// ============================================================================
-// Analytics Data Hook
-// ============================================================================
-
-/**
- * Hook for fetching analytics data
- * Requirements: 5.4, 5.5
- */
-export function useAnalyticsData(
-  options: UseAnalyticsDataOptions,
-): UseAnalyticsDataResult {
-  const {
-    enabled = true,
-    refetchInterval = 60000, // 1 minute
-    staleTime = 30000, // 30 seconds
-    ...params
-  } = options;
-
-  const query = useQuery({
-    queryKey: analyticsQueryKeys.analytics(params),
-    queryFn: async () => {
-      const analyticsService = getNotificationAnalyticsService();
-      return analyticsService.getAnalytics(params);
-    },
-    enabled,
-    refetchInterval,
-    staleTime,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   return {
-    data: query.data,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
+    trackDelivery: (notificationId: string, result: DeliveryResult) =>
+      trackDeliveryMutation.mutateAsync({ notificationId, result }),
+    trackOpen: trackOpenMutation.mutateAsync,
+    trackClick: (notificationId: string, action?: string) =>
+      trackClickMutation.mutateAsync({ notificationId, action: action || undefined }),
+    isTracking:
+      trackDeliveryMutation.isPending ||
+      trackOpenMutation.isPending ||
+      trackClickMutation.isPending,
   };
 }
 
 // ============================================================================
-// Real-time Analytics Hook
+// Chart Data Transformation Hook
 // ============================================================================
 
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+  timestamp?: Date;
+}
+
+export interface TimeSeriesData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    color?: string;
+  }[];
+}
+
+export interface UseChartDataTransformResult {
+  transformForLineChart: (
+    data: AnalyticsData[],
+    metrics: string[],
+  ) => TimeSeriesData;
+  transformForBarChart: (
+    data: AnalyticsData[],
+    metric: string,
+    groupBy?: string,
+  ) => ChartDataPoint[];
+  transformForPieChart: (
+    data: AnalyticsData[],
+    metric: string,
+  ) => ChartDataPoint[];
+  calculateTrend: (data: number[]) => {
+    direction: "up" | "down" | "stable";
+    percentage: number;
+  };
+}
+
 /**
- * Hook for real-time analytics updates
- * Requirements: 5.4, 5.5
+ * Hook for transforming analytics data for chart visualization
+ * Requirements: 14.2, 14.3, 14.5
  */
-export function useRealtimeAnalytics(
-  options: UseRealtimeAnalyticsOptions,
-): UseRealtimeAnalyticsResult {
-  const { enabled = true, ...params } = options;
+export function useChartDataTransform(): UseChartDataTransformResult {
+  const transformForLineChart = useCallback(
+    (data: AnalyticsData[], metrics: string[]): TimeSeriesData => {
+      const labels = data.map((d) => d.period);
 
-  const [data, setData] = useState<AnalyticsData[] | undefined>();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+      const datasets = metrics.map((metric) => ({
+        label: metric.charAt(0).toUpperCase() + metric.slice(1),
+        data: data.map((d) => d.metrics[metric] || 0),
+      }));
 
-  const disconnectRef = useRef<(() => void) | null>(null);
-  const analyticsService = getNotificationAnalyticsService();
+      return { labels, datasets };
+    },
+    [],
+  );
 
-  useEffect(() => {
-    if (!enabled) {
-      setIsConnected(false);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoading(true);
-    setIsError(false);
-    setError(null);
-
-    const startRealtimeUpdates = async () => {
-      try {
-        const cleanup = await analyticsService.getRealtimeAnalytics(
-          params,
-          (newData) => {
-            if (isMounted) {
-              setData(newData);
-              setIsLoading(false);
-              setIsConnected(true);
-            }
-          },
-        );
-
-        disconnectRef.current = cleanup;
-      } catch (err) {
-        if (isMounted) {
-          setIsError(true);
-          setError(err as Error);
-          setIsLoading(false);
-          setIsConnected(false);
-        }
+  const transformForBarChart = useCallback(
+    (
+      data: AnalyticsData[],
+      metric: string,
+      groupBy?: string,
+    ): ChartDataPoint[] => {
+      if (groupBy && data[0]?.breakdown) {
+        // Group by breakdown category
+        const breakdown = data[0].breakdown;
+        return Object.entries(breakdown).map(([key, values]) => ({
+          label: key,
+          value: values[metric] || 0,
+        }));
       }
-    };
 
-    startRealtimeUpdates();
+      // Default: one bar per period
+      return data.map((d) => ({
+        label: d.period,
+        value: d.metrics[metric] || 0,
+      }));
+    },
+    [],
+  );
 
-    return () => {
-      isMounted = false;
-      if (disconnectRef.current) {
-        disconnectRef.current();
-        disconnectRef.current = null;
+  const transformForPieChart = useCallback(
+    (data: AnalyticsData[], metric: string): ChartDataPoint[] => {
+      if (data.length === 0 || !data[0].breakdown) {
+        return [];
       }
-      setIsConnected(false);
-    };
-  }, [enabled, analyticsService, params]);
 
-  const disconnect = useCallback(() => {
-    if (disconnectRef.current) {
-      disconnectRef.current();
-      disconnectRef.current = null;
-    }
-    setIsConnected(false);
-  }, []);
+      const breakdown = data[0].breakdown;
+      return Object.entries(breakdown).map(([key, values]) => ({
+        label: key,
+        value: values[metric] || 0,
+      }));
+    },
+    [],
+  );
 
-  return {
-    data,
-    isLoading,
-    isError,
-    error,
-    isConnected,
-    disconnect,
-  };
-}
+  const calculateTrend = useCallback(
+    (data: number[]): { direction: "up" | "down" | "stable"; percentage: number } => {
+      if (data.length < 2) {
+        return { direction: "stable", percentage: 0 };
+      }
 
-// ============================================================================
-// Analytics Metrics Hook
-// ============================================================================
+      const first = data[0];
+      const last = data[data.length - 1];
 
-/**
- * Hook for monitoring analytics service metrics
- * Requirements: 5.1, 5.3
- */
-export function useAnalyticsMetrics() {
-  const [metrics, setMetrics] = useState<AnalyticsMetrics>({
-    eventsQueued: 0,
-    eventsSent: 0,
-    eventsFailedToSend: 0,
-    batchesSent: 0,
-    averageBatchSize: 0,
-    offlineQueueSize: 0,
-  });
+      if (first === 0) {
+        return { direction: last > 0 ? "up" : "stable", percentage: 0 };
+      }
 
-  const analyticsService = getNotificationAnalyticsService();
+      const percentage = ((last - first) / first) * 100;
 
-  useEffect(() => {
-    const updateMetrics = () => {
-      setMetrics(analyticsService.getMetrics());
-    };
+      if (Math.abs(percentage) < 5) {
+        return { direction: "stable", percentage: 0 };
+      }
 
-    updateMetrics();
-    const interval = setInterval(updateMetrics, 1000); // Update every second
-
-    return () => clearInterval(interval);
-  }, [analyticsService]);
-
-  const resetMetrics = useCallback(() => {
-    analyticsService.resetMetrics();
-    setMetrics(analyticsService.getMetrics());
-  }, [analyticsService]);
-
-  const flush = useCallback(async () => {
-    await analyticsService.flush();
-  }, [analyticsService]);
-
-  return {
-    metrics,
-    resetMetrics,
-    flush,
-  };
-}
-
-// ============================================================================
-// Automatic Event Tracking Hook
-// ============================================================================
-
-/**
- * Hook that automatically tracks notification interactions
- * Requirements: 5.1, 5.2
- */
-export function useAutoAnalyticsTracking() {
-  const { trackOpen, trackClick, trackDismiss } = useAnalyticsTracking();
-
-  // Create event handlers that can be attached to notification components
-  const createTrackingHandlers = useCallback(
-    (notificationId: string) => {
       return {
-        onOpen: () => trackOpen(notificationId),
-        onClick: (action?: string) => trackClick(notificationId, action),
-        onDismiss: () => trackDismiss(notificationId),
-
-        // Convenience handlers for common actions
-        onView: () => trackOpen(notificationId),
-        onRead: () => trackClick(notificationId, "read"),
-        onArchive: () => trackClick(notificationId, "archive"),
-        onDelete: () => trackClick(notificationId, "delete"),
-        onClose: () => trackDismiss(notificationId),
+        direction: percentage > 0 ? "up" : "down",
+        percentage: Math.abs(Math.round(percentage * 100) / 100),
       };
     },
-    [trackOpen, trackClick, trackDismiss],
+    [],
   );
 
   return {
-    createTrackingHandlers,
+    transformForLineChart,
+    transformForBarChart,
+    transformForPieChart,
+    calculateTrend,
   };
 }
 
@@ -407,74 +351,181 @@ export function useAutoAnalyticsTracking() {
 // Analytics Summary Hook
 // ============================================================================
 
+export interface AnalyticsSummary {
+  totalNotifications: number;
+  deliveryRate: number;
+  openRate: number;
+  clickRate: number;
+  engagementScore: number;
+  topPerformingType: string;
+  topPerformingChannel: string;
+  trend: {
+    direction: "up" | "down" | "stable";
+    percentage: number;
+  };
+}
+
+export interface UseAnalyticsSummaryResult {
+  summary: AnalyticsSummary | null;
+  isLoading: boolean;
+  isError: boolean;
+  error: NotificationError | null;
+  refetch: () => void;
+}
+
 /**
- * Hook for getting analytics summary data
- * Requirements: 5.4, 5.5
+ * Hook for fetching analytics summary with key metrics
+ * Requirements: 14.1, 14.2, 14.3
  */
 export function useAnalyticsSummary(
-  params: Omit<AnalyticsQueryParams, "metrics"> & {
-    metrics?: AnalyticsMetric[];
-  },
-) {
-  const defaultMetrics: AnalyticsMetric[] = [
-    "delivery_rate",
-    "open_rate",
-    "click_rate",
-    "conversion_rate",
-  ];
+  params: AnalyticsQueryParams = {},
+): UseAnalyticsSummaryResult {
+  const { user } = useAuth();
+  const { calculateTrend } = useChartDataTransform();
 
-  const analyticsParams: AnalyticsQueryParams = {
-    ...params,
-    metrics: params.metrics || defaultMetrics,
-  };
+  const query = useQuery({
+    queryKey: analyticsQueryKeys.summary(user?.id?.toString()),
+    queryFn: async () => {
+      const data = await notificationApiClient.getAnalytics({
+        ...params,
+        userId: user?.id?.toString(),
+      });
 
-  const { data, isLoading, isError, error, refetch } =
-    useAnalyticsData(analyticsParams);
-
-  // Calculate summary statistics
-  const summary = data
-    ? {
-        totalNotifications: data.length,
-        totalDeliveries: data.length,
-        totalOpens: data.length,
-        totalClicks: data.length,
-        averageDeliveryRate:
-          data.length > 0
-            ? data.reduce(
-                (sum, item) => sum + (item.metrics.delivery_rate || 0),
-                0,
-              ) / data.length
-            : 0,
-        averageOpenRate:
-          data.length > 0
-            ? data.reduce(
-                (sum, item) => sum + (item.metrics.open_rate || 0),
-                0,
-              ) / data.length
-            : 0,
-        averageClickRate:
-          data.length > 0
-            ? data.reduce(
-                (sum, item) => sum + (item.metrics.click_rate || 0),
-                0,
-              ) / data.length
-            : 0,
-        averageConversionRate:
-          data.length > 0
-            ? data.reduce(
-                (sum, item) => sum + (item.metrics.conversion_rate || 0),
-                0,
-              ) / data.length
-            : 0,
+      if (data.length === 0) {
+        return null;
       }
-    : null;
+
+      // Calculate totals
+      const totals = data.reduce(
+        (acc, d) => ({
+          sent: acc.sent + (d.metrics.sent || 0),
+          delivered: acc.delivered + (d.metrics.delivered || 0),
+          opened: acc.opened + (d.metrics.opened || 0),
+          clicked: acc.clicked + (d.metrics.clicked || 0),
+        }),
+        { sent: 0, delivered: 0, opened: 0, clicked: 0 },
+      );
+
+      const deliveryRate =
+        totals.sent > 0 ? (totals.delivered / totals.sent) * 100 : 0;
+      const openRate =
+        totals.delivered > 0 ? (totals.opened / totals.delivered) * 100 : 0;
+      const clickRate =
+        totals.opened > 0 ? (totals.clicked / totals.opened) * 100 : 0;
+      const engagementScore = openRate * 0.6 + clickRate * 0.4;
+
+      // Find top performing type and channel
+      let topPerformingType = "N/A";
+      const topPerformingChannel = "N/A";
+
+      if (data[0]?.breakdown) {
+        const breakdown = data[0].breakdown;
+
+        // Find type with highest engagement
+        const typeEngagement = Object.entries(breakdown).map(([key, values]) => {
+          const typeOpenRate =
+            values.delivered > 0 ? (values.opened / values.delivered) * 100 : 0;
+          const typeClickRate =
+            values.opened > 0 ? (values.clicked / values.opened) * 100 : 0;
+          return {
+            type: key,
+            score: typeOpenRate * 0.6 + typeClickRate * 0.4,
+          };
+        });
+
+        if (typeEngagement.length > 0) {
+          topPerformingType = typeEngagement.sort((a, b) => b.score - a.score)[0]
+            .type;
+        }
+      }
+
+      // Calculate trend
+      const sentOverTime = data.map((d) => d.metrics.sent || 0);
+      const trend = calculateTrend(sentOverTime);
+
+      const summary: AnalyticsSummary = {
+        totalNotifications: totals.sent,
+        deliveryRate: Math.round(deliveryRate * 100) / 100,
+        openRate: Math.round(openRate * 100) / 100,
+        clickRate: Math.round(clickRate * 100) / 100,
+        engagementScore: Math.round(engagementScore * 100) / 100,
+        topPerformingType,
+        topPerformingChannel,
+        trend,
+      };
+
+      return summary;
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
+    gcTime: 300000,
+  });
 
   return {
-    data,
-    summary,
-    isLoading,
-    isError,
-    error,
-    refetch,
+    summary: query.data || null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error as NotificationError | null,
+    refetch: query.refetch,
+  };
+}
+
+// ============================================================================
+// Export Utilities
+// ============================================================================
+
+export interface UseAnalyticsExportResult {
+  exportToCSV: (data: AnalyticsData[], filename?: string) => void;
+  exportToJSON: (data: AnalyticsData[], filename?: string) => void;
+}
+
+/**
+ * Hook for exporting analytics data
+ * Requirements: 14.5
+ */
+export function useAnalyticsExport(): UseAnalyticsExportResult {
+  const exportToCSV = useCallback(
+    (data: AnalyticsData[], filename: string = "analytics.csv") => {
+      if (data.length === 0) return;
+
+      // Create CSV header
+      const headers = ["Period", ...Object.keys(data[0].metrics)];
+      const csvContent = [
+        headers.join(","),
+        ...data.map((d) =>
+          [d.period, ...Object.values(d.metrics)].join(","),
+        ),
+      ].join("\n");
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    [],
+  );
+
+  const exportToJSON = useCallback(
+    (data: AnalyticsData[], filename: string = "analytics.json") => {
+      const jsonContent = JSON.stringify(data, null, 2);
+
+      const blob = new Blob([jsonContent], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    [],
+  );
+
+  return {
+    exportToCSV,
+    exportToJSON,
   };
 }
