@@ -1,337 +1,229 @@
 /**
  * useKeyboardNavigation Hook
  * 
- * Provides keyboard navigation functionality for interactive components.
- * Implements WCAG 2.1 keyboard accessibility requirements.
- * 
- * Requirements: 10.1, 10.2, 10.3
- * Task: 13.1
+ * Provides keyboard navigation functionality for notification components
+ * Supports Tab, Enter, Escape, Arrow keys, and custom shortcuts
  */
 
-'use client';
+import { useEffect, useCallback, useRef } from 'react';
 
-import { useEffect, useRef, useCallback } from 'react';
-import {
-  KEYBOARD_KEYS,
-  trapFocus,
-  handleEscapeKey,
-  getFocusableElements,
-  restoreFocus,
-} from '@/utils/accessibility';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface UseKeyboardNavigationOptions {
-  /**
-   * Enable focus trapping (for modals, dialogs)
-   */
-  trapFocus?: boolean;
-
-  /**
-   * Handle Escape key press
-   */
+export interface KeyboardNavigationOptions {
   onEscape?: () => void;
-
-  /**
-   * Handle Enter key press
-   */
   onEnter?: () => void;
-
-  /**
-   * Enable arrow key navigation
-   */
-  enableArrowKeys?: boolean;
-
-  /**
-   * Orientation for arrow key navigation
-   */
-  orientation?: 'horizontal' | 'vertical' | 'both';
-
-  /**
-   * Auto-focus first element on mount
-   */
-  autoFocus?: boolean;
-
-  /**
-   * Restore focus on unmount
-   */
-  restoreFocusOnUnmount?: boolean;
+  onArrowUp?: () => void;
+  onArrowDown?: () => void;
+  onArrowLeft?: () => void;
+  onArrowRight?: () => void;
+  onTab?: (shift: boolean) => void;
+  onSpace?: () => void;
+  enabled?: boolean;
+  trapFocus?: boolean;
 }
 
-export interface UseKeyboardNavigationReturn {
-  /**
-   * Ref to attach to the container element
-   */
-  containerRef: React.RefObject<HTMLElement | null>;
-
-  /**
-   * Current focused index (for arrow key navigation)
-   */
-  focusedIndex: number;
-
-  /**
-   * Set focused index programmatically
-   */
-  setFocusedIndex: (index: number) => void;
-
-  /**
-   * Focus the next element
-   */
-  focusNext: () => void;
-
-  /**
-   * Focus the previous element
-   */
-  focusPrevious: () => void;
-
-  /**
-   * Focus the first element
-   */
-  focusFirst: () => void;
-
-  /**
-   * Focus the last element
-   */
-  focusLast: () => void;
+export interface KeyboardShortcut {
+  key: string;
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+  action: () => void;
+  description: string;
 }
 
-// ============================================================================
-// Hook Implementation
-// ============================================================================
-
-export function useKeyboardNavigation(
-  options: UseKeyboardNavigationOptions = {}
-): UseKeyboardNavigationReturn {
+/**
+ * Hook for keyboard navigation
+ */
+export function useKeyboardNavigation(options: KeyboardNavigationOptions = {}) {
   const {
-    trapFocus: shouldTrapFocus = false,
     onEscape,
     onEnter,
-    enableArrowKeys = false,
-    orientation = 'vertical',
-    autoFocus = false,
-    restoreFocusOnUnmount = false,
+    onArrowUp,
+    onArrowDown,
+    onArrowLeft,
+    onArrowRight,
+    onTab,
+    onSpace,
+    enabled = true,
+    trapFocus = false,
   } = options;
 
-  const containerRef = useRef<HTMLElement>(null);
-  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
-  const focusedIndexRef = useRef<number>(0);
-
-  // ============================================================================
-  // Focus Management
-  // ============================================================================
-
-  const getFocusableItems = useCallback((): HTMLElement[] => {
-    if (!containerRef.current) return [];
-    return getFocusableElements(containerRef.current);
-  }, []);
-
-  const focusItemAtIndex = useCallback((index: number) => {
-    const items = getFocusableItems();
-    if (items.length === 0) return;
-
-    const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
-    focusedIndexRef.current = clampedIndex;
-    items[clampedIndex]?.focus();
-  }, [getFocusableItems]);
-
-  const setFocusedIndex = useCallback((index: number) => {
-    focusItemAtIndex(index);
-  }, [focusItemAtIndex]);
-
-  const focusNext = useCallback(() => {
-    const items = getFocusableItems();
-    if (items.length === 0) return;
-
-    const nextIndex = (focusedIndexRef.current + 1) % items.length;
-    focusItemAtIndex(nextIndex);
-  }, [getFocusableItems, focusItemAtIndex]);
-
-  const focusPrevious = useCallback(() => {
-    const items = getFocusableItems();
-    if (items.length === 0) return;
-
-    const prevIndex =
-      focusedIndexRef.current === 0
-        ? items.length - 1
-        : focusedIndexRef.current - 1;
-    focusItemAtIndex(prevIndex);
-  }, [getFocusableItems, focusItemAtIndex]);
-
-  const focusFirst = useCallback(() => {
-    focusItemAtIndex(0);
-  }, [focusItemAtIndex]);
-
-  const focusLast = useCallback(() => {
-    const items = getFocusableItems();
-    if (items.length === 0) return;
-    focusItemAtIndex(items.length - 1);
-  }, [getFocusableItems, focusItemAtIndex]);
-
-  // ============================================================================
-  // Keyboard Event Handlers
-  // ============================================================================
+  const containerRef = useRef<HTMLElement | null>(null);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      // Handle Escape key
-      if (event.key === KEYBOARD_KEYS.ESCAPE && onEscape) {
-        handleEscapeKey(event, onEscape);
-        return;
-      }
+      if (!enabled) return;
 
-      // Handle Enter key
-      if (event.key === KEYBOARD_KEYS.ENTER && onEnter) {
-        event.preventDefault();
-        onEnter();
-        return;
-      }
+      switch (event.key) {
+        case 'Escape':
+          if (onEscape) {
+            event.preventDefault();
+            onEscape();
+          }
+          break;
 
-      // Handle focus trapping
-      if (shouldTrapFocus && containerRef.current) {
-        trapFocus(containerRef.current, event);
-      }
+        case 'Enter':
+          if (onEnter) {
+            event.preventDefault();
+            onEnter();
+          }
+          break;
 
-      // Handle arrow key navigation
-      if (enableArrowKeys) {
-        const isVertical = orientation === 'vertical' || orientation === 'both';
-        const isHorizontal = orientation === 'horizontal' || orientation === 'both';
+        case 'ArrowUp':
+          if (onArrowUp) {
+            event.preventDefault();
+            onArrowUp();
+          }
+          break;
 
-        if (isVertical && event.key === KEYBOARD_KEYS.ARROW_DOWN) {
-          event.preventDefault();
-          focusNext();
-        } else if (isVertical && event.key === KEYBOARD_KEYS.ARROW_UP) {
-          event.preventDefault();
-          focusPrevious();
-        } else if (isHorizontal && event.key === KEYBOARD_KEYS.ARROW_RIGHT) {
-          event.preventDefault();
-          focusNext();
-        } else if (isHorizontal && event.key === KEYBOARD_KEYS.ARROW_LEFT) {
-          event.preventDefault();
-          focusPrevious();
-        } else if (event.key === KEYBOARD_KEYS.HOME) {
-          event.preventDefault();
-          focusFirst();
-        } else if (event.key === KEYBOARD_KEYS.END) {
-          event.preventDefault();
-          focusLast();
-        }
+        case 'ArrowDown':
+          if (onArrowDown) {
+            event.preventDefault();
+            onArrowDown();
+          }
+          break;
+
+        case 'ArrowLeft':
+          if (onArrowLeft) {
+            event.preventDefault();
+            onArrowLeft();
+          }
+          break;
+
+        case 'ArrowRight':
+          if (onArrowRight) {
+            event.preventDefault();
+            onArrowRight();
+          }
+          break;
+
+        case 'Tab':
+          if (onTab) {
+            event.preventDefault();
+            onTab(event.shiftKey);
+          }
+          break;
+
+        case ' ':
+          if (onSpace) {
+            event.preventDefault();
+            onSpace();
+          }
+          break;
       }
     },
-    [
-      shouldTrapFocus,
-      onEscape,
-      onEnter,
-      enableArrowKeys,
-      orientation,
-      focusNext,
-      focusPrevious,
-      focusFirst,
-      focusLast,
-    ]
+    [enabled, onEscape, onEnter, onArrowUp, onArrowDown, onArrowLeft, onArrowRight, onTab, onSpace]
   );
 
-  // ============================================================================
-  // Effects
-  // ============================================================================
-
-  // Setup keyboard event listener
   useEffect(() => {
+    if (!enabled) return;
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [enabled, handleKeyDown]);
+
+  return { containerRef };
+}
+
+/**
+ * Hook for managing keyboard shortcuts
+ */
+export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[], enabled = true) {
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      for (const shortcut of shortcuts) {
+        const ctrlMatch = shortcut.ctrl === undefined || shortcut.ctrl === (event.ctrlKey || event.metaKey);
+        const shiftMatch = shortcut.shift === undefined || shortcut.shift === event.shiftKey;
+        const altMatch = shortcut.alt === undefined || shortcut.alt === event.altKey;
+        const metaMatch = shortcut.meta === undefined || shortcut.meta === event.metaKey;
+
+        if (
+          event.key === shortcut.key &&
+          ctrlMatch &&
+          shiftMatch &&
+          altMatch &&
+          metaMatch
+        ) {
+          event.preventDefault();
+          shortcut.action();
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [shortcuts, enabled]);
+}
+
+/**
+ * Hook for focus trap (modal/dialog)
+ */
+export function useFocusTrap(enabled = true) {
+  const containerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !containerRef.current) return;
+
     const container = containerRef.current;
-    if (!container) return;
+    const focusableElements = container.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus first element on mount
+    firstElement?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+
+      if (event.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
 
     container.addEventListener('keydown', handleKeyDown);
 
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleKeyDown]);
+  }, [enabled]);
 
-  // Auto-focus on mount
-  useEffect(() => {
-    if (autoFocus && containerRef.current) {
-      // Store previously focused element
-      previouslyFocusedElement.current = document.activeElement as HTMLElement;
+  return { containerRef };
+}
 
-      // Focus first element
-      focusFirst();
+/**
+ * Hook for skip links
+ */
+export function useSkipLink(targetId: string) {
+  const handleSkip = useCallback(() => {
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.focus();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [autoFocus, focusFirst]);
+  }, [targetId]);
 
-  // Restore focus on unmount
-  useEffect(() => {
-    return () => {
-      if (restoreFocusOnUnmount && previouslyFocusedElement.current) {
-        restoreFocus(previouslyFocusedElement.current);
-      }
-    };
-  }, [restoreFocusOnUnmount]);
-
-  // ============================================================================
-  // Return
-  // ============================================================================
-
-  return {
-    containerRef,
-    focusedIndex: focusedIndexRef.current,
-    setFocusedIndex,
-    focusNext,
-    focusPrevious,
-    focusFirst,
-    focusLast,
-  };
+  return { handleSkip };
 }
 
-// ============================================================================
-// Specialized Hooks
-// ============================================================================
-
-/**
- * Hook for modal/dialog keyboard navigation
- */
-export function useModalKeyboardNavigation(onClose: () => void) {
-  return useKeyboardNavigation({
-    trapFocus: true,
-    onEscape: onClose,
-    autoFocus: true,
-    restoreFocusOnUnmount: true,
-  });
-}
-
-/**
- * Hook for menu/dropdown keyboard navigation
- */
-export function useMenuKeyboardNavigation(onClose?: () => void) {
-  const options: UseKeyboardNavigationOptions = {
-    enableArrowKeys: true,
-    orientation: 'vertical',
-    autoFocus: true,
-  };
-  
-  if (onClose) {
-    options.onEscape = onClose;
-  }
-  
-  return useKeyboardNavigation(options);
-}
-
-/**
- * Hook for tab list keyboard navigation
- */
-export function useTabListKeyboardNavigation() {
-  return useKeyboardNavigation({
-    enableArrowKeys: true,
-    orientation: 'horizontal',
-  });
-}
-
-/**
- * Hook for list keyboard navigation
- */
-export function useListKeyboardNavigation(orientation: 'horizontal' | 'vertical' = 'vertical') {
-  return useKeyboardNavigation({
-    enableArrowKeys: true,
-    orientation,
-  });
-}
+export default useKeyboardNavigation;

@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTouchGestures } from "@/hooks/useTouchGestures";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 export interface SpacedRepetitionReminderProps {
   reminder: {
@@ -46,6 +49,9 @@ export function SpacedRepetitionReminder({
   className = "",
 }: SpacedRepetitionReminderProps) {
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
+  const _prefersReducedMotion = useReducedMotion(); // Available for future animation control
+  const { trigger: triggerHaptic } = useHapticFeedback();
+  
   const difficulty = difficultyConfig[reminder.difficulty];
   
   // Calculate progress toward daily goal (mock: 0-100%)
@@ -57,25 +63,56 @@ export function SpacedRepetitionReminder({
     : 0;
 
   const handleSnooze = (hours: number) => {
+    triggerHaptic('light');
     onSnooze?.(hours);
     setShowSnoozeOptions(false);
   };
 
+  const handleReview = () => {
+    triggerHaptic('medium');
+    onReview?.();
+  };
+
+  // Touch gestures for mobile
+  const touchHandlers = useTouchGestures({
+    onSwipeLeft: () => {
+      triggerHaptic('light');
+      setShowSnoozeOptions(true);
+    },
+    onSwipeRight: () => {
+      setShowSnoozeOptions(false);
+    },
+  });
+
   return (
-    <Card className={`w-full max-w-md ${className}`}>
+    <Card 
+      className={`w-full max-w-md ${className}`}
+      {...touchHandlers}
+      role="article"
+      aria-label={`Spaced repetition reminder for ${reminder.topic}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-blue-500" />
-            <h3 className="font-semibold">Time to review {reminder.topic}</h3>
+            <Bell className="w-5 h-5 text-blue-500" aria-hidden="true" />
+            <h3 className="font-semibold" id="reminder-title">
+              Time to review {reminder.topic}
+            </h3>
           </div>
           {reminder.optimalTiming ? (
-            <Badge variant="default" className="bg-green-500">
-              <Clock className="w-3 h-3 mr-1" />
+            <Badge 
+              variant="default" 
+              className="bg-green-500"
+              aria-label="Optimal timing for review"
+            >
+              <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
               Perfect timing!
             </Badge>
           ) : hoursOverdue > 0 ? (
-            <Badge variant="destructive">
+            <Badge 
+              variant="destructive"
+              aria-label={`Review is overdue by ${hoursOverdue} hours`}
+            >
               Overdue by {hoursOverdue}h
             </Badge>
           ) : null}
@@ -85,8 +122,16 @@ export function SpacedRepetitionReminder({
       <CardContent className="space-y-4">
         {/* Items Due Display */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Items due</span>
-          <span className="text-2xl font-bold">{reminder.itemsDue}</span>
+          <span className="text-sm text-muted-foreground" id="items-due-label">
+            Items due
+          </span>
+          <span 
+            className="text-2xl font-bold" 
+            aria-labelledby="items-due-label"
+            aria-live="polite"
+          >
+            {reminder.itemsDue}
+          </span>
         </div>
 
         {/* Difficulty Indicator */}
@@ -110,16 +155,29 @@ export function SpacedRepetitionReminder({
         {/* Progress Indicator */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Daily goal progress</span>
-            <span className="text-sm font-medium">{Math.round(dailyProgress)}%</span>
+            <span className="text-sm text-muted-foreground" id="progress-label">
+              Daily goal progress
+            </span>
+            <span className="text-sm font-medium" aria-live="polite">
+              {Math.round(dailyProgress)}%
+            </span>
           </div>
-          <Progress value={dailyProgress} className="h-2" />
+          <Progress 
+            value={dailyProgress} 
+            className="h-2"
+            aria-labelledby="progress-label"
+            aria-valuenow={Math.round(dailyProgress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
         </div>
 
         {/* Estimated Duration */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          <span>Estimated: {Math.ceil(reminder.itemsDue * 0.5)} minutes</span>
+          <Clock className="w-4 h-4" aria-hidden="true" />
+          <span aria-label={`Estimated duration: ${Math.ceil(reminder.itemsDue * 0.5)} minutes`}>
+            Estimated: {Math.ceil(reminder.itemsDue * 0.5)} minutes
+          </span>
         </div>
 
         {/* Motivational Text */}
@@ -136,8 +194,8 @@ export function SpacedRepetitionReminder({
         {/* Last Review */}
         {reminder.lastReview && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <TrendingUp className="w-3 h-3" />
-            <span>
+            <TrendingUp className="w-3 h-3" aria-hidden="true" />
+            <span aria-label={`Last reviewed on ${new Date(reminder.lastReview).toLocaleDateString()}`}>
               Last reviewed: {new Date(reminder.lastReview).toLocaleDateString()}
             </span>
           </div>
@@ -146,9 +204,12 @@ export function SpacedRepetitionReminder({
 
       <CardFooter className="flex gap-2">
         {showSnoozeOptions ? (
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-2 w-full" role="group" aria-label="Snooze options">
             <Select onValueChange={(value) => handleSnooze(Number(value))}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger 
+                className="flex-1 min-h-[44px]"
+                aria-label="Select snooze duration"
+              >
                 <SelectValue placeholder="Snooze for..." />
               </SelectTrigger>
               <SelectContent>
@@ -161,6 +222,8 @@ export function SpacedRepetitionReminder({
             <Button 
               variant="ghost" 
               onClick={() => setShowSnoozeOptions(false)}
+              className="min-h-[44px] min-w-[44px]"
+              aria-label="Cancel snooze"
             >
               Cancel
             </Button>
@@ -169,14 +232,16 @@ export function SpacedRepetitionReminder({
           <>
             <Button
               variant="outline"
-              className="flex-1"
+              className="flex-1 min-h-[44px]"
               onClick={() => setShowSnoozeOptions(true)}
+              aria-label="Snooze this reminder"
             >
               Snooze
             </Button>
             <Button
-              className="flex-1"
-              onClick={onReview}
+              className="flex-1 min-h-[44px]"
+              onClick={handleReview}
+              aria-label={`Start reviewing ${reminder.topic}`}
             >
               Start Review
             </Button>
