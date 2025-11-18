@@ -11,7 +11,7 @@ import { NotificationPriorityBadge } from './atoms/NotificationPriorityBadge';
 import { notificationDeduplicationManager } from '@/utils/notificationDeduplication';
 import { notificationEngagementTracker } from '@/utils/notificationEngagement';
 import { notificationOfflineQueue } from '@/utils/notificationOfflineQueue';
-import type { Notification, NotificationPriority } from '@/types/notifications';
+import type { Notification, NotificationPriority } from '@/types/notification-service';
 
 export interface NotificationToastSystemProps {
   position?: 'top-right' | 'top-left' | 'top-center' | 'bottom-right' | 'bottom-left' | 'bottom-center';
@@ -147,7 +147,7 @@ export function NotificationToastSystem({
       // Show toast with appropriate settings
       const toastId = toast(toastContent, {
         duration: autoClose ? getAutoDismissDuration(notification.priority) : Infinity,
-        // @ts-ignore - sonner types may not include all props
+        // @ts-expect-error - sonner types may not include all props
         variant: getToastVariant(),
         dismissible: true,
         onDismiss: () => {
