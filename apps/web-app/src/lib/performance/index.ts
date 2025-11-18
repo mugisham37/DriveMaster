@@ -1,65 +1,22 @@
 /**
- * Performance Optimization Utilities
- * 
- * Centralized exports for all performance optimization utilities.
- * 
- * Requirements: 13.1, 13.3, 13.4, 13.5
- * Task: 14.1, 14.2, 14.3, 14.4
+ * Performance Optimization Exports
+ * Central export point for all performance utilities
  */
 
-// Dynamic imports and code splitting
-export * from './dynamic-imports';
+// Code Splitting
+export * from './code-splitting';
 
-// Webpack optimization
-export * from './webpack-optimization';
+// Debounce & Throttle
+export * from './debounce-throttle';
 
-// Data prefetching
-export * from './prefetch';
+// Image Optimization
+export * from './image-optimization';
 
-// Rendering optimizations
-export * from './rendering-optimizations';
+// Memoization
+export * from './memoization';
 
-// Re-export commonly used utilities
-export {
-  LazyChartComponents,
-  LazyMediaComponents,
-  LazyBulkComponents,
-  LazyNotificationComponents,
-  LazyGDPRComponents,
-  LazyCelebrationComponents,
-  LazyPageComponents,
-  LazyFeatureComponents,
-  createLazyComponent,
-  preloadComponent,
-  BUNDLE_SIZE_TARGETS,
-} from './dynamic-imports';
+// Performance Monitoring
+export * from './performance-monitor';
 
-export {
-  usePrefetchOnHover,
-  useProgressPrefetch,
-  useMountPrefetch,
-  useBatchPrefetch,
-  usePredictivePrefetch,
-  useLinkPrefetch,
-  prefetchSWRData,
-  prefetchMultipleSWRData,
-  addPrefetchTask,
-} from './prefetch';
-
-export {
-  useDebounce,
-  useDebouncedCallback,
-  useThrottledCallback,
-  useMemoizedSort,
-  useMemoizedFilter,
-  useMemoizedMap,
-  useMemoizedGroupBy,
-  useVirtualScroll,
-  calculateVisibleRange,
-  useIntersectionObserver,
-  useRenderTime,
-  useSlowRenderDetection,
-  useStableCallback,
-  useIsMounted,
-  useBatchedState,
-} from './rendering-optimizations';
+// Virtual Scrolling
+export * from './virtual-scrolling';
