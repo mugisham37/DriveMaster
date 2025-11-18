@@ -17,6 +17,9 @@ export interface NotificationCardProps {
   notification: Notification;
   compact?: boolean;
   showActions?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: (selected: boolean) => void;
   onRead?: (id: string) => void;
   onDelete?: (id: string) => void;
   onClick?: (notification: Notification) => void;
@@ -29,6 +32,9 @@ export function NotificationCard({
   notification,
   compact = false,
   showActions = true,
+  selectable = false,
+  selected = false,
+  onSelect,
   onRead,
   onDelete,
   onClick,
@@ -38,6 +44,11 @@ export function NotificationCard({
   const { markAsRead, deleteNotification } = useNotificationMutations();
 
   const handleClick = () => {
+    if (selectable) {
+      onSelect?.(!selected);
+      return;
+    }
+
     if (!notification.status.isRead) {
       markAsRead.mutate(notification.id);
       onRead?.(notification.id);
@@ -79,14 +90,30 @@ export function NotificationCard({
   return (
     <Card
       className={cn(
-        'transition-all duration-200 hover:shadow-md cursor-pointer',
+        'transition-all duration-200 hover:shadow-md cursor-pointer group',
         !notification.status.isRead && 'border-l-4 border-l-blue-500 bg-blue-50/50',
+        selected && 'ring-2 ring-blue-500 bg-blue-50',
         compact && 'p-2',
         className
       )}
       onClick={handleClick}
     >
       <CardContent className={cn('flex gap-3', compact ? 'p-3' : 'p-4')}>
+        {/* Selection Checkbox */}
+        {selectable && (
+          <div className="flex-shrink-0 flex items-center">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => {
+                e.stopPropagation();
+                onSelect?.(e.target.checked);
+              }}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+          </div>
+        )}
+
         {/* Icon */}
         <div className="flex-shrink-0">
           <NotificationIcon
