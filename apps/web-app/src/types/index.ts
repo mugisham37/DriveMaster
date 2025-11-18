@@ -1473,3 +1473,86 @@ export type {
 } from "./errors";
 
 export { isCircuitBreakerError as isContentCircuitBreakerError } from "./errors";
+
+// Notification Service types
+export type {
+  // Core notification types
+  NotificationType,
+  NotificationPriority,
+  DeliveryChannel,
+  NotificationStatus,
+  Notification,
+  NotificationList,
+  NotificationQueryParams,
+
+  // Device token management
+  DeviceToken,
+  DeviceMetadata,
+  DeviceTokenRequest,
+  DeviceTokenResponse,
+  DeviceTokenStats,
+
+  // Notification templates
+  NotificationTemplate,
+  RenderedNotification,
+  TemplateRenderRequest,
+
+  // Scheduling
+  ScheduledNotification,
+  RecurringPattern,
+  ScheduleNotificationRequest,
+
+  // Analytics and tracking
+  DeliveryResult,
+  NotificationAnalytics,
+  AnalyticsQueryParams,
+  AnalyticsMetric,
+  AnalyticsData,
+
+  // Preferences management
+  NotificationPreferences as NotificationServicePreferences,
+  QuietHours,
+  FrequencySettings,
+  GlobalNotificationSettings,
+
+  // Real-time communication
+  NotificationEventType,
+  NotificationEvent,
+  RealtimeNotification,
+  WebSocketMessage as NotificationWebSocketMessage,
+  EventHandler,
+
+  // Learning-specific notifications
+  AchievementNotificationRequest,
+  SpacedRepetitionRequest,
+  StreakReminderRequest,
+  MockTestReminderRequest,
+
+  // Error handling
+  NotificationErrorType,
+  NotificationError,
+  ErrorContext,
+  ErrorHandlingResult,
+
+  // API response types
+  ApiResponse as NotificationApiResponse,
+  PaginatedResponse as NotificationPaginatedResponse,
+
+  // Configuration types
+  NotificationServiceClientConfig,
+  CacheEntry,
+  CacheType,
+
+  // Circuit breaker types
+  CircuitBreakerState as NotificationCircuitBreakerState,
+  CircuitBreakerConfig as NotificationCircuitBreakerConfig,
+  CircuitBreakerMetrics,
+
+  // Authentication types
+  JWTPayload,
+
+  // Utility types
+  DeepPartial,
+  RequiredFields,
+  OptionalFields,
+} from "./notification-service";
