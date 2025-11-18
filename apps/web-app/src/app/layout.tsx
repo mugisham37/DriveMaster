@@ -9,6 +9,7 @@ import { I18nProvider } from "@/components/providers/I18nProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { EmailVerificationBanner } from "@/components/auth/shared";
 import { Toaster } from "@/components/ui/sonner";
+import { NotificationToastSystem } from "@/components/notifications/NotificationToastSystem";
 import { SkipNavigation } from "@/components/layout/SkipNavigation";
 import { GlobalKeyboardShortcuts } from "@/components/accessibility/GlobalKeyboardShortcuts";
 import { GlobalAriaLiveRegions } from "@/components/accessibility/AriaLiveRegion";
@@ -112,6 +113,7 @@ export default function RootLayout({
                     <FlashMessages />
                     <EmailVerificationBanner />
                     <Toaster position="top-right" richColors closeButton />
+                    <NotificationToastSystem />
                     <GlobalKeyboardShortcuts />
                     <AnalyticsInitializer />
                     {children}

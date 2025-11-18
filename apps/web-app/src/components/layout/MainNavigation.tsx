@@ -32,7 +32,6 @@ import {
   User,
   Settings,
   LogOut,
-  Bell,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,7 +43,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { NotificationBellIcon } from '@/components/notifications/organisms/NotificationBellIcon';
 
 // ============================================================================
 // Types
@@ -192,20 +191,7 @@ export function MainNavigation() {
         {/* Right Section: Notifications & User Menu */}
         <div className="flex items-center space-x-2">
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-            >
-              3
-            </Badge>
-          </Button>
+          <NotificationBellIcon position="right" />
 
           {/* User Menu */}
           <DropdownMenu>

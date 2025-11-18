@@ -1,12 +1,32 @@
+/**
+ * NotificationBellIcon Component
+ * 
+ * Global notification trigger with real-time badge updates
+ * 
+ * Features:
+ * - Bell icon with unread count badge
+ * - Shake animation on new notifications
+ * - Opens NotificationCenter on click
+ * - Keyboard accessible
+ * - Real-time badge updates via WebSocket
+ * 
+ * Requirements: 15.1, 15.2, 15.3, 15.4, 15.5
+ * Task: 8.1
+ */
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NotificationBadge } from '../atoms/NotificationBadge';
+import { Badge } from '@/components/ui/badge';
 import { NotificationCenter } from './NotificationCenter';
 import { useNotificationCounts } from '@/hooks/useNotificationCounts';
 import { cn } from '@/lib/utils';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface NotificationBellIconProps {
   position?: 'left' | 'center' | 'right';
@@ -15,43 +35,31 @@ export interface NotificationBellIconProps {
   className?: string;
 }
 
+// ============================================================================
+// Component
+// ============================================================================
+
 export function NotificationBellIcon({
   position = 'right',
   showBadge = true,
   badgeVariant = 'unread',
-  className = '',
+  className,
 }: NotificationBellIconProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shouldShake, setShouldShake] = useState(false);
-  const [previousCount, setPreviousCount] = useState(0);
+  const { data: counts, isLoading } = useNotificationCounts();
 
-  const { unreadCount, urgentCount, isLoading } = useNotificationCounts();
+  const unreadCount = counts?.unread || 0;
+  const hasUnread = unreadCount > 0;
 
-  // Determine which count to display based on variant
-  const displayCount = badgeVariant === 'urgent' ? urgentCount : unreadCount;
-
-  // Shake animation when new notifications arrive
-  useEffect(() => {
-    if (displayCount > previousCount && previousCount > 0) {
+  // Trigger shake animation when unread count increases
+  React.useEffect(() => {
+    if (hasUnread && !isOpen) {
       setShouldShake(true);
-      
-      // Reset shake animation after it completes
-      const timer = setTimeout(() => {
-        setShouldShake(false);
-      }, 500);
-
+      const timer = setTimeout(() => setShouldShake(false), 500);
       return () => clearTimeout(timer);
     }
-    setPreviousCount(displayCount);
-  }, [displayCount, previousCount]);
-
-  // Keyboard accessibility
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      setIsOpen(!isOpen);
-    }
-  };
+  }, [unreadCount, hasUnread, isOpen]);
 
   return (
     <div className={cn('relative', className)}>
@@ -60,55 +68,34 @@ export function NotificationBellIcon({
         size="icon"
         className={cn(
           'relative',
-          shouldShake && 'animate-shake',
-          isOpen && 'bg-accent'
+          shouldShake && 'animate-shake'
         )}
         onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
-        aria-label={`Notifications${displayCount > 0 ? `, ${displayCount} unread` : ''}`}
+        aria-label={`Notifications${hasUnread ? `, ${unreadCount} unread` : ''}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
       >
         <Bell className="h-5 w-5" />
-        
-        {showBadge && displayCount > 0 && (
-          <div className="absolute -top-1 -right-1">
-            <NotificationBadge
-              count={displayCount}
-              variant={badgeVariant}
-              maxCount={99}
-              showZero={false}
-            />
-          </div>
+        {showBadge && hasUnread && !isLoading && (
+          <Badge
+            variant={badgeVariant === 'urgent' ? 'destructive' : 'default'}
+            className={cn(
+              'absolute -top-1 -right-1 h-5 min-w-[1.25rem] rounded-full p-0 flex items-center justify-center text-xs',
+              badgeVariant === 'urgent' && 'animate-pulse'
+            )}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Badge>
         )}
       </Button>
 
-      {/* NotificationCenter Popover/Sheet */}
-      <NotificationCenter
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        trigger={null} // We're controlling it manually
-      />
-
-      <style jsx>{`
-        @keyframes shake {
-          0%, 100% {
-            transform: rotate(0deg);
-          }
-          10%, 30%, 50%, 70%, 90% {
-            transform: rotate(-10deg);
-          }
-          20%, 40%, 60%, 80% {
-            transform: rotate(10deg);
-          }
-        }
-
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
+      {isOpen && (
+        <NotificationCenter
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          position={position}
+        />
+      )}
     </div>
   );
 }
-
-export default NotificationBellIcon;

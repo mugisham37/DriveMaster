@@ -381,7 +381,7 @@ This implementation plan converts the notification service frontend integration 
 
 ### 7. Build Template Components (Pages)
 
-- [ ] 7.1 Build NotificationsPage
+- [x] 7.1 Build NotificationsPage
   - Create page layout with header, main, sidebar
   - Add page header with title, count, actions
   - Add NotificationList in full mode
@@ -395,7 +395,7 @@ This implementation plan converts the notification service frontend integration 
   - Set up route at /notifications
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 3.3, 3.4, 3.5_
 
-- [ ] 7.2 Build NotificationSettingsPage
+- [x] 7.2 Build NotificationSettingsPage
   - Create page layout with header and tabs
   - Add Shadcn Tabs component
   - Add Preferences tab (NotificationPreferencesPanel)
@@ -409,7 +409,7 @@ This implementation plan converts the notification service frontend integration 
   - Set up route at /settings/notifications
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 12.1, 13.1_
 
-- [ ] 7.3 Build NotificationAnalyticsPage (admin)
+- [x] 7.3 Build NotificationAnalyticsPage (admin)
   - Create page layout with header and sections
   - Add NotificationAnalyticsDashboard (expanded)
   - Add detailed reports section (tabbed)

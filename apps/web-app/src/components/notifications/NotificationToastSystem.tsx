@@ -8,6 +8,9 @@ import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { NotificationIcon } from './atoms/NotificationIcon';
 import { NotificationTimestamp } from './atoms/NotificationTimestamp';
 import { NotificationPriorityBadge } from './atoms/NotificationPriorityBadge';
+import { notificationDeduplicationManager } from '@/utils/notificationDeduplication';
+import { notificationEngagementTracker } from '@/utils/notificationEngagement';
+import { notificationOfflineQueue } from '@/utils/notificationOfflineQueue';
 import type { Notification, NotificationPriority } from '@/types/notifications';
 
 export interface NotificationToastSystemProps {
@@ -53,13 +56,13 @@ export function NotificationToastSystem({
     return () => clearInterval(interval);
   }, []);
 
-  // Check if notification should be deduplicated
+  // Check if notification should be deduplicated using the manager
   const shouldDedup = useCallback((notification: Notification): boolean => {
-    const lastShown = recentToasts.get(notification.id);
-    if (!lastShown) return false;
-    
-    const now = Date.now();
-    return now - lastShown < DEDUP_WINDOW;
+    return !notificationDeduplicationManager.shouldShow({
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+    });
   }, []);
 
   // Get auto-dismiss duration based on priority
@@ -90,6 +93,14 @@ export function NotificationToastSystem({
       // Mark as shown
       recentToasts.set(notification.id, Date.now());
       setDisplayedToasts((prev) => new Set(prev).add(notification.id));
+
+      // Track delivery event
+      notificationEngagementTracker.trackDelivery(
+        notification.id,
+        notification.userId,
+        'in-app',
+        notification.id // Using notification ID as correlation ID
+      );
 
       // Play sound if enabled
       if (enableSound && soundEnabled && (notification.priority === 'urgent' || notification.priority === 'critical')) {
@@ -145,6 +156,14 @@ export function NotificationToastSystem({
             next.delete(notification.id);
             return next;
           });
+          // Track dismiss event
+          notificationEngagementTracker.trackDismiss(
+            notification.id,
+            notification.userId,
+            'in-app',
+            notification.id,
+            'user_dismissed'
+          );
         },
         onAutoClose: () => {
           setDisplayedToasts((prev) => {
@@ -157,6 +176,14 @@ export function NotificationToastSystem({
           ? {
               label: 'View',
               onClick: () => {
+                // Track click event
+                notificationEngagementTracker.trackClick(
+                  notification.id,
+                  notification.userId,
+                  'in-app',
+                  notification.id,
+                  notification.actionUrl
+                );
                 if (notification.actionUrl) {
                   window.location.href = notification.actionUrl;
                 }
